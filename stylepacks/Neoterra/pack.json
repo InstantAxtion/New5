@@ -1,0 +1,15 @@
+{
+  "icon": "neoterra.png",
+  "name": "Neoterra",
+  "authors": [
+    "New5"
+  ],
+  "desc": "Semi-futuristic megastructures in white concrete, quartz and tinted glass. Every building grows upward with each level and is packed with things the player can actually use.",
+  "mods": [
+    "structurize",
+    "minecolonies",
+    "domum_ornamentum"
+  ],
+  "version": "1",
+  "pack-format": "1"
+}

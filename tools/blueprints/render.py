@@ -25,13 +25,37 @@ COLORS = {
     "rail": (110, 90, 60), "dark_oak_stairs": (66, 43, 20), "moss_block": (89, 110, 45),
     "flowering_azalea": (112, 135, 60), "polished_blackstone_wall": (53, 48, 56),
     "lantern": (230, 170, 80),
+    "blocksolidsubstitution": (120, 90, 60), "grass_block": (95, 150, 60), "cyan_concrete": (21, 119, 136),
+    "light_gray_concrete": (125, 125, 115), "polished_deepslate": (72, 72, 74), "tinted_glass": (60, 50, 70),
+    "glass": (200, 225, 235), "water": (60, 90, 220), "soul_sand": (80, 60, 50), "bookshelf": (120, 90, 55),
+    "barrel": (120, 85, 50), "crafting_table": (130, 95, 60), "furnace": (110, 110, 110), "white_bed": (230, 230, 230),
+    "cyan_bed": (21, 137, 145), "azalea": (100, 125, 50), "waxed_cut_copper": (190, 105, 75),
+    "waxed_copper_door": (190, 105, 75), "end_rod": (240, 235, 220), "lightning_rod": (190, 105, 75),
+    "smooth_quartz": (235, 229, 222), "enchanting_table": (150, 30, 40), "blockhuttownhall": (255, 60, 200),
 }
-GLASS = {"light_blue_stained_glass", "glass_pane"}
+SOLID_GUESS = (180, 120, 200)
+GLASS = {"light_blue_stained_glass", "glass_pane", "glass", "tinted_glass", "blockpaperwall", "water"}
 HALF = {"smooth_quartz_slab", "smooth_stone_slab", "rail"}
 
 
 def short(state):
     return parse_state(state)[0].split(":")[1]
+
+
+def material(bp, x, y, z):
+    """Short name used for colouring; Domum Ornamentum blocks use their main material."""
+    s = short(bp.grid[y][z][x])
+    te = bp.tile_entities.get((x, y, z))
+    if te is not None and "textureData" in te:
+        m = str(te["textureData"].get("minecraft:block/oak_planks", "")).split(":")[-1]
+        if s.endswith("light"):
+            return "sea_lantern"
+        if s == "blockpaperwall":
+            return "glass_pane"
+        if s.endswith("slab_compat"):
+            return m + "_slab_do"
+        return m or s
+    return s
 
 
 def shade(c, k):
@@ -58,7 +82,7 @@ def iso(bp, rot, path, scale=14):
         if not (0 <= x < W and 0 <= z < D and 0 <= y < sy):
             return None
         ox, oz = orig(x, z)
-        s = short(bp.grid[y][oz][ox])
+        s = material(bp, ox, y, oz)
         return None if s == "air" else s
 
     w, h, H = scale, scale / 2, scale * 1.15
@@ -78,9 +102,10 @@ def iso(bp, rot, path, scale=14):
         b = at(x, y, z)
         if b is None:
             continue
-        c = COLORS.get(b, (255, 0, 255))
-        a = 120 if b in GLASS else 255
-        top = 0.5 if b in HALF else 1.0
+        base = b[:-8] if b.endswith("_slab_do") else b
+        c = COLORS.get(base) or COLORS.get(base.replace("_stairs", "").replace("_slab", "")) or SOLID_GUESS
+        a = 120 if b in GLASS or "glass" in b else (150 if b == "water" else 255)
+        top = 0.5 if (b in HALF or "slab" in b) else 1.0
         if b == "rail":
             top = 0.1
         yt = y + top
@@ -110,17 +135,38 @@ def plan(bp, path, cell=16):
         for x in range(bp.sx):
             col = (255, 255, 255)
             for y in range(4, -1, -1):
-                s = short(bp.grid[y][z][x])
+                s = material(bp, x, y, z)
                 if s != "air":
-                    col = COLORS.get(s, (255, 0, 255))
+                    col = COLORS.get(s, SOLID_GUESS)
                     break
             dr.rectangle([x * cell, z * cell, (x + 1) * cell - 1, (z + 1) * cell - 1], fill=col, outline=(200, 200, 200))
+    img.save(path)
+
+
+def plan_at(bp, path, y_top, cell=12):
+    """Top-down plan showing the highest block at or below y_top."""
+    img = Image.new("RGB", (bp.sx * cell, bp.sz * cell), (255, 255, 255))
+    dr = ImageDraw.Draw(img)
+    for z in range(bp.sz):
+        for x in range(bp.sx):
+            col = (255, 255, 255)
+            for y in range(y_top, -1, -1):
+                s = material(bp, x, y, z)
+                if s != "air":
+                    col = COLORS.get(s, SOLID_GUESS)
+                    if y < y_top - 1:
+                        col = shade(col, 0.55)
+                    break
+            dr.rectangle([x * cell, z * cell, (x + 1) * cell - 1, (z + 1) * cell - 1], fill=col, outline=(210, 210, 210))
     img.save(path)
 
 
 if __name__ == "__main__":
     src, prefix = sys.argv[1], sys.argv[2]
     bp = load(src)
+    if len(sys.argv) > 3:
+        for yt in map(int, sys.argv[3].split(",")):
+            plan_at(bp, f"{prefix}_plan_y{yt}.png", yt)
     iso(bp, 2, f"{prefix}_front.png")   # viewer at the street side (north-west)
     iso(bp, 0, f"{prefix}_back.png")    # viewer behind the platforms (south-east)
     plan(bp, f"{prefix}_plan.png")

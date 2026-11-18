@@ -55,27 +55,33 @@ class Blueprint:
         self.grid = [[[AIR] * sx for _ in range(sz)] for _ in range(sy)]
         self.primary_offset = (0, 0, 0)
         self.architects: list[str] = []
-        self.tile_entities: list[dict] = []
+        # (x, y, z) -> block entity compound (x/y/z are added on save)
+        self.tile_entities: dict[tuple[int, int, int], nbtlib.Compound] = {}
 
     # ---- editing helpers -------------------------------------------------
     def inside(self, x, y, z):
         return 0 <= x < self.sx and 0 <= y < self.sy and 0 <= z < self.sz
 
-    def set(self, x, y, z, state: str):
+    def set(self, x, y, z, state: str, te: nbtlib.Compound | None = None):
+        """Place a block. Overwriting a block also drops its old block entity."""
         if not self.inside(x, y, z):
             raise IndexError(f"({x},{y},{z}) outside {self.sx}x{self.sy}x{self.sz}")
         self.grid[y][z][x] = format_state(*parse_state(state))
+        if te is None:
+            self.tile_entities.pop((x, y, z), None)
+        else:
+            self.tile_entities[(x, y, z)] = te
 
     def get(self, x, y, z) -> str:
         if not self.inside(x, y, z):
             return AIR
         return self.grid[y][z][x]
 
-    def fill(self, x1, y1, z1, x2, y2, z2, state: str):
+    def fill(self, x1, y1, z1, x2, y2, z2, state: str, te_factory=None):
         for y in range(min(y1, y2), max(y1, y2) + 1):
             for z in range(min(z1, z2), max(z1, z2) + 1):
                 for x in range(min(x1, x2), max(x1, x2) + 1):
-                    self.set(x, y, z, state)
+                    self.set(x, y, z, state, te_factory() if te_factory else None)
 
     def blocks(self):
         for y in range(self.sy):
@@ -123,7 +129,7 @@ class Blueprint:
             "size_z": T.Short(self.sz),
             "palette": T.List[T.Compound](pal_tags),
             "blocks": T.IntArray(ints),
-            "tile_entities": T.List[T.Compound](self.tile_entities),
+            "tile_entities": T.List[T.Compound](self._te_list()),
             "entities": T.List[T.Compound]([]),
             "required_mods": T.List[T.String](sorted({
                 parse_state(s)[0].split(":")[0] for s in palette
@@ -141,6 +147,14 @@ class Blueprint:
                 })
             }),
         })
+
+    def _te_list(self):
+        out = []
+        for (x, y, z), te in sorted(self.tile_entities.items(), key=lambda kv: (kv[0][1], kv[0][2], kv[0][0])):
+            c = T.Compound(dict(te))
+            c["x"], c["y"], c["z"] = T.Short(x), T.Short(y), T.Short(z)
+            out.append(c)
+        return out
 
     def save(self, path):
         f = nbtlib.File(self.to_nbt(), gzipped=True)
@@ -168,6 +182,8 @@ def load(path) -> Blueprint:
             for x in range(sx):
                 bp.grid[y][z][x] = palette[shorts[i]]
                 i += 1
+    for te in root.get("tile_entities", []):
+        bp.tile_entities[(int(te["x"]), int(te["y"]), int(te["z"]))] = te
     po = root.get("optional_data", {}).get("structurize", {}).get("primary_offset")
     if po is not None:
         bp.primary_offset = (int(po["x"]), int(po["y"]), int(po["z"]))
