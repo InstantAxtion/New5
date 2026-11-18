@@ -156,7 +156,7 @@ def angle(x, z, c):
 
 
 # ----------------------------------------------------------------------------- finishing
-PANE_SUFFIXES = ("glass_pane", "iron_bars", "blockpaperwall")
+PANE_SUFFIXES = ("glass_pane", "iron_bars", "blockpaperwall", "_fence")
 NO_CONNECT = ("stairs", "slab", "lantern", "rail", "door", "bed", "light", "air", "water", "rod",
               "flower", "azalea", "torch", "carpet", "button", "lever", "pressure_plate", "bulb")
 

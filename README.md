@@ -29,6 +29,20 @@ glass-pane railings); the premium look (tinted glass, polished deepslate, quartz
 Domum Ornamentum lights and railings) arrives at level 4 and is completed at level 5.
 (`CHEAP_UNTIL` in `common.py` controls this.)
 
+### Builder's hut (`fundamentals/builder1-5`) – 25 × 34 × 21, same footprint every level
+Hut block: `minecolonies:blockhutbuilder`. A construction yard: site office, workshop shed,
+fenced materials yard with racks, and a tower crane you can climb (ladder inside the mast to the cab).
+
+![Builder's hut levels 1–5](docs/previews/neoterra/builder_levels.png)
+
+| Level | Racks | Adds | Player use |
+|---|---|---|---|
+| 1 Site Office | 4 | Glass-front site office with the hut behind the counter, fenced yard | Crafting & cartography tables, barrels |
+| 2 Workshop | 8 | Timber workshop shed, material pallets, tower crane (14 high) | Stonecutter, grindstone, anvil, smithing table, crafting table, lectern, climbable crane |
+| 3 Drawing Office | 16 | Upper-floor drafting room with stairs, rack canopy, crane 18 high | Drawing tables, bookshelves, lectern, cartography table |
+| 4 Premium upgrade | 24 | Tinted glass, concrete + glass site hoarding, roof terrace with solar, crane 22 high, tree & lamps | **Architect's Cutter** (Domum Ornamentum), bed, roof access |
+| 5 Landmark | 32 | Crane 26 high with lit cab and a hanging load, timber louvres, roof planters | Ender chest |
+
 ### Courier's hut (`craftsmanship/storage/deliveryman1-5`) – 23 × 22 × 21, same footprint every level
 Hut block: `minecolonies:blockhutdeliveryman` (MineColonies calls it the Courier's Hut).
 
@@ -72,6 +86,7 @@ python3 tools/blueprints/validate.py blocks.json stylepacks/Neoterra/**/*.bluepr
 - `tools/blueprints/blueprint.py` – Structurize `.blueprint` reader/writer
 - `tools/blueprints/neoterra/common.py` – Domum Ornamentum blocks, hut block data, geometry
 - `tools/blueprints/neoterra/townhall.py` – town hall design (levels 1–5)
+- `tools/blueprints/neoterra/builder.py` – builder's hut design (levels 1–5)
 - `tools/blueprints/neoterra/deliveryman.py` – courier's hut design (levels 1–5)
 - `tools/blueprints/neoterra/warehouse.py` – warehouse design (levels 1–5)
 - `tools/blueprints/neoterra/check_townhall.py` – stair headroom, floor exits, enchanting power, elevator watertightness
