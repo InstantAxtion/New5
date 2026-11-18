@@ -15,6 +15,8 @@ import nbtlib
 MODDED = {
     "minecolonies:blockhuttownhall": {"facing"},
     "minecolonies:blockhutdeliveryman": {"facing"},
+    "minecolonies:blockhutwarehouse": {"facing"},
+    "minecolonies:blockminecoloniesrack": {"facing", "variant"},
     "structurize:blocksolidsubstitution": set(),
     "structurize:blocksubstitution": set(),
     "domum_ornamentum:vanilla_slab_compat": {"type", "waterlogged"},

@@ -80,7 +80,8 @@ def put(bp: Blueprint, x, y, z, spec):
 
 
 # ----------------------------------------------------------------------------- hut block
-def hut_te(path: str, size, hut_pos, tags: dict[tuple[int, int, int], list[str]]) -> T.Compound:
+def hut_te(path: str, size, hut_pos, tags: dict[tuple[int, int, int], list[str]],
+           te_id: str = "minecolonies:colonybuilding") -> T.Compound:
     """Block entity for a MineColonies hut, mirroring the fields in the official 1.21 packs."""
     hx, hy, hz = hut_pos
     sx, sy, sz = size
@@ -96,11 +97,11 @@ def hut_te(path: str, size, hut_pos, tags: dict[tuple[int, int, int], list[str]]
             "tagNameList": T.List[T.Compound]([T.Compound({"tagName": T.String(n)}) for n in names]),
         }))
     return T.Compound({
-        "id": T.String("minecolonies:colonybuilding"),
+        "id": T.String(te_id),
         "mirror": T.Byte(0),
         "inWarehouse": T.Byte(0),
         "colony": T.Int(1),
-        "type": T.String("minecraft:"),
+        "type": T.String(te_id if te_id != "minecolonies:colonybuilding" else "minecraft:"),
         "version": T.Int(0),
         "tagSIze": T.Int(0),
         "Item": T.String(""),
@@ -115,6 +116,27 @@ def hut_te(path: str, size, hut_pos, tags: dict[tuple[int, int, int], list[str]]
             "posTagMap": T.List[T.Compound](tag_list),
         }),
     })
+
+
+RACK_STATE = "minecolonies:blockminecoloniesrack[facing={facing},variant=blockrackemptysingle]"
+
+
+def rack_te() -> T.Compound:
+    """Block entity of a single (non-double) MineColonies rack, as in the official 1.21 packs."""
+    return T.Compound({
+        "id": T.String("minecolonies:rack"),
+        "tagSIze": T.Int(0),
+        "Item": T.String(""),
+        "inWarehouse": T.Byte(0),
+        "main": T.Byte(0),
+        "version": T.Byte(0),
+        "pos": T.Compound({"x": T.Int(0), "y": T.Int(0), "z": T.Int(0)}),
+        "inventory": T.List[T.Compound]([T.Compound({"empty": T.Byte(1)}) for _ in range(27)]),
+    })
+
+
+def rack(bp, x, y, z, facing="north"):
+    bp.set(x, y, z, RACK_STATE.format(facing=facing), rack_te())
 
 
 # ----------------------------------------------------------------------------- geometry

@@ -8,7 +8,7 @@ pack, prev = Path(sys.argv[1]), Path(sys.argv[2])
 BG = (236, 240, 244, 255)
 # category folder -> building whose level-5 render is used as the tab icon
 CATEGORIES = {"fundamentals": "townhall", "craftsmanship": "deliveryman"}
-BUILDINGS = ["townhall", "deliveryman"]
+BUILDINGS = ["townhall", "deliveryman", "warehouse"]
 
 
 def square(im, bg=BG):

@@ -36,6 +36,8 @@ COLORS = {
     "light_gray_stained_glass": (175, 180, 185), "oak_leaves": (70, 120, 40), "azalea_leaves": (90, 125, 45),
     "stripped_oak_log": (175, 140, 85), "daylight_detector": (50, 60, 90), "chain": (60, 65, 75),
     "short_grass": (110, 160, 70), "light_gray_bed": (160, 160, 155), "polished_blackstone_wall": (53, 48, 56),
+    "blockminecoloniesrack": (140, 100, 60), "blockhutwarehouse": (255, 60, 200),
+    "blockhutdeliveryman": (255, 60, 200), "ladder": (150, 115, 70), "moss_carpet": (89, 110, 45),
 }
 SOLID_GUESS = (180, 120, 200)
 GLASS = {"light_blue_stained_glass", "glass_pane", "glass", "tinted_glass", "blockpaperwall", "water"}
