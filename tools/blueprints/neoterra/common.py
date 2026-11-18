@@ -179,6 +179,11 @@ def connect_panes(bp: Blueprint):
 
 
 # ----------------------------------------------------------------------------- Neoterra style
+# When True, levels 1-2 avoid Nether/End and Domum Ornamentum blocks (cheaper early builds).
+# Off by request: every level uses the full Neoterra palette.
+EARLY_GAME_MATERIALS = False
+
+
 class Style:
     """Neoterra materials by building level (modern architecture ~20 years from now).
 
@@ -188,7 +193,7 @@ class Style:
 
     def __init__(self, level: int):
         self.level = level
-        self.early = level <= 2
+        self.early = EARLY_GAME_MATERIALS and level <= 2
         self.WHITE = "white_concrete"
         self.LIGHTGRAY = "light_gray_concrete"
         self.GLASS = "glass" if self.early else "light_gray_stained_glass"
@@ -199,7 +204,7 @@ class Style:
         self.DECK = "spruce_planks"
         self.SEAT = "spruce_stairs"
         self.LEAVES = "azalea_leaves[distance=1,persistent=true,waterlogged=false]"
-        self.railing = "glass_pane" if level == 1 else do_paperwall("gray_concrete", "glass")
+        self.railing = "glass_pane" if self.early and level == 1 else do_paperwall("gray_concrete", "glass")
         self.counter = ("smooth_stone_slab[type=top,waterlogged=false]" if self.early
                         else do_slab("white_concrete", "top"))
 

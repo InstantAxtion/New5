@@ -24,8 +24,9 @@ Copy `stylepacks/Neoterra` into `.minecraft/blueprints/` (so you get
 | 5 Landmark | Vertical timber sun-shading fins, roof garden with trees, antenna mast | **Glass-floored skywalk** off the roof deck, ~40 blocks up (doubles as an elytra launch) |
 
 Approximate blocks: L1 ≈ 3.8k, L2 ≈ 5.1k, L3 ≈ 7.6k, L4 ≈ 9.0k, L5 ≈ 9.4k (mostly concrete, glass and spruce).
-Levels 1–2 avoid Nether/End materials so they are buildable early; quartz, sea lanterns,
-and polished deepslate start at level 3.
+All levels use the full palette (quartz, sea lanterns, polished deepslate, Domum Ornamentum),
+so even level 1 looks finished. (`EARLY_GAME_MATERIALS` in `common.py` switches levels 1–2 back
+to cheap early-game blocks.)
 
 ### Courier's hut (`craftsmanship/storage/deliveryman1-5`) – 23 × 22 × 21, same footprint every level
 Hut block: `minecolonies:blockhutdeliveryman` (MineColonies calls it the Courier's Hut).

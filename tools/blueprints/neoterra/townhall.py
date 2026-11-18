@@ -29,7 +29,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    Blueprint, Spec, put, hut_te, dist, toward_center, angle, connect_panes,
+    Blueprint, Spec, Style, put, hut_te, dist, toward_center, angle, connect_panes,
     do_slab, do_stairs, do_pillar, do_paperwall, do_light,
 )
 
@@ -45,7 +45,7 @@ TUBE = (C, C + 10)                              # elevator water column (x, z)
 def build(level: int) -> Blueprint:
     L = level
     bp = Blueprint(SX, SY, SZ, f"townhall{L}.blueprint")
-    early = L <= 2
+    early = Style(L).early
 
     # ---------------------------------------------------------------- materials
     WHITE = "white_concrete"
@@ -57,7 +57,7 @@ def build(level: int) -> Blueprint:
     LEAVES = "azalea_leaves[distance=1,persistent=true,waterlogged=false]"
     CORE = "light_gray_concrete" if early else WHITE
     SEAT = "spruce_stairs"
-    railing = "glass_pane" if L == 1 else do_paperwall("gray_concrete", "glass")
+    railing = Style(L).railing
 
     def tree(x, y, z, h=3):
         """Small street/roof-garden tree: timber trunk + leaf crown."""
