@@ -1,36 +1,9 @@
-# New5 – MineColonies / Structurize content
+# New5 – MineColonies style pack (NeoForge 1.21.1)
 
-## Modern Rail style pack
+A custom MineColonies / Structurize style pack. (Pack name and theme: TBD.)
 
-`stylepacks/ModernRail/` is a Structurize style pack (works with MineColonies).
+- `docs/stylepack-format.md` – how 1.21.1 style packs and hut blueprints are structured
+- `tools/blueprints/blueprint.py` – read/write Structurize `.blueprint` files
+- `tools/blueprints/render.py` – isometric previews + floor plan of a blueprint
 
-| Blueprint | Size (x × y × z) | Notes |
-|---|---|---|
-| `transport/modern_train_station` | 37 × 17 × 27 | Glass-front station hall with clock tower, 2 tracks, 4 platform faces with canopies, covered footbridge. Vanilla blocks only. |
-
-![front](docs/previews/modern_train_station_front.png)
-![back](docs/previews/modern_train_station_back.png)
-
-### Install
-1. Copy the whole `ModernRail` folder into `.minecraft/blueprints/`
-   (so you get `.minecraft/blueprints/ModernRail/pack.json`).
-2. Restart the game, open the **Build Tool**, switch pack to **Modern Rail**,
-   and pick `transport → modern_train_station`.
-3. Place it in creative, or let your colony's builder build it as a decoration.
-
-The anchor is the front-centre of the plaza at ground level; y=0 is the foundation layer.
-Rails run the full length of the blueprint, so you can connect lines at both ends.
-
-Made for Minecraft 1.20.1 (data version 3465); newer versions upgrade it automatically on load.
-
-### Regenerating
-Blueprints are generated from Python, not hand-built:
-
-```bash
-pip install nbtlib pillow
-./tools/blueprints/build.sh
-```
-
-- `tools/blueprints/blueprint.py` – reads/writes `.blueprint` files (Structurize format v1)
-- `tools/blueprints/train_station.py` – the station design
-- `tools/blueprints/render.py` – isometric previews + floor plan
+Requires `pip install nbtlib pillow`.

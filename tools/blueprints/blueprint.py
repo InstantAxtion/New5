@@ -26,7 +26,7 @@ import nbtlib
 from nbtlib import tag as T
 
 AIR = "minecraft:air"
-DATA_VERSION_1_20_1 = 3465
+DATA_VERSION_1_21_1 = 3955  # MineColonies 1.21.1 packs are saved with this
 
 
 def parse_state(state: str) -> tuple[str, dict[str, str]]:
@@ -130,7 +130,7 @@ class Blueprint:
             } - {"minecraft", "structurize"})),
             "name": T.String(self.name),
             "architects": T.List[T.String]([T.String(a) for a in self.architects]),
-            "mcversion": T.Int(DATA_VERSION_1_20_1),
+            "mcversion": T.Int(DATA_VERSION_1_21_1),
             "optional_data": T.Compound({
                 "structurize": T.Compound({
                     "primary_offset": T.Compound({
