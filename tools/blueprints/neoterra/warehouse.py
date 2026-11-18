@@ -125,9 +125,9 @@ def build(level: int) -> Blueprint:
             bp.fill(x, 2, 1, x, 7, 1, T)
         for x in (8, 22):
             st.ceiling_light(bp, x, 8, 3)
-        solar_panels(bp, 4, ROOF + 1, 7, 26, 10)
+        pass  # (no solar panels in this style)
         if L == 2:
-            solar_panels(bp, 4, ROOF + 1, 13, 26, 20)
+            pass  # (no solar panels in this style)
 
     # ------------------------------------------------------------ L3: mezzanine office
     if L >= 3:
@@ -144,7 +144,7 @@ def build(level: int) -> Blueprint:
             for x in (3, 4):
                 if y > 2:
                     bp.fill(x, 2, z, x, y - 1, z, W)
-                bp.set(x, y, z, "spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]")
+                bp.set(x, y, z, st.SEAT + "[facing=north,half=bottom,shape=straight,waterlogged=false]")
         for x in (3, 4):
             put(bp, x, MEZZ + 1, 9, "air")                        # top of the stairs
         # office furniture
@@ -152,7 +152,7 @@ def build(level: int) -> Blueprint:
         for x in range(6, 10):
             put(bp, x, y, 7, st.counter if st.early else do_slab(T, "top"))                   # desk facing the hall
         for x in (6, 8):
-            bp.set(x, y, 8, "spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
+            bp.set(x, y, 8, st.SEAT + "[facing=south,half=bottom,shape=straight,waterlogged=false]")
         bp.set(3, y, 6, "crafting_table")
         bp.set(4, y, 6, "cartography_table")
         bp.set(5, y, 6, "lectern[facing=south,has_book=false,powered=false]")
@@ -173,11 +173,9 @@ def build(level: int) -> Blueprint:
                 bp.set(x, ROOF, z, "grass_block[snowy=false]")
                 if x % 3 == 0:
                     bp.set(x, ROOF + 1, z, "short_grass" if x % 2 else "flowering_azalea")
-        solar_panels(bp, 4, ROOF + 1, 21, 24, 21)
-        tree(bp, 1, 2, 1, h=4)
-        tree(bp, 29, 2, 1, h=4)
-        street_lamp(bp, 1, 2, 4, premium=not st.early)
-        street_lamp(bp, 29, 2, 4, premium=not st.early)
+        pass  # (no solar panels in this style)
+        street_lamp(bp, 1, 2, 1, premium=True)
+        street_lamp(bp, 29, 2, 1, premium=True)
 
     # ------------------------------------------------------------ L5: louvres, roof garden, mast
     if L >= 5:
@@ -188,7 +186,7 @@ def build(level: int) -> Blueprint:
             bp.fill(x, 2, Z2 + 1, x, ROOF - 1, Z2 + 1, WOOD)
         for x in (8, 22):
             planter(bp, x, ROOF + 1, 17, "moss_carpet")
-            tree(bp, x, ROOF + 2, 17, h=2)
+            bp.set(x, ROOF + 2, 17, "flowering_azalea")
         bp.set(26, ROOF + 1, 19, T)
         for y in range(ROOF + 2, SY - 1):
             bp.set(26, y, 19, "chain[axis=y,waterlogged=false]")

@@ -187,31 +187,38 @@ CHEAP_UNTIL = 3
 
 
 class Style:
-    """Neoterra materials by building level (modern architecture ~20 years from now).
+    """Neoterra materials by building level: semi-futuristic white towers, light-blue glass,
+    cyan accents and glowing light strips (the look of the first town hall).
 
-    Levels 1-3 use a cheaper palette; level 4+ upgrades glass, trim and lighting and uses
-    Domum Ornamentum pieces (see CHEAP_UNTIL).
+    Levels up to CHEAP_UNTIL use a cheaper palette (plain glass, gray concrete trim, cyan
+    concrete bands, lanterns, glass-pane railings); higher levels get light-blue glass,
+    polished deepslate, quartz, sea-lantern light strips and Domum Ornamentum pieces.
     """
 
     def __init__(self, level: int):
         self.level = level
         self.early = EARLY_GAME_MATERIALS and level <= CHEAP_UNTIL
+        e = self.early
         self.WHITE = "white_concrete"
         self.LIGHTGRAY = "light_gray_concrete"
-        self.GLASS = "glass" if self.early else "light_gray_stained_glass"
-        self.TRIM = "gray_concrete" if self.early else "polished_deepslate"
-        self.WOOD = "stripped_spruce_log[axis=y]"
-        self.WOOD_X = "stripped_spruce_log[axis=x]"
-        self.WOOD_Z = "stripped_spruce_log[axis=z]"
-        self.DECK = "spruce_planks"
-        self.SEAT = "spruce_stairs"
+        self.ACCENT = "cyan_concrete"
+        self.GLASS = "glass" if e else "light_blue_stained_glass"
+        self.TRIM = "gray_concrete" if e else "polished_deepslate"
+        # vertical fins / mullions: white concrete, quartz pillars on premium levels
+        self.WOOD = "white_concrete" if e else "quartz_pillar[axis=y]"
+        self.WOOD_X = self.WOOD
+        self.WOOD_Z = self.WOOD
+        # decks, soffits, canopy undersides, terrace floors
+        self.DECK = "light_gray_concrete" if e else "smooth_quartz"
+        self.SEAT = "polished_andesite_stairs" if e else "smooth_quartz_stairs"
+        self.BED = "cyan_bed"
         self.LEAVES = "azalea_leaves[distance=1,persistent=true,waterlogged=false]"
-        self.railing = "glass_pane" if self.early else do_paperwall("gray_concrete", "glass")
-        self.counter = ("smooth_stone_slab[type=top,waterlogged=false]" if self.early
+        self.railing = "glass_pane" if e else do_paperwall("gray_concrete", "glass")
+        self.counter = ("smooth_stone_slab[type=top,waterlogged=false]" if e
                         else do_slab("white_concrete", "top"))
-        # facade band: charcoal on cheap levels, a glowing light strip on premium levels
-        self.band = self.TRIM if self.early else "sea_lantern"
-        self.GLOW = None if self.early else "sea_lantern"
+        # facade band: cyan accent on cheap levels, a glowing light strip on premium levels
+        self.band = self.ACCENT if e else "sea_lantern"
+        self.GLOW = None if e else "sea_lantern"
 
     def ceiling_light(self, bp, x, y_ceiling, z):
         """Lantern hanging under the slab (L1-2) or a recessed DO light in the slab (L3+)."""
@@ -223,7 +230,9 @@ class Style:
     def floor(self, x, z):
         if self.early:
             return "smooth_stone" if (x + z) % 6 == 0 else "polished_andesite"
-        return "white_concrete" if x % 6 == 0 or z % 6 == 0 else "light_gray_concrete"
+        if x % 6 == 0 or z % 6 == 0:
+            return "cyan_concrete" if (x % 6 == 0 and z % 6 == 0) else "white_concrete"
+        return "light_gray_concrete"
 
 
 def tree(bp, x, y, z, h=3):
@@ -248,14 +257,15 @@ def planter(bp, x, y, z, plant="flowering_azalea"):
 
 
 def street_lamp(bp, x, y, z, h=3, premium=False):
-    """Lantern post (cheap) or a slim glowing light column (premium)."""
+    """Lantern post (cheap) or a white lamp spire with a glowing head and end rod (premium)."""
+    if premium:
+        bp.fill(x, y, z, x, y + h + 1, z, "white_concrete")
+        bp.set(x, y + h + 2, z, "sea_lantern")
+        bp.set(x, y + h + 3, z, "end_rod[facing=up]")
+        return
     for k in range(h):
         bp.set(x, y + k, z, "polished_blackstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
-    if premium:
-        bp.set(x, y + h, z, "sea_lantern")
-        bp.set(x, y + h + 1, z, "end_rod[facing=up]")
-    else:
-        bp.set(x, y + h, z, "lantern[hanging=false,waterlogged=false]")
+    bp.set(x, y + h, z, "lantern[hanging=false,waterlogged=false]")
 
 
 def solar_panels(bp, x1, y, z1, x2, z2):

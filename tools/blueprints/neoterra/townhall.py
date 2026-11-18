@@ -1,26 +1,24 @@
 """
 Neoterra Town Hall, levels 1-5 (MineColonies hut: minecolonies:blockhuttownhall).
 
-Style: realistic near-future (~2045) civic architecture: white concrete, clear/tinted glass,
-charcoal trim, warm timber louvres and decking, green roofs, solar panels.
+Every level has the same 45 x 62 x 45 footprint, so upgrades build on top of each other.
+The building grows upward with each level:
 
-Every level has the same 45 x 62 x 45 footprint, so upgrades build on top of each other:
-
-  L1  Founding Hall   round glass podium (r15): hut + reception, crafting/smelting corner,
-                      bed, spiral stair core to a roof terrace, solar panels.
-  L2  Civic Ring      second-floor ring building (r11) with a full player workshop and storage;
-                      green roof ring with planting on the podium.
-  L3  Archive Tower   two-storey glass tower (r9) with timber mullions: enchanting library
-                      (30 bookshelves), quarters with beds, planted balcony, street lamps.
-                      (Levels 1-3 use the cheaper palette; level 4 upgrades to tinted glass,
-                      quartz stairs, polished deepslate and recessed DO ceiling lights.)
-  L4  Sky Lounge      glass sky lounge (r7), timber roof deck, ender chest / jukebox / bar,
-                      exterior glass bubble-column elevator lobby -> roof, trees + water features.
-  L5  Landmark        vertical timber sun-shading fins, roof garden with trees, antenna mast,
-                      glass-floored skywalk (doubles as an elytra launch).
+  L1  "Founding Hall"   round glass podium (r15) with the hut, reception, crafting/smelting
+                        corner, a bed, and a spiral stair core up to a roof terrace.
+  L2  "Civic Ring"      second floor ring building (r11): a full player workshop
+                        (smithing, stonecutter, grindstone, anvil, loom, cartography,
+                        fletching, blast furnace, smoker, brewing) + storage. Terrace railings.
+  L3  "Archive Tower"   two-storey glass tower (r9): enchanting library (15+ bookshelves),
+                        residents' quarters with beds, wrap-around balcony. Materials upgrade
+                        to quartz, tinted glass, sea-lantern lighting, Domum Ornamentum trim.
+  L4  "Sky Lounge"      glass sky lounge (r7) with ender chest, jukebox and bar, a roof deck,
+                        and an exterior glass bubble-column elevator from the lobby to the deck.
+  L5  "Spire"           spire with antenna, elytra launch pad, glowing halo ring, light fins,
+                        plaza fountains and lamp spires.
 
 Coordinates: x/z 0..44 (centre 22), y 0 = foundation (solid substitution), y 1 = ground.
-The front (main entrance + skywalk) faces north (-z).
+The front (main entrance + launch pad) faces north (-z).
 """
 from __future__ import annotations
 
@@ -30,7 +28,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    Blueprint, Spec, Style, street_lamp, put, hut_te, dist, toward_center, angle, connect_panes,
+    Blueprint, Spec, Style, put, hut_te, dist, toward_center, angle, connect_panes,
     do_slab, do_stairs, do_pillar, do_paperwall, do_light,
 )
 
@@ -46,36 +44,17 @@ TUBE = (C, C + 10)                              # elevator water column (x, z)
 def build(level: int) -> Blueprint:
     L = level
     bp = Blueprint(SX, SY, SZ, f"townhall{L}.blueprint")
-    early = Style(L).early
+    early = Style(L).early          # levels 1-3 cheap, premium from level 4
 
     # ---------------------------------------------------------------- materials
     WHITE = "white_concrete"
-    GLASS = "glass" if early else "light_gray_stained_glass"     # clear, later lightly tinted
-    TRIM = "gray_concrete" if early else "polished_deepslate"         # charcoal trim
-    ACCENT = TRIM
-    WOOD = "stripped_spruce_log[axis=y]"                              # timber louvres / fins
-    DECK = "spruce_planks"                                            # timber floors, soffits, bands
-    LEAVES = "azalea_leaves[distance=1,persistent=true,waterlogged=false]"
+    GLASS = "glass" if early else "light_blue_stained_glass"
+    TRIM = "gray_concrete" if early else "polished_deepslate"
+    ACCENT = "cyan_concrete"
     CORE = "light_gray_concrete" if early else WHITE
-    SEAT = "spruce_stairs"
+    SEAT = "polished_andesite_stairs" if early else "smooth_quartz_stairs"
     railing = Style(L).railing
-
-    def tree(x, y, z, h=3):
-        """Small street/roof-garden tree: timber trunk + leaf crown."""
-        for k in range(h):
-            bp.set(x, y + k, z, "stripped_oak_log[axis=y]")
-        for dx in (-1, 0, 1):
-            for dz in (-1, 0, 1):
-                for k in (h, h + 1):
-                    if k == h + 1 and abs(dx) + abs(dz) == 2:
-                        continue
-                    if (dx, dz) != (0, 0) or k > h - 1:
-                        bp.set(x + dx, y + k, z + dz, "oak_leaves[distance=1,persistent=true,waterlogged=false]")
-        bp.set(x, y + h + 2, z, "oak_leaves[distance=1,persistent=true,waterlogged=false]")
-
-    def planter(x, y, z, plant="flowering_azalea"):
-        bp.set(x, y, z, "moss_block")
-        bp.set(x, y + 1, z, plant)
+    trim_slab = "smooth_stone_slab[type=bottom]" if early else do_slab(WHITE)
 
     def ceiling_light(x, y_ceiling, z):
         """Light fixture for a ceiling slab at y_ceiling."""
@@ -91,7 +70,7 @@ def build(level: int) -> Blueprint:
         if round(d) in (6, 10):
             return WHITE
         if round(d) == 13:
-            return DECK
+            return ACCENT
         return "light_gray_concrete"
 
     def in_core(x, z, r=3):
@@ -131,13 +110,12 @@ def build(level: int) -> Blueprint:
             elif early:
                 bp.set(x, 1, z, "polished_andesite" if 17.5 <= d < 18.5 else "smooth_stone")
             else:
-                path = abs(x - C) <= 2 or abs(z - C) <= 2
-                if 18.5 <= d < 21.5 and not path:
-                    bp.set(x, 1, z, "grass_block[snowy=false]")        # lawn ring
-                elif 17.5 <= d < 18.5:
-                    bp.set(x, 1, z, WHITE)
+                if 17.5 <= d < 18.5:
+                    bp.set(x, 1, z, "sea_lantern" if pillar_slot(x, z, 32, 0.12) else WHITE)
+                elif 19.5 <= d < 20.5:
+                    bp.set(x, 1, z, ACCENT)
                 else:
-                    bp.set(x, 1, z, "smooth_stone" if (x // 2 + z // 2) % 2 else "polished_andesite")
+                    bp.set(x, 1, z, "light_gray_concrete" if (x + z) % 2 else "smooth_stone")
 
     # ---------------------------------------------------------------- L1: podium (r15)
     disc(1, 14, lambda x, z: floor_mat(x, z))
@@ -146,14 +124,14 @@ def build(level: int) -> Blueprint:
         if cardinal_gap(x, z, 2) and y <= 5:
             return "air"                       # four entrances, 5 wide x 4 tall
         if y == 8:
-            return WHITE if early else "sea_lantern"   # fascia band (light strip on premium levels)
+            return WHITE                        # fascia band
         if pillar_slot(x, z):
             if early:
                 return WHITE
             col = "pillar_base" if y == 2 else ("pillar_capital" if y == 7 else "pillar_column")
             return do_pillar(WHITE, col)
         if cardinal_gap(x, z, 2) and y in (6, 7):
-            return DECK                         # timber lintel over the entrances
+            return ACCENT                       # lintel over the entrances
         return GLASS
 
     ring(2, 8, 15, podium_wall)
@@ -175,9 +153,9 @@ def build(level: int) -> Blueprint:
             if y == 16:
                 return WHITE
             if y == 13:
-                return DECK                     # timber band
+                return ACCENT if early else TRIM
             if pillar_slot(x, z, 16, 0.12):
-                return WOOD
+                return WHITE
             return GLASS
         disc(9, 10, lambda x, z: floor_mat(x, z))
         ring(10, 16, 11, civic_wall)
@@ -192,16 +170,16 @@ def build(level: int) -> Blueprint:
     if L >= 3:
         def tower_wall(x, y, z):
             if y in (24, 32):
-                return WHITE if early else "sea_lantern"   # slab edge light strips
+                return WHITE                    # slab edge bands
             if pillar_slot(x, z, 12, 0.10):
-                return WOOD                     # timber mullions
+                return TRIM
             return GLASS
         ring(18, 24, 9, tower_wall)
         disc(25, 11, lambda x, z: WHITE if dist(x, z, C) >= 8.5 else floor_mat(x, z))   # floor + balcony
         ring(26, 26, 11, lambda x, y, z: railing)
         ring(26, 32, 9, tower_wall)
         disc(33, 9, lambda x, z: WHITE if dist(x, z, C) >= 8.5 else floor_mat(x, z))
-        if not early:  # flared eave under the balcony
+        if not early:
             ring(25, 25, 12, lambda x, y, z: do_stairs(WHITE, toward_center(x, z, C), half="top"))
         ring(34, 34, 9, lambda x, y, z: railing)
         for y_ceiling in (25, 33):
@@ -214,12 +192,12 @@ def build(level: int) -> Blueprint:
     if L >= 4:
         def lounge_wall(x, y, z):
             if y == 40:
-                return "sea_lantern"
+                return WHITE
             if pillar_slot(x, z, 8, 0.10):
                 return WHITE
             return GLASS
         ring(34, 40, 7, lounge_wall)
-        disc(41, 10, lambda x, z: WHITE if dist(x, z, C) >= 9.5 else (DECK if dist(x, z, C) >= 7.5 else "smooth_stone"))
+        disc(41, 10, lambda x, z: WHITE if dist(x, z, C) >= 9.5 else ("smooth_quartz" if (x + z) % 2 else "light_gray_concrete"))
         ring(41, 41, 11, lambda x, y, z: do_stairs(WHITE, toward_center(x, z, C), half="top"))
         ring(42, 42, 10, lambda x, y, z: railing)
         for a in range(6):
@@ -227,38 +205,22 @@ def build(level: int) -> Blueprint:
             x, z = round(C + 5 * math.cos(ang)), round(C + 5 * math.sin(ang))
             ceiling_light(x, 41, z)
 
-    # ---------------------------------------------------------------- green roofs (L2+)
-    if L >= 2:  # planted ring on the podium roof around the civic ring
-        for x in range(SX):
-            for z in range(SZ):
-                d = dist(x, z, C)
-                if 12.5 <= d < 14.5 and not cardinal_gap(x, z, 1):
-                    bp.set(x, 9, z, "grass_block[snowy=false]")
-                    if pillar_slot(x, z, 16, 0.08):
-                        bp.set(x, 10, z, "flowering_azalea" if L >= 3 else "azalea")
-                    elif (x + z) % 3 == 0:
-                        bp.set(x, 10, z, "short_grass")
-
-    # ---------------------------------------------------------------- L5: timber louvres + roof garden
+    # ---------------------------------------------------------------- L5: spire, halo, fins
     if L >= 5:
-        # vertical timber sun-shading fins around the tower (brise-soleil)
-        for a in range(16):
-            ang = math.radians(a * 22.5 + 11.25)
-            # hung from the balcony edge, outside the railing so the balcony stays walkable
-            x, z = round(C + 12 * math.cos(ang)), round(C + 12 * math.sin(ang))
-            if abs(x - C) <= 1 and z > C:
-                continue                            # keep clear of the elevator
+        # halo ring around the sky lounge, carried on 4 spokes
+        ring(37, 37, 12, lambda x, y, z: "sea_lantern" if pillar_slot(x, z, 24, 0.2) else WHITE)
+        ring(37, 37, 13, lambda x, y, z: ACCENT)
+        for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            for r in range(8, 12):
+                bp.set(C + dx * r, 37, C + dz * r, "waxed_cut_copper")
+        # vertical light fins on the tower
+        for a in range(8):
+            ang = math.radians(a * 45 + 22.5)
+            x, z = round(C + 10 * math.cos(ang)), round(C + 10 * math.sin(ang))
             for y in range(18, 33):
-                bp.set(x, y, z, WOOD)
-        # roof garden on the deck: lawn ring with trees
-        for x in range(SX):
-            for z in range(SZ):
-                d = dist(x, z, C)
-                if 7.5 <= d < 9.5 and not cardinal_gap(x, z, 1):
-                    bp.set(x, 41, z, "grass_block[snowy=false]")
-        for a in range(4):
-            ang = math.radians(a * 90 + 45)
-            tree(round(C + 8 * math.cos(ang)), 42, round(C + 8 * math.sin(ang)))
+                if y == 25:
+                    continue
+                bp.set(x, y, z, "sea_lantern" if y % 3 == 0 else WHITE)
 
     # ---------------------------------------------------------------- stair core
     top = TOP[L]
@@ -282,15 +244,29 @@ def build(level: int) -> Blueprint:
         for y in (f + 1, f + 2):
             bp.set(ox, y, oz, "air")
 
-    # solar panels on the stair-house roof (every level), antenna mast at level 5
-    for x in range(C - 2, C + 3):
-        for z in range(C - 2, C + 3):
-            bp.set(x, core_top + 2, z, "daylight_detector[inverted=false,power=0]")
+    # spire on top of the core: glass lantern drum, tapering mast, antenna
     if L >= 5:
-        bp.set(C, core_top + 2, C, TRIM)
-        for y in range(core_top + 3, core_top + 9):
-            bp.set(C, y, C, "chain[axis=y,waterlogged=false]")
-        bp.set(C, core_top + 9, C, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        y0 = core_top + 2                                   # 47
+        for y in range(y0, y0 + 3):                         # 5x5 drum, glass faces + white corners
+            for x in range(C - 2, C + 3):
+                for z in range(C - 2, C + 3):
+                    edge = max(abs(x - C), abs(z - C)) == 2
+                    corner = abs(x - C) == 2 and abs(z - C) == 2
+                    if edge:
+                        bp.set(x, y, z, WHITE if corner else GLASS)
+                    else:
+                        bp.set(x, y, z, "sea_lantern")
+        bp.fill(C - 2, y0 + 3, C - 2, C + 2, y0 + 3, C + 2, WHITE)
+        for y in range(y0 + 4, y0 + 8):                     # 3x3 mast with cyan bands
+            bp.fill(C - 1, y, C - 1, C + 1, y, C + 1, ACCENT if y % 2 == 0 else WHITE)
+        for y in range(y0 + 8, y0 + 11):
+            bp.set(C, y, C, WHITE)
+        bp.set(C, y0 + 11, C, "sea_lantern")
+        bp.set(C, y0 + 12, C, "end_rod[facing=up]")
+        bp.set(C, y0 + 13, C, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):   # fins down the mast
+            for y in range(y0 + 4, y0 + 7):
+                put(bp, C + dx * 2, y, C + dz * 2, do_slab(WHITE, "top" if y % 2 else "bottom"))
 
     # ---------------------------------------------------------------- furniture & function
     sit = []
@@ -306,8 +282,8 @@ def build(level: int) -> Blueprint:
         bp.set(C - 6, 2, z, "barrel[facing=up,open=false]")
         bp.set(C - 5, 2, z, "barrel[facing=up,open=false]")
     # bed (respawn point) in the south-west
-    bp.set(C - 8, 2, C + 6, "light_gray_bed[facing=south,occupied=false,part=foot]")
-    bp.set(C - 8, 2, C + 7, "light_gray_bed[facing=south,occupied=false,part=head]")
+    bp.set(C - 8, 2, C + 6, "cyan_bed[facing=south,occupied=false,part=foot]")
+    bp.set(C - 8, 2, C + 7, "cyan_bed[facing=south,occupied=false,part=head]")
     # waiting benches (south-east, facing the core)
     for x in range(C + 5, C + 9):
         bp.set(x, 2, C + 7, f"{SEAT}[facing=south,half=bottom,shape=straight,waterlogged=false]")
@@ -385,32 +361,41 @@ def build(level: int) -> Blueprint:
             bp.set(x, y, z, "potted_flowering_azalea_bush")
 
     # ---------------------------------------------------------------- exterior extras
-    if L >= 3:  # street lamps along the plaza ring (paths stay clear)
-        for a in range(16):
-            ang = math.radians(a * 22.5 + 11.25)
-            x, z = round(C + 17 * math.cos(ang)), round(C + 17 * math.sin(ang))
-            if cardinal_gap(x, z, 2):
-                continue
-            street_lamp(bp, x, 2, z, h=3, premium=not early)
-    if L >= 4:  # trees on the lawn ring + water features in the corners
-        for a in range(8):
-            ang = math.radians(a * 45 + 22.5)
-            tree(round(C + 20 * math.cos(ang)), 2, round(C + 20 * math.sin(ang)), h=4)
+    if L >= 3:  # planters + benches around the plaza
+        for a in range(12):
+            if a % 3 == 0:
+                continue                                  # keep the 4 approach paths clear
+            ang = math.radians(a * 30)
+            x, z = round(C + 19 * math.cos(ang)), round(C + 19 * math.sin(ang))
+            bp.set(x, 1, z, "moss_block")
+            bp.set(x, 2, z, "flowering_azalea")
+    if L >= 4:  # fountains in the plaza corners
         for cx, cz in ((5, 5), (39, 5), (5, 39), (39, 39)):
-            bp.fill(cx - 2, 1, cz - 2, cx + 2, 1, cz + 2, "smooth_stone")
+            bp.fill(cx - 2, 1, cz - 2, cx + 2, 1, cz + 2, WHITE)
             bp.fill(cx - 1, 1, cz - 1, cx + 1, 1, cz + 1, "water[level=0]")
-            bp.fill(cx - 1, 0, cz - 1, cx + 1, 0, cz + 1, "smooth_stone")
-            bp.set(cx, 0, cz, "sea_lantern")                # underwater light
-    if L >= 5:  # glass-floored skywalk cantilevered north off the roof deck (also an elytra launch)
+            bp.set(cx, 1, cz, "sea_lantern")
+            bp.set(cx, 2, cz, "water[level=0]")
+            bp.set(cx, 0, cz, "smooth_stone")
+            for x in range(cx - 1, cx + 2):
+                for z in range(cz - 1, cz + 2):
+                    bp.set(x, 0, z, "smooth_stone")
+    if L >= 5:  # lamp spires on the plaza ring + elytra launch pad
+        for a in range(4):
+            ang = math.radians(a * 90 + 45)
+            x, z = round(C + 16.5 * math.cos(ang)), round(C + 16.5 * math.sin(ang))
+            bp.fill(x, 2, z, x, 6, z, WHITE)
+            bp.set(x, 7, z, "sea_lantern")
+            bp.set(x, 8, z, "end_rod[facing=up]")
+        # launch pad: cantilevered north from the roof deck
         for z in range(C - 18, C - 9):
             for x in range(C - 1, C + 2):
-                bp.set(x, 41, z, "glass" if x == C else "smooth_stone")
+                bp.set(x, 41, z, "yellow_concrete" if z == C - 18 else ("sea_lantern" if x == C and z % 2 == 0 else "light_gray_concrete"))
             put(bp, C - 2, 42, z, railing)
             put(bp, C + 2, 42, z, railing)
             bp.set(C - 2, 41, z, WHITE)
             bp.set(C + 2, 41, z, WHITE)
         for x in range(C - 1, C + 2):
-            bp.set(x, 42, C - 10, "air")                  # open the deck railing to the skywalk
+            bp.set(x, 42, C - 10, "air")                  # open the deck railing to the pad
 
     # ---------------------------------------------------------------- elevator (L4+)
     if L >= 4:
@@ -424,7 +409,7 @@ def build(level: int) -> Blueprint:
                     elif y == deck:
                         bp.set(x, y, z, WHITE)
                     else:
-                        bp.set(x, y, z, TRIM if y % 8 == 1 else "glass")
+                        bp.set(x, y, z, "tinted_glass" if y % 8 == 1 else "light_blue_stained_glass")
                 bp.set(x, deck + 3, z, WHITE)
         bp.set(tx, 1, tz, "soul_sand")
         # bottom door from the lobby, top exit onto the deck (water never flows through doors)

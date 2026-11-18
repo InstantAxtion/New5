@@ -151,7 +151,7 @@ def build(level: int) -> Blueprint:
             z, y = 12 + i, 2 + i
             if y > 2:
                 bp.fill(4, 2, z, 4, y - 1, z, W)
-            bp.set(4, y, z, "spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
+            bp.set(4, y, z, st.SEAT + "[facing=south,half=bottom,shape=straight,waterlogged=false]")
         for z in range(12, 17):
             bp.set(4, SLAB, z, "air")
             put(bp, 5, SLAB + 1, z, st.railing)
@@ -164,7 +164,7 @@ def build(level: int) -> Blueprint:
         for x in range(7, 11):
             put(bp, x, y, 6, st.counter if st.early else do_slab(T, "top"))        # drawing tables
         for x in (7, 9):
-            bp.set(x, y, 7, "spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
+            bp.set(x, y, 7, st.SEAT + "[facing=south,half=bottom,shape=straight,waterlogged=false]")
         bp.set(11, y, 5, "lectern[facing=south,has_book=false,powered=false]")
         bp.set(12, y, 5, "cartography_table")
         bp.set(12, y, 6, "crafting_table")
@@ -276,15 +276,15 @@ def build(level: int) -> Blueprint:
             st.ceiling_light(bp, x, SK_TOP, z)
         # sky lounge: bed (respawn), jukebox, seats
         y = BOX_ROOF + 1
-        bp.set(8, y, 9, "light_gray_bed[facing=west,occupied=false,part=foot]")
-        bp.set(7, y, 9, "light_gray_bed[facing=west,occupied=false,part=head]")
+        bp.set(8, y, 9, "cyan_bed[facing=west,occupied=false,part=foot]")
+        bp.set(7, y, 9, "cyan_bed[facing=west,occupied=false,part=head]")
         bp.set(12, y, 9, "jukebox[has_record=false]")
         for x in (8, 9, 10, 11):
-            bp.set(x, y, 3, "spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
+            bp.set(x, y, 3, st.SEAT + "[facing=south,half=bottom,shape=straight,waterlogged=false]")
             sit.append((x, y, 3))
-        solar_panels(bp, 8, BOX_ROOF + 1, 13, 11, 18)
+        pass  # (no solar panels in this style)
         bp.set(9, 2, 17, "domum_ornamentum:architectscutter[facing=north]")
-        tree(bp, 1, 2, 1, h=3)
+        street_lamp(bp, 1, 2, 1, premium=True)
         street_lamp(bp, 14, 2, 1, premium=True)
         street_lamp(bp, 27, 2, 1, premium=True)
 
@@ -315,7 +315,7 @@ def build(level: int) -> Blueprint:
     bp.set(10, 2, 17, "barrel[facing=up,open=false]")
     bp.set(10, 3, 17, "barrel[facing=up,open=false]")
     for x in (5, 6):
-        bp.set(x, 2, 8, "spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]")
+        bp.set(x, 2, 8, st.SEAT + "[facing=north,half=bottom,shape=straight,waterlogged=false]")
         sit.append((x, 2, 8))
     if L >= 2:
         for (x, z), s in (((11, 13), "stonecutter[facing=west]"), ((11, 14), "grindstone[face=floor,facing=west]"),

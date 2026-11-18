@@ -41,7 +41,7 @@ COLORS = {
     "yellow_concrete": (241, 175, 21), "bricks": (150, 75, 60), "spruce_fence": (115, 85, 50),
     "architectscutter": (150, 120, 90), "blockhutbuilder": (255, 60, 200), "iron_bars": (120, 120, 120),
     "stonecutter": (120, 120, 120), "anvil": (60, 60, 60), "smithing_table": (60, 50, 50),
-    "hopper": (70, 70, 75),
+    "hopper": (70, 70, 75), "quartz_pillar": (232, 226, 218), "quartz_block": (235, 229, 222),
 }
 SOLID_GUESS = (180, 120, 200)
 GLASS = {"light_blue_stained_glass", "glass_pane", "glass", "tinted_glass", "blockpaperwall", "water"}

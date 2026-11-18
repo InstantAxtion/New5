@@ -125,7 +125,7 @@ def build(level: int) -> Blueprint:
                 if x in (HX1, HX2) or z in (HZ1, HZ2):
                     put(bp, x, GROUND_TOP + 1, z, st.railing)
     if L == 2:
-        solar_panels(bp, 12, GROUND_TOP + 1, 12, 17, 16)
+        pass  # (no solar panels in this style)
         bp.fill(12, GROUND_TOP, 12, 17, GROUND_TOP, 16, "smooth_stone")
         for x in range(4, 11, 2):
             for z in range(8, 16, 3):
@@ -178,7 +178,7 @@ def build(level: int) -> Blueprint:
             for x in (18, 19):
                 if y > 2:
                     bp.fill(x, 2, z, x, y - 1, z, W)
-                bp.set(x, y, z, "spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
+                bp.set(x, y, z, st.SEAT + "[facing=south,half=bottom,shape=straight,waterlogged=false]")
         for x in (18, 19):
             for z in range(7, 14):
                 bp.set(x, GROUND_TOP, z, "air")
@@ -191,7 +191,7 @@ def build(level: int) -> Blueprint:
         for x in (4, 8, 14):
             planter(bp, x, GROUND_TOP + 1, HZ1 + 1)
         for x in (5, 6, 7):
-            bp.set(x, GROUND_TOP + 1, 9, "spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
+            bp.set(x, GROUND_TOP + 1, 9, st.SEAT + "[facing=south,half=bottom,shape=straight,waterlogged=false]")
 
     # ------------------------------------------------------------ L4: drone port
     if L >= 4:
@@ -207,15 +207,13 @@ def build(level: int) -> Blueprint:
                 bp.set(x, top, z, W if h else T)
         for x, z in ((12, 12), (18, 12), (12, 17), (18, 17)):
             bp.set(x, top, z, "sea_lantern")
-        solar_panels(bp, 4, top + 1, 12, 9, 15)
+        pass  # (no solar panels in this style)
         # ladder to the roof
         for y in range(GROUND_TOP + 1, top + 1):
             bp.set(3, y, 17, "ladder[facing=east,waterlogged=false]")
         # street trees + lamps on the forecourt
-        tree(bp, 1, 2, 1, h=3)
-        tree(bp, 21, 2, 1, h=3)
-        street_lamp(bp, 1, 2, 4, premium=not st.early)
-        street_lamp(bp, 21, 2, 4, premium=not st.early)
+        street_lamp(bp, 1, 2, 1, premium=True)
+        street_lamp(bp, 21, 2, 1, premium=True)
 
     # ------------------------------------------------------------ L5: louvres, mast, terrace trees
     if L >= 5:
@@ -230,7 +228,7 @@ def build(level: int) -> Blueprint:
         bp.set(19, SY - 1, 17, "lightning_rod[facing=up,powered=false,waterlogged=false]")
         for x in (4, 14):
             bp.set(x, GROUND_TOP + 2, HZ1 + 1, "air")
-            tree(bp, x, GROUND_TOP + 2, HZ1 + 1, h=2)
+            bp.set(x, GROUND_TOP + 2, HZ1 + 1, "flowering_azalea")
 
     # ------------------------------------------------------------ interior & function
     sit = []
@@ -252,14 +250,14 @@ def build(level: int) -> Blueprint:
             for y in (2, 3):
                 bp.set(x, y, 17, "barrel[facing=north,open=false]")
         for x in (14, 15, 16):
-            bp.set(x, 2, 6, "spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]")
+            bp.set(x, 2, 6, st.SEAT + "[facing=north,half=bottom,shape=straight,waterlogged=false]")
             sit.append((x, 2, 6))
     if L >= 3:  # dispatch office upstairs
         y = GROUND_TOP + 1
         for x in range(5, 10):
             put(bp, x, y, 14, st.counter if st.early else do_slab(T, "top"))                 # desks
         for x in (5, 7, 9):
-            bp.set(x, y, 13, "spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]")
+            bp.set(x, y, 13, st.SEAT + "[facing=north,half=bottom,shape=straight,waterlogged=false]")
             sit.append((x, y, 13))
         for x in range(4, 10):
             bp.set(x, y, 17, "bookshelf")
@@ -270,8 +268,8 @@ def build(level: int) -> Blueprint:
             for yy in (y, y + 1):
                 bp.set(3, yy, z, BARREL)
     if L >= 4:
-        bp.set(14, GROUND_TOP + 1, 17, "light_gray_bed[facing=east,occupied=false,part=foot]")
-        bp.set(15, GROUND_TOP + 1, 17, "light_gray_bed[facing=east,occupied=false,part=head]")
+        bp.set(14, GROUND_TOP + 1, 17, "cyan_bed[facing=east,occupied=false,part=foot]")
+        bp.set(15, GROUND_TOP + 1, 17, "cyan_bed[facing=east,occupied=false,part=head]")
     if L >= 5:
         bp.set(13, GROUND_TOP + 1, 17, "ender_chest[facing=north,waterlogged=false]")
 
