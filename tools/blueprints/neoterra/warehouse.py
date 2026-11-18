@@ -150,7 +150,7 @@ def build(level: int) -> Blueprint:
         # office furniture
         y = MEZZ + 1
         for x in range(6, 10):
-            put(bp, x, y, 7, do_slab(T, "top"))                   # desk facing the hall
+            put(bp, x, y, 7, st.counter if st.early else do_slab(T, "top"))                   # desk facing the hall
         for x in (6, 8):
             bp.set(x, y, 8, "spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
         bp.set(3, y, 6, "crafting_table")

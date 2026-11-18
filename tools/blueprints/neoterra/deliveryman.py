@@ -257,7 +257,7 @@ def build(level: int) -> Blueprint:
     if L >= 3:  # dispatch office upstairs
         y = GROUND_TOP + 1
         for x in range(5, 10):
-            put(bp, x, y, 14, do_slab(T, "top"))                 # desks
+            put(bp, x, y, 14, st.counter if st.early else do_slab(T, "top"))                 # desks
         for x in (5, 7, 9):
             bp.set(x, y, 13, "spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]")
             sit.append((x, y, 13))

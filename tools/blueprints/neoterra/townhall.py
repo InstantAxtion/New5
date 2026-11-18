@@ -12,7 +12,8 @@ Every level has the same 45 x 62 x 45 footprint, so upgrades build on top of eac
                       green roof ring with planting on the podium.
   L3  Archive Tower   two-storey glass tower (r9) with timber mullions: enchanting library
                       (30 bookshelves), quarters with beds, planted balcony, street lamps.
-                      Glass goes tinted, recessed DO ceiling lights, quartz stairs.
+                      (Levels 1-3 use the cheaper palette; level 4 upgrades to tinted glass,
+                      quartz stairs, polished deepslate and recessed DO ceiling lights.)
   L4  Sky Lounge      glass sky lounge (r7), timber roof deck, ender chest / jukebox / bar,
                       exterior glass bubble-column elevator lobby -> roof, trees + water features.
   L5  Landmark        vertical timber sun-shading fins, roof garden with trees, antenna mast,
@@ -200,7 +201,8 @@ def build(level: int) -> Blueprint:
         ring(26, 26, 11, lambda x, y, z: railing)
         ring(26, 32, 9, tower_wall)
         disc(33, 9, lambda x, z: WHITE if dist(x, z, C) >= 8.5 else floor_mat(x, z))
-        ring(25, 25, 12, lambda x, y, z: do_stairs(WHITE, toward_center(x, z, C), half="top"))
+        if not early:  # flared eave under the balcony
+            ring(25, 25, 12, lambda x, y, z: do_stairs(WHITE, toward_center(x, z, C), half="top"))
         ring(34, 34, 9, lambda x, y, z: railing)
         for y_ceiling in (25, 33):
             for a in range(6):

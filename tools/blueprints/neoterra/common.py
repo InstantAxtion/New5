@@ -179,21 +179,23 @@ def connect_panes(bp: Blueprint):
 
 
 # ----------------------------------------------------------------------------- Neoterra style
-# When True, levels 1-2 avoid Nether/End and Domum Ornamentum blocks (cheaper early builds).
-# Off by request: every level uses the full Neoterra palette.
-EARLY_GAME_MATERIALS = False
+# Levels up to CHEAP_UNTIL use a cheaper palette (plain glass, gray concrete, smooth stone,
+# lanterns, glass-pane railings). The premium look (tinted glass, polished deepslate, quartz,
+# sea lanterns, Domum Ornamentum lights and railings) starts the level after.
+EARLY_GAME_MATERIALS = True
+CHEAP_UNTIL = 3
 
 
 class Style:
     """Neoterra materials by building level (modern architecture ~20 years from now).
 
-    Levels 1-2 only use early-game materials (no Nether/End); level 3+ upgrades glass,
-    trim and lighting and starts using Domum Ornamentum pieces.
+    Levels 1-3 use a cheaper palette; level 4+ upgrades glass, trim and lighting and uses
+    Domum Ornamentum pieces (see CHEAP_UNTIL).
     """
 
     def __init__(self, level: int):
         self.level = level
-        self.early = EARLY_GAME_MATERIALS and level <= 2
+        self.early = EARLY_GAME_MATERIALS and level <= CHEAP_UNTIL
         self.WHITE = "white_concrete"
         self.LIGHTGRAY = "light_gray_concrete"
         self.GLASS = "glass" if self.early else "light_gray_stained_glass"
@@ -204,7 +206,7 @@ class Style:
         self.DECK = "spruce_planks"
         self.SEAT = "spruce_stairs"
         self.LEAVES = "azalea_leaves[distance=1,persistent=true,waterlogged=false]"
-        self.railing = "glass_pane" if self.early and level == 1 else do_paperwall("gray_concrete", "glass")
+        self.railing = "glass_pane" if self.early else do_paperwall("gray_concrete", "glass")
         self.counter = ("smooth_stone_slab[type=top,waterlogged=false]" if self.early
                         else do_slab("white_concrete", "top"))
 

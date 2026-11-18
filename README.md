@@ -19,14 +19,15 @@ Copy `stylepacks/Neoterra` into `.minecraft/blueprints/` (so you get
 |---|---|---|
 | 1 Founding Hall | Round glass podium, reception with the hut block, stair core to a roof terrace, solar panels | Crafting table, 2 furnaces, 4 barrels, bed (respawn) |
 | 2 Civic Ring | Second-floor ring building with timber band, green roof ring, terrace railings | Full workshop: smithing table, stonecutter, grindstone, anvil, loom, cartography & fletching tables, blast furnace, smoker, furnace, brewing stand, water cauldron, 10 barrels |
-| 3 Archive Tower | Two-storey tinted-glass tower with timber mullions, balcony, street lamps, Domum Ornamentum trim and recessed lights | Enchanting library (max level enchants: 30 bookshelves), lectern, anvil, grindstone, 4 beds |
-| 4 Sky Lounge | Glass sky lounge, timber roof deck, street trees, water features | Ender chest, jukebox, bar; **glass bubble-column elevator** from the lobby (copper door) straight to the roof deck |
+| 3 Archive Tower | Two-storey glass tower with timber mullions, balcony, street lamps | Enchanting library (max level enchants: 30 bookshelves), lectern, anvil, grindstone, 4 beds |
+| 4 Sky Lounge | Glass sky lounge, timber roof deck, street trees, water features; premium upgrade (tinted glass, quartz, DO trim and recessed lights) | Ender chest, jukebox, bar; **glass bubble-column elevator** from the lobby (copper door) straight to the roof deck |
 | 5 Landmark | Vertical timber sun-shading fins, roof garden with trees, antenna mast | **Glass-floored skywalk** off the roof deck, ~40 blocks up (doubles as an elytra launch) |
 
 Approximate blocks: L1 ≈ 3.8k, L2 ≈ 5.1k, L3 ≈ 7.6k, L4 ≈ 9.0k, L5 ≈ 9.4k (mostly concrete, glass and spruce).
-All levels use the full palette (quartz, sea lanterns, polished deepslate, Domum Ornamentum),
-so even level 1 looks finished. (`EARLY_GAME_MATERIALS` in `common.py` switches levels 1–2 back
-to cheap early-game blocks.)
+Levels 1–3 are the cheaper versions (plain glass, gray concrete, smooth stone, lanterns,
+glass-pane railings); the premium look (tinted glass, polished deepslate, quartz, sea lanterns,
+Domum Ornamentum lights and railings) arrives at level 4 and is completed at level 5.
+(`CHEAP_UNTIL` in `common.py` controls this.)
 
 ### Courier's hut (`craftsmanship/storage/deliveryman1-5`) – 23 × 22 × 21, same footprint every level
 Hut block: `minecolonies:blockhutdeliveryman` (MineColonies calls it the Courier's Hut).
@@ -37,8 +38,8 @@ Hut block: `minecolonies:blockhutdeliveryman` (MineColonies calls it the Courier
 |---|---|---|
 | 1 Depot Hall | Glass depot hall with a 7-wide loading door, reception counter with the hut block | 8 parcel lockers (barrels), crafting table, cartography table |
 | 2 Loading Canopy | Timber canopy on charcoal columns, loading-bay markings, green roof + solar panels | 21 lockers + 10 storage barrels, lectern, waiting bench |
-| 3 Dispatch Office | Upper floor (tinted glass, timber mullions), staircase through a double-height void, roof terrace with planters | Office desks, 12 bookshelves, lectern, cartography table, 10 more lockers |
-| 4 Drone Port | Roof drone pad, solar array, roof railing + ladder, street trees and lamps | Bed (respawn) |
+| 3 Dispatch Office | Upper floor (timber mullions), staircase through a double-height void, roof terrace with planters | Office desks, 12 bookshelves, lectern, cartography table, 10 more lockers |
+| 4 Drone Port | Roof drone pad, solar array, roof railing + ladder, street trees and lamps; premium upgrade (tinted glass, DO lights/railings) | Bed (respawn) |
 | 5 Landmark | Full-height timber louvres on side and back facades, terrace trees, antenna mast | Ender chest |
 
 Approximate blocks: L1 ≈ 1.2k, L2 ≈ 1.3k, L3 ≈ 1.7k, L4 ≈ 1.8k, L5 ≈ 2.1k.
@@ -53,8 +54,8 @@ max 3 high, every rack next to an aisle so couriers can reach it).
 |---|---|---|---|
 | 1 | 36 | Tall distribution hall: clerestory glass band, two 5×5 loading docks, glazed entrance, reception counter | Crafting table |
 | 2 | 72 | Timber dock canopy on charcoal columns, dock bay markings, rooftop solar | – |
-| 3 | 144 | Office mezzanine reached by stairs, skylights, tinted glass, timber mullions | Desk, crafting & cartography tables, lectern, barrels |
-| 4 | 216 | Roof railing + ladder, green roof strips, street trees and lamps | Roof access |
+| 3 | 144 | Office mezzanine reached by stairs, skylights | Desk, crafting & cartography tables, lectern, barrels |
+| 4 | 216 | Roof railing + ladder, green roof strips, street trees and lamps; premium upgrade (tinted glass, timber mullions, DO lights) | Roof access |
 | 5 | 324 | Full-height timber louvres, roof garden with trees, antenna mast | Ender chest |
 
 Approximate blocks (including racks): L1 ≈ 2.0k, L2 ≈ 2.5k, L3 ≈ 2.4k, L4 ≈ 2.7k, L5 ≈ 3.1k.
