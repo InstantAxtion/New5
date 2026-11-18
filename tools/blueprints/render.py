@@ -32,10 +32,14 @@ COLORS = {
     "cyan_bed": (21, 137, 145), "azalea": (100, 125, 50), "waxed_cut_copper": (190, 105, 75),
     "waxed_copper_door": (190, 105, 75), "end_rod": (240, 235, 220), "lightning_rod": (190, 105, 75),
     "smooth_quartz": (235, 229, 222), "enchanting_table": (150, 30, 40), "blockhuttownhall": (255, 60, 200),
+    "spruce_planks": (115, 85, 50), "stripped_spruce_log": (150, 112, 70), "spruce_stairs": (115, 85, 50),
+    "light_gray_stained_glass": (175, 180, 185), "oak_leaves": (70, 120, 40), "azalea_leaves": (90, 125, 45),
+    "stripped_oak_log": (175, 140, 85), "daylight_detector": (50, 60, 90), "chain": (60, 65, 75),
+    "short_grass": (110, 160, 70), "light_gray_bed": (160, 160, 155), "polished_blackstone_wall": (53, 48, 56),
 }
 SOLID_GUESS = (180, 120, 200)
 GLASS = {"light_blue_stained_glass", "glass_pane", "glass", "tinted_glass", "blockpaperwall", "water"}
-HALF = {"smooth_quartz_slab", "smooth_stone_slab", "rail"}
+HALF = {"smooth_quartz_slab", "smooth_stone_slab", "rail", "daylight_detector"}
 
 
 def short(state):
