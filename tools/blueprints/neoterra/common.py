@@ -154,3 +154,72 @@ def connect_panes(bp: Blueprint):
             props[d] = "true" if ok else "false"
         props["waterlogged"] = "false"
         bp.grid[y][z][x] = format_state(name, props)
+
+
+# ----------------------------------------------------------------------------- Neoterra style
+class Style:
+    """Neoterra materials by building level (modern architecture ~20 years from now).
+
+    Levels 1-2 only use early-game materials (no Nether/End); level 3+ upgrades glass,
+    trim and lighting and starts using Domum Ornamentum pieces.
+    """
+
+    def __init__(self, level: int):
+        self.level = level
+        self.early = level <= 2
+        self.WHITE = "white_concrete"
+        self.LIGHTGRAY = "light_gray_concrete"
+        self.GLASS = "glass" if self.early else "light_gray_stained_glass"
+        self.TRIM = "gray_concrete" if self.early else "polished_deepslate"
+        self.WOOD = "stripped_spruce_log[axis=y]"
+        self.WOOD_X = "stripped_spruce_log[axis=x]"
+        self.WOOD_Z = "stripped_spruce_log[axis=z]"
+        self.DECK = "spruce_planks"
+        self.SEAT = "spruce_stairs"
+        self.LEAVES = "azalea_leaves[distance=1,persistent=true,waterlogged=false]"
+        self.railing = "glass_pane" if level == 1 else do_paperwall("gray_concrete", "glass")
+        self.counter = ("smooth_stone_slab[type=top,waterlogged=false]" if self.early
+                        else do_slab("white_concrete", "top"))
+
+    def ceiling_light(self, bp, x, y_ceiling, z):
+        """Lantern hanging under the slab (L1-2) or a recessed DO light in the slab (L3+)."""
+        if self.early:
+            bp.set(x, y_ceiling - 1, z, "lantern[hanging=true,waterlogged=false]")
+        else:
+            put(bp, x, y_ceiling, z, do_light("white_concrete", "sea_lantern"))
+
+    def floor(self, x, z):
+        if self.early:
+            return "smooth_stone" if (x + z) % 6 == 0 else "polished_andesite"
+        return "white_concrete" if x % 6 == 0 or z % 6 == 0 else "light_gray_concrete"
+
+
+def tree(bp, x, y, z, h=3):
+    """Small street / roof-garden tree: timber trunk + leaf crown."""
+    leaves = "oak_leaves[distance=1,persistent=true,waterlogged=false]"
+    for k in range(h):
+        bp.set(x, y + k, z, "stripped_oak_log[axis=y]")
+    for dx in (-1, 0, 1):
+        for dz in (-1, 0, 1):
+            for k in (h, h + 1):
+                if k == h + 1 and abs(dx) + abs(dz) == 2:
+                    continue
+                if bp.inside(x + dx, y + k, z + dz):
+                    bp.set(x + dx, y + k, z + dz, leaves)
+    if bp.inside(x, y + h + 2, z):
+        bp.set(x, y + h + 2, z, leaves)
+
+
+def planter(bp, x, y, z, plant="flowering_azalea"):
+    bp.set(x, y, z, "moss_block")
+    bp.set(x, y + 1, z, plant)
+
+
+def street_lamp(bp, x, y, z, h=3):
+    for k in range(h):
+        bp.set(x, y + k, z, "polished_blackstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
+    bp.set(x, y + h, z, "lantern[hanging=false,waterlogged=false]")
+
+
+def solar_panels(bp, x1, y, z1, x2, z2):
+    bp.fill(x1, y, z1, x2, y, z2, "daylight_detector[inverted=false,power=0]")
