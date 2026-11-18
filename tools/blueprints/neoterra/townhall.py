@@ -30,7 +30,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    Blueprint, Spec, Style, put, hut_te, dist, toward_center, angle, connect_panes,
+    Blueprint, Spec, Style, street_lamp, put, hut_te, dist, toward_center, angle, connect_panes,
     do_slab, do_stairs, do_pillar, do_paperwall, do_light,
 )
 
@@ -146,7 +146,7 @@ def build(level: int) -> Blueprint:
         if cardinal_gap(x, z, 2) and y <= 5:
             return "air"                       # four entrances, 5 wide x 4 tall
         if y == 8:
-            return WHITE                        # fascia band
+            return WHITE if early else "sea_lantern"   # fascia band (light strip on premium levels)
         if pillar_slot(x, z):
             if early:
                 return WHITE
@@ -192,7 +192,7 @@ def build(level: int) -> Blueprint:
     if L >= 3:
         def tower_wall(x, y, z):
             if y in (24, 32):
-                return WHITE                    # slab edge bands
+                return WHITE if early else "sea_lantern"   # slab edge light strips
             if pillar_slot(x, z, 12, 0.10):
                 return WOOD                     # timber mullions
             return GLASS
@@ -214,7 +214,7 @@ def build(level: int) -> Blueprint:
     if L >= 4:
         def lounge_wall(x, y, z):
             if y == 40:
-                return WHITE
+                return "sea_lantern"
             if pillar_slot(x, z, 8, 0.10):
                 return WHITE
             return GLASS
@@ -391,8 +391,7 @@ def build(level: int) -> Blueprint:
             x, z = round(C + 17 * math.cos(ang)), round(C + 17 * math.sin(ang))
             if cardinal_gap(x, z, 2):
                 continue
-            bp.fill(x, 2, z, x, 4, z, "polished_blackstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
-            bp.set(x, 5, z, "lantern[hanging=false,waterlogged=false]")
+            street_lamp(bp, x, 2, z, h=3, premium=not early)
     if L >= 4:  # trees on the lawn ring + water features in the corners
         for a in range(8):
             ang = math.radians(a * 45 + 22.5)

@@ -26,22 +26,24 @@ Copy `stylepacks/Neoterra` into `.minecraft/blueprints/` (so you get
 Approximate blocks: L1 ≈ 3.8k, L2 ≈ 5.1k, L3 ≈ 7.6k, L4 ≈ 9.0k, L5 ≈ 9.4k (mostly concrete, glass and spruce).
 Levels 1–3 are the cheaper versions (plain glass, gray concrete, smooth stone, lanterns,
 glass-pane railings); the premium look (tinted glass, polished deepslate, quartz, sea lanterns,
-Domum Ornamentum lights and railings) arrives at level 4 and is completed at level 5.
+Domum Ornamentum lights and railings, glowing light strips) arrives at level 4 and is completed
+at level 5.
 (`CHEAP_UNTIL` in `common.py` controls this.)
 
-### Builder's hut (`fundamentals/builder1-5`) – 25 × 34 × 21, same footprint every level
-Hut block: `minecolonies:blockhutbuilder`. A construction yard: site office, workshop shed,
-fenced materials yard with racks, and a tower crane you can climb (ladder inside the mast to the cab).
+### Builder's hut (`fundamentals/builder1-5`) – 29 × 28 × 25, same footprint every level
+Hut block: `minecolonies:blockhutbuilder`. A fabrication hub: a glass lobby carrying a floating
+upper box on slim pilotis, a sky box stacked on top and cantilevered over the entrance (L4+),
+and a fabrication yard where a 3D-printing gantry prints a concrete pod that grows every level.
 
 ![Builder's hut levels 1–5](docs/previews/neoterra/builder_levels.png)
 
 | Level | Racks | Adds | Player use |
 |---|---|---|---|
-| 1 Site Office | 4 | Glass-front site office with the hut behind the counter, fenced yard | Crafting & cartography tables, barrels |
-| 2 Workshop | 8 | Timber workshop shed, material pallets, tower crane (14 high) | Stonecutter, grindstone, anvil, smithing table, crafting table, lectern, climbable crane |
-| 3 Drawing Office | 16 | Upper-floor drafting room with stairs, rack canopy, crane 18 high | Drawing tables, bookshelves, lectern, cartography table |
-| 4 Premium upgrade | 24 | Tinted glass, concrete + glass site hoarding, roof terrace with solar, crane 22 high, tree & lamps | **Architect's Cutter** (Domum Ornamentum), bed, roof access |
-| 5 Landmark | 32 | Crane 26 high with lit cab and a hanging load, timber louvres, roof planters | Ender chest |
+| 1 Lobby | 8 | Glass lobby with chamfered corners, hut behind a counter, fenced yard | Crafting & cartography tables, barrels |
+| 2 Floating Studio | 11 | Cantilevered upper box with ribbon window, 3D-printing gantry + first printed ring, covered racks | Stonecutter, grindstone, anvil, smithing table; design studio (bookshelves, lectern, drawing tables) |
+| 3 Roof Deck | 22 | Roof deck + ladder, taller printed pod | Roof access |
+| 4 Sky Box (premium) | 33 | Stacked glass sky box cantilevered over the entrance, glowing light strips (soffits, bands, gantry), glowing print nozzle, solar, light columns, tree | **Architect's Cutter**, bed, jukebox, sky lounge seats |
+| 5 Landmark | 44 | Printed pod finished with a glass oculus, glowing box edges, roof garden, antenna spire | Ender chest |
 
 ### Courier's hut (`craftsmanship/storage/deliveryman1-5`) – 23 × 22 × 21, same footprint every level
 Hut block: `minecolonies:blockhutdeliveryman` (MineColonies calls it the Courier's Hut).

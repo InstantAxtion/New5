@@ -48,7 +48,7 @@ def build(level: int) -> Blueprint:
     bp = Blueprint(SX, SY, SZ, f"warehouse{L}.blueprint")
     W, G, T, WOOD, DECK = st.WHITE, st.GLASS, st.TRIM, st.WOOD, st.DECK
     mullion = W if st.early else WOOD
-    band = T if st.early else DECK
+    band = st.band
 
     # ------------------------------------------------------------ ground
     bp.fill(0, 0, 0, SX - 1, 0, SZ - 1, "structurize:blocksolidsubstitution")
@@ -176,8 +176,8 @@ def build(level: int) -> Blueprint:
         solar_panels(bp, 4, ROOF + 1, 21, 24, 21)
         tree(bp, 1, 2, 1, h=4)
         tree(bp, 29, 2, 1, h=4)
-        street_lamp(bp, 1, 2, 4)
-        street_lamp(bp, 29, 2, 4)
+        street_lamp(bp, 1, 2, 4, premium=not st.early)
+        street_lamp(bp, 29, 2, 4, premium=not st.early)
 
     # ------------------------------------------------------------ L5: louvres, roof garden, mast
     if L >= 5:

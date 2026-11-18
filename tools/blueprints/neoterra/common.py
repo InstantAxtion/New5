@@ -209,6 +209,9 @@ class Style:
         self.railing = "glass_pane" if self.early else do_paperwall("gray_concrete", "glass")
         self.counter = ("smooth_stone_slab[type=top,waterlogged=false]" if self.early
                         else do_slab("white_concrete", "top"))
+        # facade band: charcoal on cheap levels, a glowing light strip on premium levels
+        self.band = self.TRIM if self.early else "sea_lantern"
+        self.GLOW = None if self.early else "sea_lantern"
 
     def ceiling_light(self, bp, x, y_ceiling, z):
         """Lantern hanging under the slab (L1-2) or a recessed DO light in the slab (L3+)."""
@@ -244,10 +247,15 @@ def planter(bp, x, y, z, plant="flowering_azalea"):
     bp.set(x, y + 1, z, plant)
 
 
-def street_lamp(bp, x, y, z, h=3):
+def street_lamp(bp, x, y, z, h=3, premium=False):
+    """Lantern post (cheap) or a slim glowing light column (premium)."""
     for k in range(h):
         bp.set(x, y + k, z, "polished_blackstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
-    bp.set(x, y + h, z, "lantern[hanging=false,waterlogged=false]")
+    if premium:
+        bp.set(x, y + h, z, "sea_lantern")
+        bp.set(x, y + h + 1, z, "end_rod[facing=up]")
+    else:
+        bp.set(x, y + h, z, "lantern[hanging=false,waterlogged=false]")
 
 
 def solar_panels(bp, x1, y, z1, x2, z2):

@@ -1,27 +1,30 @@
 """
-Neoterra Builder's Hut ("Construction Yard"), levels 1-5 (minecolonies:blockhutbuilder).
+Neoterra Builder's Hut ("Fabrication Hub"), levels 1-5 (minecolonies:blockhutbuilder).
 
-Style: realistic near-future construction company yard: a white concrete + glass site office,
-an open timber workshop shed, a fenced materials yard with racks, and a yellow tower crane
-you can climb (ladder up the mast to the cab and jib).
+Style: near-future construction company. A glass lobby with chamfered corners carries a floating
+upper box (cantilevered on slim pilotis, ribbon window all round). Next to it, a fabrication
+yard with a big 3D-printing gantry over a print bed, where a printed concrete pod grows every
+level. Racks sit in a covered materials store at the back of the yard.
 
-Levels 1-3 use the cheap palette, level 4+ the premium one (see common.CHEAP_UNTIL).
+Levels 1-3 use the cheap palette; level 4+ the premium one with glowing light strips
+(see common.CHEAP_UNTIL).
 
-  L1  Site Office      ground-floor office with the hut, crafting & cartography tables;
-                       fenced yard with 4 racks.
-  L2  Workshop         timber workshop shed (stonecutter, grindstone, anvil, smithing table,
-                       crafting table), 8 racks, material pallets, tower crane (14 high).
-  L3  Drawing Office   upper floor drafting room (stairs, bookshelves, lectern, cartography),
-                       16 racks under a canopy, crane 18 high.
-  L4  Premium upgrade  tinted glass/DO trim, roof terrace with solar, architect's cutter,
-                       24 racks, bed, crane 22 high, trees & lamps, concrete site hoarding.
-  L5  Landmark         crane 26 high with lit cab and hook load, timber louvres, 32 racks,
-                       ender chest, roof planters.
+  L1  Lobby            glass lobby with the hut behind a counter; crafting & cartography
+                       tables, barrels; fenced yard with 8 racks.
+  L2  Floating Studio  cantilevered upper box (design studio, stairs), workshop corner
+                       (stonecutter, grindstone, anvil, smithing table), 3D-printing gantry
+                       with a first printed ring, covered racks (11).
+  L3  Roof Deck        roof deck + ladder, taller printed pod, 22 racks.
+  L4  Premium upgrade  tinted glass, light strips (box soffit, bands, gantry), glowing print
+                       nozzle, Architect's Cutter, bed, solar, trees + light columns, 33 racks.
+  L5  Landmark         printed pod finished with a glass oculus, glowing box edges, roof garden,
+                       antenna spire, ender chest, 44 racks.
 
-Same 25 x 34 x 21 footprint every level. Front = north (z 0). y 0 foundation, y 1 ground.
+Same 29 x 28 x 25 footprint every level. Front = north (z 0). y 0 foundation, y 1 ground.
 """
 from __future__ import annotations
 
+import math
 import sys
 from pathlib import Path
 
@@ -31,15 +34,26 @@ from common import (  # noqa: E402
     do_slab, rack,
 )
 
-SX, SY, SZ = 25, 34, 21
-OX1, OX2, OZ1, OZ2 = 2, 11, 4, 12      # site office
-SHED_Z1, SHED_Z2 = 13, 18              # workshop shed behind the office
-YX1, YX2, YZ1, YZ2 = 13, 23, 3, 19     # materials yard (fence line on the outer edge)
-MAST = (20, 8)                         # crane mast centre (x, z); 3x3 mast
-CRANE_TOP = {1: None, 2: 14, 3: 18, 4: 22, 5: 26}
-RACKS = {1: [(18, 1, range(14, 18))], 2: [(18, 1, range(14, 22))], 3: [(18, 2, range(14, 22))],
-         4: [(18, 2, range(14, 22)), (16, 1, range(14, 22))],
-         5: [(18, 2, range(14, 22)), (16, 2, range(14, 22))]}   # (z, height, x range)
+SX, SY, SZ = 29, 28, 25
+LX1, LX2, LZ1, LZ2 = 3, 12, 6, 18      # glass lobby (ground floor)
+BX1, BX2, BZ1, BZ2 = 2, 13, 3, 20      # floating upper box
+SLAB, BOX_ROOF = 7, 14
+BED = (21, 12)                          # print bed centre (x, z)
+GANTRY_X = (16, 26)
+GANTRY_Z = (7, 17)
+GANTRY_TOP = 13
+RACK_ROWS = {  # level -> list of (z, facing, height, x range)
+    1: [(20, "north", 1, range(16, 24))],
+    2: [(20, "north", 1, range(16, 27))],
+    3: [(20, "north", 2, range(16, 27))],
+    4: [(20, "north", 2, range(16, 27)), (22, "south", 1, range(16, 27))],
+    5: [(20, "north", 2, range(16, 27)), (22, "south", 2, range(16, 27))],
+}
+PRINT_HEIGHT = {1: 0, 2: 2, 3: 4, 4: 6, 5: 7}
+
+
+def chamfer(x, z, x1, x2, z1, z2):
+    return x in (x1, x2) and z in (z1, z2)
 
 
 def build(level: int) -> Blueprint:
@@ -47,227 +61,275 @@ def build(level: int) -> Blueprint:
     st = Style(L)
     bp = Blueprint(SX, SY, SZ, f"builder{L}.blueprint")
     W, G, T, WOOD, DECK = st.WHITE, st.GLASS, st.TRIM, st.WOOD, st.DECK
-    mullion = W if st.early else WOOD
-    band = T if st.early else DECK
-    YELLOW = "yellow_concrete"
+    glow = st.GLOW                        # None on cheap levels
+    band = st.band
+    sit = []
 
     # ------------------------------------------------------------ ground
     bp.fill(0, 0, 0, SX - 1, 0, SZ - 1, "structurize:blocksolidsubstitution")
     for x in range(SX):
         for z in range(SZ):
-            if YX1 <= x <= YX2 and YZ1 <= z <= YZ2:
-                s = "polished_andesite" if (x + z) % 3 else "smooth_stone"        # yard slab
-            elif OX1 <= x <= OX2 and OZ1 <= z <= SHED_Z2:
+            bx, bz = BED
+            if LX1 <= x <= LX2 and LZ1 <= z <= LZ2:
                 s = st.floor(x, z)
-            elif z <= 3:
-                s = "smooth_stone" if (x + z) % 2 else "polished_andesite"
+            elif abs(x - bx) <= 4 and abs(z - bz) <= 4:
+                edge = abs(x - bx) == 4 or abs(z - bz) == 4
+                s = (glow if glow and edge else "smooth_stone")                 # print bed
+            elif 15 <= x <= 27 and 3 <= z <= 23:
+                s = "polished_andesite" if (x + z) % 2 else "smooth_stone"      # yard
+            elif z <= 2:
+                s = "smooth_stone" if (x // 2 + z) % 2 else "polished_andesite"
             else:
                 s = "grass_block[snowy=false]"
             bp.set(x, 1, z, s)
 
-    # ------------------------------------------------------------ site office (ground floor)
-    upper = L >= 3
-    top1 = 7                                  # slab over the ground floor
-    for x in range(OX1, OX2 + 1):
-        for z in range(OZ1, OZ2 + 1):
-            if not (x in (OX1, OX2) or z in (OZ1, OZ2)):
+    # ------------------------------------------------------------ glass lobby
+    for x in range(LX1, LX2 + 1):
+        for z in range(LZ1, LZ2 + 1):
+            if not (x in (LX1, LX2) or z in (LZ1, LZ2)):
                 continue
-            for y in range(2, top1):
-                if z == OZ1 and x in (6, 7) and y <= 4:
-                    s = "air"                                         # entrance
+            for y in range(2, SLAB):
+                if chamfer(x, z, LX1, LX2, LZ1, LZ2):
+                    s = "air"
                 elif y == 6:
                     s = band
-                elif z == OZ1:
-                    s = mullion if x in (OX1, OX2) or (x - OX1) % 3 == 0 else G
-                elif x == OX2 and z == 11 and y <= 4:
-                    s = "air"                                         # side door to the yard
-                elif x in (OX1, OX2) and 3 <= y <= 5 and (z - OZ1) % 3:
-                    s = G
-                elif z == OZ2 and x in (4, 5) and y <= 4 and L >= 2:
-                    s = "air"                                         # back door to the workshop
-                else:
+                elif z == LZ1 and x in (7, 8) and y <= 4:
+                    s = "air"                                          # main entrance
+                elif x == LX2 and z == 11 and y <= 4:
+                    s = "air"                                          # door to the yard
+                elif z == LZ2 and L == 1:
                     s = W
+                elif (x + z) % 3 == 0:
+                    s = T                                              # slim mullions
+                else:
+                    s = G
                 bp.set(x, y, z, s)
-    for x in range(OX1, OX2 + 1):
-        for z in range(OZ1, OZ2 + 1):
-            edge = x in (OX1, OX2) or z in (OZ1, OZ2)
-            bp.set(x, top1, z, W if edge else (st.floor(x, z) if upper else "smooth_stone"))
-    for x, z in ((4, 6), (8, 6), (4, 10), (8, 10)):
-        st.ceiling_light(bp, x, top1, z)
+    for x, z in ((LX1 + 1, LZ1 + 1), (LX2 - 1, LZ1 + 1), (LX1 + 1, LZ2 - 1), (LX2 - 1, LZ2 - 1)):
+        for y in range(2, SLAB):
+            bp.set(x, y, z, band if y == 6 else G)
 
-    # ------------------------------------------------------------ L3: drawing office upstairs
-    top2 = 13
-    if upper:
-        for x in range(OX1, OX2 + 1):
-            for z in range(OZ1, OZ2 + 1):
-                if not (x in (OX1, OX2) or z in (OZ1, OZ2)):
+    # ------------------------------------------------------------ slab / L1 roof
+    if L == 1:
+        for x in range(LX1, LX2 + 1):
+            for z in range(LZ1, LZ2 + 1):
+                if chamfer(x, z, LX1, LX2, LZ1, LZ2):
                     continue
-                for y in range(top1 + 1, top2):
-                    if y == top2 - 1:
+                edge = x in (LX1, LX2) or z in (LZ1, LZ2)
+                bp.set(x, SLAB, z, W if edge else "smooth_stone")
+        for x in range(LX1, LX2 + 1):
+            for z in range(LZ1, LZ2 + 1):
+                if (x in (LX1, LX2) or z in (LZ1, LZ2)) and not chamfer(x, z, LX1, LX2, LZ1, LZ2):
+                    put(bp, x, SLAB + 1, z, st.railing)
+    else:
+        # ------------------------------------------------ L2+: floating box on pilotis
+        for x in range(BX1, BX2 + 1):
+            for z in range(BZ1, BZ2 + 1):
+                if chamfer(x, z, BX1, BX2, BZ1, BZ2):
+                    continue
+                edge = x in (BX1, BX2) or z in (BZ1, BZ2)
+                bp.set(x, SLAB, z, (glow or W) if edge else st.floor(x, z))       # glowing soffit edge
+                bp.set(x, BOX_ROOF, z, W if edge else ("smooth_stone" if L < 3 else DECK))
+                if not edge:
+                    continue
+                for y in range(SLAB + 1, BOX_ROOF):
+                    if y in (SLAB + 1, BOX_ROOF - 2):
                         s = W
-                    elif z == OZ1:
-                        s = mullion if x in (OX1, OX2) or (x - OX1) % 3 == 0 else G
-                    elif x in (OX1, OX2) and y in (9, 10, 11) and (z - OZ1) % 3:
-                        s = G
+                    elif y == BOX_ROOF - 1:
+                        s = band
                     else:
-                        s = W
+                        s = G                                          # ribbon window
                     bp.set(x, y, z, s)
-        for x in range(OX1, OX2 + 1):
-            for z in range(OZ1, OZ2 + 1):
-                edge = x in (OX1, OX2) or z in (OZ1, OZ2)
-                bp.set(x, top2, z, W if edge else "smooth_stone")
-        for x, z in ((4, 7), (8, 7), (5, 10)):
-            st.ceiling_light(bp, x, top2, z)
-        # staircase along the east wall, rising south (z5 y2 -> z10 y7)
+        for x, z in ((BX1 + 1, BZ1 + 1), (BX2 - 1, BZ1 + 1), (BX1 + 1, BZ2 - 1), (BX2 - 1, BZ2 - 1)):
+            for y in range(SLAB + 1, BOX_ROOF):
+                bp.set(x, y, z, W if y in (SLAB + 1, BOX_ROOF - 2) else (band if y == BOX_ROOF - 1 else G))
+        for x, z in ((4, 4), (11, 4), (4, 19), (11, 19)):
+            bp.fill(x, 2, z, x, SLAB - 1, z, T)                        # slim pilotis
+        for x, z in ((5, 9), (9, 9), (6, 14), (10, 15)):
+            st.ceiling_light(bp, x, BOX_ROOF, z)
+        # stairs from the lobby up into the box (x4, rising south z12 -> z17)
         for i in range(6):
-            z, y = 5 + i, 2 + i
+            z, y = 12 + i, 2 + i
             if y > 2:
-                bp.fill(10, 2, z, 10, y - 1, z, W)
-            bp.set(10, y, z, "spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
-        for z in range(5, 10):
-            bp.set(10, top1, z, "air")
-            put(bp, 9, top1 + 1, z, st.railing)
-        # drafting room
-        y = top1 + 1
-        for x in range(3, 9):
-            bp.set(x, y, 11, "bookshelf")
-        bp.set(3, y, 5, "cartography_table")
-        bp.set(4, y, 5, "lectern[facing=south,has_book=false,powered=false]")
-        for x in (5, 6, 7):
-            put(bp, x, y, 8, st.counter if st.early else do_slab(T, "top"))   # drawing tables
-            bp.set(x, y, 9, "spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]")
+                bp.fill(4, 2, z, 4, y - 1, z, W)
+            bp.set(4, y, z, "spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
+        for z in range(12, 17):
+            bp.set(4, SLAB, z, "air")
+            put(bp, 5, SLAB + 1, z, st.railing)
+        put(bp, 4, SLAB + 1, 11, st.railing)
+        # design studio
+        y = SLAB + 1
+        for z in range(5, 11):
+            bp.set(3, y, z, "bookshelf")
+            bp.set(3, y + 1, z, "bookshelf")
+        for x in range(7, 11):
+            put(bp, x, y, 6, st.counter if st.early else do_slab(T, "top"))        # drawing tables
+        for x in (7, 9):
+            bp.set(x, y, 7, "spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
+        bp.set(11, y, 5, "lectern[facing=south,has_book=false,powered=false]")
+        bp.set(12, y, 5, "cartography_table")
+        bp.set(12, y, 6, "crafting_table")
 
-    # ------------------------------------------------------------ L2: workshop shed
+    for x, z in ((6, 9), (9, 13), (6, 16)):                           # lobby ceiling lights
+        st.ceiling_light(bp, x, SLAB, z)
+
+    # ------------------------------------------------------------ L3: roof deck
+    if L >= 3:
+        for x in range(BX1, BX2 + 1):
+            for z in range(BZ1, BZ2 + 1):
+                if (x in (BX1, BX2) or z in (BZ1, BZ2)) and not chamfer(x, z, BX1, BX2, BZ1, BZ2):
+                    put(bp, x, BOX_ROOF + 1, z, st.railing)
+        for y in range(SLAB + 1, BOX_ROOF + 1):
+            bp.set(12, y, 19, "ladder[facing=west,waterlogged=false]")
+        for z in (13, 17):
+            planter(bp, 3, BOX_ROOF + 1, z)
+
+    # ------------------------------------------------------------ yard fence
+    for x in range(14, SX):
+        for z in range(2, SZ):
+            on_line = (x == SX - 1 or z in (2, SZ - 1)) and not (z == 2 and 18 <= x <= 24)
+            if on_line:
+                put(bp, x, 2, z, st.railing)
+
+    # ------------------------------------------------------------ 3D-printing gantry + printed pod
     if L >= 2:
-        roof_y = 6
-        for x in range(OX1, OX2 + 1):
-            for z in range(SHED_Z1, SHED_Z2 + 1):
-                bp.set(x, roof_y, z, W if z == SHED_Z2 or x in (OX1, OX2) else DECK)
-        for x, z in ((OX1, SHED_Z2), (OX2, SHED_Z2), (OX1, SHED_Z1), (OX2, SHED_Z1), (6, SHED_Z2)):
-            bp.fill(x, 2, z, x, roof_y - 1, z, T)
-        for x in range(OX1 + 1, OX2):                 # back wall of the shed (timber slats)
-            bp.fill(x, 2, SHED_Z2, x, roof_y - 1, SHED_Z2, WOOD if x % 2 else DECK)
-        ws = [((3, 17), "stonecutter[facing=north]"), ((4, 17), "grindstone[face=floor,facing=north]"),
-              ((5, 17), "anvil[facing=east]"), ((7, 17), "smithing_table"), ((8, 17), "crafting_table"),
-              ((9, 17), "barrel[facing=up,open=false]"), ((10, 17), "barrel[facing=up,open=false]")]
-        for (x, z), s in ws:
-            bp.set(x, 2, z, s)
-        for x in (4, 8):
-            st.ceiling_light(bp, x, roof_y, 15)
-        # material pallets in the yard
-        for x, z, mat in ((14, 5, "stripped_spruce_log[axis=x]"), (14, 11, "bricks")):
-            bp.fill(x, 2, z, x + 1, 3, z + 1, mat)
+        gx1, gx2 = GANTRY_X
+        gz1, gz2 = GANTRY_Z
+        top = GANTRY_TOP
+        leg = W
+        for x in (gx1, gx2):
+            for z in (gz1, gz2):
+                bp.set(x, 1, z, T)                                         # base plate
+                for y in range(2, top):
+                    bp.set(x, y, z, glow if glow and y % 4 == 0 else leg)
+            for z in range(gz1, gz2 + 1):                                  # rails
+                bp.set(x, top, z, T)
+        bx, bz = BED
+        for x in range(gx1, gx2 + 1):                                      # bridge
+            bp.set(x, top, bz, T)
+            bp.set(x, top + 1, bz, W)
+            if glow and gx1 < x < gx2:
+                bp.set(x, top - 1, bz, "end_rod[facing=down]" if x % 2 == 0 else "air")
+        # print head carriage + nozzle
+        bp.fill(bx - 1, top - 1, bz - 1, bx + 1, top - 1, bz + 1, T)
+        bp.set(bx, top - 1, bz, W)
+        bp.set(bx, top - 2, bz, "end_rod[facing=down]" if glow else "hopper[enabled=true,facing=down]")
+        # printed pod: layered ring that grows and tapers into a dome
+        h = PRINT_HEIGHT[L]
+        for k in range(h):
+            y = 2 + k
+            r = 3.5 - max(0, k - 3) * 0.75
+            mat = (W if k % 2 else st.LIGHTGRAY) if not st.early else ("smooth_stone" if k % 2 else st.LIGHTGRAY)
+            for x in range(bx - 4, bx + 5):
+                for z in range(bz - 4, bz + 5):
+                    d = math.hypot(x - bx, z - bz)
+                    if r - 1 <= d < r and not (z > bz and x == bx and k < 2):   # doorway on the south
+                        bp.set(x, y, z, mat)
+        if L >= 5:
+            bp.set(bx, 2 + h, bz, "glass")                                 # oculus
+            for x, z in ((bx - 1, bz), (bx + 1, bz), (bx, bz - 1), (bx, bz + 1)):
+                bp.set(x, 2 + h, z, W)
+            bp.set(bx, 1, bz, "sea_lantern")
 
-    # ------------------------------------------------------------ yard: fence / hoarding, racks, canopy
-    gate = range(15, 22)
-    for x in range(YX1, YX2 + 1):
-        for z in range(YZ1, YZ2 + 1):
-            on_line = (x == YX2 or z in (YZ1, YZ2)) and not (z == YZ1 and x in gate)
-            if not on_line:
-                continue
-            if st.early:
-                bp.set(x, 2, z, "spruce_fence[east=false,north=false,south=false,waterlogged=false,west=false]")
-            else:
-                bp.set(x, 2, z, W)
-                put(bp, x, 3, z, st.railing)
-    for z_row, height, xs in RACKS[L]:
+    # ------------------------------------------------------------ materials store (racks)
+    for z_row, facing, height, xs in RACK_ROWS[L]:
         for x in xs:
             for y in range(2, 2 + height):
-                rack(bp, x, y, z_row, "north")
-    if L >= 3:  # canopy over the racks
-        for x in range(YX1, YX2):
-            for z in range(14, YZ2 + 1):
-                bp.set(x, 6, z, W if z == 14 or x == YX1 else DECK)
-        for x in (YX1, YX2 - 1):
-            bp.fill(x, 2, 14, x, 5, 14, T)
-        for x in (15, 19):
-            st.ceiling_light(bp, x, 6, 16)
-
-    # ------------------------------------------------------------ tower crane
-    ct = CRANE_TOP[L]
-    if ct:
-        mx, mz = MAST
-        for y in range(2, ct + 1):
-            for dx in (-1, 0, 1):
-                for dz in (-1, 0, 1):
-                    corner = abs(dx) == 1 and abs(dz) == 1
-                    brace = (y - 2) % 4 == 0 and not (dx == 0 and dz == 1)
-                    if (dx, dz) == (0, 0) or corner or brace:
-                        bp.set(mx + dx, y, mz + dz, YELLOW)
-            bp.set(mx, y, mz + 1, "ladder[facing=south,waterlogged=false]")   # climb inside the mast
-        bp.fill(mx - 1, 1, mz - 1, mx + 1, 1, mz + 1, "smooth_stone")        # concrete base
-        # slewing platform, cab, jib and counter-jib
-        bp.fill(mx - 1, ct + 1, mz - 1, mx + 1, ct + 1, mz + 1, YELLOW)
-        bp.set(mx, ct + 1, mz + 1, "ladder[facing=south,waterlogged=false]")
-        for x in range(4, mx - 1):                                            # jib (west)
-            bp.set(x, ct + 1, mz, YELLOW)
-            bp.set(x, ct + 2, mz, "iron_bars[east=false,north=false,south=false,waterlogged=false,west=false]" if x % 2 else YELLOW)
-        for x in range(mx + 2, SX):                                           # counter-jib (east)
-            bp.set(x, ct + 1, mz, YELLOW)
-        bp.fill(SX - 2, ct + 2, mz, SX - 1, ct + 3, mz, "gray_concrete")      # counterweight
-        for y in range(ct + 2, ct + 6):                                       # apex
-            bp.set(mx, y, mz, YELLOW)
-        bp.set(mx, ct + 6, mz, "lantern[hanging=false,waterlogged=false]")    # aircraft warning light
-        # cab on the south side of the platform: glass with a seat
-        for y in (ct + 2, ct + 3):
-            bp.set(mx - 1, y, mz + 1, G)
-            bp.set(mx + 1, y, mz + 1, G)
-        bp.fill(mx - 1, ct + 1, mz + 2, mx + 1, ct + 1, mz + 2, YELLOW)     # cab floor
-        bp.fill(mx - 1, ct + 2, mz + 2, mx + 1, ct + 3, mz + 2, G)          # cab windscreen
-        bp.fill(mx - 1, ct + 4, mz + 1, mx + 1, ct + 4, mz + 2, YELLOW)     # cab roof
-        # hook over the yard
-        hook_x = 15
-        for y in range(9 if L >= 5 else ct - 3, ct + 1):
-            bp.set(hook_x, y, mz, "chain[axis=y,waterlogged=false]")
-        if L >= 5:
-            bp.fill(hook_x - 1, 7, mz - 1, hook_x + 1, 8, mz + 1, "stripped_spruce_log[axis=x]")  # load
-            bp.set(mx, ct + 2, mz - 1, "sea_lantern")                              # cab light
-
-    # ------------------------------------------------------------ L4: roof terrace, cutter, bed, trees
-    if L >= 4:
-        for x in range(OX1, OX2 + 1):
-            for z in range(OZ1, OZ2 + 1):
-                if x in (OX1, OX2) or z in (OZ1, OZ2):
-                    put(bp, x, top2 + 1, z, st.railing)
-        solar_panels(bp, 3, top2 + 1, 9, 10, 11)
-        for y in range(top1 + 1, top2 + 1):
-            bp.set(3, y, 6, "ladder[facing=east,waterlogged=false]")            # roof ladder
-        bp.set(6, 2, 17, "domum_ornamentum:architectscutter[facing=north]")
-        bp.set(3, top1 + 1, 8, "light_gray_bed[facing=south,occupied=false,part=foot]")
-        bp.set(3, top1 + 1, 9, "light_gray_bed[facing=south,occupied=false,part=head]")
-        tree(bp, 1, 2, 1, h=3)
-        street_lamp(bp, 12, 2, 1)
-        street_lamp(bp, 23, 2, 1)
-
-    # ------------------------------------------------------------ L5: louvres, planters, ender chest
-    if L >= 5:
-        for z in range(OZ1 + 1, OZ2 + 1, 2):
-            bp.fill(OX1 - 1, 2, z, OX1 - 1, top2 - 1, z, WOOD)
-        for x in (5, 8):
-            planter(bp, x, top2 + 1, 6)
-        bp.set(9, top1 + 1, 11, "ender_chest[facing=north,waterlogged=false]")
-
-    # ------------------------------------------------------------ hut, reception, function
-    sit = []
-    hut = (4, 2, 8)
-    for z in (7, 8, 9):
-        put(bp, 5, 2, z, st.counter)
-    bp.set(3, 2, 11, "crafting_table")
-    bp.set(7, 2, 11, "cartography_table")
-    bp.set(8, 2, 11, "barrel[facing=up,open=false]")
-    bp.set(9, 2, 11, "barrel[facing=up,open=false]")
+                rack(bp, x, y, z_row, facing)
     if L >= 2:
-        bp.set(6, 2, 11, "lectern[facing=north,has_book=false,powered=false]")
-        for x in (8, 9):
-            bp.set(x, 2, 5, "spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]")
-            sit.append((x, 2, 5))
+        for x in range(15, 28):
+            for z in range(19, 24):
+                bp.set(x, 6, z, (glow or W) if z == 19 else DECK)
+        for x, z in ((15, 19), (27, 19), (15, 23), (27, 23)):
+            bp.fill(x, 2, z, x, 5, z, T)
+        for x in (18, 24):
+            st.ceiling_light(bp, x, 6, 21)
+
+    # ------------------------------------------------------------ L4: sky box + premium extras
+    SKX1, SKX2, SKZ1, SKZ2, SK_TOP = 6, 13, 1, 11, 20
+    if L >= 4:
+        # second glass box stacked on the roof, cantilevered 2 blocks further over the entrance
+        for x in range(SKX1, SKX2 + 1):
+            for z in range(SKZ1, SKZ2 + 1):
+                if chamfer(x, z, SKX1, SKX2, SKZ1, SKZ2):
+                    continue
+                edge = x in (SKX1, SKX2) or z in (SKZ1, SKZ2)
+                if z < BZ1:
+                    bp.set(x, BOX_ROOF, z, glow if edge else W)               # cantilevered floor
+                elif not edge:
+                    bp.set(x, BOX_ROOF, z, DECK)
+                bp.set(x, SK_TOP, z, W if edge else "smooth_stone")
+                for y in range(BOX_ROOF + 1, SK_TOP):
+                    if not edge:
+                        bp.set(x, y, z, "air")
+                    elif y == SK_TOP - 1:
+                        bp.set(x, y, z, band)
+                    elif z == SKZ1:
+                        bp.set(x, y, z, T if x in (SKX1 + 2, SKX2 - 2) else G)  # full-height glass front
+                    elif z == SKZ2 and x in (9, 10) and y <= BOX_ROOF + 2:
+                        bp.set(x, y, z, "air")                                 # door from the roof deck
+                    else:
+                        bp.set(x, y, z, W if y == BOX_ROOF + 1 else G)
+        for x, z in ((SKX1 + 1, SKZ1 + 1), (SKX2 - 1, SKZ1 + 1), (SKX1 + 1, SKZ2 - 1), (SKX2 - 1, SKZ2 - 1)):
+            for y in range(BOX_ROOF + 1, SK_TOP):
+                bp.set(x, y, z, band if y == SK_TOP - 1 else G)
+        for x, z in ((8, 4), (11, 4), (9, 8)):
+            st.ceiling_light(bp, x, SK_TOP, z)
+        # sky lounge: bed (respawn), jukebox, seats
+        y = BOX_ROOF + 1
+        bp.set(8, y, 9, "light_gray_bed[facing=west,occupied=false,part=foot]")
+        bp.set(7, y, 9, "light_gray_bed[facing=west,occupied=false,part=head]")
+        bp.set(12, y, 9, "jukebox[has_record=false]")
+        for x in (8, 9, 10, 11):
+            bp.set(x, y, 3, "spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
+            sit.append((x, y, 3))
+        solar_panels(bp, 8, BOX_ROOF + 1, 13, 11, 18)
+        bp.set(9, 2, 17, "domum_ornamentum:architectscutter[facing=north]")
+        tree(bp, 1, 2, 1, h=3)
+        street_lamp(bp, 14, 2, 1, premium=True)
+        street_lamp(bp, 27, 2, 1, premium=True)
+
+    # ------------------------------------------------------------ L5: landmark
+    if L >= 5:
+        for x, z in ((BX1, BZ1 + 1), (BX2, BZ1 + 1), (BX1, BZ2 - 1), (BX2, BZ2 - 1),
+                     (BX1 + 1, BZ1), (BX2 - 1, BZ1), (BX1 + 1, BZ2), (BX2 - 1, BZ2)):
+            for y in range(SLAB + 1, BOX_ROOF):
+                bp.set(x, y, z, "sea_lantern")                             # glowing box edges
+        for x, z in ((SKX1, SKZ1 + 1), (SKX2, SKZ1 + 1), (SKX1 + 1, SKZ1), (SKX2 - 1, SKZ1)):
+            for y in range(BOX_ROOF + 1, SK_TOP):
+                bp.set(x, y, z, "sea_lantern")
+        for x, z in ((5, 15), (5, 17)):
+            planter(bp, x, BOX_ROOF + 1, z)
+        bp.set(10, SK_TOP + 1, 6, T)
+        for y in range(SK_TOP + 2, SY - 2):
+            bp.set(10, y, 6, "end_rod[facing=up]" if y % 2 else "chain[axis=y,waterlogged=false]")
+        bp.set(10, SY - 2, 6, "sea_lantern")
+        bp.set(10, SY - 1, 6, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        bp.set(11, BOX_ROOF + 1, 9, "ender_chest[facing=north,waterlogged=false]")
+
+    # ------------------------------------------------------------ lobby: hut, counter, workshop
+    hut = (10, 2, 10)
+    for x, z in ((9, 9), (10, 9), (11, 9), (9, 10)):
+        put(bp, x, 2, z, st.counter)
+    bp.set(6, 2, 17, "crafting_table")
+    bp.set(7, 2, 17, "cartography_table")
+    bp.set(10, 2, 17, "barrel[facing=up,open=false]")
+    bp.set(10, 3, 17, "barrel[facing=up,open=false]")
+    for x in (5, 6):
+        bp.set(x, 2, 8, "spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]")
+        sit.append((x, 2, 8))
+    if L >= 2:
+        for (x, z), s in (((11, 13), "stonecutter[facing=west]"), ((11, 14), "grindstone[face=floor,facing=west]"),
+                          ((11, 15), "anvil[facing=north]"), ((8, 17), "smithing_table")):
+            bp.set(x, 2, z, s)
+        for x in (7, 9):
+            sit.append((x, SLAB + 1, 7))
 
     connect_panes(bp)
     tags = {hut: ["neoterra"], (0, 1, 0): ["groundlevel"]}
     for p in sit:
         tags.setdefault(p, []).append("sit")
     path = f"fundamentals/builder{L}.blueprint"
-    bp.set(*hut, "minecolonies:blockhutbuilder[facing=east]", hut_te(path, (SX, SY, SZ), hut, tags))
+    bp.set(*hut, "minecolonies:blockhutbuilder[facing=north]", hut_te(path, (SX, SY, SZ), hut, tags))
     bp.primary_offset = hut
     bp.architects = ["Neoterra"]
     return bp
