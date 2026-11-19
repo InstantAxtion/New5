@@ -10,6 +10,14 @@ Requires: MineColonies, Structurize, Domum Ornamentum (all on NeoForge 1.21.1).
 
 ![Town hall levels 1–5](docs/previews/neoterra/townhall_levels.png)
 
+
+## Install (CurseForge / any NeoForge 1.21.1 instance)
+- **Easiest:** put `dist/Neoterra-1.0.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+  profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that only carries the style pack;
+  MineColonies, Structurize and Domum Ornamentum must be installed.
+- **Or:** unzip `dist/Neoterra-1.0.0-blueprints.zip` into the instance's `blueprints` folder.
+- Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>`.
+
 ## Install
 Copy `stylepacks/Neoterra` into `.minecraft/blueprints/` (so you get
 `.minecraft/blueprints/Neoterra/pack.json`), restart, and pick **Neoterra** in the Build Tool / supply camp.
