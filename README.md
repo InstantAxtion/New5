@@ -26,11 +26,23 @@ paths – so every hut works identically – but a warm, cozy modern feel:
 
 ![Hearthwood](docs/previews/hearthwood/hearthwood_overview.png)
 
+## Cascadia – Oregon / Pacific Northwest style pack
+The third pack in the jar (`stylepacks/Cascadia`, `restyle.py ... Cascadia`). Same buildings, levels and hut
+requirements; Oregon / Pacific Northwest materials:
+
+- cedar and fir timber: spruce siding and stripped-spruce cladding, dark oak frames, spruce shingle roofs
+- river-rock base courses and aprons (cobblestone, mossy cobblestone, andesite), moss roofs
+- Columbia basalt (polished / smooth basalt) at level 5
+- accent palettes per building: fir green, covered-bridge red, coast teal, rain grey, timber brown, wheat ochre
+- levels 1-4 use only easy-to-medium blocks; level 5 may use anything
+
+![Cascadia](docs/previews/cascadia/cascadia_overview.png)
+
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.6.0.jar` into the instance's `mods` folder (CurseForge: right-click the
-  profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that carries both style packs (Neoterra and Hearthwood);
+- **Easiest:** put `dist/Neoterra-1.7.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+  profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that carries all three style packs (Neoterra, Hearthwood and Cascadia);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.6.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.7.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>`.
 
 ## Install

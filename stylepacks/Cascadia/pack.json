@@ -1,0 +1,15 @@
+{
+  "icon": "cascadia.png",
+  "name": "Cascadia",
+  "authors": [
+    "New5"
+  ],
+  "desc": "Pacific Northwest / Oregon: cedar and fir timber, river-rock bases, mossy roofs, covered-bridge red, coast teal and basalt at the top level. Same buildings as Neoterra, levels 1-4 from easy-to-medium blocks, level 5 from anything.",
+  "mods": [
+    "structurize",
+    "minecolonies",
+    "domum_ornamentum"
+  ],
+  "version": "1",
+  "pack-format": "1"
+}
