@@ -128,7 +128,8 @@ class Detailer:
                                     "soul_sand", "fence")):
                 self.sensitive.add((x, y, z))
         self.sensitive |= set(self.tags)
-        self.sensitive |= set(bp.tile_entities)
+        # block entities are always protected; only the functional ones need clearance around them
+        self.sensitive |= {p for p in bp.tile_entities if "domum_ornamentum" not in bp.get(*p)}
 
     # -------------------------------------------------------------- helpers
     def _tags(self):

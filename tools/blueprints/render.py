@@ -61,6 +61,9 @@ SOLID_GUESS = (180, 120, 200)
 GLASS = {"light_blue_stained_glass", "glass_pane", "glass", "tinted_glass", "blockpaperwall", "water"}
 HALF = {"smooth_quartz_slab", "smooth_stone_slab", "rail", "daylight_detector"}
 COLORS.update({
+    "stone_brick_stairs": (122, 121, 122), "bamboo_mosaic": (190, 170, 80), "stripped_bamboo_block": (192, 175, 85),
+    "chiseled_bookshelf": (150, 110, 60), "white_candle": (230, 230, 220), "spore_blossom": (210, 100, 160),
+    "azalea": (100, 125, 50), "flowering_azalea": (120, 110, 80),
     "light_blue_stained_glass_pane": (130, 190, 230), "cyan_stained_glass_pane": (76, 127, 153),
     "tuff_bricks": (98, 103, 95), "polished_tuff": (97, 104, 99), "chiseled_tuff": (93, 99, 93), "bone_block": (229, 225, 207),
     "deepslate_tiles": (54, 54, 55), "polished_blackstone_bricks": (48, 42, 49), "white_glazed_terracotta": (188, 212, 202),

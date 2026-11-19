@@ -12,10 +12,10 @@ Requires: MineColonies, Structurize, Domum Ornamentum (all on NeoForge 1.21.1).
 
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.2.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.3.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that only carries the style pack;
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.2.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.3.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>`.
 
 ## Install
@@ -162,6 +162,25 @@ Counts follow the official MineColonies packs. The gatehouse (a wall gate that n
 gate blocks) is not included yet.
 
 ![Barracks](docs/previews/neoterra/barracks_levels.png)
+
+### Reshape pass (the main building changes every level)
+![Reshape](docs/previews/neoterra/neoterra_reshape_overview.png)
+
+MineColonies upgrades replace every block that differs, so a level does not have to keep the previous shape.
+`tools/blueprints/neoterra/reshape.py` runs first and rebuilds the top of each main building per level: it clears
+the old roof down to the median wall height (never where anything functional sits), lays a fresh slab, then
+
+| Level | Main building |
+|---|---|
+| 1 | base building |
+| 2 | new roof form |
+| 3 | + 1 storey with its own roof form |
+| 4 | + 2 storeys (stepped back on some buildings), vertical facade fins, balconies |
+| 5 | + 3 storeys with cantilevered glowing slab edges and a crown (glass dome, stepped glass pyramid, halo rings or needle spire) |
+
+Roof forms (gable, barrel vault, hip, sawtooth, overhang deck) rotate per level and per building. New storeys are
+reached by a ladder from the floor below. Very tall buildings (24+ blocks) keep their height and only get the roof
+or crown; a few vaulted/ring-shaped buildings keep their core and grow through the massing pass instead.
 
 ### Massing pass (bigger buildings every level)
 ![Massing](docs/previews/neoterra/neoterra_massing_overview.png)
