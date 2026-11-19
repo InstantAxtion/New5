@@ -661,11 +661,16 @@ def assemble(parent, wing, region, hut):
                     parent.set(x1 + x, 1 + y, z1 + z, wing.get(x, y, z))
 
 
+def wonder_set(style):
+    import wonders_styles
+    return wonders_styles.wonder_set(style, WONDERS)
+
+
 def check(style):
     """Walk-check every level with its wings pasted in (as MineColonies will have built them)."""
     import walkcheck
     bad = 0
-    for name, (core, wing) in WONDERS.items():
+    for name, (core, wing) in wonder_set(style).items():
         for L in range(1, 6):
             bp, wb = core(style, L), wing(style, L)
             for region in bp.wings:
@@ -681,7 +686,7 @@ def check(style):
 def build_all(root: Path, style: str):
     d = root / "wonders"
     d.mkdir(parents=True, exist_ok=True)
-    for name, (core, wing) in WONDERS.items():
+    for name, (core, wing) in wonder_set(style).items():
         for L in range(1, 6):
             bp = core(style, L)
             wb = wing(style, L)
@@ -703,7 +708,7 @@ def previews(d: Path, style: str):
     out.mkdir(parents=True, exist_ok=True)
     fronts = []
     with tempfile.TemporaryDirectory() as tmp:
-        for name, (core, wing) in WONDERS.items():
+        for name, (core, wing) in wonder_set(style).items():
             bp, wb = core(style, 5), wing(style, 5)
             for r in bp.wings:
                 assemble(bp, wb, r, None)
