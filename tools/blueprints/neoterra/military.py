@@ -266,8 +266,7 @@ def build_barracks(L):
     return k.finish_hut(hut, "blockhutbarracks")
 
 
-BUILDERS = {"military/guardtower": build_guardtower, "military/archery": build_archery,
-            "military/combatacademy": build_combatacademy, "military/stable": build_stable,
+BUILDERS = {"military/guardtower": build_guardtower,
             "military/barracks": build_barracks, "military/barrackstower": build_barrackstower}
 
 def barracks_preview(L):

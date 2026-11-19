@@ -254,13 +254,7 @@ def build_mechanic(L):
                     cladding=lambda L, st: "light_gray_concrete" if st.early else "waxed_cut_copper")
 
 
-BUILDERS = {
-    "fundamentals/cook": build_cook,
-    "fundamentals/lumberjack": build_lumberjack,
-    "craftsmanship/carpentry/sawmill": build_sawmill,
-    "craftsmanship/masonry/stonemason": build_stonemason,
-    "craftsmanship/metallurgy/mechanic": build_mechanic,
-}
+BUILDERS = {}  # superseded by unique.py (Halo Bistro, Arbor Vault, Timber Works, Stepped Atelier, Gear Hub)
 
 if __name__ == "__main__":
     root = Path(sys.argv[1])

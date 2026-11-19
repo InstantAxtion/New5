@@ -20,6 +20,7 @@ python3 $T/neoterra/workhuts.py "$PACK"
 python3 $T/neoterra/education.py "$PACK"
 python3 $T/neoterra/military.py "$PACK" "$FURN"
 python3 $T/neoterra/bunker.py "$PACK/fundamentals" "$FURN"
+python3 $T/neoterra/unique.py "$PACK"
 python3 $T/neoterra/deliveryman.py "$PACK/craftsmanship/storage"
 python3 $T/neoterra/warehouse.py "$PACK/craftsmanship/storage"
 

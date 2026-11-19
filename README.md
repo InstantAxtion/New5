@@ -120,24 +120,22 @@ air vents, surface trees and lamp spires. Child room blueprints are tagged invis
 
 ![Bunker levels 1–5 (cutaway, rooms furnished)](docs/previews/neoterra/bunker_levels.png)
 
-### Work huts
-| Building | Hut block | Signature | Per level |
+### Work huts – each with its own form
+| Building | Hut block | Form | Per level |
 |---|---|---|---|
-| Restaurant `fundamentals/cook` | blockhutcook | glass dining pavilion, open kitchen, terrace (L2), sky lounge (L3), rooftop bar (L4) | 1 furnace per level, 4→16+ tagged seats, kitchen `work` spots |
-| Forester `fundamentals/lumberjack` | blockhutlumberjack | timber-clad hall, sapling nursery, greenhouse (L3) | racks 2→6, more saplings |
-| Woodcutter `craftsmanship/carpentry/sawmill` | blockhutsawmill | spruce-clad hall, saw line, log yard, skylights | racks, saws; architect's cutter (L4) |
-| Stonemason `craftsmanship/masonry/stonemason` | blockhutstonemason | stone-clad hall, stone yard, monolith sculpture | racks, more stone stacks |
-| Mechanic `craftsmanship/metallurgy/mechanic` | blockhutmechanic | copper-clad hall, test bench, robot arm, wind turbine (L4) | racks, copper light strip |
-
-All workshop huts: upper office with stairs (L3), roof access + bed (L4), mast (L5).
+| Restaurant `fundamentals/cook` | blockhutcook | **Halo Bistro**: round dining drum (r10), terrace ring, 2nd dining drum (L3), rooftop bar (L4), glass cupola (L5) | 1 furnace per level, kitchen `work` spots, more tagged seats |
+| Forester `fundamentals/lumberjack` | blockhutlumberjack | **Arbor Vault**: glass barrel-vault greenhouse that grows longer, lab, sapling nursery, giant indoor tree (L3) | racks 2→6, more saplings |
+| Woodcutter `craftsmanship/carpentry/sawmill` | blockhutsawmill | **Timber Works**: sawtooth-roof factory, saw line, log yard, silo + office mezzanine (L3) | racks, saws, log piles; architect's cutter (L4) |
+| Stonemason `craftsmanship/masonry/stonemason` | blockhutstonemason | **Stepped Atelier**: stone ziggurat that gains a tier per level, terraces, crown sculpture (L4) | stonecutters, racks, stone stacks |
+| Mechanic `craftsmanship/metallurgy/mechanic` | blockhutmechanic | **Gear Hub**: octagonal copper hub, gear sculpture, robot gantry (L2), satellite pod + glass bridge (L3), radar dish (L4) | racks, copper light ring |
 
 ![Restaurant](docs/previews/neoterra/cook_levels.png)
 
 ### Education
 | Building | Hut block | Per level |
 |---|---|---|
-| School `education/school` | blockhutschool | 10 `sit` seats facing a board + teacher `work` spot; playground (L2), art & reading loft (L3), rooftop observatory (L5) |
-| Library `education/library` | blockhutlibrary | double-height hall, bookshelves ≈10/30/50/95/110, study seats, mezzanine (L3), enchanting table (L4), glass dome (L5) |
+| School `education/school` | blockhutschool | **Crescent School** wrapping a playground courtyard (the crescent grows each level, 2 storeys from L3): 10 `sit` seats facing a board + teacher `work` spot, roof garden (L4) |
+| Library `education/library` | blockhutlibrary | **Book Tower**: round tower that gains a storey per level, bookshelves 10/30/54/104/121 around the walls, reading tables, enchanting table (L4), glass dome (L5) |
 | University `education/university` | blockhutuniversity | research rotunda (bookshelves 4/21/41/46/47), lab wing (furnaces 1/1/3/3/3, brewing), lecture hall (L2), quad with `leisure` spots (L3), glowing dome (L5) |
 
 ![University](docs/previews/neoterra/university_levels.png)
@@ -148,9 +146,9 @@ All workshop huts: upper office with stairs (L3), roof access + bed (L4), mast (
 | Guard tower `military/guardtower` | blockhutguardtower | 2 beds; grows 12→24 high; ladder to a lookout, glass pod (L4) |
 | Barracks `military/barracks` | blockhutbarracks | HQ + courtyard; adds one child **barracks tower** per level (max 4), perimeter wall (L3) |
 | Barracks tower `military/barrackstower` | blockhutbarrackstower | child hut: 2 beds per level (one storey each); upgrade from its own hut |
-| Archery `military/archery` | blockhutarchery | 2 beds, 1 target + 1 firing `work` spot per level; covered firing line (L2) |
-| Combat academy `military/combatacademy` | blockhutcombatacademy | 2 beds per level, sand arena with hay dummies 1/2/3/6/9 |
-| Stable `military/stable` | blockhutstable | 2 `stall`s per level with hay, loft beds 2/4/4/6/8, paddock |
+| Archery `military/archery` | blockhutarchery | **Arrow Range**: 45-long range under arched canopies + round bunk tower (2 storeys from L3); 2 beds, 1 target + 1 firing `work` spot per level |
+| Combat academy `military/combatacademy` | blockhutcombatacademy | **Colosseum**: sand arena, tiered stands with tagged seats, arcaded outer wall that grows taller; 2 beds per level under the stands, hay dummies 1/2/3/6/9 |
+| Stable `military/stable` | blockhutstable | **Equestrian Hall**: barrel-vault riding hall that grows longer + 2-storey stall block; 2 `stall`s per level with hay, loft beds 2/4/4/6/8, paddock |
 
 Counts follow the official MineColonies packs. The gatehouse (a wall gate that needs MineColonies'
 gate blocks) is not included yet.
@@ -206,7 +204,8 @@ python3 tools/blueprints/validate.py blocks.json stylepacks/Neoterra/**/*.bluepr
 - `tools/blueprints/neoterra/skytower.py` – Skytower + apartment floors (child residence huts)
 - `tools/blueprints/neoterra/playerhouse.py` – player house decoration
 - `tools/blueprints/neoterra/kit.py` – shared building kit (shells, stairs, canopies, anchors, child huts)
-- `tools/blueprints/neoterra/workhuts.py`, `education.py`, `military.py`, `bunker.py` – the buildings above
+- `tools/blueprints/neoterra/unique.py` – signature forms (bistro, vault, sawtooth, ziggurat, octagon, crescent, book tower, range, colosseum, riding hall)
+- `tools/blueprints/neoterra/education.py`, `military.py`, `bunker.py` – university, guard tower, barracks, bunker
 - `tools/blueprints/neoterra/deliveryman.py` – courier's hut design (levels 1–5)
 - `tools/blueprints/neoterra/warehouse.py` – warehouse design (levels 1–5)
 - `tools/blueprints/neoterra/check_townhall.py` – stair headroom, floor exits, enchanting power, elevator watertightness

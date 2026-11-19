@@ -238,3 +238,101 @@ class Kit:
 
     def child(self, pos, block, path):
         self.bp.set(*pos, f"minecolonies:{block}[facing=north]", child_hut_te(path))
+
+
+# ============================================================================ shapes
+import math as _m  # noqa: E402
+
+
+def in_octagon(dx, dz, r):
+    return abs(dx) <= r and abs(dz) <= r and abs(dx) + abs(dz) <= r * 1.42
+
+
+class Shapes:
+    """Curved / special forms on top of a Kit."""
+
+    def __init__(self, k: Kit):
+        self.k = k
+
+    def drum(self, cx, cz, r, floor_y, top_y, wall=None, glass_every=30, doors=(), roof=True, floor=True):
+        """Cylinder: floor disc, wall ring (glass bays between pillars), roof disc. doors: angles."""
+        k, bp = self.k, self.k.bp
+        for x in range(cx - r - 1, cx + r + 2):
+            for z in range(cz - r - 1, cz + r + 2):
+                if not bp.inside(x, floor_y, z):
+                    continue
+                d = _m.hypot(x - cx, z - cz)
+                if d < r - 0.5:
+                    if floor:
+                        bp.set(x, floor_y, z, k.st.floor(x, z))
+                    if roof:
+                        put(bp, x, top_y, z, "smooth_stone" if k.st.early else k.D)
+                elif d < r + 0.5:
+                    if roof:
+                        bp.set(x, top_y, z, k.band)
+                    ang = _m.degrees(_m.atan2(z - cz, x - cx)) % 360
+                    door = any(min(abs(ang - a), 360 - abs(ang - a)) < 9 for a in doors)
+                    pillar = (ang % glass_every) < (360 / (2 * _m.pi * r)) * 1.2
+                    for y in range(floor_y + 1, top_y):
+                        if door and y <= floor_y + 3:
+                            s = "air"
+                        elif y == top_y - 1:
+                            s = k.W
+                        elif pillar:
+                            s = wall or k.W
+                        else:
+                            s = k.G
+                        bp.set(x, y, z, s)
+
+    def disc(self, cx, cz, r, y, spec, r_in=-1.0):
+        bp = self.k.bp
+        for x in range(cx - r - 1, cx + r + 2):
+            for z in range(cz - r - 1, cz + r + 2):
+                d = _m.hypot(x - cx, z - cz)
+                if r_in - 0.5 <= d < r + 0.5 and bp.inside(x, y, z):
+                    put(bp, x, y, z, spec(x, z) if callable(spec) else spec)
+
+    def vault(self, x1, x2, z1, z2, base_y, rib_every=4, end_doors=True):
+        """Glass barrel vault along x over z1..z2 springing from base_y. Returns crown height."""
+        k, bp = self.k, self.k.bp
+        cz, r = (z1 + z2) / 2, (z2 - z1) / 2
+        heights = {}
+        for z in range(z1, z2 + 1):
+            heights[z] = base_y + int(round(_m.sqrt(max(0.0, r * r - (z - cz) ** 2)) * 0.9))
+        for x in range(x1, x2 + 1):
+            rib = (x - x1) % rib_every == 0 or x in (x1, x2)
+            for z in range(z1, z2 + 1):
+                h = heights[z]
+                prev = heights.get(z - 1, base_y) if z > cz else heights.get(z + 1, base_y)
+                lo = min(h, prev + 1) if z not in (z1, z2) else base_y + 1
+                for y in range(lo, h + 1):
+                    bp.set(x, y, z, (k.glow if (k.glow and rib and y == h) else k.W) if rib else "glass")
+                if z in (z1, z2):
+                    for y in range(2, base_y + 1):
+                        bp.set(x, y, z, k.W if rib else k.G)
+        for x in (x1, x2):                                                   # gable ends
+            for z in range(z1 + 1, z2):
+                for y in range(2, heights[z]):
+                    door = end_doors and abs(z - cz) <= 1 and y <= 4
+                    bp.set(x, y, z, "air" if door else (k.W if (z - z1) % 4 == 0 else k.G))
+        return max(heights.values())
+
+    def sawtooth(self, x1, x2, z1, z2, y, tooth=4):
+        """Sawtooth roof over a hall: glazed north faces, sloped south backs (along x)."""
+        k, bp = self.k, self.k.bp
+        for x0 in range(x1, x2 + 1, tooth):
+            for i in range(tooth):
+                x = x0 + i
+                if x > x2:
+                    break
+                for z in range(z1, z2 + 1):
+                    h = y + (tooth - 1 - i)
+                    stair = f"{'polished_andesite' if k.st.early else 'smooth_quartz'}_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]"
+                    bp.set(x, h, z, stair if i > 0 else k.W)
+                    if i == 0:
+                        for yy in range(y, y + tooth):
+                            bp.set(x, yy, z, k.W if z in (z1, z2) else "glass")
+                        bp.set(x, y + tooth, z, k.band)
+                    for yy in range(y, h):
+                        if z in (z1, z2):
+                            bp.set(x, yy, z, k.W)

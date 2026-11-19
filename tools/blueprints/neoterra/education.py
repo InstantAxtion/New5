@@ -255,7 +255,7 @@ def build_university(L):
     return k.finish_hut(hut, "blockhutuniversity")
 
 
-BUILDERS = {"education/school": build_school, "education/library": build_library,
+BUILDERS = {
             "education/university": build_university}
 
 if __name__ == "__main__":
