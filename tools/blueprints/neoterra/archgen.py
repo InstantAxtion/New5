@@ -37,6 +37,7 @@ from nbtlib import tag as NBT
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import typology  # noqa: E402
 from blueprint import Blueprint, load, parse_state, format_state, AIR  # noqa: E402
 from common import connect_panes  # noqa: E402
 
@@ -149,6 +150,14 @@ MATS = {
         chimney=["bricks"], door="dark_oak_door", light="lantern",
         rug=["orange_carpet", "white_carpet", "brown_carpet"], accent=["orange_terracotta", "brown_terracotta", "yellow_terracotta"]),
 }
+MATS["Neoterra"] = dict(
+    base=["smooth_stone", "polished_andesite"], base5=["smooth_quartz", "polished_diorite"],
+    post="white_concrete", beam_x="light_gray_concrete", beam_z="light_gray_concrete",
+    wall="white_concrete", batten="light_gray_concrete", wall2="white_concrete",
+    frame="light_gray_concrete", glass="light_blue_stained_glass_pane", floor="polished_andesite", floor2="smooth_stone",
+    roof="polished_andesite", roof5="smooth_quartz", ridge="light_gray_concrete", deck="smooth_stone", rail="birch_fence",
+    chimney=["light_gray_concrete"], door="birch_door", light="lantern",
+    rug=["light_gray_carpet", "cyan_carpet", "white_carpet"], accent=["cyan_concrete", "light_blue_concrete", "orange_concrete"])
 # per-building material variants (wall, batten/upper cladding, post/trim) and roof / base options
 SIDINGS = {
     "Cascadia": [("spruce_planks", "stripped_spruce_log[axis=y]", "dark_oak_log[axis=y]"),
@@ -167,11 +176,19 @@ SIDINGS = {
                    ("white_terracotta", "dark_oak_planks", "dark_oak_planks"),
                    ("light_blue_terracotta", "birch_planks", "white_terracotta")],
 }
-ROOFMATS = {"Cascadia": ["spruce", "dark_oak", "mangrove", "spruce"], "Hearthwood": ["dark_oak", "spruce", "brick", "mud_brick"]}
-BASES = {"Cascadia": [["cobblestone", "mossy_cobblestone"], ["stone_bricks", "mossy_stone_bricks"], ["andesite", "cobblestone"],
+SIDINGS["Neoterra"] = [("white_concrete", "light_gray_concrete", "gray_concrete"),
+                       ("white_concrete", "cyan_terracotta", "light_gray_concrete"),
+                       ("smooth_stone", "white_concrete", "polished_andesite"),
+                       ("light_gray_concrete", "white_concrete", "cyan_concrete"),
+                       ("white_concrete", "light_blue_concrete", "white_concrete"),
+                       ("polished_diorite", "white_concrete", "light_gray_concrete"),
+                       ("white_terracotta", "light_gray_concrete", "gray_concrete")]
+ROOFMATS = {"Neoterra": ["polished_andesite", "stone_brick", "polished_diorite"], "Cascadia": ["spruce", "dark_oak", "mangrove", "spruce"], "Hearthwood": ["dark_oak", "spruce", "brick", "mud_brick"]}
+BASES = {"Neoterra": [["smooth_stone"], ["polished_andesite"], ["light_gray_concrete"]], "Cascadia": [["cobblestone", "mossy_cobblestone"], ["stone_bricks", "mossy_stone_bricks"], ["andesite", "cobblestone"],
                       ["tuff", "cobblestone"]],
          "Hearthwood": [["bricks"], ["stone_bricks"], ["mud_bricks"], ["polished_andesite", "stone_bricks"]]}
 FUNC_EXTRA = {
+    "Neoterra": {},
     "Cascadia": {"farmer": "silo", "composter": "silo", "chickenherder": "silo", "cowboy": "silo", "sawmill": "water_wheel",
                  "lumberjack": "water_wheel", "fletcher": "water_wheel", "baker": "stone_chimney", "cook": "stone_chimney",
                  "cookery": "stone_chimney", "smeltery": "stone_chimney", "blacksmith": "stone_chimney",
@@ -185,14 +202,17 @@ FUNC_EXTRA = {
 }
 
 PLANS = {
+    "Neoterra": ["box", "box_wide", "house_L", "longhall", "house_T"],
     "Cascadia": ["longhall", "aframe", "lodge_L", "barn", "longhall_T"],
     "Hearthwood": ["box", "house_L", "split", "house_T", "box_wide"],
 }
 ROOFS = {
+    "Neoterra": ["flat", "shed", "flat"],
     "Cascadia": ["aframe", "gambrel", "gable_steep"],
     "Hearthwood": ["gable", "hip", "shed"],
 }
 EXTRAS = {
+    "Neoterra": ["porch", "sunroom", "balcony", "dormers", "covered_entry"],
     "Cascadia": ["lookout", "stone_chimney", "deck", "covered_entry", "loft_dormer"],
     "Hearthwood": ["porch", "brick_chimney", "sunroom", "dormers", "balcony"],
 }
@@ -241,6 +261,18 @@ class Arch:
         if fx:
             self.extras = (fx,) + tuple(e for e in self.extras if e != fx)[:2]
         self.gy = 1
+        self.typ = typology.SPEC.get(prog.base)
+        self.margin = 4
+        if style == "Neoterra":
+            self.top = level >= 4
+        if self.typ:
+            self.plan = self.typ["plan"]
+            self.roof = typology.roof_form(style, self.typ["roof"])
+            self.margin = self.typ["margin"]
+            if self.typ.get("skin"):
+                self.M.update(typology.SKINS[self.typ["skin"]][style])
+                if self.typ["skin"] in ("industrial", "civic"):
+                    self.win = 2
 
     # ---- sizing ---------------------------------------------------------
     def needs(self):
@@ -254,7 +286,9 @@ class Arch:
 
     def floors(self):
         f = {1: 1, 2: 1, 3: 2, 4: 2, 5: 3}[self.L]
-        if self.style == "Cascadia" and self.plan in ("aframe", "barn"):
+        if self.typ and self.typ["floors"]:
+            f = self.typ["floors"][self.L]
+        if self.style == "Cascadia" and self.plan in ("aframe", "barn") and self.roof in ("aframe", "gambrel"):
             f = min(f, 2)
         return f
 
@@ -267,7 +301,18 @@ class Arch:
         nf = self.floors()
         if nf >= 2:
             W = max(W, 13)
+        if self.plan == "civic":
+            W, D = max(W, 15) | 1, max(D, 9)
+        elif self.plan == "tower":
+            W = D = 7 + 2 * scale
+        elif self.plan == "shop":
+            W, D = 9 + 2 * scale, 11 + 2 * scale + (self.L - 1)
         vols = [(0, W - 1, 0, D - 1, nf, self.roof)]
+        if self.plan == "civic" and self.L >= 3:
+            ww, dd = 7 + (self.L - 3) * 2, D - 2
+            wf = max(1, nf - 1)
+            vols.append((W, W + ww - 1, 1, dd, wf, self.roof))
+            vols.append((-ww, -1, 1, dd, wf, self.roof))
         if self.L >= 3 and self.plan in ("lodge_L", "house_L", "longhall_T", "house_T", "split"):
             ww, dd = max(7, D - 2), 7 + self.L
             if self.plan in ("lodge_L", "house_L"):
@@ -300,10 +345,16 @@ class Arch:
     # ---- build ------------------------------------------------------------
     def build(self):
         import walkcheck
-        for scale in range(0, 16):
-            res = self._try(scale)
-            if res is not None and not walkcheck.analyse(res)[1]:
-                return res
+        for attempt in range(2):
+            for scale in range(0, 16):
+                res = self._try(scale)
+                if res is not None and not walkcheck.analyse(res)[1]:
+                    return res
+            if not self.typ:
+                break
+            # a feature got in the way: drop the ones that sit in front of / beside the building and retry
+            self.skip_feats = ("portico", "terrace", "loading_docks", "entry_canopy", "storefront", "barn_doors",
+                               "balconies", "flower_boxes", "hanging_sign")
         raise RuntimeError(f"{self.P.name}: requirements do not fit")
 
     def _try(self, scale):
@@ -314,7 +365,7 @@ class Arch:
         minz = min(v[2] for v in vols)
         maxx = max(v[1] for v in vols)
         maxz = max(v[3] for v in vols)
-        m = 4
+        m = self.margin
         yard_d = 0
         if P.yard or P.yard_seats or self.P.base in ("chickenherder", "cowboy", "shepherd", "swineherder", "rabbithutch",
                                                      "graveyard", "archery", "beekeeper", "mysticalsite"):
@@ -456,7 +507,7 @@ class Arch:
         self.locked |= {(self.door_x, y, z1 - 1), (self.door_x, y + 1, z1 - 1)}
         # entry step / path
         for z in range(0, z1):
-            self.S(self.door_x, self.gy, z, "spruce_planks" if self.style == "Cascadia" else "bricks", force=True)
+            self.S(self.door_x, self.gy, z, {"Cascadia": "spruce_planks", "Hearthwood": "bricks"}.get(self.style, "smooth_stone"), force=True)
 
     def stair_core(self):
         """Straight stair along the back wall of the main volume, one flight per floor."""
@@ -760,6 +811,12 @@ class Arch:
                 return i // 2
             return i                                                           # gable / hip
 
+        if form == "flat":
+            for x in range(x1, x2 + 1):
+                for z in range(z1, z2 + 1):
+                    if x in (x1, x2) or z in (z1, z2):
+                        self.S(x, y0 + 1, z, ridge)
+            return
         if form == "hip":
             for i in range(0, min(X2 - X1, Z2 - Z1) // 2 + 1):
                 for x in range(X1 + i, X2 - i + 1):
@@ -812,6 +869,9 @@ class Arch:
 
     # ---- pack extras --------------------------------------------------------
     def exteriors(self):
+        if self.typ:
+            typology.apply(self)
+            return
         L = self.L
         extras = list(self.extras)
         if L >= 2:

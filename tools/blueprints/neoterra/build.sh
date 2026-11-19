@@ -39,6 +39,9 @@ python3 $T/neoterra/detail.py "$PACK" "$FURN" > /dev/null
 python3 $T/neoterra/plot.py "$PACK" > /dev/null
 # support pass: nothing floats (posts down to the ground, or stray bits removed; walk-checked)
 python3 $T/neoterra/support.py "$PACK" Neoterra > /dev/null
+# every regular hut as its real-world building type (typology.py), in Neoterra's modern style
+python3 $T/neoterra/archgen.py "$RAW" "$PACK" Neoterra > /dev/null
+python3 $T/neoterra/support.py "$PACK" Neoterra > /dev/null
 # Twin Builders' Yard: one building, two builder huts (parent + child annex)
 python3 $T/neoterra/twinbuilder.py "$PACK" Neoterra
 # Grand Projects (wonders) with wing child huts
@@ -100,10 +103,11 @@ for STY in Hearthwood Cascadia; do
   NEOTERRA_STYLE=$STY python3 $T/neoterra/plot.py "$OUT" > /dev/null
   NEOTERRA_STYLE=$STY python3 $T/neoterra/support.py "$OUT" $STY > /dev/null
   python3 $T/neoterra/restyle.py "$OUT" "$OUT" $STY
-  # every regular hut: designed from scratch in the pack's own architecture (only requirements are shared)
+  # every regular hut: its real-world building type (typology.py) in the pack's own architecture
   python3 $T/neoterra/archgen.py "$RAW" "$OUT" $STY > /dev/null
   # Cascadia university: hand-designed campus hall (clock tower, portico, wings, library)
   if [ "$STY" = Cascadia ]; then python3 $T/neoterra/university_cascadia.py "$OUT"; fi
+  python3 $T/neoterra/support.py "$OUT" $STY > /dev/null
   # walls, roads, rails, canals, bridges, subway, boardwalk, cliff climb and parks in the pack's own design
   python3 $T/neoterra/styleinfra.py "$OUT" $STY
   python3 $T/neoterra/twinbuilder.py "$OUT" $STY

@@ -67,6 +67,36 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## Every hut as its real-world building (1.14.0)
+All regular huts in Neoterra, Hearthwood and Cascadia are now generated from a building **typology**
+(`tools/blueprints/neoterra/typology.py`): each hut type gets the plan, roof, storeys, wall treatment and features
+of the building it is in real life, added level by level and drawn in the pack's own style (Neoterra modern
+concrete and glass with flat roofs, Hearthwood brick and plaster, Cascadia timber and river rock):
+
+| Type | Real-world cues |
+|---|---|
+| Town hall, university, community college | symmetrical civic hall, portico, clock tower with bell, wings, flag, dome (town hall L5) |
+| School, library | bell cupola and flag / portico and dome |
+| Hospital | red cross, ambulance canopy, flag, rooftop helipad (flat roofs) |
+| Cottage, house, apartment, quadplex | porch, chimney, dormers / stacked balconies, entrance canopy |
+| Tavern, restaurant, cookery, bakery | hanging sign, storefront windows, striped awning, terrace tables, oven chimney |
+| Builder, stonemason, warehouse, post office | timber or stone stockpiles, yard crane, loading docks |
+| Smeltery, stone smeltery, crusher, concrete mixer, mechanic, nether worker | brick/stone/concrete factory hall, smokestacks, bottle kiln, silo |
+| Blacksmith, glassblower, dyer, fletcher, alchemist | forge chimney / kiln / dye vats and drying line / targets / apothecary greenhouse |
+| Farm, cattle, sheep, pig, chicken, rabbit, stable, composter | red barn boards, X-braced barn doors, hay loft, silo, cupola, compost bins |
+| Lumberjack, sawmill | log piles, water wheel |
+| Florist, plantation | glass greenhouse roof, flower boxes / sunroom |
+| Guard tower, archery, combat academy | stone tower with battlements and flag / targets and lookout |
+| Miner | stone pithead with headframe |
+| Enchanter, graveyard, mystical site | purple mage tower / chapel with steeple and bell / temple with portico and dome |
+
+Cascadia's university keeps its hand-designed campus hall. Barracks, bunker, sky tower, gatehouse and wall
+guard tower keep their special designs.
+
+![Neoterra](docs/previews/typology_neoterra.png)
+![Hearthwood](docs/previews/typology_hearthwood.png)
+![Cascadia](docs/previews/typology_cascadia.png)
+
 ## Farmworks – automatic farms + the Trade Post
 The fourth pack in the jar. Every farm uses mechanics that need no timing-sensitive redstone:
 
@@ -157,10 +187,10 @@ server with a self-test: two colonies trade a request, the Supply Depot crafts o
 Structurize (`SELFTEST PASS`).
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.13.1.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.14.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a NeoForge mod that carries the Trade Post and all four style packs (Neoterra, Hearthwood, Cascadia and Farmworks);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.13.1.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.14.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>` (compiles `mod/` with Gradle).
 
 ## Install
