@@ -3,7 +3,7 @@ Package the Neoterra style pack for players.
 
   dist/Neoterra-<ver>.jar   no-code NeoForge mod (lowcodefml) – drop into the instance's `mods` folder.
                             Structurize loads packs from  blueprints/<modid>/<Pack>/pack.json  inside mod jars.
-  dist/Neoterra-<ver>-blueprints.zip   plain pack – unzip into the instance's `blueprints` folder instead.
+  dist/Neoterra-<ver>.zip   download bundle containing the jar.
 """
 import sys
 import zipfile
@@ -74,11 +74,10 @@ def main():
         z.write(PACK / "neoterra.png", "neoterra.png")
         for f, rel in pack_files():
             z.write(f, f"blueprints/{MODID}/Neoterra/{rel}")
-    plain = DIST / f"Neoterra-{VERSION}-blueprints.zip"
-    with zipfile.ZipFile(plain, "w", zipfile.ZIP_DEFLATED) as z:
-        for f, rel in pack_files():
-            z.write(f, f"Neoterra/{rel}")
-    for p in (jar, plain):
+    bundle = DIST / f"Neoterra-{VERSION}.zip"                          # download: the zip holds the jar
+    with zipfile.ZipFile(bundle, "w", zipfile.ZIP_DEFLATED) as z:
+        z.write(jar, jar.name)
+    for p in (jar, bundle):
         print(f"{p.relative_to(ROOT)}  {p.stat().st_size // 1024} KB")
 
 
