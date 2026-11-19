@@ -17,7 +17,7 @@ ROOFMAP = {
     "Cascadia": {"pitched": "gable_steep", "steep": "aframe", "hip": "hip", "barn": "gambrel", "flat": "gable",
                  "industrial": "gable", "battlement": "flat"},
     "Hearthwood": {"pitched": "gable", "steep": "gable_steep", "hip": "hip", "barn": "gambrel", "flat": "hip",
-                   "industrial": "shed", "battlement": "flat"},
+                   "industrial": "shed", "battlement": "flat", "gable": "gable", "shed_roof": "shed"},
     "Neoterra": {"pitched": "shed", "steep": "gable", "hip": "flat", "barn": "gambrel", "flat": "flat",
                  "industrial": "flat", "battlement": "flat"},
 }
@@ -28,102 +28,281 @@ FACE = {"Cascadia": "calcite", "Hearthwood": "calcite", "Neoterra": "white_concr
 FLAG = {"Cascadia": ["green_wool", "white_wool"], "Hearthwood": ["red_wool", "white_wool"], "Neoterra": ["cyan_wool", "white_wool"]}
 
 
-def T(plan, roof, floors=None, feats=(), margin=5, skin=None):
-    return dict(plan=plan, roof=roof, floors=floors, feats=list(feats), margin=margin, skin=skin)
+def T(plan, roof, floors=None, feats=(), margin=5, skin=None, dw=0, dd=0, fh=None):
+    return dict(plan=plan, roof=roof, floors=floors, feats=list(feats), margin=margin, skin=skin, dw=dw, dd=dd, fh=fh)
 
 
-# wall treatments that make a building type read right (override the pack's default cladding)
+# wall treatments (override the pack's default cladding); every pack has its own set
 SKINS = {
-    "barn": {"Cascadia": dict(wall="red_terracotta", batten="stripped_birch_log[axis=y]", frame="stripped_birch_log[axis=y]",
-                              post="stripped_birch_log[axis=y]", wall2="red_terracotta"),
-             "Hearthwood": dict(wall="red_terracotta", batten="white_terracotta", frame="white_terracotta",
-                                post="stripped_birch_log[axis=y]", wall2="red_terracotta"),
-             "Neoterra": dict(wall="gray_concrete", batten="white_concrete", frame="white_concrete", post="white_concrete",
-                              wall2="gray_concrete")},
-    "industrial": {"Cascadia": dict(wall="stone_bricks", batten="stone_bricks", frame="dark_oak_log[axis=y]",
-                                    post="dark_oak_log[axis=y]", wall2="stone_bricks"),
-                   "Hearthwood": dict(wall="bricks", batten="bricks", frame="stone_bricks", post="stone_bricks", wall2="bricks"),
-                   "Neoterra": dict(wall="light_gray_concrete", batten="gray_concrete", frame="gray_concrete",
-                                    post="gray_concrete", wall2="light_gray_concrete")},
-    "civic": {"Cascadia": dict(wall="spruce_planks", batten="stripped_spruce_log[axis=y]", frame="stone_bricks",
-                               post="stone_bricks", wall2="spruce_planks"),
-              "Hearthwood": dict(wall="bricks", batten="bricks", frame="stone_bricks", post="stone_bricks", wall2="bricks"),
-              "Neoterra": dict(wall="white_concrete", batten="white_concrete", frame="smooth_stone", post="smooth_stone",
-                               wall2="white_concrete")},
-    "stone": {"Cascadia": dict(wall="cobblestone", batten="mossy_cobblestone", frame="stone_bricks", post="stone_bricks",
-                               wall2="stone_bricks"),
-              "Hearthwood": dict(wall="stone_bricks", batten="stone_bricks", frame="chiseled_stone_bricks",
-                                 post="stone_bricks", wall2="stone_bricks"),
-              "Neoterra": dict(wall="light_gray_concrete", batten="smooth_stone", frame="smooth_stone", post="gray_concrete",
-                               wall2="light_gray_concrete")},
+    # Neoterra
+    "glass": dict(wall="light_blue_stained_glass", batten="white_concrete", frame="white_concrete", post="gray_concrete",
+                  wall2="light_blue_stained_glass"),
+    "concrete": dict(wall="white_concrete", batten="light_gray_concrete", frame="light_gray_concrete", post="gray_concrete",
+                     wall2="white_concrete"),
+    "dark": dict(wall="gray_concrete", batten="black_concrete", frame="black_concrete", post="black_concrete",
+                 wall2="gray_concrete"),
+    "lab": dict(wall="white_concrete", batten="cyan_terracotta", frame="cyan_concrete", post="white_concrete",
+                wall2="light_blue_concrete"),
+    # Hearthwood
+    "brick": dict(wall="bricks", batten="bricks", frame="stone_bricks", post="stone_bricks", wall2="bricks"),
+    "stonework": dict(wall="stone_bricks", batten="stone_bricks", frame="chiseled_stone_bricks", post="stone_bricks",
+                      wall2="stone_bricks"),
+    "redbarn": dict(wall="red_terracotta", batten="white_terracotta", frame="white_terracotta",
+                    post="stripped_birch_log[axis=y]", wall2="red_terracotta"),
+    "mudbrick": dict(wall="mud_bricks", batten="packed_mud", frame="dark_oak_planks", post="stripped_dark_oak_log[axis=y]",
+                     wall2="mud_bricks"),
+    # Cascadia
+    "log": dict(wall="stripped_spruce_log[axis=y]", batten="spruce_log[axis=y]", frame="dark_oak_log[axis=y]",
+                post="dark_oak_log[axis=y]", wall2="stripped_spruce_log[axis=y]"),
+    "riverrock": dict(wall="cobblestone", batten="mossy_cobblestone", frame="spruce_log[axis=y]", post="spruce_log[axis=y]",
+                      wall2="mossy_cobblestone"),
+    "weathered": dict(wall="stripped_spruce_wood[axis=y]", batten="spruce_planks", frame="dark_oak_log[axis=y]",
+                      post="dark_oak_log[axis=y]", wall2="stripped_spruce_wood[axis=y]"),
+    "cedar": dict(wall="mangrove_planks", batten="stripped_mangrove_log[axis=y]", frame="dark_oak_log[axis=y]",
+                  post="dark_oak_log[axis=y]", wall2="mangrove_planks"),
 }
 
-
+FH = {"Neoterra": 5, "Hearthwood": 4, "Cascadia": 4}
 F1 = {1: 1, 2: 1, 3: 1, 4: 2, 5: 2}
 F2 = {1: 1, 2: 2, 3: 2, 4: 2, 5: 3}
 F3 = {1: 1, 2: 2, 3: 2, 4: 3, 5: 3}
+G1 = {1: 1, 2: 1, 3: 1, 4: 1, 5: 2}          # low buildings
+T4 = {1: 2, 2: 3, 3: 3, 4: 4, 5: 5}          # towers
+T3 = {1: 2, 2: 2, 3: 3, 4: 3, 5: 4}
 
-SPEC = {
-    # civic / education
-    "townhall": T("civic", "hip", F3, [(1, "flagpole"), (2, "portico"), (3, "clock_tower"), (5, "dome")], 6, skin="civic"),
-    "university": T("civic", "hip", F2, [(2, "portico"), (3, "clock_tower"), (4, "flagpole")], 6, skin="civic"),
-    "communitycollege": T("longhall_T", "hip", F2, [(1, "cupola"), (2, "portico"), (4, "flagpole")], 6, skin="civic"),
-    "school": T("longhall", "hip", F1, [(1, "cupola"), (2, "flagpole"), (3, "entry_canopy")], skin="civic"),
-    "library": T("box", "hip", F2, [(2, "portico"), (4, "dome")], 6, skin="civic"),
-    "hospital": T("longhall_T", "flat", F3, [(1, "red_cross"), (2, "covered_entry"), (3, "flagpole"), (4, "helipad")], skin="civic"),
-    # homes
-    "cottage": T("box", "steep", F1, [(1, "chimney"), (2, "porch"), (3, "dormers")]),
-    "house": T("house_L", "pitched", F2, [(1, "porch"), (2, "chimney"), (3, "dormers"), (4, "balconies")]),
-    "apartment": T("box", "flat", {1: 2, 2: 3, 3: 3, 4: 4, 5: 4}, [(1, "entry_canopy"), (2, "balconies")]),
-    "quadplex": T("box_wide", "hip", {1: 2, 2: 2, 3: 2, 4: 3, 5: 3}, [(1, "entry_canopy"), (2, "balconies"), (3, "chimney")]),
-    # food & drink
-    "tavern": T("house_L", "pitched", {1: 2, 2: 2, 3: 2, 4: 3, 5: 3},
-                [(1, "hanging_sign"), (1, "chimney"), (2, "terrace"), (3, "balconies"), (4, "dormers")]),
-    "cook": T("shop", "pitched", F1, [(1, "storefront"), (1, "awning"), (2, "terrace"), (3, "chimney"), (4, "hanging_sign")]),
-    "cookery": T("shop", "pitched", F1, [(1, "storefront"), (1, "chimney"), (2, "awning"), (3, "terrace")]),
-    "baker": T("shop", "pitched", F1, [(1, "storefront"), (1, "awning"), (2, "chimney"), (3, "hanging_sign")]),
-    # trades
-    "builder": T("longhall", "pitched", F1, [(1, "timber_stack"), (2, "crane"), (3, "awning")], 6),
-    "lumberjack": T("lodge_L", "steep", F1, [(1, "log_piles"), (2, "chimney"), (3, "porch")]),
-    "sawmill": T("barn", "pitched", F1, [(1, "log_piles"), (2, "water_wheel"), (3, "awning")]),
-    "stonemason": T("longhall", "pitched", F1, [(1, "stone_pile"), (2, "crane"), (3, "chimney")], 6),
-    "mechanic": T("box_wide", "industrial", F1, [(1, "loading_docks"), (2, "smokestacks"), (3, "crane")], 6, skin="industrial"),
-    "deliveryman": T("longhall", "pitched", F1, [(1, "loading_docks"), (1, "hanging_sign"), (2, "flagpole")]),
-    "warehouse": T("box_wide", "industrial", F1, [(1, "loading_docks"), (2, "crane"), (4, "flagpole")], 6, skin="industrial"),
-    "blacksmith": T("longhall", "pitched", F1, [(1, "forge_chimney"), (2, "awning"), (3, "hanging_sign")], skin="industrial"),
-    "fletcher": T("longhall", "pitched", F1, [(1, "awning"), (2, "hanging_sign"), (3, "targets")]),
-    "alchemist": T("shop", "steep", F1, [(1, "storefront"), (1, "hanging_sign"), (2, "sunroom")]),
-    "dyer": T("longhall", "pitched", F1, [(1, "vats"), (2, "drying_line"), (3, "awning")]),
-    "glassblower": T("longhall", "pitched", F1, [(1, "kiln"), (2, "storefront"), (3, "hanging_sign")], skin="industrial"),
-    "concretemixer": T("box_wide", "industrial", F1, [(1, "silo"), (2, "smokestacks"), (3, "loading_docks")], 6, skin="industrial"),
-    "crusher": T("box_wide", "industrial", F1, [(1, "stone_pile"), (2, "smokestacks")], 6, skin="industrial"),
-    "sifter": T("longhall", "pitched", F1, [(1, "stone_pile"), (2, "awning")]),
-    "smeltery": T("box_wide", "industrial", F1, [(1, "smokestacks"), (2, "loading_docks")], 6, skin="industrial"),
-    "stonesmeltery": T("box_wide", "industrial", F1, [(1, "kiln"), (2, "smokestacks")], 6, skin="industrial"),
-    "miner": T("box", "pitched", F1, [(1, "headframe"), (2, "stone_pile")], 6, skin="stone"),
-    "netherworker": T("box_wide", "industrial", F1, [(1, "smokestacks")], 6, skin="industrial"),
-    # farming
-    "farmer": T("barn", "barn", F1, [(1, "barn_doors"), (2, "silo"), (3, "cupola")], 6, skin="barn"),
-    "cowboy": T("barn", "barn", F1, [(1, "barn_doors"), (2, "silo")], 6, skin="barn"),
-    "shepherd": T("barn", "barn", F1, [(1, "barn_doors"), (3, "cupola")], 6, skin="barn"),
-    "swineherder": T("barn", "pitched", F1, [(1, "barn_doors")], skin="barn"),
-    "chickenherder": T("box", "pitched", F1, [(1, "barn_doors"), (3, "silo")], 6, skin="barn"),
-    "rabbithutch": T("box", "pitched", F1, [(1, "barn_doors")], skin="barn"),
-    "stable": T("barn", "barn", F1, [(1, "barn_doors"), (2, "cupola")], skin="barn"),
-    "composter": T("barn", "pitched", F1, [(1, "compost_bins"), (2, "silo")], 6, skin="barn"),
-    "beekeeper": T("box", "steep", F1, [(1, "porch"), (2, "chimney")]),
-    "florist": T("shop", "pitched", F1, [(1, "glass_roof"), (1, "storefront"), (2, "flower_boxes")]),
-    "plantation": T("longhall", "pitched", F1, [(1, "sunroom"), (2, "silo")], 6),
-    "fisherman": T("box", "pitched", F1, [(1, "porch"), (2, "nets")]),
-    # military
-    "guardtower": T("tower", "battlement", {1: 2, 2: 2, 3: 3, 4: 3, 5: 4}, [(1, "battlements"), (2, "flagpole")], skin="stone"),
-    "archery": T("longhall", "pitched", F1, [(1, "targets"), (2, "flagpole"), (3, "lookout")]),
-    "combatacademy": T("longhall_T", "hip", F1, [(1, "flagpole"), (2, "battlements_low"), (3, "portico")], 6, skin="stone"),
-    # mystic
-    "enchanter": T("box", "steep", F1, [(1, "mage_tower")], 6),
-    "graveyard": T("box", "steep", F1, [(1, "steeple")], skin="stone"),
-    "mysticalsite": T("box", "hip", F1, [(1, "portico"), (3, "dome")], 6, skin="civic"),
+# ---------------------------------------------------------------------------------------------------------------
+# NEOTERRA – the modern city: concrete, glass and steel; flat roofs, tall storeys, cubes and slabs
+NEO = {
+    "townhall": T("box_wide", "flat", T3, [(1, "glass_canopy"), (2, "fins"), (3, "roof_terrace"), (4, "antenna"), (5, "screen")], 6, "glass", 2, 2),
+    "university": T("civic", "flat", F2, [(1, "glass_canopy"), (2, "fins"), (3, "solar_roof"), (5, "antenna")], 6, "concrete", 0, 3),
+    "communitycollege": T("box_wide", "flat", F2, [(1, "glass_canopy"), (2, "light_strips"), (4, "solar_roof")], 6, "lab"),
+    "school": T("longhall", "flat", F2, [(1, "glass_canopy"), (2, "solar_roof"), (3, "light_strips")], 5, "concrete", 2),
+    "library": T("box", "flat", F3, [(1, "fins"), (2, "glass_cube"), (4, "roof_terrace")], 6, "glass", 3, 3),
+    "hospital": T("box", "flat", T4, [(1, "glass_canopy"), (2, "light_strips"), (3, "helipad"), (4, "antenna")], 6, "lab", 2, 1),
+    "cottage": T("box", "flat", G1, [(1, "glass_cube"), (3, "solar_roof")], 6, "concrete", 1, -1),
+    "house": T("split", "pitched", F2, [(1, "glass_canopy"), (2, "roof_terrace"), (3, "solar_roof")], 5, "concrete"),
+    "apartment": T("box", "flat", T4, [(1, "glass_canopy"), (2, "balconies"), (3, "fins"), (5, "roof_terrace")], 5, "concrete", 2, 0),
+    "quadplex": T("box_wide", "flat", T3, [(1, "glass_canopy"), (2, "balconies"), (4, "solar_roof")], 5, "lab", 0, 2),
+    "tavern": T("box", "flat", F2, [(1, "screen"), (2, "roof_terrace"), (3, "light_strips")], 5, "dark", 1, 2),
+    "cook": T("box_wide", "flat", F1, [(1, "glass_front"), (1, "glass_canopy"), (3, "roof_terrace")], 5, "glass", 2),
+    "cookery": T("box", "flat", F1, [(1, "glass_front"), (2, "light_strips")], 5, "concrete", 0, 2),
+    "baker": T("box", "pitched", F1, [(1, "glass_front"), (2, "screen"), (3, "solar_roof")], 5, "lab", -1, 1),
+    "builder": T("box_wide", "flat", F1, [(1, "crane"), (2, "loading_docks"), (4, "solar_roof")], 7, "dark", 3),
+    "lumberjack": T("box", "pitched", F1, [(1, "glass_cube"), (2, "solar_roof")], 6, "concrete", 0, 1),
+    "sawmill": T("box_wide", "industrial", F1, [(1, "loading_docks"), (2, "conveyor"), (3, "solar_roof")], 6, "dark", 2, 2),
+    "stonemason": T("box_wide", "industrial", F1, [(1, "crane"), (2, "solar_roof")], 7, "concrete", 1, 3),
+    "mechanic": T("box_wide", "industrial", F1, [(1, "loading_docks"), (2, "antenna"), (3, "solar_roof")], 6, "dark", 5, 1),
+    "playerhouse": T("split", "flat", F2, [(1, "glass_front"), (2, "roof_terrace"), (3, "glass_cube"), (4, "solar_roof")], 6, "concrete", 3, 2),
+    "deliveryman": T("box_wide", "flat", F1, [(1, "loading_docks"), (2, "screen"), (3, "antenna")], 6, "lab", 2),
+    "warehouse": T("box_wide", "industrial", F1, [(1, "loading_docks"), (2, "solar_roof"), (3, "crane")], 7, "dark", 4, 2),
+    "blacksmith": T("box", "industrial", F1, [(1, "cooling_tower"), (3, "light_strips")], 7, "dark", 2),
+    "fletcher": T("box", "flat", F1, [(1, "glass_canopy"), (2, "fins")], 5, "concrete", 0, 2),
+    "alchemist": T("box", "flat", F2, [(1, "glass_cube"), (2, "light_strips"), (4, "antenna")], 6, "lab", 1, 1),
+    "dyer": T("box_wide", "flat", F1, [(1, "screen"), (2, "light_strips")], 5, "lab"),
+    "glassblower": T("box", "flat", F1, [(1, "glass_cube"), (2, "fins")], 6, "glass", 2, 1),
+    "concretemixer": T("box_wide", "industrial", F1, [(1, "cooling_tower"), (2, "conveyor")], 7, "concrete", 2),
+    "crusher": T("box_wide", "industrial", F1, [(1, "conveyor"), (3, "antenna")], 6, "dark", 1, 3),
+    "sifter": T("box", "industrial", F1, [(1, "conveyor"), (2, "solar_roof")], 6, "concrete", 2, 2),
+    "smeltery": T("box_wide", "industrial", F1, [(1, "cooling_tower"), (2, "loading_docks")], 7, "dark", 3, 1),
+    "stonesmeltery": T("box_wide", "industrial", F1, [(1, "cooling_tower"), (3, "light_strips")], 7, "concrete", 1, 2),
+    "miner": T("box", "flat", F1, [(1, "headframe"), (2, "light_strips")], 7, "dark", 1, 1),
+    "netherworker": T("box", "flat", F2, [(1, "light_strips"), (2, "antenna")], 6, "dark", 2, 2),
+    "farmer": T("box_wide", "flat", F1, [(1, "solar_roof"), (2, "silo_modern")], 7, "concrete", 3),
+    "cowboy": T("box_wide", "barn", F1, [(1, "silo_modern"), (3, "solar_roof")], 7, "dark", 2, 1),
+    "shepherd": T("box_wide", "pitched", F1, [(1, "glass_canopy"), (2, "solar_roof")], 6, "dark", 1),
+    "swineherder": T("box_wide", "flat", G1, [(1, "solar_roof")], 6, "concrete", 2, -1),
+    "chickenherder": T("box", "pitched", F1, [(1, "glass_cube"), (2, "solar_roof")], 6, "concrete", 1, 1),
+    "rabbithutch": T("box", "flat", G1, [(1, "glass_canopy")], 5, "lab"),
+    "stable": T("box_wide", "barn", F1, [(1, "glass_canopy"), (2, "solar_roof")], 6, "dark", 3),
+    "composter": T("box_wide", "flat", F1, [(1, "silo_modern"), (2, "solar_roof")], 7, "concrete", 1),
+    "beekeeper": T("box", "flat", G1, [(1, "glass_cube"), (2, "solar_roof")], 6, "lab", 1),
+    "florist": T("box", "flat", F1, [(1, "glass_roof"), (1, "glass_front")], 5, "glass", 2, 1),
+    "plantation": T("box_wide", "flat", F1, [(1, "glass_cube"), (2, "solar_roof")], 7, "glass", 2),
+    "fisherman": T("box", "flat", G1, [(1, "glass_canopy"), (2, "roof_terrace")], 6, "concrete", 1, -1),
+    "guardtower": T("tower", "flat", T4, [(1, "antenna"), (2, "light_strips")], 5, "dark", 0, 0),
+    "archery": T("box_wide", "flat", F1, [(1, "targets"), (2, "fins")], 6, "concrete", 2),
+    "combatacademy": T("box_wide", "flat", F2, [(1, "screen"), (3, "light_strips")], 6, "dark", 3, 2),
+    "enchanter": T("tower", "flat", T3, [(1, "light_strips"), (2, "antenna")], 6, "lab", 2),
+    "graveyard": T("box", "flat", G1, [(1, "fins"), (2, "light_strips")], 5, "concrete", 1),
+    "mysticalsite": T("box", "flat", F2, [(1, "glass_cube"), (2, "light_strips"), (4, "antenna")], 6, "glass", 2, 2),
 }
+
+# HEARTHWOOD – the cosy market town: brick, plaster and half-timber; gables and hips, compact and narrow
+HEARTH = {
+    "townhall": T("house_T", "hip", F3, [(1, "wall_lanterns"), (2, "portico"), (3, "gable_clock"), (4, "cupola"), (5, "shutters")], 6, "brick", -2, 3),
+    "university": T("longhall_T", "hip", F2, [(1, "wall_lanterns"), (2, "portico"), (3, "cupola"), (4, "shutters")], 6, "brick", 0, 2),
+    "communitycollege": T("house_L", "gable", F2, [(1, "shutters"), (2, "cupola"), (3, "bench")], 6, "brick", -1, 1),
+    "school": T("house_T", "gable", F1, [(1, "cupola"), (2, "bench"), (3, "shutters")], 6, "brick", -2, 2),
+    "library": T("house_L", "hip", F2, [(1, "bay_window"), (2, "wall_lanterns"), (3, "dormers")], 6, "stonework", -2, 2),
+    "hospital": T("house_T", "hip", F2, [(1, "red_cross"), (2, "porch"), (3, "shutters"), (4, "bench")], 6, None, -1, 3),
+    "cottage": T("house_L", "steep", F1, [(1, "chimney"), (2, "shutters"), (3, "bench")], 6, None, -3, 1),
+    "playerhouse": T("house_T", "hip", F2, [(1, "porch"), (2, "bay_window"), (3, "chimney"), (4, "dormers"), (5, "shutters")], 6, "brick", -1, 3),
+    "house": T("house_T", "steep", F2, [(1, "porch"), (2, "bay_window"), (3, "dormers")], 6, None, -2, 2),
+    "apartment": T("box", "gable", T3, [(1, "shutters"), (2, "wall_lanterns"), (3, "dormers")], 5, "brick", -3, 3),
+    "quadplex": T("house_T", "hip", F3, [(1, "porch"), (2, "shutters"), (3, "chimney")], 6, "brick", -2, 1),
+    "tavern": T("house_L", "steep", F3, [(1, "hanging_sign"), (1, "chimney"), (2, "bench"), (3, "bay_window")], 6, None, -1, 2),
+    "cook": T("shop", "steep", F2, [(1, "storefront"), (1, "awning"), (3, "chimney")], 6, None, -2, 2),
+    "cookery": T("shop", "gable", F1, [(1, "bay_window"), (2, "chimney"), (3, "shutters")], 6, "brick", -1),
+    "baker": T("shop", "steep", F2, [(1, "storefront"), (1, "awning"), (2, "chimney"), (3, "hanging_sign")], 6, None, -2, 1),
+    "builder": T("house_L", "gable", F1, [(1, "awning"), (2, "wall_lanterns"), (3, "chimney")], 6, None, -1, 2),
+    "lumberjack": T("house_L", "steep", F1, [(1, "shutters"), (2, "chimney")], 6, "mudbrick", -2),
+    "sawmill": T("house_T", "gable", F1, [(1, "hoist"), (2, "awning")], 6, "mudbrick", -1, 2),
+    "stonemason": T("house_L", "hip", F1, [(1, "stone_pile"), (2, "wall_lanterns")], 6, "stonework", -2, 1),
+    "mechanic": T("house_T", "shed_roof", F1, [(1, "awning"), (2, "chimney")], 6, "brick", -1, 2),
+    "deliveryman": T("shop", "gable", F2, [(1, "hanging_sign"), (2, "storefront"), (3, "wall_lanterns")], 6, None, -1, 1),
+    "warehouse": T("house_T", "gable", F2, [(1, "hoist"), (2, "shutters")], 6, "brick", -2, 3),
+    "blacksmith": T("house_L", "gable", F1, [(1, "forge_chimney"), (2, "hanging_sign"), (3, "awning")], 6, "stonework", -2, 1),
+    "fletcher": T("shop", "steep", F1, [(1, "hanging_sign"), (2, "shutters")], 6, None, -2),
+    "alchemist": T("shop", "steep", F2, [(1, "bay_window"), (1, "hanging_sign"), (3, "sunroom")], 6, None, -2, 2),
+    "dyer": T("house_L", "gable", F1, [(1, "drying_line"), (2, "shutters")], 6, "mudbrick", -1),
+    "glassblower": T("house_L", "gable", F1, [(1, "kiln"), (2, "bay_window")], 6, "brick", -2, 1),
+    "concretemixer": T("house_T", "shed_roof", F1, [(1, "kiln"), (2, "hoist")], 6, "brick", -1, 2),
+    "crusher": T("house_L", "shed_roof", F1, [(1, "hoist"), (2, "stone_pile")], 6, "stonework", -1, 1),
+    "sifter": T("house_L", "gable", F1, [(1, "stone_pile"), (2, "awning")], 6, "mudbrick", -2),
+    "smeltery": T("house_T", "gable", F1, [(1, "smokestacks"), (2, "hoist")], 6, "brick", -1, 3),
+    "stonesmeltery": T("house_L", "hip", F1, [(1, "kiln"), (2, "smokestacks")], 6, "brick", -2, 2),
+    "miner": T("house_L", "gable", F1, [(1, "stone_pile"), (2, "chimney")], 6, "stonework", -2, 1),
+    "netherworker": T("house_T", "steep", F2, [(1, "forge_chimney"), (2, "wall_lanterns")], 6, "stonework", -1, 1),
+    "farmer": T("house_L", "barn", F1, [(1, "barn_doors"), (2, "dovecote"), (3, "chimney")], 6, "redbarn", -1, 2),
+    "cowboy": T("house_T", "barn", F1, [(1, "barn_doors"), (2, "dovecote")], 6, "redbarn", -1, 1),
+    "shepherd": T("house_L", "steep", F1, [(1, "barn_doors"), (2, "shutters")], 6, "redbarn", -2),
+    "swineherder": T("house_L", "gable", G1, [(1, "barn_doors")], 6, "redbarn", -2, 1),
+    "chickenherder": T("shop", "steep", F1, [(1, "dovecote"), (2, "bench")], 6, "redbarn", -2),
+    "rabbithutch": T("house_L", "gable", G1, [(1, "shutters")], 6, "redbarn", -3),
+    "stable": T("house_T", "barn", F1, [(1, "barn_doors"), (2, "cupola")], 6, "redbarn", -1, 2),
+    "composter": T("house_L", "shed_roof", F1, [(1, "compost_bins")], 6, "mudbrick", -2),
+    "beekeeper": T("house_L", "steep", F1, [(1, "bench"), (2, "chimney")], 6, None, -3),
+    "florist": T("shop", "steep", F1, [(1, "storefront"), (1, "awning"), (2, "sunroom")], 6, None, -2, 1),
+    "plantation": T("house_T", "gable", F1, [(1, "sunroom"), (2, "shutters")], 6, "mudbrick", -1, 1),
+    "fisherman": T("house_L", "steep", F1, [(1, "nets"), (2, "bench")], 6, None, -3),
+    "guardtower": T("tower", "battlement", T3, [(1, "battlements"), (2, "wall_lanterns")], 5, "stonework", 1, 1),
+    "archery": T("house_L", "gable", F1, [(1, "hanging_sign"), (2, "wall_lanterns")], 6, "stonework", -1),
+    "combatacademy": T("house_T", "hip", F1, [(1, "battlements_low"), (2, "portico")], 6, "stonework", -1, 2),
+    "enchanter": T("house_L", "steep", F2, [(1, "mage_tower")], 6, "stonework", -2, 1),
+    "graveyard": T("house_L", "steep", F1, [(1, "steeple"), (2, "wall_lanterns")], 6, "stonework", -2),
+    "mysticalsite": T("house_T", "hip", F1, [(1, "portico"), (2, "dome")], 6, "stonework", -1, 1),
+}
+
+# CASCADIA – the Pacific Northwest backcountry: logs, cedar, river rock and moss; long low lodges, steep roofs
+CASC = {
+    "townhall": T("lodge_L", "steep", F2, [(1, "log_porch"), (2, "stone_chimney"), (3, "lookout"), (4, "moss_ridge")], 6, "log", 4, -1),
+    "university": T("longhall", "steep", F2, [(1, "log_porch"), (2, "stone_chimney"), (3, "lantern_posts")], 6, "cedar", 5),
+    "communitycollege": T("lodge_L", "pitched", F1, [(1, "covered_entry"), (2, "moss_ridge"), (3, "lantern_posts")], 6, "weathered", 3),
+    "school": T("aframe", "steep", F1, [(1, "log_porch"), (2, "lantern_posts")], 6, "cedar", 3, -1),
+    "library": T("lodge_L", "steep", F1, [(1, "stone_chimney"), (2, "log_porch"), (3, "moss_ridge")], 6, "riverrock", 4),
+    "hospital": T("longhall", "pitched", F1, [(1, "covered_entry"), (2, "stone_chimney"), (3, "rain_barrels")], 6, "weathered", 5, -1),
+    "cottage": T("aframe", "steep", G1, [(1, "firewood"), (2, "stone_chimney")], 6, "log", 2),
+    "playerhouse": T("lodge_L", "steep", F2, [(1, "log_porch"), (2, "stone_chimney"), (3, "firewood"), (4, "moss_ridge")], 6, "log", 5, -1),
+    "house": T("lodge_L", "pitched", F1, [(1, "log_porch"), (2, "firewood"), (3, "stone_chimney")], 6, "cedar", 3),
+    "apartment": T("longhall_T", "pitched", F2, [(1, "log_porch"), (2, "deck"), (3, "moss_ridge")], 6, "weathered", 4, -1),
+    "quadplex": T("longhall", "steep", F2, [(1, "log_porch"), (2, "firewood")], 6, "log", 5),
+    "tavern": T("lodge_L", "steep", F2, [(1, "log_porch"), (1, "stone_chimney"), (2, "lantern_posts"), (3, "rain_barrels")], 6, "log", 3),
+    "cook": T("longhall", "pitched", F1, [(1, "log_porch"), (2, "stone_chimney"), (3, "firewood")], 6, "cedar", 3, -1),
+    "cookery": T("lodge_L", "pitched", F1, [(1, "stone_chimney"), (2, "rain_barrels")], 6, "riverrock", 2),
+    "baker": T("longhall", "steep", F1, [(1, "stone_chimney"), (2, "firewood"), (3, "lantern_posts")], 6, "riverrock", 3),
+    "builder": T("barn", "steep", F1, [(1, "log_piles"), (2, "lantern_posts")], 6, "weathered", 4),
+    "lumberjack": T("aframe", "steep", F1, [(1, "log_piles"), (2, "firewood"), (3, "stone_chimney")], 6, "log", 2),
+    "sawmill": T("barn", "pitched", F1, [(1, "water_wheel"), (2, "log_piles")], 6, "weathered", 5, -1),
+    "stonemason": T("longhall", "pitched", F1, [(1, "rock_pile"), (2, "stone_chimney")], 6, "riverrock", 4),
+    "mechanic": T("barn", "pitched", F1, [(1, "rain_barrels"), (2, "lantern_posts")], 6, "weathered", 4),
+    "deliveryman": T("longhall", "pitched", F1, [(1, "covered_entry"), (2, "lantern_posts")], 6, "cedar", 4),
+    "warehouse": T("barn", "pitched", F1, [(1, "covered_entry"), (2, "log_piles")], 6, "weathered", 6),
+    "blacksmith": T("lodge_L", "pitched", F1, [(1, "stone_chimney"), (2, "rock_pile")], 6, "riverrock", 2),
+    "fletcher": T("longhall", "steep", F1, [(1, "firewood"), (2, "lantern_posts")], 6, "cedar", 3),
+    "alchemist": T("aframe", "steep", F1, [(1, "rain_barrels"), (2, "moss_ridge")], 6, "cedar", 2),
+    "dyer": T("longhall", "pitched", F1, [(1, "rain_barrels"), (2, "log_porch")], 6, "weathered", 3),
+    "glassblower": T("lodge_L", "pitched", F1, [(1, "stone_chimney"), (2, "rain_barrels")], 6, "riverrock", 3),
+    "concretemixer": T("barn", "pitched", F1, [(1, "rock_pile"), (2, "water_wheel")], 6, "riverrock", 4),
+    "crusher": T("barn", "pitched", F1, [(1, "water_wheel"), (2, "rock_pile")], 6, "weathered", 4),
+    "sifter": T("longhall", "pitched", F1, [(1, "rock_pile"), (2, "rain_barrels")], 6, "weathered", 3),
+    "smeltery": T("lodge_L", "pitched", F1, [(1, "stone_chimney"), (2, "rock_pile")], 6, "riverrock", 4),
+    "stonesmeltery": T("barn", "steep", F1, [(1, "stone_chimney"), (2, "rock_pile")], 6, "riverrock", 3),
+    "miner": T("longhall", "pitched", F1, [(1, "mine_portal"), (2, "lantern_posts")], 6, "log", 3),
+    "netherworker": T("lodge_L", "steep", F1, [(1, "stone_chimney"), (2, "lantern_posts")], 6, "riverrock", 2),
+    "farmer": T("barn", "barn", F1, [(1, "hay_loft"), (2, "rain_barrels"), (3, "moss_ridge")], 6, "weathered", 5),
+    "cowboy": T("barn", "barn", F1, [(1, "hay_loft"), (2, "log_piles")], 6, "weathered", 6),
+    "shepherd": T("longhall", "steep", F1, [(1, "hay_loft"), (2, "moss_ridge")], 6, "log", 4),
+    "swineherder": T("longhall", "pitched", G1, [(1, "rain_barrels")], 6, "weathered", 4, -1),
+    "chickenherder": T("aframe", "steep", F1, [(1, "firewood")], 6, "cedar", 2),
+    "rabbithutch": T("aframe", "steep", G1, [(1, "moss_ridge")], 6, "log", 2, -1),
+    "stable": T("barn", "barn", F1, [(1, "hay_loft"), (2, "lantern_posts")], 6, "log", 6),
+    "composter": T("longhall", "pitched", F1, [(1, "firewood"), (2, "rain_barrels")], 6, "weathered", 3),
+    "beekeeper": T("aframe", "steep", G1, [(1, "log_porch"), (2, "moss_ridge")], 6, "cedar", 2),
+    "florist": T("lodge_L", "pitched", F1, [(1, "log_porch"), (2, "rain_barrels")], 6, "cedar", 2),
+    "plantation": T("longhall", "pitched", F1, [(1, "covered_entry"), (2, "rain_barrels")], 6, "cedar", 4),
+    "fisherman": T("aframe", "steep", G1, [(1, "deck"), (2, "lantern_posts")], 6, "weathered", 2),
+    "guardtower": T("tower", "steep", T3, [(1, "lookout"), (2, "lantern_posts")], 6, "log", 2, 2),
+    "archery": T("longhall", "pitched", F1, [(1, "lookout"), (2, "lantern_posts")], 6, "log", 4),
+    "combatacademy": T("barn", "steep", F1, [(1, "log_porch"), (2, "lantern_posts")], 6, "log", 5),
+    "enchanter": T("aframe", "steep", F2, [(1, "moss_ridge"), (2, "lantern_posts")], 6, "riverrock", 3),
+    "graveyard": T("aframe", "steep", G1, [(1, "lantern_posts"), (2, "moss_ridge")], 6, "weathered", 2),
+    "mysticalsite": T("lodge_L", "steep", F1, [(1, "lantern_posts"), (2, "moss_ridge"), (3, "stone_chimney")], 6, "riverrock", 3),
+}
+
+SPECS = {"Neoterra": NEO, "Hearthwood": HEARTH, "Cascadia": CASC}
+SPEC = HEARTH                                        # kept for older callers
+
+
+# final per-pack material vocabulary: (old name or family prefix, new) – applied to every non-functional block
+REMAP = {
+    "Cascadia": [("dark_oak_", "mangrove_"), ("stripped_dark_oak_", "stripped_mangrove_"), ("oak_", "spruce_"),
+                 ("stripped_oak_", "stripped_spruce_"), ("birch_", "spruce_"), ("stripped_birch_", "stripped_spruce_"),
+                 ("stone_bricks", "mossy_stone_bricks"), ("stone_brick_", "mossy_stone_brick_"), ("glass_pane", "glass"),
+                 ("white_concrete", "calcite"), ("bricks", "mud_bricks"), ("brick_", "mud_brick_"),
+                 ("polished_andesite", "tuff"), ("smooth_stone", "tuff"), ("white_terracotta", "calcite")],
+    "Hearthwood": [("spruce_", "oak_"), ("stripped_spruce_", "stripped_oak_"), ("birch_", "oak_"),
+                   ("stripped_birch_", "stripped_oak_"), ("mangrove_", "dark_oak_"), ("cobblestone", "stone_bricks"),
+                   ("mossy_cobblestone", "mossy_stone_bricks"), ("cobblestone_", "stone_brick_"), ("andesite", "stone"),
+                   ("tuff", "stone"), ("campfire", "decorated_pot"), ("hay_block", "pumpkin"), ("white_concrete", "white_terracotta"),
+                   ("glass", "white_stained_glass"), ("gravel", "packed_mud"), ("coarse_dirt", "packed_mud"),
+                   ("calcite", "white_terracotta")],
+    "Neoterra": [("oak_", "birch_"), ("dark_oak_", "birch_"), ("spruce_", "birch_"), ("mangrove_", "birch_"),
+                 ("stripped_oak_", "stripped_birch_"), ("stripped_spruce_", "stripped_birch_"),
+                 ("stripped_dark_oak_", "stripped_birch_"), ("glass_pane", "light_blue_stained_glass_pane"),
+                 ("cobblestone", "gray_concrete"), ("mossy_cobblestone", "gray_concrete"), ("stone_bricks", "light_gray_concrete"),
+                 ("bricks", "gray_concrete"), ("campfire", "soul_campfire"), ("hay_block", "white_wool"),
+                 ("gravel", "light_gray_concrete_powder")],
+}
+FUNCTIONAL = ("blockhut", "rack", "crafting_table", "furnace", "smoker", "barrel", "anvil", "lectern", "bookshelf",
+              "stonecutter", "grindstone", "loom", "cartography", "fletching", "smithing", "brewing", "enchanting",
+              "cauldron", "composter", "_bed", "chest", "jukebox", "bell", "beehive", "bee_nest", "target", "hopper",
+              "substitution", "field", "grave", "scarecrow", "portal", "obsidian", "farmland", "water", "lava", "rail",
+              "ladder", "_door", "flower_pot", "potted_", "carpet", "lantern")
+NO_PROPS = {"glass", "calcite", "mossy_stone_bricks", "mud_bricks", "tuff", "stone", "stone_bricks", "mossy_stone_bricks",
+            "white_terracotta", "white_stained_glass", "pumpkin", "white_wool", "gray_concrete", "light_gray_concrete",
+            "packed_mud", "light_gray_concrete_powder", "decorated_pot"}
+
+
+def remap(style, state):
+    ns, _, rest = state.partition(":")
+    if ns != "minecraft":
+        return state
+    name, br, props = rest.partition("[")
+    if any(f in name for f in FUNCTIONAL):
+        return state
+    new = name
+    for old, rep in REMAP[style]:
+        if old.endswith("_"):
+            if new.startswith(old) and not (old == "oak_" and new.startswith("dark_oak_")):
+                cand = rep + new[len(old):]
+                new = cand
+                break
+        elif new == old or (old in ("bricks",) and new == "bricks"):
+            new = rep
+            break
+    if new == name:
+        return state
+    if new == "decorated_pot":
+        return "minecraft:decorated_pot[cracked=false,facing=north,waterlogged=false]"
+    if new in NO_PROPS or new.endswith("_concrete") or new.endswith("_terracotta"):
+        return "minecraft:" + new
+    if name in ("hay_block",):
+        return "minecraft:" + new
+    return "minecraft:" + new + (br + props if br else "")
+
+
+def spec(style, base):
+    return SPECS[style].get(base)
 
 
 def roof_form(style, kind):
@@ -643,8 +822,308 @@ def f_steeple(c):
     c.S(c.dx, top + 8, c.z1 + 1, "lightning_rod[facing=up,powered=false,waterlogged=false]", force=True)
 
 
+
+
+# ================================================================================================================
+# Neoterra vocabulary
+def f_glass_canopy(c):
+    y = c.gy + 3
+    for x in range(c.dx - 3, c.dx + 4):
+        for z in range(c.z1 - 3, c.z1):
+            c.S(x, y, z, "smooth_quartz_slab[type=top,waterlogged=false]" if z > c.z1 - 3 else "light_blue_stained_glass")
+
+
+def f_glass_front(c):
+    for f in range(c.nf):
+        for y in range(c.a.floor_y(f) + 1, c.a.floor_y(f + 1)):
+            for x in range(c.x1 + 1, c.x2):
+                g = c.get(x, y, c.z1)
+                if "door" in g or (x, y, c.z1) in c.a.locked:
+                    continue
+                c.S(x, y, c.z1, "light_blue_stained_glass_pane")
+
+
+def f_fins(c):
+    for x in range(c.x1 + 1, c.x2, 3):
+        if abs(x - c.dx) <= 1:
+            continue
+        for y in range(c.gy + 1, c.ytop + 1):
+            c.S(x, y, c.z1 - 1, "white_concrete")
+
+
+def f_roof_terrace(c):
+    y = c.top(c.cx, c.cz)
+    for x in range(c.x1 + 1, c.x2):
+        for z in (c.z1 + 1, c.z2 - 1):
+            c.S(x, y + 1, z, "light_blue_stained_glass_pane")
+    for z in range(c.z1 + 1, c.z2):
+        for x in (c.x1 + 1, c.x2 - 1):
+            c.S(x, y + 1, z, "light_blue_stained_glass_pane")
+    for x in range(c.cx - 2, c.cx + 3, 2):
+        c.S(x, y + 1, c.cz, "smooth_quartz_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]")
+
+
+def f_antenna(c):
+    x, z = c.x2 - 1, c.z2 - 1
+    y = c.top(x, z)
+    for k in range(1, 8):
+        c.S(x, y + k, z, "iron_bars")
+    c.S(x, y + 8, z, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+    c.S(x - 1, y + 5, z, "iron_bars")
+    c.S(x + 1 if x + 1 < c.bp.sx else x - 2, y + 5, z, "iron_bars")
+
+
+def f_screen(c):
+    x = c.x1
+    for z in range(c.z1 + 2, min(c.z2 - 1, c.z1 + 8)):
+        for y in range(c.gy + 2, c.gy + 5):
+            edge = z in (c.z1 + 2, min(c.z2 - 2, c.z1 + 7)) or y in (c.gy + 2, c.gy + 4)
+            c.S(x - 1, y, z, "cyan_concrete" if edge else "black_concrete")
+
+
+def f_light_strips(c):
+    for f in range(c.nf):
+        y = c.a.floor_y(f + 1) - 1 if f < c.nf - 1 else c.ytop - 1
+        for x in range(c.x1 + 1, c.x2):
+            if "glass" not in c.get(x, y, c.z1) and "door" not in c.get(x, y, c.z1):
+                c.S(x, y, c.z1, "sea_lantern")
+
+
+def f_glass_cube(c):
+    xa, xb = c.x2 + 1, c.x2 + 5
+    za, zb = c.cz - 2, c.cz + 2
+    for x in range(xa, xb + 1):
+        for z in range(za, zb + 1):
+            e = x in (xa, xb) or z in (za, zb)
+            c.S(x, c.gy, z, "smooth_stone")
+            for y in range(c.gy + 1, c.gy + 4):
+                corner = x in (xa, xb) and z in (za, zb)
+                c.S(x, y, z, "white_concrete" if corner else ("light_blue_stained_glass" if e else AIR))
+            c.S(x, c.gy + 4, z, "white_concrete" if e else "light_blue_stained_glass")
+    for y in (c.gy + 1, c.gy + 2):
+        c.S(c.x2, y, c.cz, AIR)
+        c.S(xa, y, c.cz, AIR)
+
+
+def f_solar_roof(c):
+    for x in range(c.x1 + 1, c.x2, 1):
+        for z in range(c.z1 + 1, c.z2, 2):
+            y = c.top(x, z)
+            if "pane" in c.get(x, y, z) or "rod" in c.get(x, y, z):
+                continue
+            c.S(x, y + 1, z, "daylight_detector[inverted=false,power=0]")
+
+
+def f_conveyor(c):
+    z = c.cz
+    for x in range(c.x1 - 6, c.x1):
+        c.S(x, c.gy + 4, z, "smooth_stone_slab[type=top,waterlogged=false]")
+        if (x - c.x1) % 2 == 0:
+            for y in range(c.gy + 1, c.gy + 4):
+                c.S(x, y, z, "iron_bars")
+    c.S(c.x1 - 6, c.gy + 5, z, "iron_block")
+
+
+def f_cooling_tower(c):
+    tx, tz = c.x2 + 5, c.cz
+    H = c.ytop + 6
+    for y in range(c.gy + 1, H + 1):
+        t = (y - c.gy) / (H - c.gy)
+        r = 3.4 - 1.6 * math.sin(math.pi * t * 0.85)
+        for x in range(tx - 4, tx + 5):
+            for z in range(tz - 4, tz + 5):
+                d = math.hypot(x - tx, z - tz)
+                if r - 1 < d <= r:
+                    c.S(x, y, z, "light_gray_concrete" if y % 6 else "white_concrete")
+
+
+def f_silo_modern(c):
+    tx, tz = c.x2 + 4, c.z1 + 2
+    H = c.ytop + 7
+    for y in range(c.gy + 1, H + 1):
+        for x in range(tx - 2, tx + 3):
+            for z in range(tz - 2, tz + 3):
+                d = math.hypot(x - tx, z - tz)
+                if 1.5 < d <= 2.5:
+                    c.S(x, y, z, "white_concrete" if (y // 3) % 2 else "light_gray_concrete")
+    for x in range(tx - 1, tx + 2):
+        for z in range(tz - 1, tz + 2):
+            c.S(x, H + 1, z, "smooth_quartz")
+    c.S(tx, H + 2, tz, "sea_lantern")
+    for y in range(c.gy + 1, H + 1):
+        c.S(tx, y, tz - 3, "iron_bars")
+
+
+# ================================================================================================================
+# Hearthwood vocabulary
+def f_shutters(c):
+    wood = c.wood
+    for f in range(c.nf):
+        for y in range(c.a.floor_y(f) + 1, c.a.floor_y(f + 1)):
+            for x in range(c.x1 + 1, c.x2):
+                if "glass" in c.get(x, y, c.z1):
+                    for nx in (x - 1, x + 1):
+                        if "glass" not in c.get(nx, y, c.z1) and c.get(nx, y, c.z1) != AIR and (nx, y, c.z1 - 1) not in c.a.locked:
+                            c.S(nx, y, c.z1 - 1, f"{wood}_trapdoor[facing=north,half=bottom,open=true,powered=false,waterlogged=false]")
+
+
+def f_wall_lanterns(c):
+    for x in (c.dx - 2, c.dx + 2):
+        c.S(x, c.gy + 3, c.z1 - 1, c.fence())
+        c.S(x, c.gy + 2, c.z1 - 1, "lantern[hanging=true,waterlogged=false]")
+
+
+def f_bay_window(c):
+    for x0 in (c.dx + 3, c.dx - 5):
+        if x0 < c.x1 + 1 or x0 + 2 > c.x2 - 1:
+            continue
+        for x in range(x0, x0 + 3):
+            c.S(x, c.gy + 1, c.z1 - 1, "bricks")
+            for y in (c.gy + 2, c.gy + 3):
+                c.S(x, y, c.z1 - 1, "glass_pane")
+                c.S(x, y, c.z1, "glass_pane")
+            c.S(x, c.gy + 4, c.z1 - 1, c.stair(c.wood, "north"))
+
+
+def f_gable_clock(c):
+    y0 = c.ytop + 2
+    for dx in (-1, 0, 1):
+        for dy in (0, 1, 2):
+            if c.get(c.dx + dx, y0 + dy, c.z1) != AIR:
+                c.S(c.dx + dx, y0 + dy, c.z1 - 1, "calcite" if (dx, dy) != (0, 1) else "dark_oak_planks")
+
+
+def f_bench(c):
+    for x in (c.dx - 3, c.dx - 2):
+        if x > c.x1:
+            c.S(x, c.gy + 1, c.z1 - 1, c.stair(c.wood, "south"))
+
+
+def f_dovecote(c):
+    xa, za = c.x1 - 4, c.z1
+    for y in range(c.gy + 1, c.gy + 7):
+        for x in range(xa, xa + 3):
+            for z in range(za, za + 3):
+                if x in (xa, xa + 2) or z in (za, za + 2):
+                    c.S(x, y, z, "bricks" if y < c.gy + 4 else ("white_terracotta" if (x + z + y) % 2 else AIR))
+    for k in range(2):
+        for x in range(xa + k, xa + 3 - k):
+            for z in range(za + k, za + 3 - k):
+                c.S(x, c.gy + 7 + k, z, f"{c.wood}_planks" if k else c.stair(c.wood, "south"))
+
+
+def f_hoist(c):
+    y = c.ytop + 1
+    for z in (c.z1 - 1, c.z1 - 2):
+        c.S(c.dx, y, z, f"stripped_{c.wood}_log[axis=z]")
+    for k in range(1, 4):
+        c.S(c.dx, y - k, c.z1 - 2, "chain[axis=y,waterlogged=false]")
+    c.S(c.dx, y - 4, c.z1 - 2, f"{c.wood}_planks")
+
+
+# ================================================================================================================
+# Cascadia vocabulary
+def f_log_porch(c):
+    xa, xb = c.x1, c.x2
+    for x in range(xa, xb + 1):
+        for z in range(c.z1 - 3, c.z1):
+            c.S(x, c.gy, z, "spruce_planks")
+        c.S(x, c.gy + 4, c.z1 - 3, "spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]")
+        for z in (c.z1 - 2, c.z1 - 1):
+            c.S(x, c.gy + 4, z, "spruce_planks")
+        if (x - xa) % 3 == 0:
+            for y in range(c.gy + 1, c.gy + 4):
+                c.S(x, y, c.z1 - 3, "stripped_spruce_log[axis=y]")
+        elif abs(x - c.dx) > 1:
+            c.S(x, c.gy + 1, c.z1 - 3, c.fence("spruce"))
+
+
+def f_firewood(c):
+    x0 = c.x2 + 1
+    for z in range(c.z1 + 1, min(c.z2, c.z1 + 6)):
+        for y in (c.gy + 1, c.gy + 2):
+            c.S(x0, y, z, "spruce_log[axis=x]" if (y + z) % 2 else "birch_log[axis=x]")
+        c.S(x0, c.gy + 3, z, "spruce_slab[type=bottom,waterlogged=false]")
+
+
+def f_rain_barrels(c):
+    for x, z in ((c.x1 - 1, c.z1 + 1), (c.x2 + 1, c.z2 - 1)):
+        c.S(x, c.gy + 1, z, "water_cauldron[level=2]")
+        top = None
+        for y in range(c.gy + 3, c.bp.sy):
+            if c.get(x, y, z) != AIR:
+                top = y
+                break
+        if top:
+            for y in range(c.gy + 2, top):
+                c.S(x, y, z, "chain[axis=y,waterlogged=false]")
+
+
+def f_moss_ridge(c):
+    for x in range(c.x1 - 1, c.x2 + 2):
+        for z in range(c.z1 - 1, c.z2 + 2):
+            y = c.top(x, z)
+            if y <= c.ytop:
+                continue
+            s = c.get(x, y, z)
+            if "stairs" in s and (x + z) % 3 == 0:
+                c.S(x, y + 1, z, "moss_carpet")
+            elif "planks" in s or "slab" in s:
+                c.S(x, y, z, "moss_block", force=True)
+
+
+def f_lantern_posts(c):
+    for x in (c.dx - 2, c.dx + 2):
+        z = c.z1 - 4 if c.z1 - 4 >= 0 else 0
+        for y in range(c.gy + 1, c.gy + 3):
+            c.S(x, y, z, "spruce_log[axis=y]")
+        c.S(x, c.gy + 3, z, "lantern[hanging=false,waterlogged=false]")
+
+
+def f_rock_pile(c):
+    x0, z0 = c.x1 - 4, c.z2 - 3
+    mats = ["mossy_cobblestone", "cobblestone", "andesite", "tuff"]
+    for x in range(x0, x0 + 3):
+        for z in range(z0, z0 + 3):
+            hgt = 1 + (x == x0 + 1 and z == z0 + 1) + ((x + z) % 3 == 0)
+            for y in range(c.gy + 1, c.gy + 1 + hgt):
+                c.S(x, y, z, mats[(x * 7 + z * 3 + y) % len(mats)])
+
+
+def f_hay_loft(c):
+    y = c.ytop + 2
+    if c.get(c.dx, y, c.z1) != AIR:
+        c.S(c.dx, y, c.z1, "spruce_trapdoor[facing=north,half=bottom,open=true,powered=false,waterlogged=false]")
+    if c.get(c.dx, y + 2, c.z1) != AIR:
+        c.S(c.dx, y + 2, c.z1 - 1, "stripped_spruce_log[axis=z]")
+    for x in (c.dx - 4, c.dx - 3, c.dx + 3):
+        if c.x1 <= x <= c.x2:
+            c.S(x, c.gy + 1, c.z1 - 2, "hay_block[axis=x]")
+    c.S(c.dx - 4, c.gy + 2, c.z1 - 2, "hay_block[axis=x]")
+
+
+def f_mine_portal(c):
+    x0, z0 = c.x1 - 6, c.z1
+    for x in range(x0, x0 + 5):
+        for z in range(z0, z0 + 4):
+            for y in range(c.gy + 1, c.gy + 5 - abs(x - (x0 + 2)) // 2):
+                c.S(x, y, z, "cobblestone" if (x + y + z) % 3 else "mossy_cobblestone")
+    xc = x0 + 2
+    for y in (c.gy + 1, c.gy + 2):
+        c.S(xc, y, z0, AIR)
+        c.S(xc, y, z0 + 1, AIR)
+    for x in (xc - 1, xc + 1):
+        for y in (c.gy + 1, c.gy + 2):
+            c.S(x, y, z0 - 1, "spruce_log[axis=y]")
+    for x in range(xc - 1, xc + 2):
+        c.S(x, c.gy + 3, z0 - 1, "spruce_log[axis=x]")
+    for z in (z0 - 2, z0 - 1, z0, z0 + 1):
+        c.S(xc, c.gy + 1, z, "rail[shape=north_south,waterlogged=false]")
+
+
 # archgen's own extras
-PASSTHROUGH = ("porch", "covered_entry", "deck", "dormers", "awning", "silo", "water_wheel", "cupola", "lookout", "sunroom")
+PASSTHROUGH = ("porch", "covered_entry", "deck", "dormers", "awning", "silo", "water_wheel", "cupola", "lookout", "sunroom",
+               "stone_chimney", "brick_chimney")
 
 
 def apply(a):

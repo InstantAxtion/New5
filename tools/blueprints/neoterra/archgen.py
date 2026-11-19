@@ -261,7 +261,8 @@ class Arch:
         if fx:
             self.extras = (fx,) + tuple(e for e in self.extras if e != fx)[:2]
         self.gy = 1
-        self.typ = typology.SPEC.get(prog.base)
+        self.typ = typology.spec(style, prog.base)
+        self.FH = typology.FH[style]
         self.margin = 4
         if style == "Neoterra":
             self.top = level >= 4
@@ -269,9 +270,11 @@ class Arch:
             self.plan = self.typ["plan"]
             self.roof = typology.roof_form(style, self.typ["roof"])
             self.margin = self.typ["margin"]
+            if self.typ.get("fh"):
+                self.FH = self.typ["fh"]
             if self.typ.get("skin"):
-                self.M.update(typology.SKINS[self.typ["skin"]][style])
-                if self.typ["skin"] in ("industrial", "civic"):
+                self.M.update(typology.SKINS[self.typ["skin"]])
+                if self.typ["skin"] in ("glass", "concrete", "dark", "lab", "brick", "stonework"):
                     self.win = 2
 
     # ---- sizing ---------------------------------------------------------
@@ -307,6 +310,9 @@ class Arch:
             W = D = 7 + 2 * scale
         elif self.plan == "shop":
             W, D = 9 + 2 * scale, 11 + 2 * scale + (self.L - 1)
+        if self.typ:
+            W = max(9, W + self.typ["dw"])
+            D = max(7, D + self.typ["dd"])
         vols = [(0, W - 1, 0, D - 1, nf, self.roof)]
         if self.plan == "civic" and self.L >= 3:
             ww, dd = 7 + (self.L - 3) * 2, D - 2
@@ -1031,6 +1037,16 @@ class Arch:
     # ---- anchor ---------------------------------------------------------------
     def finish(self):
         bp, P = self.bp, self.P
+        if self.typ:
+            for y in range(bp.sy):
+                for z in range(bp.sz):
+                    row = bp.grid[y][z]
+                    for x in range(bp.sx):
+                        st = row[x]
+                        if st != AIR and (x, y, z) not in bp.tile_entities:
+                            nst = typology.remap(self.style, st)
+                            if nst != st:
+                                row[x] = nst
         hp, st, te = P.hut
         te = copy.deepcopy(te)
         hx, hy, hz = self.hut_pos
