@@ -107,7 +107,9 @@ def iso(bp, rot, path, scale=14):
             return None
         ox, oz = orig(x, z)
         s = material(bp, ox, y, oz)
-        return None if s == "air" else s
+        if s == "blockfluidsubstitution":
+            return "water"
+        return None if s in ("air", "blocksubstitution", "blocktagsubstitution") else s
 
     w, h, H = scale, scale / 2, scale * 1.15
     img_w = int((W + D) * w + 40)

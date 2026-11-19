@@ -8,11 +8,12 @@ pack, prev = Path(sys.argv[1]), Path(sys.argv[2])
 BG = (236, 240, 244, 255)
 # category folder -> building whose level-5 render is used as the tab icon
 CATEGORIES = {"fundamentals": "townhall5", "craftsmanship": "deliveryman5", "decorations": "playerhouse5",
-              "education": "university5", "military": "barracks5"}
+              "education": "university5", "military": "barracks5", "agriculture": "farmer5",
+              "infrastructure": "miner5"}
 BUILDINGS = ["townhall", "builder", "cottage", "house", "apartment", "quadplex", "skytower", "bunker",
              "cook", "lumberjack", "sawmill", "stonemason", "mechanic", "deliveryman", "warehouse",
              "school", "library", "university", "guardtower", "barracks", "archery", "combatacademy", "stable",
-             "playerhouse"]
+             "playerhouse", "miner", "farmer", "hospital", "tavern", "fisherman", "smeltery", "blacksmith", "baker"]
 
 
 def square(im, bg=BG):
@@ -37,8 +38,8 @@ for cat, b in CATEGORIES.items():
     gray.save(pack / cat / "icon_disabled.png")
 
 for b in BUILDINGS:
-    files = [prev / f"{b}{lvl}_front.png" for lvl in range(1, 6)]
-    if not all(f.exists() for f in files):
+    files = [prev / f"{b}{lvl}_front.png" for lvl in range(1, 6) if (prev / f"{b}{lvl}_front.png").exists()]
+    if not files:
         continue
     ims = [Image.open(f).convert("RGBA") for f in files]
     scale = 420 / max(i.height for i in ims)
