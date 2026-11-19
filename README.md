@@ -102,21 +102,21 @@ the next `playerhouseN`.
 | 4 | Premium palette; beacon on a 3×3 iron-block base, roof garden, nether portal frame, ender chest, jukebox, lamp spires |
 | 5 | Roof lounge seats, glowing corners |
 
-### Bunker – self-sustaining underground settlement (`fundamentals/bunker1-5`)
-33 × 22 × 31, mostly underground (the lawn is at the top; the ground around the shell is
-`blocksolidsubstitution`, so the builder only digs what it needs). Like the Skytower it contains
-**child huts**, each upgraded on its own:
+### Bunker – four-deck underground settlement with a player base (`fundamentals/bunker1-5`)
+41 × 32 × 41, almost entirely underground (lawn on top; the ground around the shell and any deck
+not built yet is `blocksolidsubstitution`, so the builder only digs what it needs). A glass atrium
+runs through every deck under a skylight. Like the Skytower it contains **child huts**, each
+upgraded on its own:
 
-| Hut | Room | Per level |
+| Deck | Purpose | Rooms |
 |---|---|---|
-| Bunker (residence) | dorm on deck A | 1–5 beds |
-| `bunkerkitchen` (cook) | canteen | 1 furnace per level, seats, kitchen `work` spots, rack |
-| `bunkerschool` (school) | classroom | 10 seats + teacher spot, bookshelves |
-| `bunkerclinic` (hospital) | sick bay | 2 beds per level, furnace, brewing (L3) |
-| `bunkerfarm` (farmer) | farm office on deck B | racks, composter; works the scarecrow field in the lit farm hall |
+| A (top) | Living | dorm (bunker residence, 1–5 beds), **canteen** (cook hut: 1 furnace/level), **classroom** (school hut: 10 seats), **clinic** (hospital hut: 2 beds/level), commons lounge, stores & laundry |
+| B | **Player base** | workshop (up to 4 furnaces + 2 blast furnaces + 2 smokers, crafting/smithing/stonecutter/loom/cartography/fletching), enchanting library (30 bookshelves), storage vault (~150 barrels), player suite (2 beds, 2 brewing stands, cauldron, ender chest from L4), armory, map room |
+| C (L2+) | Farm | farm hall with a scarecrow field, **farm office** (farmer hut: racks), compost store, water reservoir |
+| D (L3+) | Engineering | second scarecrow field, generator room, water tanks, emergency stores, atrium garden |
 
-Also: glass entrance pavilion + stairs, corridor, storage + generator room with a water tank (L3),
-air vents, surface trees and lamp spires. Child room blueprints are tagged invisible.
+L4 adds the premium palette and a glass skylight dome, L5 a glowing ring around the atrium on
+every deck and a lit reactor core. Up to 17 beds (5 dorm + 2 player + 10 clinic).
 
 ![Bunker levels 1–5 (cutaway, rooms furnished)](docs/previews/neoterra/bunker_levels.png)
 
