@@ -56,7 +56,7 @@ def analyse(bp):
     for x in range(bp.sx):
         for z in range(bp.sz):
             if x in (0, bp.sx - 1) or z in (0, bp.sz - 1):
-                for y in range(1, 5):
+                for y in range(1, bp.sy - 1):           # lowest open spot = ground level
                     if ok(x, y, z):
                         start.append((x, y, z))
                         break
@@ -91,11 +91,15 @@ def analyse(bp):
             continue
         if "rack" in n and "blockhut" not in n:
             pass
-        reach = False
-        for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            for dy in (0, -1, -2, 1):
-                if (x + dx, y + dy, z + dz) in seen:
-                    reach = True
+        def reachable(px, py, pz):
+            return any((px + dx, py + dy, pz + dz) in seen
+                       for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)) for dy in (0, -1, -2, 1))
+        reach = reachable(x, y, z)
+        if not reach and n.endswith("_bed"):           # a bed only needs one reachable half
+            facing = parse_state(s)[1].get("facing", "north")
+            fdx, fdz = {"north": (0, -1), "south": (0, 1), "east": (1, 0), "west": (-1, 0)}[facing]
+            sign = 1 if "part=foot" in s else -1
+            reach = reachable(x + sign * fdx, y, z + sign * fdz)
         if not reach:
             problems.append(f"{n} at {(x, y, z)} not reachable")
     beds = sum(1 for *_, s in bp.blocks() if short(s).endswith("_bed") and "part=head" in s)

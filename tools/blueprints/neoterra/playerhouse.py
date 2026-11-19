@@ -32,10 +32,10 @@ SX, SY, SZ = 35, 22, 29
 GX1, GX2, GZ1, GZ2 = 3, 30, 6, 22          # ground floor shell
 UX1, UX2, UZ1, UZ2 = 6, 27, 4, 19          # floating upper box
 SLAB, ROOF = 7, 13
-PATH = "decorations/housing/playerhouse.blueprint"
+PATH = "decorations/housing/playerhouse{}.blueprint"
 
 
-def decoration_te(controller, tags):
+def decoration_te(controller, tags, level):
     cx, cy, cz = controller
 
     def pos(x, y, z):
@@ -46,8 +46,8 @@ def decoration_te(controller, tags):
                 for (x, y, z), names in sorted(tags.items())]
     return T.Compound({
         "id": T.String("minecolonies:decorationcontroller"),
-        "path": T.String(PATH),
-        "name": T.String("playerhouse"),
+        "path": T.String(PATH.format(level)),
+        "name": T.String(f"playerhouse{level}"),
         "pack": T.String(PACK_NAME),
         "Item": T.String(""),
         "mirror": T.Byte(0),
@@ -55,8 +55,8 @@ def decoration_te(controller, tags):
         "blueprintDataProvider": T.Compound({
             "corner1": pos(-cx, -cy, -cz),
             "corner2": pos(SX - 1 - cx, SY - 1 - cy, SZ - 1 - cz),
-            "path": T.String(PATH),
-            "schematicName": T.String("playerhouse"),
+            "path": T.String(PATH.format(level)),
+            "schematicName": T.String(f"playerhouse{level}"),
             "pack": T.String(PACK_NAME),
             "posTagMap": T.List[T.Compound](tag_list),
         }),
@@ -67,9 +67,10 @@ def edge(x, z, x1, x2, z1, z2):
     return x in (x1, x2) or z in (z1, z2)
 
 
-def build() -> Blueprint:
-    st = Style(5)
-    bp = Blueprint(SX, SY, SZ, "playerhouse.blueprint")
+def build(level: int = 5) -> Blueprint:
+    L = level
+    st = Style(L)
+    bp = Blueprint(SX, SY, SZ, f"playerhouse{L}.blueprint")
     W, G, TR, D, AC = st.WHITE, st.GLASS, st.TRIM, st.DECK, st.ACCENT
     glow = st.GLOW
     sit = []
@@ -79,7 +80,7 @@ def build() -> Blueprint:
     for x in range(SX):
         for z in range(SZ):
             if 16 <= x <= 18 and z < GZ1:
-                s = W if x in (16, 18) else "smooth_quartz"
+                s = W if x in (16, 18) else ("smooth_stone" if st.early else "smooth_quartz")
             elif GX1 <= x <= GX2 and GZ1 <= z <= GZ2:
                 s = st.floor(x, z)
             else:
@@ -94,7 +95,7 @@ def build() -> Blueprint:
             for y in range(2, SLAB):
                 corner = x in (GX1, GX2) and z in (GZ1, GZ2)
                 if y == SLAB - 1:
-                    s = "sea_lantern"                                      # light strip
+                    s = st.band                                            # cyan band / light strip
                 elif corner:
                     s = W
                 elif z == GZ1:
@@ -126,19 +127,20 @@ def build() -> Blueprint:
         for z in (9, 13, 18):
             st.ceiling_light(bp, x, SLAB, z)
 
-    # ------------------------------------------------------------ floating upper box
-    for x in range(UX1, UX2 + 1):
+    # ------------------------------------------------------------ floating upper box (L3+)
+    upper = L >= 3
+    for x in (range(UX1, UX2 + 1) if upper else ()):
         for z in range(UZ1, UZ2 + 1):
             e = edge(x, z, UX1, UX2, UZ1, UZ2)
             if z < GZ1:
-                bp.set(x, SLAB, z, glow if e else D)                       # cantilevered floor
+                bp.set(x, SLAB, z, (glow or st.band) if e else D)          # cantilevered floor
             bp.set(x, ROOF, z, AC if e else D)
             if not e:
                 continue
             for y in range(SLAB + 1, ROOF):
                 corner = x in (UX1, UX2) and z in (UZ1, UZ2)
                 if corner:
-                    s = "sea_lantern"
+                    s = glow or W
                 elif y == ROOF - 1:
                     s = W
                 elif z == UZ1:
@@ -148,27 +150,29 @@ def build() -> Blueprint:
                 else:
                     s = W
                 bp.set(x, y, z, s)
-    for xp in (12, 21):
+    for xp in ((12, 21) if upper else ()):
         for z in range(UZ1 + 1, UZ2):
             for y in range(SLAB + 1, ROOF):
                 bp.set(xp, y, z, W if y < 11 else G)
         for y in (SLAB + 1, SLAB + 2):
             bp.set(xp, y, 15, "air")
-    for x in (16, 17):                                                     # doors to the back terrace
-        for y in (SLAB + 1, SLAB + 2):
-            bp.set(x, y, UZ2, "air")
-    for x, z in ((9, 16), (15, 7), (18, 12), (24, 8), (24, 15)):
-        st.ceiling_light(bp, x, ROOF, z)
+    if upper:
+        for x in (16, 17):                                                 # doors to the back terrace
+            for y in (SLAB + 1, SLAB + 2):
+                bp.set(x, y, UZ2, "air")
+        for x, z in ((9, 16), (15, 7), (18, 12), (24, 8), (24, 15)):
+            st.ceiling_light(bp, x, ROOF, z)
     # terrace railing on the exposed ground-floor roof
     for x in range(GX1, GX2 + 1):
         for z in range(GZ1, GZ2 + 1):
-            inside_box = UX1 <= x <= UX2 and UZ1 <= z <= UZ2
+            inside_box = upper and UX1 <= x <= UX2 and UZ1 <= z <= UZ2
             if edge(x, z, GX1, GX2, GZ1, GZ2) and not inside_box:
                 put(bp, x, SLAB + 1, z, st.railing)
-    for x in (8, 26):
-        planter(bp, x, SLAB + 1, 21)
-    for x in (12, 14, 19, 21):
-        chair(bp, x, SLAB + 1, 21, st.SEAT, "south", sit)
+    if L >= 2:
+        for x in (8, 26):
+            planter(bp, x, SLAB + 1, 21)
+        for x in (12, 14, 19, 21):
+            chair(bp, x, SLAB + 1, 21, st.SEAT, "south", sit)
 
     # ------------------------------------------------------------ stairs
     # ground -> upper floor: x15, rising south z8 -> z13, landing z14
@@ -182,49 +186,63 @@ def build() -> Blueprint:
         put(bp, 16, SLAB + 1, z, st.railing)
     put(bp, 15, SLAB + 1, 7, st.railing)
     # upper floor -> roof: x19, rising north z13 -> z8, landing z7
-    for i in range(6):
+    for i in (range(6) if upper else ()):
         z, y = 13 - i, SLAB + 1 + i
         if y > SLAB + 1:
             bp.fill(19, SLAB + 1, z, 19, y - 1, z, W)
         bp.set(19, y, z, f"{st.SEAT}[facing=north,half=bottom,shape=straight,waterlogged=false]")
-    for z in range(9, 14):
-        bp.set(19, ROOF, z, "air")
-        put(bp, 18, ROOF + 1, z, st.railing)
-    put(bp, 19, ROOF + 1, 14, st.railing)
+    if upper:
+        for z in range(9, 14):
+            bp.set(19, ROOF, z, "air")
+            put(bp, 18, ROOF + 1, z, st.railing)
+        put(bp, 19, ROOF + 1, 14, st.railing)
 
     # ------------------------------------------------------------ ground floor rooms
     y = 2
     # workshop (x4..12)
-    for z, s in ((9, "furnace"), (10, "furnace"), (11, "furnace"), (12, "furnace"),
-                 (14, "blast_furnace"), (15, "blast_furnace"), (17, "smoker"), (18, "smoker")):
+    smelt = [(9, "furnace"), (10, "furnace")]
+    if L >= 2:
+        smelt += [(11, "furnace"), (12, "furnace"), (14, "blast_furnace"), (15, "blast_furnace"),
+                  (17, "smoker"), (18, "smoker")]
+    for z, s in smelt:
         bp.set(4, y, z, f"{s}[facing=east,lit=false]")
     for z in (8, 13, 16, 19, 20):
         bp.set(4, y, z, "barrel[facing=east,open=false]")
-    for x, s in ((5, "crafting_table"), (6, "smithing_table"), (7, "stonecutter[facing=north]"),
-                 (8, "loom[facing=north]"), (9, "cartography_table"), (10, "fletching_table"),
-                 (11, "anvil[facing=east]"), (12, "barrel[facing=north,open=false]")):
+    stations = [(5, "crafting_table"), (12, "barrel[facing=north,open=false]")]
+    if L >= 2:
+        stations += [(6, "smithing_table"), (7, "stonecutter[facing=north]"), (8, "loom[facing=north]"),
+                     (9, "cartography_table"), (10, "fletching_table"), (11, "anvil[facing=east]")]
+    for x, s in stations:
         bp.set(x, y, 21, s)
     for x in range(7, 11):
         put(bp, x, y, 14, st.counter)                                      # central workbench
     # entrance hall (x14..20): controller, ender chest, lectern, seats
     controller = (19, 2, 8)
-    bp.set(20, y, 12, "ender_chest[facing=west,waterlogged=false]")
+    if L >= 4:
+        bp.set(20, y, 12, "ender_chest[facing=west,waterlogged=false]")
     bp.set(20, y, 13, "crafting_table")
-    bp.set(20, y, 19, "lectern[facing=west,has_book=false,powered=false]")
+    if L >= 2:
+        bp.set(20, y, 19, "lectern[facing=west,has_book=false,powered=false]")
+    if not upper:
+        bed(bp, 19, y, 15, "south")                                      # player bed until the upper floor exists
     for x in (17, 18):
         chair(bp, x, y, 18, st.SEAT, "south", sit)
     # storage vault (x22..29): barrel walls + island, 3 high
-    for yy in (2, 3, 4):
+    for yy in ((2, 3, 4) if L >= 2 else (2,)):
         for z in range(8, 21):
             bp.set(29, yy, z, "barrel[facing=west,open=false]")
+        if L < 2:
+            continue
         for x in range(23, 29):
             bp.set(x, yy, 21, "barrel[facing=north,open=false]")
         for z in range(10, 19):
             bp.set(25, yy, z, "barrel[facing=west,open=false]")
             bp.set(26, yy, z, "barrel[facing=east,open=false]")
 
-    # ------------------------------------------------------------ upper floor rooms
+    # ------------------------------------------------------------ upper floor rooms (L3+)
     y = SLAB + 1
+    if not upper:
+        return _finish(bp, L, sit, controller)
     # enchanting library (x7..11): 5x5 ring of bookshelves, 2 high
     for x in range(7, 12):
         for z in range(9, 14):
@@ -243,7 +261,6 @@ def build() -> Blueprint:
     for x in (14, 15, 16):
         chair(bp, x, y, 6, st.SEAT, "south", sit)                          # sofa facing the glass front
     put(bp, 15, y, 8, st.counter)
-    bp.set(13, y, 18, "jukebox[has_record=false]")
     bp.set(14, y, 18, "barrel[facing=up,open=false]")
     # bedroom suite + brewing (x22..26)
     bed(bp, 24, y, 6, "north")
@@ -256,63 +273,79 @@ def build() -> Blueprint:
     bp.set(26, y, 18, "water_cauldron[level=3]")
     bp.set(25, y, 18, "barrel[facing=north,open=false]")
 
+    if L >= 4:
+        bp.set(13, y, 18, "jukebox[has_record=false]")
     # ------------------------------------------------------------ roof: beacon, garden, railing
     for x in range(UX1, UX2 + 1):
         for z in range(UZ1, UZ2 + 1):
             if edge(x, z, UX1, UX2, UZ1, UZ2):
                 put(bp, x, ROOF + 1, z, st.railing)
-    bp.fill(23, ROOF, 9, 25, ROOF, 11, "iron_block")
-    bp.set(24, ROOF + 1, 10, "beacon")
-    for x, z in ((8, 6), (8, 17), (13, 17)):
-        planter(bp, x, ROOF + 1, z)
-    tree(bp, 10, ROOF + 1, 13, h=2)
-    for x in (22, 23, 24):
-        chair(bp, x, ROOF + 1, 16, st.SEAT, "south", sit)
+    if L >= 4:
+        bp.fill(23, ROOF, 9, 25, ROOF, 11, "iron_block")
+        bp.set(24, ROOF + 1, 10, "beacon")
+        for x, z in ((8, 6), (8, 17), (13, 17)):
+            planter(bp, x, ROOF + 1, z)
+        tree(bp, 10, ROOF + 1, 13, h=2)
+    if L >= 5:
+        for x in (22, 23, 24):
+            chair(bp, x, ROOF + 1, 16, st.SEAT, "south", sit)
+    return _finish(bp, L, sit, controller)
+
+
+def _garden(bp, st, L):
+    W, D = st.WHITE, st.DECK
 
     # ------------------------------------------------------------ garden: pool, farm, portal, trees
-    for x in range(19, 31):
+    for x in (range(19, 31) if L >= 3 else ()):
         for z in range(24, 28):
             e = edge(x, z, 19, 30, 24, 27)
             bp.set(x, 1, z, W if e else "water[level=0]")
             if not e:
-                bp.set(x, 0, z, "sea_lantern" if (x + z) % 3 == 0 else "smooth_quartz")
-    for x in range(19, 31):
+                bp.set(x, 0, z, "sea_lantern" if (x + z) % 3 == 0 and not st.early else "smooth_stone")
+    for x in (range(19, 31) if L >= 3 else ()):
         bp.set(x, 1, 23, D)
     crops = ["wheat[age=7]", "carrots[age=7]", "potatoes[age=7]", "beetroots[age=3]"]
-    for x in range(3, 13):
+    for x in (range(3, 13) if L >= 2 else ()):
         for z in range(24, 28):
             if z == 25:
                 bp.set(x, 1, z, "water[level=0]")                         # irrigation channel
             else:
                 bp.set(x, 1, z, "farmland[moisture=7]")
                 bp.set(x, 2, z, crops[(x // 3) % 4])
-    bp.set(13, 2, 24, "composter[level=0]")
-    for x in range(13, 17):                                                # nether portal frame (unlit)
+    if L >= 2:
+        bp.set(13, 2, 24, "composter[level=0]")
+    for x in (range(13, 17) if L >= 4 else ()):                            # nether portal frame (unlit)
         for yy in range(2, 7):
             if x in (13, 16) or yy in (2, 6):
                 bp.set(x, yy, 28, "obsidian")
-    tree(bp, 1, 2, 2, h=4)
-    tree(bp, 32, 2, 2, h=4)
-    tree(bp, 1, 2, 22, h=4)
-    tree(bp, 32, 2, 21, h=4)
-    for x in (12, 22):
-        street_lamp(bp, x, 2, 1, premium=True)
+    if L >= 2:
+        tree(bp, 1, 2, 2, h=4)
+        tree(bp, 32, 2, 2, h=4)
+        tree(bp, 1, 2, 22, h=4)
+        tree(bp, 32, 2, 21, h=4)
+    if L >= 4:
+        for x in (12, 22):
+            street_lamp(bp, x, 2, 1, premium=True)
 
+
+def _finish(bp, L, sit, controller):
+    _garden(bp, Style(L), L)
     connect_panes(bp)
     tags = {(0, 1, 0): ["groundlevel"]}
     for p in sit:
         tags.setdefault(p, []).append("sit")
     bp.set(*controller, "minecolonies:decorationcontroller[facing=north,mirror=false,waterlogged=false]",
-           decoration_te(controller, tags))
+           decoration_te(controller, tags, L))
     bp.primary_offset = controller
     bp.architects = ["Neoterra"]
     return bp
 
 
 if __name__ == "__main__":
-    out = Path(sys.argv[1])
-    out.parent.mkdir(parents=True, exist_ok=True)
-    b = build()
-    b.save(out)
-    n = sum(1 for *_, s in b.blocks() if s not in ("minecraft:air", "structurize:blocksolidsubstitution"))
-    print(f"playerhouse: {n} blocks")
+    out = Path(sys.argv[1])               # folder: decorations/housing
+    out.mkdir(parents=True, exist_ok=True)
+    for lvl in range(1, 6):
+        b = build(lvl)
+        b.save(out / f"playerhouse{lvl}.blueprint")
+        n = sum(1 for *_, s in b.blocks() if s not in ("minecraft:air", "structurize:blocksolidsubstitution"))
+        print(f"playerhouse{lvl}: {n} blocks")

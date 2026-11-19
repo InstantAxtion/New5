@@ -87,20 +87,75 @@ barrel), dining table; sofa (L2), planter (L3), bookshelves + jukebox (L4), ende
 Inside the tower blueprint the apartment interiors are `structurize:blocksubstitution`, so
 upgrading the tower never overwrites the apartments.
 
-### Player house (`decorations/housing/playerhouse`) – decoration, no hut
-35 × 22 × 29. Uses MineColonies' decoration controller (like the official player mansion), so a
-builder can build it but it is not a colony building and has no levels. Premium materials.
+### Player house (`decorations/housing/playerhouse1-5`) – decoration, no hut, 5 upgrade levels
+35 × 22 × 29. Uses MineColonies' decoration controller (like the official player mansion): a
+builder builds it, it is not a colony building, and its controller block offers **Upgrade** to
+the next `playerhouseN`.
 
-![Player house](docs/previews/neoterra/playerhouse_front.png)
+![Player house levels 1–5](docs/previews/neoterra/playerhouse_levels.png)
 
-- **Workshop:** 4 furnaces, 2 blast furnaces, 2 smokers, crafting table, smithing table, stonecutter,
-  loom, cartography & fletching tables, anvil, workbench
-- **Storage vault:** ~120 barrels
-- **Upper floor (floating glass box):** enchanting library (30 bookshelves), anvil, grindstone,
-  lounge with jukebox, bedroom with 2 beds, brewing station (2 brewing stands, water cauldron)
-- **Roof:** working beacon base (3×3 iron blocks — bring a nether star), roof garden, seats
-- **Garden:** pool, irrigated farm (wheat, carrots, potatoes, beetroot), composter,
-  nether portal frame (light it yourself), trees, lamp spires, ender chest in the hall
+| Level | Adds |
+|---|---|
+| 1 | Ground floor: workshop (2 furnaces, crafting table), entrance hall with a bed, storage wall (13 barrels), roof terrace |
+| 2 | Full workshop (4 furnaces, 2 blast furnaces, 2 smokers, smithing table, stonecutter, loom, cartography & fletching tables, anvil), storage vault (~120 barrels), irrigated farm, composter, lectern, trees |
+| 3 | Floating upper floor: enchanting library (30 bookshelves), bedroom (2 beds), brewing station, lounge; pool; roof terrace seats |
+| 4 | Premium palette; beacon on a 3×3 iron-block base, roof garden, nether portal frame, ender chest, jukebox, lamp spires |
+| 5 | Roof lounge seats, glowing corners |
+
+### Bunker – self-sustaining underground settlement (`fundamentals/bunker1-5`)
+33 × 22 × 31, mostly underground (the lawn is at the top; the ground around the shell is
+`blocksolidsubstitution`, so the builder only digs what it needs). Like the Skytower it contains
+**child huts**, each upgraded on its own:
+
+| Hut | Room | Per level |
+|---|---|---|
+| Bunker (residence) | dorm on deck A | 1–5 beds |
+| `bunkerkitchen` (cook) | canteen | 1 furnace per level, seats, kitchen `work` spots, rack |
+| `bunkerschool` (school) | classroom | 10 seats + teacher spot, bookshelves |
+| `bunkerclinic` (hospital) | sick bay | 2 beds per level, furnace, brewing (L3) |
+| `bunkerfarm` (farmer) | farm office on deck B | racks, composter; works the scarecrow field in the lit farm hall |
+
+Also: glass entrance pavilion + stairs, corridor, storage + generator room with a water tank (L3),
+air vents, surface trees and lamp spires. Child room blueprints are tagged invisible.
+
+![Bunker levels 1–5 (cutaway, rooms furnished)](docs/previews/neoterra/bunker_levels.png)
+
+### Work huts
+| Building | Hut block | Signature | Per level |
+|---|---|---|---|
+| Restaurant `fundamentals/cook` | blockhutcook | glass dining pavilion, open kitchen, terrace (L2), sky lounge (L3), rooftop bar (L4) | 1 furnace per level, 4→16+ tagged seats, kitchen `work` spots |
+| Forester `fundamentals/lumberjack` | blockhutlumberjack | timber-clad hall, sapling nursery, greenhouse (L3) | racks 2→6, more saplings |
+| Woodcutter `craftsmanship/carpentry/sawmill` | blockhutsawmill | spruce-clad hall, saw line, log yard, skylights | racks, saws; architect's cutter (L4) |
+| Stonemason `craftsmanship/masonry/stonemason` | blockhutstonemason | stone-clad hall, stone yard, monolith sculpture | racks, more stone stacks |
+| Mechanic `craftsmanship/metallurgy/mechanic` | blockhutmechanic | copper-clad hall, test bench, robot arm, wind turbine (L4) | racks, copper light strip |
+
+All workshop huts: upper office with stairs (L3), roof access + bed (L4), mast (L5).
+
+![Restaurant](docs/previews/neoterra/cook_levels.png)
+
+### Education
+| Building | Hut block | Per level |
+|---|---|---|
+| School `education/school` | blockhutschool | 10 `sit` seats facing a board + teacher `work` spot; playground (L2), art & reading loft (L3), rooftop observatory (L5) |
+| Library `education/library` | blockhutlibrary | double-height hall, bookshelves ≈10/30/50/95/110, study seats, mezzanine (L3), enchanting table (L4), glass dome (L5) |
+| University `education/university` | blockhutuniversity | research rotunda (bookshelves 4/21/41/46/47), lab wing (furnaces 1/1/3/3/3, brewing), lecture hall (L2), quad with `leisure` spots (L3), glowing dome (L5) |
+
+![University](docs/previews/neoterra/university_levels.png)
+
+### Military
+| Building | Hut block | Per level |
+|---|---|---|
+| Guard tower `military/guardtower` | blockhutguardtower | 2 beds; grows 12→24 high; ladder to a lookout, glass pod (L4) |
+| Barracks `military/barracks` | blockhutbarracks | HQ + courtyard; adds one child **barracks tower** per level (max 4), perimeter wall (L3) |
+| Barracks tower `military/barrackstower` | blockhutbarrackstower | child hut: 2 beds per level (one storey each); upgrade from its own hut |
+| Archery `military/archery` | blockhutarchery | 2 beds, 1 target + 1 firing `work` spot per level; covered firing line (L2) |
+| Combat academy `military/combatacademy` | blockhutcombatacademy | 2 beds per level, sand arena with hay dummies 1/2/3/6/9 |
+| Stable `military/stable` | blockhutstable | 2 `stall`s per level with hay, loft beds 2/4/4/6/8, paddock |
+
+Counts follow the official MineColonies packs. The gatehouse (a wall gate that needs MineColonies'
+gate blocks) is not included yet.
+
+![Barracks](docs/previews/neoterra/barracks_levels.png)
 
 ### Courier's hut (`craftsmanship/storage/deliveryman1-5`) – 23 × 22 × 21, same footprint every level
 Hut block: `minecolonies:blockhutdeliveryman` (MineColonies calls it the Courier's Hut).
@@ -150,6 +205,8 @@ python3 tools/blueprints/validate.py blocks.json stylepacks/Neoterra/**/*.bluepr
 - `tools/blueprints/walkcheck.py` – checks every bed, hut block, rack and workstation is reachable on foot
 - `tools/blueprints/neoterra/skytower.py` – Skytower + apartment floors (child residence huts)
 - `tools/blueprints/neoterra/playerhouse.py` – player house decoration
+- `tools/blueprints/neoterra/kit.py` – shared building kit (shells, stairs, canopies, anchors, child huts)
+- `tools/blueprints/neoterra/workhuts.py`, `education.py`, `military.py`, `bunker.py` – the buildings above
 - `tools/blueprints/neoterra/deliveryman.py` – courier's hut design (levels 1–5)
 - `tools/blueprints/neoterra/warehouse.py` – warehouse design (levels 1–5)
 - `tools/blueprints/neoterra/check_townhall.py` – stair headroom, floor exits, enchanting power, elevator watertightness

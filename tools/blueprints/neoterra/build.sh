@@ -14,24 +14,32 @@ python3 $T/neoterra/builder.py "$PACK/fundamentals"
 python3 $T/neoterra/residences.py "$PACK/fundamentals"
 FURN=$(mktemp -d)
 python3 $T/neoterra/skytower.py "$PACK/fundamentals" "$FURN"
-python3 $T/neoterra/playerhouse.py "$PACK/decorations/housing/playerhouse.blueprint"
+rm -f "$PACK/decorations/housing/playerhouse.blueprint"
+python3 $T/neoterra/playerhouse.py "$PACK/decorations/housing"
+python3 $T/neoterra/workhuts.py "$PACK"
+python3 $T/neoterra/education.py "$PACK"
+python3 $T/neoterra/military.py "$PACK" "$FURN"
+python3 $T/neoterra/bunker.py "$PACK/fundamentals" "$FURN"
 python3 $T/neoterra/deliveryman.py "$PACK/craftsmanship/storage"
 python3 $T/neoterra/warehouse.py "$PACK/craftsmanship/storage"
 
 for l in 1 2 3 4 5; do
-  python3 $T/render.py "$PACK/fundamentals/townhall$l.blueprint" "$PREV/townhall$l" >/dev/null
-  python3 $T/render.py "$PACK/craftsmanship/storage/deliveryman$l.blueprint" "$PREV/deliveryman$l" >/dev/null
-  python3 $T/render.py "$PACK/craftsmanship/storage/warehouse$l.blueprint" "$PREV/warehouse$l" >/dev/null
-  python3 $T/render.py "$PACK/fundamentals/builder$l.blueprint" "$PREV/builder$l" >/dev/null
-  python3 $T/render.py "$FURN/skytower${l}_furnished.blueprint" "$PREV/skytower$l" >/dev/null
-  for r in cottage house apartment quadplex; do
-    python3 $T/render.py "$PACK/fundamentals/$r$l.blueprint" "$PREV/$r$l" >/dev/null
+  for f in fundamentals/townhall fundamentals/builder fundamentals/cottage fundamentals/house \
+           fundamentals/apartment fundamentals/quadplex fundamentals/cook fundamentals/lumberjack \
+           craftsmanship/storage/deliveryman craftsmanship/storage/warehouse \
+           craftsmanship/carpentry/sawmill craftsmanship/masonry/stonemason craftsmanship/metallurgy/mechanic \
+           education/school education/library education/university \
+           military/guardtower military/archery military/combatacademy military/stable \
+           decorations/housing/playerhouse; do
+    python3 $T/render.py "$PACK/$f$l.blueprint" "$PREV/$(basename $f)$l" >/dev/null
   done
+  python3 $T/render.py "$FURN/skytower${l}_furnished.blueprint" "$PREV/skytower$l" >/dev/null
+  python3 $T/render.py "$FURN/barracks${l}_furnished.blueprint" "$PREV/barracks$l" >/dev/null
+  python3 $T/render.py "$FURN/bunker${l}_cutaway.preview" "$PREV/bunker$l" >/dev/null
 done
-python3 $T/render.py "$PACK/decorations/housing/playerhouse.blueprint" "$PREV/playerhouse" >/dev/null
 python3 $T/neoterra/make_images.py "$PACK" "$PREV"
-# the Skytower's apartments are separate child huts, so check the furnished copies instead
-python3 $T/walkcheck.py $(ls "$PACK"/fundamentals/*.blueprint | grep -v "/skytower") \
-  "$FURN"/*.blueprint "$PACK"/decorations/housing/*.blueprint "$PACK"/craftsmanship/storage/*.blueprint >/dev/null \
+# buildings with child huts (Skytower, barracks, bunker) are checked as assembled copies
+python3 $T/walkcheck.py $(find "$PACK" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]") \
+  "$FURN"/*_furnished.blueprint >/dev/null \
   && echo "walkcheck: everything reachable"
 echo "built $PACK"

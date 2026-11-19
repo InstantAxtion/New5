@@ -7,8 +7,12 @@ from PIL import Image, ImageDraw, ImageOps
 pack, prev = Path(sys.argv[1]), Path(sys.argv[2])
 BG = (236, 240, 244, 255)
 # category folder -> building whose level-5 render is used as the tab icon
-CATEGORIES = {"fundamentals": "townhall5", "craftsmanship": "deliveryman5", "decorations": "playerhouse"}
-BUILDINGS = ["townhall", "builder", "cottage", "house", "apartment", "quadplex", "skytower", "deliveryman", "warehouse"]
+CATEGORIES = {"fundamentals": "townhall5", "craftsmanship": "deliveryman5", "decorations": "playerhouse5",
+              "education": "university5", "military": "barracks5"}
+BUILDINGS = ["townhall", "builder", "cottage", "house", "apartment", "quadplex", "skytower", "bunker",
+             "cook", "lumberjack", "sawmill", "stonemason", "mechanic", "deliveryman", "warehouse",
+             "school", "library", "university", "guardtower", "barracks", "archery", "combatacademy", "stable",
+             "playerhouse"]
 
 
 def square(im, bg=BG):
