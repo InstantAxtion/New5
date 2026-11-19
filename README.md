@@ -90,8 +90,18 @@ concrete and glass with flat roofs, Hearthwood brick and plaster, Cascadia timbe
 | Miner | stone pithead with headframe |
 | Enchanter, graveyard, mystical site | purple mage tower / chapel with steeple and bell / temple with portico and dome |
 
-Cascadia's university keeps its hand-designed campus hall. Barracks, bunker, sky tower, gatehouse and wall
-guard tower keep their special designs.
+Cascadia's university keeps its hand-designed campus hall. The special buildings (`military_real.py`, `skyskin.py`):
+
+| Building | Real-world form |
+|---|---|
+| Barracks | walled fort: curtain wall with battlements and gate, parade ground with flag and targets, barracks hall with armoury; one corner keep (child hut, 4 bunks per level, ladders, battlements) per level |
+| Gatehouse | castle gatehouse: two flanking towers, arched passage with wooden → iron portcullis gate, archers' gallery, bunks |
+| Wall guard tower | round (square in Neoterra) bastion tower, stacked floors, bunks and armoury, battlemented top |
+| Sky tower | regular high-rise facade – Neoterra white concrete, Hearthwood red-brick mansion block, Cascadia timber tower – paved forecourt |
+
+The bunker stays underground behind its blast-door entrance.
+
+![Military and sky tower](docs/previews/military_real.png)
 
 ![Neoterra](docs/previews/typology_neoterra.png)
 ![Hearthwood](docs/previews/typology_hearthwood.png)
@@ -187,10 +197,10 @@ server with a self-test: two colonies trade a request, the Supply Depot crafts o
 Structurize (`SELFTEST PASS`).
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.14.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.15.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a NeoForge mod that carries the Trade Post and all four style packs (Neoterra, Hearthwood, Cascadia and Farmworks);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.14.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.15.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>` (compiles `mod/` with Gradle).
 
 ## Install

@@ -39,6 +39,9 @@ python3 $T/neoterra/detail.py "$PACK" "$FURN" > /dev/null
 python3 $T/neoterra/plot.py "$PACK" > /dev/null
 # support pass: nothing floats (posts down to the ground, or stray bits removed; walk-checked)
 python3 $T/neoterra/support.py "$PACK" Neoterra > /dev/null
+# barracks fort, gatehouse, wall guard tower and sky tower facade in real-world forms
+python3 $T/neoterra/military_real.py "$PACK" Neoterra
+python3 $T/neoterra/skyskin.py "$PACK" Neoterra > /dev/null
 # every regular hut as its real-world building type (typology.py), in Neoterra's modern style
 python3 $T/neoterra/archgen.py "$RAW" "$PACK" Neoterra > /dev/null
 python3 $T/neoterra/support.py "$PACK" Neoterra > /dev/null
@@ -108,6 +111,8 @@ for STY in Hearthwood Cascadia; do
   # Cascadia university: hand-designed campus hall (clock tower, portico, wings, library)
   if [ "$STY" = Cascadia ]; then python3 $T/neoterra/university_cascadia.py "$OUT"; fi
   python3 $T/neoterra/support.py "$OUT" $STY > /dev/null
+  python3 $T/neoterra/military_real.py "$OUT" $STY
+  python3 $T/neoterra/skyskin.py "$OUT" $STY > /dev/null
   # walls, roads, rails, canals, bridges, subway, boardwalk, cliff climb and parks in the pack's own design
   python3 $T/neoterra/styleinfra.py "$OUT" $STY
   python3 $T/neoterra/twinbuilder.py "$OUT" $STY
