@@ -31,7 +31,7 @@ def short(s):
     return parse_state(s)[0].split(":")[1]
 
 
-def analyse(bp):
+def analyse(bp, return_seen=False):
     def name(x, y, z):
         return short(bp.get(x, y, z)) if bp.inside(x, y, z) else "air"
 
@@ -103,6 +103,8 @@ def analyse(bp):
         if not reach:
             problems.append(f"{n} at {(x, y, z)} not reachable")
     beds = sum(1 for *_, s in bp.blocks() if short(s).endswith("_bed") and "part=head" in s)
+    if return_seen:
+        return beds, problems, seen
     return beds, problems
 
 

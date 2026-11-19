@@ -61,6 +61,20 @@ SOLID_GUESS = (180, 120, 200)
 GLASS = {"light_blue_stained_glass", "glass_pane", "glass", "tinted_glass", "blockpaperwall", "water"}
 HALF = {"smooth_quartz_slab", "smooth_stone_slab", "rail", "daylight_detector"}
 COLORS.update({
+    "potted_fern": (120, 140, 70), "potted_azalea_bush": (120, 140, 70), "potted_flowering_azalea_bush": (120, 140, 70), "potted_bamboo": (120, 140, 70), "potted_oak_sapling": (120, 140, 70), "potted_lily_of_the_valley": (120, 140, 70), "potted_cornflower": (120, 140, 70), "potted_blue_orchid": (120, 140, 70), "potted_cactus": (120, 140, 70), "potted_birch_sapling": (120, 140, 70),
+    "calcite": (223, 224, 220), "diorite": (188, 188, 188), "polished_diorite": (193, 193, 195), "birch_planks": (192, 175, 121),
+    "smooth_quartz": (235, 229, 222), "quartz_bricks": (234, 229, 221), "chiseled_quartz_block": (231, 226, 218),
+    "quartz_pillar": (236, 231, 224), "cyan_terracotta": (87, 91, 91), "waxed_oxidized_cut_copper": (80, 154, 132),
+    "waxed_oxidized_copper": (82, 162, 132), "waxed_oxidized_copper_grate": (82, 162, 132),
+    "prismarine_bricks": (99, 171, 158), "dark_prismarine": (51, 91, 75), "cyan_stained_glass": (76, 127, 153),
+    "white_stained_glass": (230, 235, 240), "polished_deepslate": (72, 72, 73), "moss_block": (89, 109, 45),
+    "moss_carpet": (89, 109, 45), "flowering_azalea_leaves": (100, 111, 61), "azalea_leaves": (90, 115, 44),
+    "vine": (60, 100, 30), "daylight_detector": (130, 116, 94), "iron_trapdoor": (200, 200, 200),
+    "stripped_birch_log": (196, 176, 118), "stripped_oak_log": (177, 144, 86), "pink_petals": (240, 160, 200),
+    "lilac": (190, 140, 200), "rose_bush": (160, 30, 30), "peony": (230, 180, 220), "red_tulip": (200, 40, 40),
+    "white_tulip": (240, 240, 240), "orange_tulip": (230, 120, 30), "pink_tulip": (240, 160, 200),
+    "white_carpet": (233, 236, 236), "light_blue_carpet": (58, 175, 217), "cyan_carpet": (21, 137, 145),
+    "light_gray_carpet": (142, 142, 134), "short_grass": (80, 140, 50), "chain": (60, 65, 80),
     "gate_iron": (90, 95, 100), "blockminecoloniesnamedgrave": (150, 150, 155), "decorationcontroller": (200, 200, 200),
     "amethyst_block": (133, 97, 191), "amethyst_cluster": (160, 120, 220), "obsidian": (20, 18, 30), "crying_obsidian": (40, 10, 70),
     "soul_lantern": (90, 200, 210), "soul_sand": (81, 62, 50), "netherrack": (110, 50, 50), "moss_block": (89, 109, 45),

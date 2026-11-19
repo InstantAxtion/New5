@@ -12,10 +12,10 @@ Requires: MineColonies, Structurize, Domum Ornamentum (all on NeoForge 1.21.1).
 
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.0.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.1.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that only carries the style pack;
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.0.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.1.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>`.
 
 ## Install
@@ -162,6 +162,24 @@ Counts follow the official MineColonies packs. The gatehouse (a wall gate that n
 gate blocks) is not included yet.
 
 ![Barracks](docs/previews/neoterra/barracks_levels.png)
+
+### Detail pass (all buildings)
+![Detail pass](docs/previews/neoterra/neoterra_detail_overview.png)
+
+After the generators lay out each building, `tools/blueprints/neoterra/detail.py` enriches every blueprint:
+- **Materials** – no fixed palette, just the Neoterra theme: walls mix white concrete, calcite, polished diorite
+  and birch panels (L1-3) or smooth quartz, quartz bricks, quartz pillars and chiseled quartz (L4-5); floors get
+  tile grids with terracotta / prismarine inlays; cyan accents become terracotta, oxidised copper, copper grates,
+  prismarine and dark prismarine; premium glass gets light-blue / cyan / white bands.
+- **Facades** – flowering azalea window boxes under upper windows (L2+), hanging vines (L4+).
+- **Roofs** – vents (L2-3), moss green roofs (L3), roof gardens, trees and solar arrays (L4-5), glowing roof
+  edges (L4-5) and a glass **sky lounge with a spire** on the highest roof at level 5 (the blueprint grows taller).
+- **Grounds** – grass and flowers, bushes (L3+), trees, pink petals and a lantern-lit hedge border (L4+),
+  tall flowers (L5).
+- **Interiors** – potted plants in corners, rugs (L2+), plants on counters (L3+), pendant lights (L4-5).
+
+Block entities, tags and hut requirements are never touched, and each step is walk-checked and rolled back if it
+would block a bed, hut block, rack, workstation, seat or guard post. Levels 1-3 stay on cheap blocks.
 
 ### Update 1 – colony essentials
 | Building | Path | Form | Per level |
