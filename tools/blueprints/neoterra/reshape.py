@@ -250,6 +250,33 @@ class Reshape(Massing):
                         self.place(x, y + 4, z, M["accent"])
                     else:
                         self.place(x, y + 4 - k, z, self.stair("west"))
+        elif form in ("aframe", "gambrel", "shed"):
+            along_x = w >= d
+            span = d if along_x else w
+            for u in range((x1 if along_x else z1), (x2 if along_x else z2) + 1):
+                end = u in ((x1, x2) if along_x else (z1, z2))
+                for j in range(span):
+                    if form == "shed":
+                        hgt, prev, face = 1 + j // 2, (j - 1) // 2 + 1 if j else 0, ("south" if along_x else "east")
+                    else:
+                        i = min(j, span - 1 - j)
+                        prof = (lambda k: 2 * k + 1) if form == "aframe" else \
+                               (lambda k: 2 * k + 1 if k < 2 else 4 + k)
+                        hgt, prev = prof(i), (prof(i - 1) if i else 0)
+                        first_half = j < span - 1 - j
+                        face = (("south" if first_half else "north") if along_x else ("east" if first_half else "west"))
+                        if j == span - 1 - j:
+                            face = None
+                    v_ = (z1 if along_x else x1) + j
+                    x, z = (u, v_) if along_x else (v_, u)
+                    for k in range(max(1, prev), hgt + 1):
+                        if k == hgt:
+                            self.place(x, y + k, z, self.stair(face) if face else M["accent"])
+                        else:
+                            self.place(x, y + k, z, M["roof"])
+                    if end:
+                        for k in range(1, max(1, prev)):
+                            self.place(x, y + k, z, M["glass"] if (j + k) % 3 else M["fin"])
         elif form == "overhang":
             for x in range(x1 - 2, x2 + 3):
                 for z in range(z1 - 2, z2 + 3):
@@ -297,6 +324,32 @@ class Reshape(Massing):
                 for yy in range(y + 1, y + 4):
                     self.place(cx + dx * rad, yy, cz + dz * rad, M["fin"])
             top = y + 11
+        elif kind in ("cupola", "belfry", "lookout"):
+            base = max((yy for yy in range(y, self.bp.sy) if not self.air(cx, yy, cz)), default=y)
+            if kind == "lookout":                                 # deck ring with railing first
+                for x in range(cx - 2, cx + 3):
+                    for z in range(cz - 2, cz + 3):
+                        self.place(x, base + 1, z, M["deck"])
+                        if x in (cx - 2, cx + 2) or z in (cz - 2, cz + 2):
+                            self.place(x, base + 2, z, "glass_pane")
+                base += 1
+            for x in range(cx - 1, cx + 2):
+                for z in range(cz - 1, cz + 2):
+                    corner = x != cx and z != cz
+                    for yy in range(base + 1, base + 4):
+                        if corner:
+                            self.place(x, yy, z, M["fin"])
+                        elif kind == "belfry":
+                            self.place(x, yy, z, "air")
+                        else:
+                            self.place(x, yy, z, M["glass"] if (x, z) != (cx, cz) else "air")
+                    self.place(x, base + 4, z, M["accent"])
+            if kind == "belfry":
+                self.place(cx, base + 3, cz, "bell[attachment=ceiling,facing=north,powered=false]")
+            for x, z, f in ((cx, cz - 1, "south"), (cx, cz + 1, "north"), (cx - 1, cz, "east"), (cx + 1, cz, "west")):
+                self.place(x, base + 5, z, self.stair(f))
+            self.place(cx, base + 5, cz, M["accent"])
+            top = base + 6
         else:  # spire
             for yy in range(y + 1, y + 14):
                 k = yy - y
@@ -345,7 +398,8 @@ class Reshape(Massing):
     # -------------------------------------------------------------- plan
     def run(self):
         L = self.L
-        if L < 2:
+        neo = themes.STYLE == "Neoterra"
+        if L < 2 and neo:
             return []
         box = self.core()
         if box is None:
@@ -380,7 +434,12 @@ class Reshape(Massing):
                           fin=pick("trim"), roof=pick("feature"), accent=pick("accent"), deck=pick("accent", 1))
         glass = ["ribbon", "grid", "slit"][v % 3]
         stepped = h("step", self.base) < .5
-        storeys = 0 if tall else {2: 0, 3: 1, 4: 2, 5: 3}[L]
+        storeys = 0 if tall else {1: 0, 2: 0, 3: 1, 4: 2, 5: 3}[L]
+        if not neo and rec:
+            form = rec["roofs"][min(L, 4) - 1]
+            glass, stepped = "grid", False
+            storeys = 0 if tall else ({1: 0, 2: 0, 3: 1, 4: 1, 5: 2} if themes.STYLE == "Hearthwood"
+                                      else {1: 0, 2: 0, 3: 0, 4: 1, 5: 1})[L]
         done = []
 
         def try_(label, fn):
@@ -401,7 +460,7 @@ class Reshape(Massing):
                         break
                 rects.append((rr, y))
                 y = self.storey(rr, y, glass)
-                if L == 5:                                       # cantilevered slab edge
+                if L == 5 and neo:                               # cantilevered slab edge
                     for x in range(rr[0] - 1, rr[1] + 2):
                         for z in range(rr[2] - 1, rr[3] + 2):
                             if x in (rr[0] - 1, rr[1] + 1) or z in (rr[2] - 1, rr[3] + 1):
@@ -415,11 +474,13 @@ class Reshape(Massing):
             out = try_(f"+{storeys} storey{'s' if storeys > 1 else ''}", build)
             if out:
                 rects, top, last = out
-        if L == 5:
+        if L == 5 and neo:
             try_(f"{crown} crown", lambda: self.crown(last, top, crown))
         else:
             try_(f"{form} roof", lambda: self.roof_form(last, top, form))
-        if L >= 4:
+            if L == 5:
+                try_(f"{crown} crown", lambda: self.crown(last, top, crown))
+        if L >= 4 and neo:
             try_("fins", lambda: self.fins(box, top))
             for rr, y0 in rects[-2:]:
                 try_("balconies", lambda rr=rr, y0=y0: self.balconies(rr, y0))

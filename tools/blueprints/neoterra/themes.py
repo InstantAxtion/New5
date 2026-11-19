@@ -288,6 +288,59 @@ GROUND = {   # plant density multiplier, hedge border, bushes, trees, special
 }
 
 
+# ---------------------------------------------------------------------------- other style packs
+import os as _os
+import random as _random
+
+STYLE = _os.environ.get("NEOTERRA_STYLE", "Neoterra")
+
+STYLE_POOLS = {
+    "Hearthwood": dict(
+        roofs=["gable", "hip", "shed", "gable", "hip"],
+        crowns=["cupola", "belfry"],
+        modules=["porch", "chimney_stack", "conservatory", "gazebo", "bay_windows", "awning", "pergola",
+                 "water_tower", "bell_tower", "crate_yard", "greenhouse_dome", "silos"],
+        favs={"baker": "chimney_stack", "cook": "porch", "cookery": "chimney_stack", "florist": "conservatory",
+              "house": "porch", "cottage": "bay_windows", "townhall": "bell_tower", "library": "bay_windows",
+              "school": "gazebo", "farmer": "silos", "composter": "greenhouse_dome", "blacksmith": "chimney_stack",
+              "smeltery": "chimney_stack", "playerhouse": "conservatory", "hospital": "awning"}),
+    "Cascadia": dict(
+        roofs=["aframe", "gambrel", "aframe", "gable", "gambrel"],
+        crowns=["cupola", "lookout"],
+        modules=["covered_bridge", "lookout_tower", "aframe_cabin", "barn", "stone_chimney", "lighthouse",
+                 "log_stacks", "water_tower", "wind_turbines", "porch", "silos", "gantry"],
+        favs={"lumberjack": "log_stacks", "sawmill": "log_stacks", "farmer": "barn", "cowboy": "barn",
+              "shepherd": "barn", "swineherder": "barn", "townhall": "covered_bridge", "guardtower": "lookout_tower",
+              "archery": "lookout_tower", "deliveryman": "lighthouse", "warehouse": "gantry", "house": "aframe_cabin",
+              "cottage": "aframe_cabin", "smeltery": "stone_chimney", "blacksmith": "stone_chimney",
+              "mechanic": "wind_turbines", "library": "covered_bridge"}),
+}
+_STYLE_RECIPES = {}
+
+
+def _style_recipes(style):
+    if style in _STYLE_RECIPES:
+        return _STYLE_RECIPES[style]
+    pool = STYLE_POOLS[style]
+    out, used = {}, set()
+    for b, rec in sorted(BUILDINGS.items()):
+        rng = _random.Random(f"{style}:{b}")
+        for attempt in range(200):
+            mods = rng.sample(pool["modules"], 4)
+            fav = pool["favs"].get(b)
+            if fav:
+                mods = [fav] + [m for m in mods if m != fav][:3]
+            key = tuple(mods)
+            if key not in used and key != tuple(m[0] for m in rec["modules"]):
+                break
+        used.add(key)
+        roofs = tuple(rng.choice(pool["roofs"]) for _ in range(4))
+        out[b] = dict(theme=rec["theme"], roofs=roofs, crown=rng.choice(pool["crowns"]),
+                      modules=[(m, lvl, {"n": 2} if m in ("silos",) else {}) for m, lvl in zip(mods, (2, 3, 4, 5))])
+    _STYLE_RECIPES[style] = out
+    return out
+
+
 def building_of(name: str) -> str:
     """'cookery4' / 'cookery4_furnished' -> 'cookery'"""
     import re
@@ -295,6 +348,8 @@ def building_of(name: str) -> str:
 
 
 def recipe(name: str):
+    if STYLE != "Neoterra":
+        return _style_recipes(STYLE).get(building_of(name))
     return BUILDINGS.get(building_of(name))
 
 

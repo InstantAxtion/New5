@@ -805,6 +805,272 @@ class Signature(Massing):
             n += 1
         return n > 0
 
+
+    # ================================================================ Hearthwood / Cascadia modules
+    def _front_u(self, box):
+        """Coordinate along the front wall where the entrance path meets it (or the middle)."""
+        x1, x2, z1, z2, _ = box
+        side = self.front
+        horiz = side in ("north", "south")
+        sgn = -1 if side in ("north", "west") else 1
+        base = (z1 if side == "north" else z2) if horiz else (x1 if side == "west" else x2)
+        span = range(x1, x2 + 1) if horiz else range(z1, z2 + 1)
+        for dist in (1, 2, 3):
+            w = base + sgn * dist
+            path = [u for u in span if self.paved(*((u, w) if horiz else (w, u)))]
+            if path:
+                return (min(path) + max(path)) // 2, side, horiz, sgn, base
+        return (span.start + span.stop - 1) // 2, side, horiz, sgn, base
+
+    def _xz(self, horiz, u, w):
+        return (u, w) if horiz else (w, u)
+
+    def gable_over(self, cells_u, w_from, w_to, horiz, y0, stair_mat, ridge):
+        """Little gable roof running outward (along w) over a strip of u values."""
+        us = sorted(cells_u)
+        mid = (us[0] + us[-1]) / 2
+        for u in us:
+            k = int(min(u - us[0], us[-1] - u))
+            for w in range(min(w_from, w_to), max(w_from, w_to) + 1):
+                x, z = self._xz(horiz, u, w)
+                if u == mid:
+                    self.place(x, y0 + k, z, ridge)
+                else:
+                    face = ("east" if u < mid else "west") if horiz else ("south" if u < mid else "north")
+                    self.place(x, y0 + k, z, f"{stair_mat}_stairs[facing={face},half=bottom,shape=straight,waterlogged=false]")
+
+    def m_porch(self, box, **_):
+        u0, side, horiz, sgn, base = self._front_u(box)
+        cells = [(u, base + sgn * d) for u in range(u0 - 3, u0 + 4) for d in (1, 2, 3)]
+        if not all(self.bp.inside(self._xz(horiz, u, w)[0], self.gy, self._xz(horiz, u, w)[1]) for u, w in cells):
+            return False
+        if not all(self.free(*self._xz3(horiz, u, w, self.gy + 1)) for u, w in cells):
+            return False
+        for u, w in cells:
+            x, z = self._xz(horiz, u, w)
+            if (x, self.gy, z) not in self.protect:
+                self.bp.set(x, self.gy, z, "minecraft:spruce_planks")
+            if abs(u - u0) == 3 and (w - base) * sgn in (1, 3):
+                for y in range(self.gy + 1, self.gy + 4):
+                    self.place(x, y, z, "stripped_spruce_log[axis=y]")
+        self.gable_over(range(u0 - 3, u0 + 4), base + sgn, base + sgn * 3, horiz, self.gy + 4, "spruce", "spruce_planks")
+        for u in (u0 - 2, u0 + 2):
+            x, z = self._xz(horiz, u, base + sgn * 2)
+            self.place(x, self.gy + 3, z, "lantern[hanging=true,waterlogged=false]")
+        return True
+
+    def _xz3(self, horiz, u, w, y):
+        x, z = self._xz(horiz, u, w)
+        return x, y, z
+
+    def m_awning(self, box, **_):
+        x1, x2, z1, z2, _ = box
+        u0, side, horiz, sgn, base = self._front_u(box)
+        span = range(x1 + 1, x2) if horiz else range(z1 + 1, z2)
+        n = 0
+        for u in span:
+            if abs(u - u0) <= 1:
+                continue
+            for d, y in ((1, self.gy + 4), (2, self.gy + 3)):
+                x, z = self._xz(horiz, u, base + sgn * d)
+                wx, wz = self._xz(horiz, u, base)
+                if d == 1 and not self.solid(wx, y, wz):
+                    break
+                if self.free(x, y, z):
+                    self.place(x, y, z, "red_wool" if u % 2 else "white_wool")
+                    n += 1
+        return n > 0
+
+    def m_bay_windows(self, box, **_):
+        x1, x2, z1, z2, _ = box
+        n = 0
+        for side in self.sides_side[:2]:
+            horiz = side in ("north", "south")
+            sgn = -1 if side in ("north", "west") else 1
+            base = (z1 if side == "north" else z2) if horiz else (x1 if side == "west" else x2)
+            span = range(x1, x2 + 1) if horiz else range(z1, z2 + 1)
+            for u0 in (span.start + 3, span.stop - 4):
+                cells = [(u, base + sgn) for u in range(u0 - 1, u0 + 2)]
+                if any(not self.lawn(*self._xz(horiz, u, w)) for u, w in cells):
+                    continue
+                for u, w in cells:
+                    x, z = self._xz(horiz, u, w)
+                    if (x, self.gy, z) not in self.protect:
+                        self.bp.set(x, self.gy, z, "minecraft:cobblestone")
+                    self.place(x, self.gy + 1, z, "spruce_planks")
+                    for y in (self.gy + 2, self.gy + 3):
+                        self.place(x, y, z, "stripped_spruce_log[axis=y]" if u != u0 else "glass")
+                    face = {"north": "south", "south": "north", "west": "east", "east": "west"}[side]
+                    self.place(x, self.gy + 4, z, f"spruce_stairs[facing={face},half=bottom,shape=straight,waterlogged=false]")
+                n += 1
+        return n > 0
+
+    def m_conservatory(self, box, **_):
+        def b(r):
+            x1, x2, z1, z2 = r
+            for x in range(x1, x2 + 1):
+                for z in range(z1, z2 + 1):
+                    e = x in (x1, x2) or z in (z1, z2)
+                    corner = x in (x1, x2) and z in (z1, z2)
+                    if (x, self.gy, z) not in self.protect:
+                        self.bp.set(x, self.gy, z, "minecraft:spruce_planks")
+                    hgt = 3 + (z - z1) * 2 // max(1, z2 - z1)
+                    for y in range(self.gy + 1, self.gy + hgt + 1):
+                        door = e and not corner and x == (x1 + x2) // 2 and z == z1 and y <= self.gy + 2
+                        self.place(x, y, z, "air" if (door or not e) else ("stripped_spruce_log[axis=y]" if corner else "glass"))
+                    self.place(x, self.gy + hgt + 1, z, "glass" if not e else "spruce_planks")
+            for x in range(x1 + 1, x2, 2):
+                self.place(x, self.gy + 1, z2 - 1, "potted_fern")
+        return self.yard(7, 5, box, self.sides_side, b)
+
+    def m_gazebo(self, box, **_):
+        def b(r):
+            x1, _, z1, _ = r
+            cx, cz = x1 + 3, z1 + 3
+            for x in range(cx - 3, cx + 4):
+                for z in range(cz - 3, cz + 4):
+                    dx, dz = abs(x - cx), abs(z - cz)
+                    if dx + dz <= 4 and max(dx, dz) <= 3:
+                        if (x, self.gy, z) not in self.protect:
+                            self.bp.set(x, self.gy, z, "minecraft:spruce_planks")
+            for x, z in ((cx - 3, cz - 1), (cx - 3, cz + 1), (cx + 3, cz - 1), (cx + 3, cz + 1),
+                         (cx - 1, cz - 3), (cx + 1, cz - 3), (cx - 1, cz + 3), (cx + 1, cz + 3)):
+                self.column(x, z, self.gy + 1, self.gy + 3, "stripped_spruce_log[axis=y]")
+            for i in range(4):
+                for x in range(cx - 3 + i, cx + 4 - i):
+                    for z in range(cz - 3 + i, cz + 4 - i):
+                        if x in (cx - 3 + i, cx + 3 - i) or z in (cz - 3 + i, cz + 3 - i):
+                            self.place(x, self.gy + 4 + i, z, "spruce_planks" if i < 3 else "dark_oak_planks")
+            self.place(cx, self.gy + 3, cz, "lantern[hanging=true,waterlogged=false]")
+        return self.yard(7, 7, box, self.sides_side, b)
+
+    def m_chimney_stack(self, box, **_):
+        return self._chimney(box, "bricks", "bricks")
+
+    def m_stone_chimney(self, box, **_):
+        return self._chimney(box, "cobblestone", "mossy_cobblestone")
+
+    def _chimney(self, box, a, b_):
+        x1, x2, z1, z2, top = box
+        for x, z in ((x1 - 2, (z1 + z2) // 2), (x2 + 1, (z1 + z2) // 2), ((x1 + x2) // 2, z1 - 2), ((x1 + x2) // 2, z2 + 1)):
+            if not all(self.lawn(x + dx, z + dz) for dx in (0, 1) for dz in (0, 1)):
+                continue
+            H = top - self.gy + 3
+            self.ensure_height(self.gy + H + 3)
+            for y in range(self.gy + 1, self.gy + H + 1):
+                for dx in (0, 1):
+                    for dz in (0, 1):
+                        self.place(x + dx, y, z + dz, a if (x + dx + y + z + dz) % 3 else b_)
+            self.place(x, self.gy + H + 1, z, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+            return True
+        return False
+
+    def m_covered_bridge(self, box, **_):
+        u0, side, horiz, sgn, base = self._front_u(box)
+        L_ = 5 + self.L // 2
+        cells = [(u, base + sgn * d) for u in range(u0 - 2, u0 + 3) for d in range(1, L_ + 1)]
+        if not all(self.bp.inside(self._xz(horiz, u, w)[0], self.gy, self._xz(horiz, u, w)[1]) for u, w in cells):
+            return False
+        if not all(self.free(*self._xz3(horiz, u, w, self.gy + 2)) for u, w in cells):
+            return False
+        self.ensure_height(self.gy + 9)
+        for u, w in cells:
+            x, z = self._xz(horiz, u, w)
+            if (x, self.gy, z) not in self.protect:
+                self.bp.set(x, self.gy, z, "minecraft:spruce_planks")
+            if abs(u - u0) == 2:
+                d = (w - base) * sgn
+                for y in range(self.gy + 1, self.gy + 4):
+                    window = y == self.gy + 2 and d % 2 == 0
+                    self.place(x, y, z, "air" if window else "red_terracotta")
+        self.gable_over(range(u0 - 3, u0 + 4), base + sgn, base + sgn * L_, horiz, self.gy + 4, "spruce", "spruce_planks")
+        return True
+
+    def m_lookout_tower(self, box, **_):
+        H = 9 + self.L
+
+        def b(r):
+            x1, x2, z1, z2 = r
+            for x, z in ((x1, z1), (x2, z1), (x1, z2), (x2, z2)):
+                self.column(x, z, self.gy + 1, self.gy + H, "dark_oak_log[axis=y]")
+            for y in range(self.gy + 4, self.gy + H, 4):
+                for x in range(x1, x2 + 1):
+                    for z in (z1, z2):
+                        self.place(x, y, z, "dark_oak_log[axis=x]")
+            for x in range(x1 - 1, x2 + 2):
+                for z in range(z1 - 1, z2 + 2):
+                    self.place(x, self.gy + H + 1, z, "spruce_planks")
+                    e = x in (x1 - 1, x2 + 1) or z in (z1 - 1, z2 + 1)
+                    if e:
+                        self.place(x, self.gy + H + 2, z, "spruce_fence[east=false,north=false,south=false,waterlogged=false,west=false]")
+                    elif x in (x1, x2) or z in (z1, z2):
+                        for y in (self.gy + H + 2, self.gy + H + 3):
+                            self.place(x, y, z, "glass" if (x + z) % 2 else "stripped_spruce_log[axis=y]")
+            for i in range(3):
+                for x in range(x1 - 1 + i, x2 + 2 - i):
+                    for z in range(z1 - 1 + i, z2 + 2 - i):
+                        if x in (x1 - 1 + i, x2 + 1 - i) or z in (z1 - 1 + i, z2 + 1 - i):
+                            self.place(x, self.gy + H + 4 + i, z, "spruce_planks" if i < 2 else "dark_oak_planks")
+            for y in range(self.gy + 1, self.gy + H + 2):           # ladder on the inside of a leg
+                if y == self.gy + H + 1:
+                    self.bp.set(x1 + 1, y, z1 + 1, "minecraft:ladder[facing=east,waterlogged=false]")
+                else:
+                    self.place(x1 + 1, y, z1 + 1, "ladder[facing=east,waterlogged=false]")
+                    self.place(x1, y, z1 + 1, "dark_oak_log[axis=y]")
+        return self.yard(3, 3, box, self.sides_side, b)
+
+    def m_aframe_cabin(self, box, **_):
+        def b(r):
+            x1, x2, z1, z2 = r
+            W = x2 - x1 + 1
+            for x in range(x1, x2 + 1):
+                i = min(x - x1, x2 - x)
+                hgt = 2 * i + 1
+                for z in range(z1, z2 + 1):
+                    if (x, self.gy, z) not in self.protect:
+                        self.bp.set(x, self.gy, z, "minecraft:spruce_planks")
+                    end = z in (z1, z2)
+                    for k in range(1, hgt + 1):
+                        if k == hgt:
+                            face = "east" if x - x1 < x2 - x else ("west" if x - x1 > x2 - x else None)
+                            self.place(x, self.gy + k, z, f"spruce_stairs[facing={face},half=bottom,shape=straight,waterlogged=false]"
+                                       if face else "dark_oak_planks")
+                        elif k >= 2 * i - 1 and i > 0 and not end:
+                            self.place(x, self.gy + k, z, "spruce_planks")
+                        elif end:
+                            door = z == z1 and x == (x1 + x2) // 2 and k <= 2
+                            self.place(x, self.gy + k, z, "air" if door else ("glass" if k % 2 else "stripped_spruce_log[axis=y]"))
+        return self.yard(7, 7, box, self.sides_back, b)
+
+    def m_barn(self, box, **_):
+        def b(r):
+            x1, x2, z1, z2 = r
+            for x in range(x1, x2 + 1):
+                for z in range(z1, z2 + 1):
+                    e = x in (x1, x2) or z in (z1, z2)
+                    if (x, self.gy, z) not in self.protect:
+                        self.bp.set(x, self.gy, z, "minecraft:spruce_planks")
+                    for y in range(self.gy + 1, self.gy + 5):
+                        door = z == z1 and abs(x - (x1 + x2) // 2) <= 1 and y <= self.gy + 3
+                        trim = e and (x in (x1, x2) and z in (z1, z2) or y == self.gy + 4)
+                        self.place(x, y, z, "air" if (door or not e) else ("stripped_birch_log[axis=y]" if trim else "red_terracotta"))
+            W = x2 - x1 + 1
+            for x in range(x1, x2 + 1):
+                i = min(x - x1, x2 - x)
+                hgt = (2 * i + 1) if i < 2 else 4 + i
+                prev = (2 * (i - 1) + 1 if i - 1 < 2 else 4 + i - 1) if i else 0
+                face = "east" if x - x1 < x2 - x else ("west" if x - x1 > x2 - x else None)
+                for z in range(z1, z2 + 1):
+                    end = z in (z1, z2)
+                    for k in range(max(1, prev), hgt + 1):
+                        y = self.gy + 4 + k
+                        self.place(x, y, z, (f"spruce_stairs[facing={face},half=bottom,shape=straight,waterlogged=false]"
+                                             if face else "dark_oak_planks") if k == hgt else "dark_oak_planks")
+                    if end:
+                        for k in range(1, max(1, prev)):
+                            self.place(x, self.gy + 4 + k, z, "red_terracotta")
+        return self.yard(9, 7, box, self.sides_back, b)
+
     # -------------------------------------------------------------- plan
     def run(self):
         if not self.R or self.L < 2:

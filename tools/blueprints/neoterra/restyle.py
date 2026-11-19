@@ -84,6 +84,13 @@ STYLE_WOODS = {
                  ("spruce_planks", "stripped_spruce_log", "dark_oak_log", "dark_oak")),
 }
 STYLE = "Hearthwood"
+# blocks the style's own landmark modules place on purpose – never re-mapped
+STYLE_KEEP = {
+    "Hearthwood": {"bricks", "spruce_planks", "dark_oak_planks", "stripped_spruce_log", "red_wool", "white_wool",
+                   "cobblestone", "mossy_cobblestone"},
+    "Cascadia": {"red_terracotta", "spruce_planks", "dark_oak_planks", "stripped_spruce_log", "dark_oak_log",
+                 "stripped_birch_log", "cobblestone", "mossy_cobblestone", "spruce_fence"},
+}
 HARD = ("quartz", "deepslate", "basalt", "prismarine", "purpur", "amethyst", "end_stone", "gold_block", "iron_block",
         "nether_brick", "crimson", "warped", "blackstone", "froglight", "sea_lantern", "end_rod", "tinted_glass",
         "crying_obsidian", "shroomlight", "beacon", "cherry")
@@ -200,6 +207,8 @@ class Restyler:
     def map_name(self, n, x, y, z, props):
         """Return (new_name, new_props) or None to keep."""
         if n == "obsidian" or any(k in n for k in FUNCTIONAL if k != "obsidian"):
+            return None
+        if n in STYLE_KEEP.get(STYLE, ()):
             return None
         if "amethyst_cluster" in n or "amethyst_bud" in n:
             return None if self.top else ("lantern", {"hanging": "false", "waterlogged": "false"})
@@ -331,7 +340,7 @@ def main():
     global STYLE
     src, dst = Path(sys.argv[1]), Path(sys.argv[2])
     STYLE = sys.argv[3] if len(sys.argv) > 3 else "Hearthwood"
-    if dst.exists():
+    if dst.exists() and dst.resolve() != src.resolve():
         shutil.rmtree(dst)
     jobs = [(str(f), str(dst / f.relative_to(src)), STYLE) for f in sorted(src.rglob("*.blueprint"))]
     with Pool() as pool:

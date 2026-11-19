@@ -337,6 +337,8 @@ class Detailer:
 
     def roof(self):
         L = self.L
+        if themes.STYLE != "Neoterra":                     # sky lounges / glowing edges are Neoterra-only
+            return
         if L < 2:
             return
         groups = self.roof_groups()

@@ -11,10 +11,14 @@ Requires: MineColonies, Structurize, Domum Ornamentum (all on NeoForge 1.21.1).
 ![Town hall levels 1–5](docs/previews/neoterra/townhall_levels.png)
 
 
+## Three packs side by side
+![Comparison](docs/previews/three_packs_comparison.png)
+
 ## Hearthwood – cozy modern style pack
-A second style pack shipped in the same jar (`stylepacks/Hearthwood`, built by
-`tools/blueprints/neoterra/restyle.py` from the finished Neoterra pack). Same buildings, levels, hut requirements and
-paths – so every hut works identically – but a warm, cozy modern feel:
+A second style pack shipped in the same jar (`stylepacks/Hearthwood`). It starts from the same raw buildings (so
+every hut's requirements are identical) but runs its own shape passes – pitched gable / hip / shed roofs from level
+1, cupola and belfry crowns, and its own landmark recipe per building (porches, brick chimney stacks, glass
+conservatories, gazebos, bay windows, striped awnings, ...) – then its own materials:
 
 - warm plaster walls (white terracotta) with vertical wood-cladding panels and a stone-brick base course
 - dark wood trim, spruce / dark oak stair roofs, stone-brick or tiled flat roofs, plank floors inside
@@ -27,8 +31,10 @@ paths – so every hut works identically – but a warm, cozy modern feel:
 ![Hearthwood](docs/previews/hearthwood/hearthwood_overview.png)
 
 ## Cascadia – Oregon / Pacific Northwest style pack
-The third pack in the jar (`stylepacks/Cascadia`, `restyle.py ... Cascadia`). Same buildings, levels and hut
-requirements; Oregon / Pacific Northwest materials:
+The third pack in the jar (`stylepacks/Cascadia`). Its own shapes: steep A-frame and gambrel barn roofs from level
+1, lookout and cupola crowns, and per-building landmarks – red covered-bridge entrances, timber fire-lookout towers,
+A-frame cabins, gambrel barns, river-stone chimneys, coast lighthouses, log stacks, water towers – with Oregon /
+Pacific Northwest materials:
 
 - cedar and fir timber: spruce siding and stripped-spruce cladding, dark oak frames, spruce shingle roofs
 - river-rock base courses and aprons (cobblestone, mossy cobblestone, andesite), moss roofs
@@ -39,10 +45,10 @@ requirements; Oregon / Pacific Northwest materials:
 ![Cascadia](docs/previews/cascadia/cascadia_overview.png)
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.7.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.8.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that carries all three style packs (Neoterra, Hearthwood and Cascadia);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.7.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.8.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>`.
 
 ## Install
@@ -189,6 +195,10 @@ Counts follow the official MineColonies packs. The gatehouse (a wall gate that n
 gate blocks) is not included yet.
 
 ![Barracks](docs/previews/neoterra/barracks_levels.png)
+
+### Support pass (nothing floats)
+`support.py` runs after the plot pass in every pack: any group of blocks not connected to the ground gets posts
+down to the ground in the pack's trim material, or – if small or if posts would block a path – is removed.
 
 ### Plot pass (clean exteriors, tight plots)
 `tools/blueprints/neoterra/plot.py` runs last. It removes all landscaping outside the buildings (trees, bushes,

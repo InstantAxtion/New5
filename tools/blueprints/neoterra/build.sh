@@ -26,6 +26,9 @@ python3 $T/neoterra/update2.py "$PACK"
 python3 $T/neoterra/update3.py "$PACK"
 python3 $T/neoterra/deliveryman.py "$PACK/craftsmanship/storage"
 python3 $T/neoterra/warehouse.py "$PACK/craftsmanship/storage"
+# raw generator output: the other packs run their own shape passes from here
+RAW=$(mktemp -d)
+cp -r "$PACK/." "$RAW/"
 # detail pass: richer materials, facades, roofs, gardens and interiors (level-scaled, walk-checked)
 # reshape pass: each level re-forms the main building (roofs, storeys, crowns; walk-checked)
 python3 $T/neoterra/reshape.py "$PACK" > /dev/null
@@ -34,6 +37,8 @@ python3 $T/neoterra/massing.py "$PACK" > /dev/null
 python3 $T/neoterra/detail.py "$PACK" "$FURN" > /dev/null
 # plot pass: no landscaping outside, crop to the building + 1-block paved apron (walk-checked)
 python3 $T/neoterra/plot.py "$PACK" > /dev/null
+# support pass: nothing floats (posts down to the ground, or stray bits removed; walk-checked)
+python3 $T/neoterra/support.py "$PACK" Neoterra > /dev/null
 
 for l in 1 2 3 4 5; do
   for f in fundamentals/townhall fundamentals/builder fundamentals/cottage fundamentals/house \
@@ -77,11 +82,20 @@ python3 $T/neoterra/make_images.py "$PACK" "$PREV"
 python3 $T/walkcheck.py $(find "$PACK" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint") \
   "$FURN"/*_furnished.blueprint >/dev/null \
   && echo "walkcheck: everything reachable"
-# Hearthwood (cozy modern) and Cascadia (Oregon / Pacific Northwest): restyled from the finished Neoterra pack
+# Hearthwood (cozy modern) and Cascadia (Oregon / Pacific Northwest): their own shape passes (roof forms,
+# crowns, landmark modules) from the raw buildings, then their own materials
 for STY in Hearthwood Cascadia; do
   OUT=stylepacks/$STY
   SP=docs/previews/$(echo $STY | tr 'A-Z' 'a-z')
-  python3 $T/neoterra/restyle.py "$PACK" "$OUT" $STY
+  rm -rf "$OUT"
+  cp -r "$RAW" "$OUT"
+  rm -f "$OUT/pack.json" "$OUT/neoterra.png"
+  NEOTERRA_STYLE=$STY python3 $T/neoterra/reshape.py "$OUT" > /dev/null
+  NEOTERRA_STYLE=$STY python3 $T/neoterra/massing.py "$OUT" > /dev/null
+  NEOTERRA_STYLE=$STY python3 $T/neoterra/detail.py "$OUT" > /dev/null
+  NEOTERRA_STYLE=$STY python3 $T/neoterra/plot.py "$OUT" > /dev/null
+  NEOTERRA_STYLE=$STY python3 $T/neoterra/support.py "$OUT" $STY > /dev/null
+  python3 $T/neoterra/restyle.py "$OUT" "$OUT" $STY
   mkdir -p "$SP"
   for f in fundamentals/townhall5 craftsmanship/storage/deliveryman5 decorations/housing/playerhouse5 \
            education/university5 military/barracks5 agriculture/horticulture/farmer5 fundamentals/miner5 \
