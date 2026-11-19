@@ -50,6 +50,7 @@ python3 $T/neoterra/twinbuilder.py "$PACK" Neoterra
 # Grand Projects (wonders) with wing child huts
 python3 $T/neoterra/wonders.py "$PACK" Neoterra
 # Domum Ornamentum: Neoterra's own set (framed lights, quartz pillars), more at higher levels
+python3 $T/neoterra/furnish.py "$PACK" Neoterra
 python3 $T/neoterra/domumize.py "$PACK" Neoterra
 
 for l in 1 2 3 4 5; do
@@ -122,6 +123,8 @@ for STY in Hearthwood Cascadia; do
   python3 $T/neoterra/twinbuilder.py "$OUT" $STY
   python3 $T/neoterra/wonders.py "$OUT" $STY
   # Domum Ornamentum: the pack's own set (shutters / timber frames / shingles / pillars), more at higher levels
+  # furniture in the pack's own style, then its Domum set
+  python3 $T/neoterra/furnish.py "$OUT" $STY
   python3 $T/neoterra/domumize.py "$OUT" $STY
   mkdir -p "$SP"
   for f in fundamentals/townhall5 craftsmanship/storage/deliveryman5 decorations/housing/playerhouse5 \

@@ -67,6 +67,17 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## Furnished interiors (1.18.0)
+`furnish.py` furnishes every hut in the pack's own style – free floor spots against interior walls (about 15 % at
+level 1 up to 55 % at level 5) plus rugs in the middle of bigger rooms; doors, ladders, stairs, huts, beds, racks and
+work blocks keep a clear ring, and every building is walk-checked afterwards.
+
+| Neoterra | Hearthwood | Cascadia |
+|---|---|---|
+| quartz sofas (Domum), counters, glass display cases, potted bamboo, cyan / grey rugs | chiseled-bookshelf bookcases, shelves with flower pots, oak benches, dressers with candles, orange / white rugs | log benches, stump stools, firewood stacks, plank tables with lanterns, river-rock hearths, brown / green rugs |
+
+![Furnished interiors](docs/previews/interiors_furnished.png)
+
 ## Domum Ornamentum per pack (1.17.0)
 `domumize.py` gives every pack its own set of Domum Ornamentum blocks – a little at levels 1-3, a lot at levels 4-5
 (buildings that stop at level 3 use the level 1 / 3 / 5 rules):
@@ -235,10 +246,10 @@ server with a self-test: two colonies trade a request, the Supply Depot crafts o
 Structurize (`SELFTEST PASS`).
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.17.1.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.18.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a NeoForge mod that carries the Trade Post and all four style packs (Neoterra, Hearthwood, Cascadia and Farmworks);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.17.1.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.18.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>` (compiles `mod/` with Gradle).
 
 ## Install
