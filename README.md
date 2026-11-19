@@ -65,6 +65,43 @@ has N beds. Every flat/house has its own kitchen (furnace, smoker, crafting tabl
 | L4 | Premium; pool, vegetable garden (carrots/potatoes on farmland), lamp spires | Premium; guest room, garage roof terrace, hot tub, lamp spires | 4th storey, premium, roof garden with seats | Townhouse 4, premium, lamp spires |
 | L5 | Roof garden on the wing, glowing loft, jukebox | Attic loft bed under the high roof (ladder), ender chest, jukebox | Penthouse storey, roof trees, mast, ender chest | Glass penthouse on the roof (ladder from townhouse 2), roof terrace, ender chest, jukebox |
 
+### Skytower – apartment tower with penthouse, up to 25 residents (`fundamentals/skytower1-5`)
+19 × 40 × 19. MineColonies caps one residence hut at 5 residents, so the Skytower contains
+**five residence huts**: the tower's own hut in the lobby (its residents live in the glass
+penthouse) plus one child residence hut on each of the 4 apartment floors — the same mechanism
+the official barracks use for their towers. Upgrade each floor's hut on its own (it builds
+`skytowerflat1-5`, tagged invisible so it does not clutter the Build Tool). 5 × 5 = 25 beds max.
+
+![Skytower levels 1–5 (apartments shown furnished at the same level)](docs/previews/neoterra/skytower_levels.png)
+
+| Tower level | Adds | Penthouse beds |
+|---|---|---|
+| 1 | Full tower shell, stair core through all floors, lobby with parcel boxes, glass penthouse, roof railing | 1 |
+| 2 | Lobby seating and planters, trees | 2 |
+| 3 | Balconies on every apartment floor, roof garden with planters and seats | 3 |
+| 4 | Premium palette, roof-garden trees, lamp spires | 4 |
+| 5 | Glowing crown around the roof, antenna mast | 5 |
+
+Each apartment (`skytowerflat`, levels 1–5): 1–5 beds, kitchen (furnace, smoker, crafting table,
+barrel), dining table; sofa (L2), planter (L3), bookshelves + jukebox (L4), ender chest (L5).
+Inside the tower blueprint the apartment interiors are `structurize:blocksubstitution`, so
+upgrading the tower never overwrites the apartments.
+
+### Player house (`decorations/housing/playerhouse`) – decoration, no hut
+35 × 22 × 29. Uses MineColonies' decoration controller (like the official player mansion), so a
+builder can build it but it is not a colony building and has no levels. Premium materials.
+
+![Player house](docs/previews/neoterra/playerhouse_front.png)
+
+- **Workshop:** 4 furnaces, 2 blast furnaces, 2 smokers, crafting table, smithing table, stonecutter,
+  loom, cartography & fletching tables, anvil, workbench
+- **Storage vault:** ~120 barrels
+- **Upper floor (floating glass box):** enchanting library (30 bookshelves), anvil, grindstone,
+  lounge with jukebox, bedroom with 2 beds, brewing station (2 brewing stands, water cauldron)
+- **Roof:** working beacon base (3×3 iron blocks — bring a nether star), roof garden, seats
+- **Garden:** pool, irrigated farm (wheat, carrots, potatoes, beetroot), composter,
+  nether portal frame (light it yourself), trees, lamp spires, ender chest in the hall
+
 ### Courier's hut (`craftsmanship/storage/deliveryman1-5`) – 23 × 22 × 21, same footprint every level
 Hut block: `minecolonies:blockhutdeliveryman` (MineColonies calls it the Courier's Hut).
 
@@ -111,6 +148,8 @@ python3 tools/blueprints/validate.py blocks.json stylepacks/Neoterra/**/*.bluepr
 - `tools/blueprints/neoterra/builder.py` – builder's hut design (levels 1–5)
 - `tools/blueprints/neoterra/residences.py` – cottage, house, apartment and quadplex residences (levels 1–5)
 - `tools/blueprints/walkcheck.py` – checks every bed, hut block, rack and workstation is reachable on foot
+- `tools/blueprints/neoterra/skytower.py` – Skytower + apartment floors (child residence huts)
+- `tools/blueprints/neoterra/playerhouse.py` – player house decoration
 - `tools/blueprints/neoterra/deliveryman.py` – courier's hut design (levels 1–5)
 - `tools/blueprints/neoterra/warehouse.py` – warehouse design (levels 1–5)
 - `tools/blueprints/neoterra/check_townhall.py` – stair headroom, floor exits, enchanting power, elevator watertightness

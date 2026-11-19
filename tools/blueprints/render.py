@@ -41,7 +41,9 @@ COLORS = {
     "yellow_concrete": (241, 175, 21), "bricks": (150, 75, 60), "spruce_fence": (115, 85, 50),
     "architectscutter": (150, 120, 90), "blockhutbuilder": (255, 60, 200), "iron_bars": (120, 120, 120),
     "stonecutter": (120, 120, 120), "anvil": (60, 60, 60), "smithing_table": (60, 50, 50),
-    "hopper": (70, 70, 75), "birch_door": (215, 200, 150), "farmland": (100, 70, 45),
+    "hopper": (70, 70, 75), "obsidian": (25, 18, 40), "iron_block": (220, 220, 222), "beacon": (120, 220, 215),
+    "composter": (110, 80, 45), "wheat": (200, 180, 80), "beetroots": (150, 60, 60), "blast_furnace": (90, 90, 95),
+    "decorationcontroller": (255, 60, 200), "blocksubstitution": (230, 120, 230), "birch_door": (215, 200, 150), "farmland": (100, 70, 45),
     "carrots": (90, 160, 50), "potatoes": (110, 150, 60), "cyan_bed": (21, 137, 145),
     "blockhutcitizen": (255, 60, 200), "jukebox": (110, 75, 55), "smoker": (90, 85, 80), "quartz_pillar": (232, 226, 218), "quartz_block": (235, 229, 222),
 }

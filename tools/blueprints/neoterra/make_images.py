@@ -7,8 +7,8 @@ from PIL import Image, ImageDraw, ImageOps
 pack, prev = Path(sys.argv[1]), Path(sys.argv[2])
 BG = (236, 240, 244, 255)
 # category folder -> building whose level-5 render is used as the tab icon
-CATEGORIES = {"fundamentals": "townhall", "craftsmanship": "deliveryman"}
-BUILDINGS = ["townhall", "builder", "cottage", "house", "apartment", "quadplex", "deliveryman", "warehouse"]
+CATEGORIES = {"fundamentals": "townhall5", "craftsmanship": "deliveryman5", "decorations": "playerhouse"}
+BUILDINGS = ["townhall", "builder", "cottage", "house", "apartment", "quadplex", "skytower", "deliveryman", "warehouse"]
 
 
 def square(im, bg=BG):
@@ -22,7 +22,7 @@ square(Image.open(prev / "townhall5_front.png").convert("RGBA")).resize((128, 12
     .save(pack / "neoterra.png")
 
 for cat, b in CATEGORIES.items():
-    src = prev / f"{b}5_front.png"
+    src = prev / f"{b}_front.png"
     if not src.exists():
         continue
     icon = square(Image.open(src).convert("RGBA"), (0, 0, 0, 0)).resize((20, 20), Image.LANCZOS)

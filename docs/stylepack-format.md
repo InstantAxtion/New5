@@ -57,3 +57,16 @@ some huts have fewer levels, e.g. warehouse/townhall all 5, guard tower etc. var
     – `groundlevel` tag marks the ground height used when placing,
     other tags are building specific (e.g. `stand_out`, work spots).
 - Racks are `minecolonies:blockminecoloniesrack` with block entity `minecolonies:rack`.
+
+## Child huts (multi-hut buildings)
+Any hut block inside a building's blueprint is registered as a child of that building when the
+builder places it (`AbstractBuildingContainer#registerBlockPosition` -> `setParent`). The official
+barracks do this with `barrackstower`. A child hut's block entity stores `path` =
+`<category>/<name>0.blueprint` (level 0, corners 0,0,0); upgrading it builds `<name>1..5` at the
+child's position. The parent uses `structurize:blocksubstitution` in the child's volume so the two
+never overwrite each other. A residence holds `level` residents (max 5) per hut.
+
+## Decorations
+No hut: the anchor is `minecolonies:decorationcontroller[facing,mirror,waterlogged]` with block entity
+`minecolonies:decorationcontroller` {path, name, pack, mirror, rotation, blueprintDataProvider}.
+The tag `invisible` hides a blueprint from the Build Tool list.

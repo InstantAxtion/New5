@@ -18,6 +18,7 @@ MODDED = {
     "minecolonies:blockhutwarehouse": {"facing"},
     "minecolonies:blockhutbuilder": {"facing"},
     "minecolonies:blockhutcitizen": {"facing"},
+    "minecolonies:decorationcontroller": {"facing", "mirror", "waterlogged"},
     "domum_ornamentum:architectscutter": {"facing"},
     "minecolonies:blockminecoloniesrack": {"facing", "variant"},
     "structurize:blocksolidsubstitution": set(),
