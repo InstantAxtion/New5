@@ -14,7 +14,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 from blueprint import load, parse_state  # noqa: E402
 
 COLORS = {
-    "dirt_path": (148, 122, 65), "cobblestone_stairs": (122, 122, 122), "tuff_brick_stairs": (98, 104, 96), "brick_wall": (150, 74, 58), "stone_brick_wall": (122, 121, 122),
+    "dirt_path": (148, 122, 65), "brown_brick_extra": (118, 78, 58), "black_brick_extra": (52, 52, 58),
+    "white_paper_extra": (236, 232, 222), "paper_extra": (222, 210, 182), "brick_extra": (150, 74, 58),
+    "mossy_cobblestone_extra": (98, 118, 88), "cobblestone_extra": (122, 122, 122), "cobblestone_stairs": (122, 122, 122), "tuff_brick_stairs": (98, 104, 96), "brick_wall": (150, 74, 58), "stone_brick_wall": (122, 121, 122),
     "tuff_brick_wall": (98, 104, 96), "prismarine_brick_wall": (99, 171, 158), "dark_oak_fence": (66, 43, 20),
     "spruce_fence": (104, 78, 47), "magma_block": (142, 63, 31), "campfire": (230, 140, 50), "blockhuttradepost": (120, 85, 50),
     "stone": (125, 125, 125), "smooth_stone": (158, 158, 158), "gravel": (131, 127, 126),
@@ -170,7 +172,12 @@ def material(bp, x, y, z):
     s = short(bp.grid[y][z][x])
     te = bp.tile_entities.get((x, y, z))
     if te is not None and "textureData" in te:
-        m = str(te["textureData"].get("minecraft:block/oak_planks", "")).split(":")[-1]
+        td = te["textureData"]
+        m = str(td.get("minecraft:block/oak_planks", "")).split(":")[-1]
+        if s in ("shingle", "shingle_slab") and "minecraft:block/clay" in td:
+            return str(td["minecraft:block/clay"]).split(":")[-1]
+        if s in ("plain", "horizontal_plain", "framed", "side_framed") and "minecraft:block/dark_oak_planks" in td:
+            return str(td["minecraft:block/dark_oak_planks"]).split(":")[-1]
         if s.endswith("light"):
             return "sea_lantern"
         if s == "blockpaperwall":

@@ -67,6 +67,22 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## Domum Ornamentum per pack (1.17.0)
+`domumize.py` gives every pack its own set of Domum Ornamentum blocks – a little at levels 1-3, a lot at levels 4-5
+(buildings that stop at level 3 use the level 1 / 3 / 5 rules):
+
+| Level | Hearthwood | Cascadia | Neoterra |
+|---|---|---|---|
+| 2 | Domum shutters | squared timber pillars on the corner logs | framed lights |
+| 3 | + timber-framed upper storeys (dark-oak frames, white plaster, crossed panels) | + log-cabin frames on upper storeys | + quartz square pillars on the corners |
+| 4 | + shingle roofs, brown tile | + cedar shingle roofs | + every light framed |
+| 5 | + black tile shingles, frames on every storey (brick infill below) | + mossy shingles mixed in, frames on every storey | + framed light strips |
+
+Block states and texture keys follow MineColonies' own official packs. Huts, racks, beds and work blocks are never
+replaced.
+
+![Domum, level 2 vs 5](docs/previews/domum_levels.png)
+
 ## Every pack is its own world (1.16.0)
 The same hut type is a completely different building in each pack – own plan, size, roof, storey height, wall
 treatment, materials and decorations (`typology.py` has a separate table per pack):
@@ -218,10 +234,10 @@ server with a self-test: two colonies trade a request, the Supply Depot crafts o
 Structurize (`SELFTEST PASS`).
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.16.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.17.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a NeoForge mod that carries the Trade Post and all four style packs (Neoterra, Hearthwood, Cascadia and Farmworks);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.16.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.17.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>` (compiles `mod/` with Gradle).
 
 ## Install

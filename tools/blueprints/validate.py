@@ -86,6 +86,13 @@ MODDED = {
     "domum_ornamentum:blockpillar": {"column"},
     "domum_ornamentum:blockpaperwall": {"north", "south", "east", "west", "waterlogged"},
     "domum_ornamentum:fancy_light": set(),
+    "domum_ornamentum:shingle": {"facing", "half", "shape", "waterlogged"},
+    "domum_ornamentum:shingle_slab": {"facing", "shape", "waterlogged"},
+    "domum_ornamentum:plain": {"facing"}, "domum_ornamentum:double_crossed": {"facing"},
+    "domum_ornamentum:one_crossed_lr": {"facing"}, "domum_ornamentum:one_crossed_rl": {"facing"},
+    "domum_ornamentum:framed": {"facing"}, "domum_ornamentum:horizontal_plain": {"facing"},
+    "domum_ornamentum:side_framed": {"facing"}, "domum_ornamentum:squarepillar": {"column"},
+    "domum_ornamentum:vanilla_trapdoors_compat": {"facing", "half", "open", "powered", "type", "waterlogged"},
     "domum_ornamentum:center_light": set(),
 }
 
