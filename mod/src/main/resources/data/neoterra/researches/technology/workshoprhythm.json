@@ -1,0 +1,27 @@
+{
+  "branch": "minecolonies:technology",
+  "costs": [
+    {
+      "count": 16,
+      "item": "minecraft:iron_ingot"
+    }
+  ],
+  "effects": [
+    {
+      "id": "neoterra:effects/craftingspeed",
+      "level": 2
+    }
+  ],
+  "icon": "minecraft:iron_ingot",
+  "requirements": [
+    {
+      "type": "minecolonies:building",
+      "building": "minecolonies:stonemason",
+      "level": 2
+    }
+  ],
+  "researchLevel": 2,
+  "sortOrder": 41,
+  "subtitle": "com.neoterra.research.technology.workshoprhythm.subtitle",
+  "parentResearch": "neoterra:technology/efficientbenches"
+}

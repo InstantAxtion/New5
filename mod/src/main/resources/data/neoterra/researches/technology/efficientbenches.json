@@ -1,0 +1,26 @@
+{
+  "branch": "minecolonies:technology",
+  "costs": [
+    {
+      "count": 8,
+      "item": "minecraft:crafting_table"
+    }
+  ],
+  "effects": [
+    {
+      "id": "neoterra:effects/craftingspeed",
+      "level": 1
+    }
+  ],
+  "icon": "minecraft:crafting_table",
+  "requirements": [
+    {
+      "type": "minecolonies:building",
+      "building": "minecolonies:sawmill",
+      "level": 1
+    }
+  ],
+  "researchLevel": 1,
+  "sortOrder": 40,
+  "subtitle": "com.neoterra.research.technology.efficientbenches.subtitle"
+}

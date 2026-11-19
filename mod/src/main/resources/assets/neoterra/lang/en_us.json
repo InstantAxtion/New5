@@ -26,5 +26,12 @@
   "com.neoterra.building.royalgranary": "Royal Granary",
   "com.neoterra.building.wonderwing": "Grand Project Wing",
   "com.neoterra.job.quartermaster": "Quartermaster",
-  "com.minecolonies.core.gui.modules.supplydepot_work": "Quartermaster"
+  "com.minecolonies.core.gui.modules.supplydepot_work": "Quartermaster",
+  "com.neoterra.research.technology.efficientbenches.name": "Efficient Benches",
+  "com.neoterra.research.technology.efficientbenches.subtitle": "A place for every tool.",
+  "com.neoterra.research.technology.workshoprhythm.name": "Workshop Rhythm",
+  "com.neoterra.research.technology.workshoprhythm.subtitle": "Measure twice, cut once \u2013 quickly.",
+  "com.neoterra.research.technology.masterartisans.name": "Master Artisans",
+  "com.neoterra.research.technology.masterartisans.subtitle": "Practice makes the queue shorter.",
+  "com.neoterra.research.effects.craftingspeed.description": "Crafters Finish Orders +%3$s%% Faster"
 }

@@ -13,6 +13,7 @@ import com.minecolonies.api.util.InventoryUtils;
 import com.minecolonies.api.util.ItemStackUtils;
 import com.minecolonies.core.colony.buildings.AbstractBuildingStructureBuilder;
 import com.minecolonies.core.colony.buildings.utils.BuildingBuilderResource;
+import com.minecolonies.core.colony.jobs.AbstractJobCrafter;
 import com.minecolonies.core.research.GlobalResearchEffect;
 import com.minecolonies.core.research.ResearchEffectManager;
 import net.minecraft.resources.ResourceLocation;
@@ -26,12 +27,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.minecolonies.api.research.util.ResearchConstants.BLOCK_PLACE_SPEED;
 
 /**
  * Server-side colony helpers that run every few seconds:
  * <ul>
- *   <li>builder speed and Grand Project bonuses, applied as extra strength on MineColonies' own research effects;</li>
+ *   <li>Grand Project bonuses, applied as extra strength on MineColonies' own research effects;</li>
+ *   <li>the University's workshop research: crafters finish each craft a little sooner;</li>
  *   <li>up-front material requests for builders.</li>
  * </ul>
  */
@@ -51,10 +52,24 @@ public final class ColonyBoosts
         }
     }
 
+    /** Research effect of the University line "Efficient Benches / Workshop Rhythm / Master Artisans". */
+    public static final ResourceLocation CRAFTING_SPEED = NeoterraTrade.id("effects/craftingspeed");
+
+    /** Fractional extra crafting progress per crafter (colony id << 32 | citizen id). */
+    private final Map<Long, Double> craftCarry = new HashMap<>();
+
     @SubscribeEvent
     public void onTick(final ServerTickEvent.Post event)
     {
-        if (++tick % 100 != 0)
+        ++tick;
+        if (tick % 10 == 0)
+        {
+            for (final IColony colony : IColonyManager.getInstance().getAllColonies())
+            {
+                speedUpCrafters(colony, craftCarry);
+            }
+        }
+        if (tick % 100 != 0)
         {
             return;
         }
@@ -104,7 +119,6 @@ public final class ColonyBoosts
         }
         final Map<ResourceLocation, Double> bonus = bonuses(colony);
         final List<ResourceLocation> ids = new ArrayList<>(bonus.keySet());
-        ids.add(BLOCK_PLACE_SPEED);
         // also revisit effects we boosted before, so a removed wonder or a config change takes the bonus away
         for (final Map.Entry<ResourceLocation, IResearchEffect> e : map.entrySet())
         {
@@ -113,22 +127,11 @@ public final class ColonyBoosts
                 ids.add(e.getKey());
             }
         }
-        final double speed = NeoterraConfig.get(NeoterraConfig.BUILDER_SPEED, 1.5);
         for (final ResourceLocation id : ids)
         {
             final IResearchEffect current = map.get(id);
             final double base = current instanceof Boosted b ? b.base : (current instanceof GlobalResearchEffect ? current.getEffect() : 0);
-            double value;
-            if (id.equals(BLOCK_PLACE_SPEED))
-            {
-                // MineColonies: delay *= (1 - strength). Divide the delay by the configured speed.
-                value = Math.min(0.95, 1 - (1 - base) / speed);
-                value += bonus.getOrDefault(id, 0.0);
-            }
-            else
-            {
-                value = base + bonus.getOrDefault(id, 0.0);
-            }
+            final double value = base + bonus.getOrDefault(id, 0.0);
             if (Math.abs(value - base) < 1e-9)
             {
                 if (current instanceof Boosted)
@@ -174,6 +177,40 @@ public final class ColonyBoosts
             NeoterraTrade.LOG.error("Cannot reach MineColonies research effects", e);
             return null;
         }
+    }
+
+    // ------------------------------------------------------------------ crafters
+
+    /**
+     * Crafters gain one point of progress per hit (every 10 ticks) while they work on a recipe; with the
+     * research at strength s they get s extra points per 10 ticks, i.e. each craft finishes ~s faster.
+     * Returns the number of crafters that were sped up.
+     */
+    static int speedUpCrafters(final IColony colony, final Map<Long, Double> carry)
+    {
+        final double strength = colony.getResearchManager().getResearchEffects().getEffectStrength(CRAFTING_SPEED);
+        if (strength <= 0)
+        {
+            return 0;
+        }
+        int n = 0;
+        for (final ICitizenData citizen : colony.getCitizenManager().getCitizens())
+        {
+            if (!(citizen.getJob() instanceof AbstractJobCrafter<?, ?> job) || job.getCurrentTask() == null || job.getProgress() <= 0)
+            {
+                continue;
+            }
+            final long key = ((long) colony.getID() << 32) | (citizen.getId() & 0xffffffffL);
+            double c = carry.getOrDefault(key, 0.0) + strength;
+            if (c >= 1)
+            {
+                job.setProgress(job.getProgress() + (int) c);
+                c -= (int) c;
+            }
+            carry.put(key, c);
+            n++;
+        }
+        return n;
     }
 
     // ------------------------------------------------------------------ builders

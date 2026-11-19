@@ -15,8 +15,8 @@ public enum WonderType
         "Citizens walk +3% faster and Trade Couriers travel 8% faster"),
     COLOSSUS("colossus", Map.of(MELEE_DAMAGE, 0.4, ARCHER_DAMAGE, 0.4, MELEE_ARMOR, 0.04, ARCHER_ARMOR, 0.04),
         "Guards +0.4 damage and +4% armour"),
-    ROYALGRANARY("royalgranary", Map.of(SATURATION, 0.04, FARMING, 0.1),
-        "Meals +4% saturation, farmers +10% crops");
+    ROYALGRANARY("royalgranary", Map.of(SATURATION, 0.05),
+        "Meals +5% saturation");
 
     public final String                        id;
     public final Map<ResourceLocation, Double> perLevel;

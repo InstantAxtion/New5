@@ -190,12 +190,12 @@ final class SelfTest
                 final var fx = a.getResearchManager().getResearchEffects();
                 final double happy = fx.getEffectStrength(com.minecolonies.api.research.util.ResearchConstants.HAPPINESS);
                 final double place = fx.getEffectStrength(com.minecolonies.api.research.util.ResearchConstants.BLOCK_PLACE_SPEED);
-                log("cathedral level 2: happiness +%.2f, block place speed %.3f", happy, place);
+                log("cathedral level 2: happiness +%.2f, block place speed untouched: %.3f", happy, place);
                 cathedral.setBuildingLevel(0);
                 ColonyBoosts.applyBoosts(a);
                 final double after = fx.getEffectStrength(com.minecolonies.api.research.util.ResearchConstants.HAPPINESS);
                 log("cathedral gone: happiness +%.2f", after);
-                if (!(Math.abs(happy - 0.06) < 1e-6 && Math.abs(place - (1 - 1 / 1.5)) < 1e-6 && after == 0))
+                if (!(Math.abs(happy - 0.06) < 1e-6 && place == 0 && after == 0))
                 {
                     finish(level, false);
                     return;
@@ -227,10 +227,35 @@ final class SelfTest
                     finish(level, false);
                     return;
                 }
-                finish(level, checkBlueprints(level));
+                finish(level, checkBlueprints(level) && checkResearch());
             }
             default -> { }
         }
+    }
+
+    /** The University research line is in MineColonies' research tree with the crafting-speed effect. */
+    private static boolean checkResearch()
+    {
+        final var tree = com.minecolonies.api.research.IGlobalResearchTree.getInstance();
+        final net.minecraft.resources.ResourceLocation branch = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("minecolonies", "technology");
+        final double[] expect = {0.05, 0.10, 0.15};
+        final String[] names = {"efficientbenches", "workshoprhythm", "masterartisans"};
+        boolean ok = true;
+        for (int i = 0; i < names.length; i++)
+        {
+            final var id = NeoterraTrade.id("technology/" + names[i]);
+            final var r = tree.hasResearch(branch, id) ? tree.getResearch(branch, id) : null;
+            if (r == null)
+            {
+                log("research %s missing", id);
+                ok = false;
+                continue;
+            }
+            final double strength = r.getEffects().stream().filter(e -> e.getId().equals(ColonyBoosts.CRAFTING_SPEED)).mapToDouble(e -> e.getEffect()).findFirst().orElse(-1);
+            log("research %s: depth %d, parent %s, crafting speed +%.0f%%", names[i], r.getDepth(), r.getParent(), strength * 100);
+            ok &= Math.abs(strength - expect[i]) < 1e-9 && r.getDepth() == i + 1;
+        }
+        return ok;
     }
 
     /** Every hut blueprint of ours loads through Structurize, with the right hut block and (wonders) two wing huts. */

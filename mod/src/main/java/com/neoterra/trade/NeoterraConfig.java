@@ -7,7 +7,6 @@ public final class NeoterraConfig
 {
     public static final ModConfigSpec SPEC;
 
-    public static final ModConfigSpec.DoubleValue  BUILDER_SPEED;
     public static final ModConfigSpec.BooleanValue UPFRONT_MATERIALS;
     public static final ModConfigSpec.BooleanValue SUPPLY_DEPOT;
     public static final ModConfigSpec.DoubleValue  WONDER_BONUS;
@@ -17,8 +16,6 @@ public final class NeoterraConfig
     {
         final ModConfigSpec.Builder b = new ModConfigSpec.Builder();
         b.push("builders");
-        BUILDER_SPEED = b.comment("How fast builders place blocks. 1.0 = normal MineColonies speed, 2.0 = twice as fast, 0.5 = half speed.",
-            "Stacks with the builder speed research.").defineInRange("builderSpeed", 1.5, 0.25, 10.0);
         UPFRONT_MATERIALS = b.comment("When a builder has worked out the material list of a build, request everything still missing at once",
             "instead of one stage at a time, so the warehouse and crafters can work on all of it in parallel.").define("upfrontMaterials", true);
         b.pop();

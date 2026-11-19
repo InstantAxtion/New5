@@ -114,7 +114,6 @@ for an order are kept in the post until the courier leaves. Each post level allo
 
 | Setting | Default | What it does |
 |---|---|---|
-| `builders.builderSpeed` | 1.5 | builder block-placing speed (1.0 = MineColonies normal, 2.0 = twice as fast); stacks with research |
 | `builders.upfrontMaterials` | true | builders request the whole missing material list at once instead of stage by stage |
 | `huts.supplyDepot` | true | Supply Depot on/off |
 | `huts.tradePost` | true | Trade Post on/off |
@@ -123,6 +122,16 @@ for an order are kept in the post until the courier leaves. Each post level allo
 **Up-front materials** – as soon as a builder has worked out a build's material list, everything still missing is
 requested in one go, so the warehouse, crafters, Supply Depot and Trade Post work on all of it in parallel and
 the builder doesn't stall between stages.
+
+**Faster crafting queues (University research)** – three new entries in the University's *Technology* branch.
+Each one makes every crafter (stonemason, sawmill, blacksmith, …) finish each craft a little sooner, so orders
+spend less time waiting in crafting queues:
+
+| Research | Needs | Cost | Crafters |
+|---|---|---|---|
+| Efficient Benches | sawmill level 1 | 8 crafting tables | +5% faster |
+| Workshop Rhythm | stonemason level 2 | 16 iron ingots | +10% faster |
+| Master Artisans | university level 3 | 8 gold ingots, 16 books | +15% faster |
 
 **Supply Depot** (Farmworks → `trade/supplydepot1-5`, hut `neoterra:blockhutsupplydepot`, job Quartermaster) – takes
 requests nobody in the colony makes (the ones that would land on you), picks the simplest crafting recipe,
@@ -138,20 +147,20 @@ the lowest level of the core and both wings, and adds to MineColonies' own resea
 | Cathedral | two bell towers | +3% happiness, +10% regeneration, +1 citizen HP |
 | Grand Bridge | two end pylons | +3% walking speed, Trade Couriers 8% faster |
 | Colossus | two fire braziers | guards +0.4 damage and +4% armour |
-| Royal Granary | two silos | meals +4% saturation, farmers +10% crops |
+| Royal Granary | two silos | meals +5% saturation |
 
 ![Hearthwood wonders](docs/previews/wonders/hearthwood_wonders.png)
 
 Build the mod: `cd mod && gradle jar` (NeoForge 21.1 / ModDevGradle, MineColonies 1.1.1420). `gradle runServer` boots a dev
-server with a self-test: two colonies trade a request, the Supply Depot crafts one, a wonder bonus and builder speed
-are applied and removed, a builder requests its materials up front, and all 130 hut blueprints load through
+server with a self-test: two colonies trade a request, the Supply Depot crafts one, a wonder bonus is applied and removed
+(builder speed left alone), the University research line loads, a builder requests its materials up front, and all 130 hut blueprints load through
 Structurize (`SELFTEST PASS`).
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.12.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.13.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a NeoForge mod that carries the Trade Post and all four style packs (Neoterra, Hearthwood, Cascadia and Farmworks);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.12.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.13.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>` (compiles `mod/` with Gradle).
 
 ## Install
