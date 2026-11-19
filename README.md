@@ -73,15 +73,16 @@ barn workshop).
 
 | Level | Hearthwood | Cascadia | Neoterra |
 |---|---|---|---|
-| 2 | Domum shutters | squared timber pillars on the corner logs | framed lights |
-| 3 | + timber-framed upper storeys (dark-oak frames, white plaster, crossed panels) | + log-cabin frames on upper storeys | + quartz square pillars on the corners |
-| 4 | + shingle roofs, brown tile | + cedar shingle roofs | + every light framed |
-| 5 | + black tile shingles, frames on every storey (brick infill below) | + mossy shingles mixed in, frames on every storey | + framed light strips |
+| 2 | Domum shutters | squared timber pillars on the corner logs | framed lights, quartz Domum table tops |
+| 3 | + timber-framed upper storeys (dark-oak frames, white plaster, crossed panels) | + log-cabin frames on upper storeys | + quartz square pillars on the corners, framed floor tiles, quartz Domum stairs and seats, framed quartz roof coping |
+| 4 | + shingle roofs, brown tile | + cedar shingle roofs | + every light framed, standing-seam metal roofs, waffle-panel decking on flat roofs |
+| 5 | + black tile shingles, frames on every storey (brick infill below) | + mossy shingles mixed in, frames on every storey | + framed light strips, iron seam roofs, checkerboard floor tiles |
 
 Block states and texture keys follow MineColonies' own official packs. Huts, racks, beds and work blocks are never
 replaced.
 
 ![Domum, level 2 vs 5](docs/previews/domum_levels.png)
+![Neoterra roofs](docs/previews/neoterra_domum.png)
 
 ## Every pack is its own world (1.16.0)
 The same hut type is a completely different building in each pack – own plan, size, roof, storey height, wall
@@ -234,10 +235,10 @@ server with a self-test: two colonies trade a request, the Supply Depot crafts o
 Structurize (`SELFTEST PASS`).
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.17.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.17.1.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a NeoForge mod that carries the Trade Post and all four style packs (Neoterra, Hearthwood, Cascadia and Farmworks);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.17.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.17.1.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>` (compiles `mod/` with Gradle).
 
 ## Install

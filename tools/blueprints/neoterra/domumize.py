@@ -36,6 +36,9 @@ PLASTER = {"white_terracotta", "light_gray_terracotta", "pink_terracotta", "yell
 CASC_WALL = {"mangrove_planks", "spruce_planks", "stripped_spruce_wood", "stripped_mangrove_wood"}
 CASC_POST = {"spruce_log", "mangrove_log", "stripped_spruce_log", "stripped_mangrove_log", "dark_oak_log"}
 NEO_POST = {"gray_concrete", "white_concrete", "smooth_stone"}
+NEO_FLOOR = {"polished_andesite", "smooth_stone", "smooth_quartz", "polished_diorite"}
+NEO_PARAPET = {"light_gray_concrete", "white_concrete", "gray_concrete", "smooth_stone"}
+NEO_ROOFDECK = {"polished_andesite", "smooth_stone", "smooth_quartz", "light_gray_concrete", "polished_diorite"}
 
 
 def name(s):
@@ -147,6 +150,27 @@ def process(args):
                     put(x, y, z, f"domum_ornamentum:horizontal_plain[facing={f}]",
                         {K_MAIN: "minecraft:spruce_planks", K_SECOND: "minecraft:stripped_spruce_log"})
         else:  # Neoterra
+            above_in = bp.get(x, y + 1, z) == AIR and (x, y + 1, z) not in out
+            if t >= 4 and is_roof_stair(bp, out, x, y, z, s):                     # standing-seam metal roof
+                put(x, y, z, f"domum_ornamentum:shingle[facing={props.get('facing', 'north')},half={props.get('half', 'bottom')},"
+                             f"shape={props.get('shape', 'straight')},waterlogged=false]",
+                    {K_CLAY: "minecraft:iron_block" if t >= 5 else "minecraft:light_gray_concrete", K_MAIN: "minecraft:white_concrete"})
+                continue
+            if t >= 3 and n in NEO_FLOOR and above_in and y >= 2:                   # framed floor tiles
+                infill = ("minecraft:smooth_quartz" if (x + z) % 2 else "minecraft:white_concrete") if t >= 5 else "minecraft:smooth_quartz"
+                put(x, y, z, "domum_ornamentum:framed[facing=up]", {K_MAIN: "minecraft:light_gray_concrete", K_SECOND: infill})
+                continue
+            if t >= 3 and n in NEO_PARAPET and (x, y + 1, z) in out and y >= 4 and facing_out(out, x, y, z):
+                put(x, y, z, "domum_ornamentum:side_framed[facing=up]",
+                    {K_MAIN: "minecraft:quartz_block", K_SECOND: "minecraft:light_gray_concrete"})
+                continue
+            if "_stairs" in n and not is_roof_stair(bp, out, x, y, z, s) and t >= 3 and (x, y, z) not in out and above_in:
+                put(x, y, z, f"domum_ornamentum:vanilla_stairs_compat[facing={props.get('facing', 'north')},half={props.get('half', 'bottom')},"
+                             f"shape={props.get('shape', 'straight')},waterlogged=false]", {K_MAIN: "minecraft:smooth_quartz"})
+                continue
+            if "_slab" in n and props.get("type") == "top" and t >= 2 and above_in and facing_out(out, x, y, z) is None:
+                put(x, y, z, "domum_ornamentum:vanilla_slab_compat[type=top,waterlogged=false]", {K_MAIN: "minecraft:smooth_quartz"})
+                continue
             if n == "lantern" and t >= 2 and props.get("hanging") == "true":
                 if t >= 4 or (x + z) % 2 == 0:
                     if bp.get(x, y - 1, z) == AIR and bp.get(x, y - 2, z) == AIR and bp.get(x, y + 1, z) != AIR:
@@ -164,6 +188,15 @@ def process(args):
                     col = "pillar_column" if below and above else ("pillar_base" if above else ("pillar_capital" if below else "full_pillar"))
                     put(x, y, z, f"domum_ornamentum:squarepillar[column={col}]",
                         {K_MAIN: "minecraft:quartz_block" if t >= 5 else "minecraft:smooth_quartz"})
+    if style == "Neoterra" and t >= 4:                                         # waffle-panel decking on flat roofs
+        for x, y, z, s in [(x, y, z, s) for x, y, z, s in bp.blocks() if s == AIR and y >= 6]:
+            if (x, y, z) not in out:
+                continue
+            below = bp.get(x, y - 1, z)
+            if name(below) in NEO_ROOFDECK and (x, y - 1, z) not in te_pos and bp.get(x, y - 2, z) == AIR \
+                    and (x, y - 2, z) not in out:
+                put(x, y, z, "domum_ornamentum:panel[facing=north,half=bottom,open=false,type=waffle,waterlogged=false]",
+                    {K_MAIN: "minecraft:gray_concrete"})
     if changed:
         bp.save(path)
     return changed

@@ -92,6 +92,7 @@ MODDED = {
     "domum_ornamentum:one_crossed_lr": {"facing"}, "domum_ornamentum:one_crossed_rl": {"facing"},
     "domum_ornamentum:framed": {"facing"}, "domum_ornamentum:horizontal_plain": {"facing"},
     "domum_ornamentum:side_framed": {"facing"}, "domum_ornamentum:squarepillar": {"column"},
+    "domum_ornamentum:panel": {"facing", "half", "open", "type", "waterlogged"},
     "domum_ornamentum:vanilla_trapdoors_compat": {"facing", "half", "open", "powered", "type", "waterlogged"},
     "domum_ornamentum:center_light": set(),
 }
