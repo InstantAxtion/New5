@@ -367,11 +367,11 @@ class Detailer:
                     if r < .03:
                         self.put(x, y + 1, z, "light_gray_concrete")             # HVAC box with grille
                         self.put(x, y + 2, z, "iron_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]")
-                    elif L == 3 and r < .3 and replaceable:
+                    elif False:
                         self.put(x, y, z, "moss_block")
                         self.put(x, y + 1, z, ["moss_carpet", "short_grass", "fern", "azure_bluet"][int(r * 40) % 4])
                     continue
-                garden = .42 if L == 4 else .5
+                garden = 0.0                       # no roof planting (clean exteriors)
                 if r < garden and replaceable:
                     self.put(x, y, z, "moss_block" if r < garden * .6 else "grass_block[snowy=false]")
                     rr = h("p", x, z)
@@ -676,11 +676,10 @@ def process(path_str):
     d.texture()
     done.append("texture")
     if kind in ("building",):
-        if d.guarded(d.facade):
-            done.append("facade")
+        pass                                    # no window boxes / vines: exteriors stay clean
         if d.guarded(d.roof):
             done.append("roof")
-    if kind in ("building", "park"):
+    if kind == "park":                          # buildings get no landscaping; parks keep theirs
         if d.guarded(d.ground):
             done.append("ground")
     if kind in ("building", "child"):

@@ -496,8 +496,7 @@ class Signature(Massing):
                         self.bp.set(x, self.gy, z, "minecraft:" + self.t("accent"))
                     if z in (z1, z2) or x % 2 == 0:
                         self.place(x, self.gy + 4, z, "stripped_oak_log[axis=x]" if z in (z1, z2) else "stripped_oak_log[axis=z]")
-                    elif h("pg", x, z) < .5:
-                        self.place(x, self.gy + 4, z, "flowering_azalea_leaves[distance=1,persistent=true,waterlogged=false]")
+
             for x in range(x1 + 1, x2, 3):
                 self.place(x, self.gy + 1, (z1 + z2) // 2, self.stair("south"))
         return self.yard(10, 4, box, self.sides_side, b)

@@ -12,10 +12,10 @@ Requires: MineColonies, Structurize, Domum Ornamentum (all on NeoForge 1.21.1).
 
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.4.1.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.5.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that only carries the style pack;
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.4.1.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.5.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>`.
 
 ## Install
@@ -162,6 +162,15 @@ Counts follow the official MineColonies packs. The gatehouse (a wall gate that n
 gate blocks) is not included yet.
 
 ![Barracks](docs/previews/neoterra/barracks_levels.png)
+
+### Plot pass (clean exteriors, tight plots)
+`tools/blueprints/neoterra/plot.py` runs last. It removes all landscaping outside the buildings (trees, bushes,
+hedges, flowers, grass, vines, window boxes, roof planting and free-standing lamp posts), paves the open ground as
+an apron in the building's own colours, and crops every blueprint to the building plus its landmark features with
+a 1-block apron – that edge is the road access point for colony roads. Plants inside buildings stay, the
+beekeeper keeps its flowers and the animal huts keep their grass pens. The crop is walk-checked (a 2-block apron is
+used if 1 would block a door, otherwise nothing is cut). Huts with child buildings, shafts, ponds or wall
+alignment (Skytower, barracks, bunker, miner, fisherman, plantation, gatehouse, wall tower) keep their plots.
 
 ### Building identities (themes + signature modules)
 ![Identities 1](docs/previews/neoterra/neoterra_identity_overview_1.png)

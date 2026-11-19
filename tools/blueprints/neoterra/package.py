@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 PACK = ROOT / "stylepacks" / "Neoterra"
 DIST = ROOT / "dist"
-VERSION = sys.argv[1] if len(sys.argv) > 1 else "1.4.1"
+VERSION = sys.argv[1] if len(sys.argv) > 1 else "1.5.0"
 MODID = "neoterra"
 
 MODS_TOML = f'''modLoader = "lowcodefml"

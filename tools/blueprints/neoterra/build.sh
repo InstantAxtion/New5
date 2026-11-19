@@ -32,6 +32,8 @@ python3 $T/neoterra/reshape.py "$PACK" > /dev/null
 # massing pass: towers, wings, colonnades and plazas that make each level bigger (walk-checked)
 python3 $T/neoterra/massing.py "$PACK" > /dev/null
 python3 $T/neoterra/detail.py "$PACK" "$FURN" > /dev/null
+# plot pass: no landscaping outside, crop to the building + 1-block paved apron (walk-checked)
+python3 $T/neoterra/plot.py "$PACK" > /dev/null
 
 for l in 1 2 3 4 5; do
   for f in fundamentals/townhall fundamentals/builder fundamentals/cottage fundamentals/house \
