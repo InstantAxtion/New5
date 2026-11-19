@@ -270,3 +270,24 @@ def street_lamp(bp, x, y, z, h=3, premium=False):
 
 def solar_panels(bp, x1, y, z1, x2, z2):
     bp.fill(x1, y, z1, x2, y, z2, "daylight_detector[inverted=false,power=0]")
+
+
+DIRS = {"north": (0, -1), "south": (0, 1), "east": (1, 0), "west": (-1, 0)}
+
+
+def bed(bp, x, y, z, facing="south", color="cyan"):
+    """Bed with its foot at (x, z) and its head one block towards `facing`."""
+    dx, dz = DIRS[facing]
+    bp.set(x, y, z, f"{color}_bed[facing={facing},occupied=false,part=foot]")
+    bp.set(x + dx, y, z + dz, f"{color}_bed[facing={facing},occupied=false,part=head]")
+
+
+def door(bp, x, y, z, facing="north", mat="birch", hinge="left"):
+    for half, yy in (("lower", y), ("upper", y + 1)):
+        bp.set(x, yy, z, f"{mat}_door[facing={facing},half={half},hinge={hinge},open=false,powered=false]")
+
+
+def chair(bp, x, y, z, seat, back_towards, sit_list):
+    """A seat made from a stairs block; `back_towards` is where the backrest is."""
+    bp.set(x, y, z, f"{seat}[facing={back_towards},half=bottom,shape=straight,waterlogged=false]")
+    sit_list.append((x, y, z))

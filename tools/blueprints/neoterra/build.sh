@@ -11,6 +11,7 @@ mkdir -p "$PREV"
 python3 $T/neoterra/townhall.py "$PACK/fundamentals"
 python3 $T/neoterra/check_townhall.py
 python3 $T/neoterra/builder.py "$PACK/fundamentals"
+python3 $T/neoterra/residences.py "$PACK/fundamentals"
 python3 $T/neoterra/deliveryman.py "$PACK/craftsmanship/storage"
 python3 $T/neoterra/warehouse.py "$PACK/craftsmanship/storage"
 
@@ -19,6 +20,11 @@ for l in 1 2 3 4 5; do
   python3 $T/render.py "$PACK/craftsmanship/storage/deliveryman$l.blueprint" "$PREV/deliveryman$l" >/dev/null
   python3 $T/render.py "$PACK/craftsmanship/storage/warehouse$l.blueprint" "$PREV/warehouse$l" >/dev/null
   python3 $T/render.py "$PACK/fundamentals/builder$l.blueprint" "$PREV/builder$l" >/dev/null
+  for r in cottage apartment quadplex; do
+    python3 $T/render.py "$PACK/fundamentals/$r$l.blueprint" "$PREV/$r$l" >/dev/null
+  done
 done
 python3 $T/neoterra/make_images.py "$PACK" "$PREV"
+python3 $T/walkcheck.py "$PACK"/fundamentals/*.blueprint "$PACK"/craftsmanship/storage/*.blueprint >/dev/null \
+  && echo "walkcheck: everything reachable"
 echo "built $PACK"

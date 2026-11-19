@@ -17,6 +17,7 @@ MODDED = {
     "minecolonies:blockhutdeliveryman": {"facing"},
     "minecolonies:blockhutwarehouse": {"facing"},
     "minecolonies:blockhutbuilder": {"facing"},
+    "minecolonies:blockhutcitizen": {"facing"},
     "domum_ornamentum:architectscutter": {"facing"},
     "minecolonies:blockminecoloniesrack": {"facing", "variant"},
     "structurize:blocksolidsubstitution": set(),

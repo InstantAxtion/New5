@@ -47,6 +47,23 @@ and a fabrication yard where a 3D-printing gantry prints a concrete pod that gro
 | 4 Sky Box (premium) | 33 | Stacked glass sky box cantilevered over the entrance, glowing light strips (soffits, bands, gantry), glowing print nozzle, light columns, tree | **Architect's Cutter**, bed, jukebox, sky lounge seats |
 | 5 Landmark | 44 | Printed pod finished with a glass oculus, glowing box edges, roof garden, antenna spire | Ender chest |
 
+### Residences (`fundamentals/cottage1-5`, `apartment1-5`, `quadplex1-5`)
+Hut block: `minecolonies:blockhutcitizen`. Three variants of the same hut; a residence of level N
+has N beds. Every flat/house has its own kitchen (furnace, smoker, crafting table, barrel) and seats.
+
+![Cottage levels 1–5](docs/previews/neoterra/cottage_levels.png)
+![Apartment levels 1–5](docs/previews/neoterra/apartment_levels.png)
+![Quadplex levels 1–5](docs/previews/neoterra/quadplex_levels.png)
+
+| | Cottage (19 × 16 × 19) | Apartment (17 × 34 × 19) | Quadplex (27 × 18 × 21) |
+|---|---|---|---|
+| Idea | Single-family home, cantilevered flat roof, glass front, garden | Block that grows one storey per level, one flat per storey, stair core | Row of four townhouses with cantilevered glass bay windows |
+| L1 | House: kitchen, dining, 1 bed | Ground-floor flat + entrance with the hut | Townhouse 1 (kitchen downstairs, bedroom upstairs) |
+| L2 | Bedroom wing, trees | 2nd storey, trees | Townhouse 2, back-garden trees |
+| L3 | Glass loft with stairs, roof terrace, hedge | 3rd storey, balconies + ground patio | Townhouse 3, hedge dividers |
+| L4 | Premium; pool, vegetable garden (carrots/potatoes on farmland), lamp spires | 4th storey, premium, roof garden with seats | Townhouse 4, premium, lamp spires |
+| L5 | Roof garden on the wing, glowing loft, jukebox | Penthouse storey, roof trees, mast, ender chest | Glass penthouse on the roof (ladder from townhouse 2), roof terrace, ender chest, jukebox |
+
 ### Courier's hut (`craftsmanship/storage/deliveryman1-5`) – 23 × 22 × 21, same footprint every level
 Hut block: `minecolonies:blockhutdeliveryman` (MineColonies calls it the Courier's Hut).
 
@@ -91,6 +108,8 @@ python3 tools/blueprints/validate.py blocks.json stylepacks/Neoterra/**/*.bluepr
 - `tools/blueprints/neoterra/common.py` – Domum Ornamentum blocks, hut block data, geometry
 - `tools/blueprints/neoterra/townhall.py` – town hall design (levels 1–5)
 - `tools/blueprints/neoterra/builder.py` – builder's hut design (levels 1–5)
+- `tools/blueprints/neoterra/residences.py` – cottage, apartment and quadplex residences (levels 1–5)
+- `tools/blueprints/walkcheck.py` – checks every bed, hut block, rack and workstation is reachable on foot
 - `tools/blueprints/neoterra/deliveryman.py` – courier's hut design (levels 1–5)
 - `tools/blueprints/neoterra/warehouse.py` – warehouse design (levels 1–5)
 - `tools/blueprints/neoterra/check_townhall.py` – stair headroom, floor exits, enchanting power, elevator watertightness
