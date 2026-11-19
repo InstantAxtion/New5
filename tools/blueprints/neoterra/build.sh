@@ -102,6 +102,8 @@ for STY in Hearthwood Cascadia; do
   python3 $T/neoterra/restyle.py "$OUT" "$OUT" $STY
   # every regular hut: designed from scratch in the pack's own architecture (only requirements are shared)
   python3 $T/neoterra/archgen.py "$RAW" "$OUT" $STY > /dev/null
+  # Cascadia university: hand-designed campus hall (clock tower, portico, wings, library)
+  if [ "$STY" = Cascadia ]; then python3 $T/neoterra/university_cascadia.py "$OUT"; fi
   # walls, roads, rails, canals, bridges, subway, boardwalk, cliff climb and parks in the pack's own design
   python3 $T/neoterra/styleinfra.py "$OUT" $STY
   python3 $T/neoterra/twinbuilder.py "$OUT" $STY
