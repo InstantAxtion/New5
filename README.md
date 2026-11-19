@@ -40,29 +40,30 @@ and a fabrication yard where a 3D-printing gantry prints a concrete pod that gro
 ![Builder's hut levels 1–5](docs/previews/neoterra/builder_levels.png)
 
 | Level | Racks | Adds | Player use |
-|---|---|---|---|
+|---|---|---|---|---|
 | 1 Lobby | 8 | Glass lobby with chamfered corners, hut behind a counter, fenced yard | Crafting & cartography tables, barrels |
 | 2 Floating Studio | 11 | Cantilevered upper box with ribbon window, 3D-printing gantry + first printed ring, covered racks | Stonecutter, grindstone, anvil, smithing table; design studio (bookshelves, lectern, drawing tables) |
 | 3 Roof Deck | 22 | Roof deck + ladder, taller printed pod | Roof access |
 | 4 Sky Box (premium) | 33 | Stacked glass sky box cantilevered over the entrance, glowing light strips (soffits, bands, gantry), glowing print nozzle, light columns, tree | **Architect's Cutter**, bed, jukebox, sky lounge seats |
 | 5 Landmark | 44 | Printed pod finished with a glass oculus, glowing box edges, roof garden, antenna spire | Ender chest |
 
-### Residences (`fundamentals/cottage1-5`, `apartment1-5`, `quadplex1-5`)
-Hut block: `minecolonies:blockhutcitizen`. Three variants of the same hut; a residence of level N
+### Residences (`fundamentals/cottage1-5`, `house1-5`, `apartment1-5`, `quadplex1-5`)
+Hut block: `minecolonies:blockhutcitizen`. Four variants of the same hut; a residence of level N
 has N beds. Every flat/house has its own kitchen (furnace, smoker, crafting table, barrel) and seats.
 
 ![Cottage levels 1–5](docs/previews/neoterra/cottage_levels.png)
+![House levels 1–5](docs/previews/neoterra/house_levels.png)
 ![Apartment levels 1–5](docs/previews/neoterra/apartment_levels.png)
 ![Quadplex levels 1–5](docs/previews/neoterra/quadplex_levels.png)
 
-| | Cottage (19 × 16 × 19) | Apartment (17 × 34 × 19) | Quadplex (27 × 18 × 21) |
+| | Cottage (19 × 16 × 19) | House (21 × 19 × 21) | Apartment (17 × 34 × 19) | Quadplex (27 × 18 × 21) |
 |---|---|---|---|
-| Idea | Single-family home, cantilevered flat roof, glass front, garden | Block that grows one storey per level, one flat per storey, stair core | Row of four townhouses with cantilevered glass bay windows |
-| L1 | House: kitchen, dining, 1 bed | Ground-floor flat + entrance with the hut | Townhouse 1 (kitchen downstairs, bedroom upstairs) |
-| L2 | Bedroom wing, trees | 2nd storey, trees | Townhouse 2, back-garden trees |
-| L3 | Glass loft with stairs, roof terrace, hedge | 3rd storey, balconies + ground patio | Townhouse 3, hedge dividers |
-| L4 | Premium; pool, vegetable garden (carrots/potatoes on farmland), lamp spires | 4th storey, premium, roof garden with seats | Townhouse 4, premium, lamp spires |
-| L5 | Roof garden on the wing, glowing loft, jukebox | Penthouse storey, roof trees, mast, ender chest | Glass penthouse on the roof (ladder from townhouse 2), roof terrace, ender chest, jukebox |
+| Idea | Single-family home, cantilevered flat roof, glass front, garden | Regular two-storey family house, sloping roof, garage | Block that grows one storey per level, one flat per storey, stair core | Row of four townhouses with cantilevered glass bay windows |
+| L1 | House: kitchen, dining, 1 bed | Kitchen, living, dining, master bedroom upstairs | Ground-floor flat + entrance with the hut | Townhouse 1 (kitchen downstairs, bedroom upstairs) |
+| L2 | Bedroom wing, trees | Garage workshop (anvil, smithing table, grindstone), driveway, porch canopy, 2nd bedroom | 2nd storey, trees | Townhouse 2, back-garden trees |
+| L3 | Glass loft with stairs, roof terrace, hedge | Back deck with pergola and outdoor table, hedge, 3rd bedroom | 3rd storey, balconies + ground patio | Townhouse 3, hedge dividers |
+| L4 | Premium; pool, vegetable garden (carrots/potatoes on farmland), lamp spires | Premium; guest room, garage roof terrace, hot tub, lamp spires | 4th storey, premium, roof garden with seats | Townhouse 4, premium, lamp spires |
+| L5 | Roof garden on the wing, glowing loft, jukebox | Attic loft bed under the high roof (ladder), ender chest, jukebox | Penthouse storey, roof trees, mast, ender chest | Glass penthouse on the roof (ladder from townhouse 2), roof terrace, ender chest, jukebox |
 
 ### Courier's hut (`craftsmanship/storage/deliveryman1-5`) – 23 × 22 × 21, same footprint every level
 Hut block: `minecolonies:blockhutdeliveryman` (MineColonies calls it the Courier's Hut).
@@ -108,7 +109,7 @@ python3 tools/blueprints/validate.py blocks.json stylepacks/Neoterra/**/*.bluepr
 - `tools/blueprints/neoterra/common.py` – Domum Ornamentum blocks, hut block data, geometry
 - `tools/blueprints/neoterra/townhall.py` – town hall design (levels 1–5)
 - `tools/blueprints/neoterra/builder.py` – builder's hut design (levels 1–5)
-- `tools/blueprints/neoterra/residences.py` – cottage, apartment and quadplex residences (levels 1–5)
+- `tools/blueprints/neoterra/residences.py` – cottage, house, apartment and quadplex residences (levels 1–5)
 - `tools/blueprints/walkcheck.py` – checks every bed, hut block, rack and workstation is reachable on foot
 - `tools/blueprints/neoterra/deliveryman.py` – courier's hut design (levels 1–5)
 - `tools/blueprints/neoterra/warehouse.py` – warehouse design (levels 1–5)

@@ -7,6 +7,9 @@ levels 1-5. A residence of level N has N beds, like the official packs.
              L4 pool, vegetable garden, premium upgrade -> L5 roof garden, glowing loft, trees.
   apartment  apartment block that grows one storey per level (one flat + bed per storey),
              stair core, balconies from L3, roof terrace / roof garden.
+  house      regular two-storey family house with a sloping roof and a garage.
+             L1 house (1 bed) -> L2 garage workshop, porch, 2nd bed -> L3 back deck, pergola,
+             3rd bed -> L4 guest room, garage roof terrace, hot tub -> L5 attic loft bed.
   quadplex   row of four townhouses with cantilevered glass bay windows; one townhouse per
              level (L1-L4), and a glass penthouse on the roof at L5 (5th bed).
 
@@ -471,7 +474,198 @@ def build_quadplex(level: int) -> Blueprint:
     return finish(bp, "quadplex", L, hut, sit, (SX, SY, SZ))
 
 
-BUILDERS = {"cottage": build_cottage, "apartment": build_apartment, "quadplex": build_quadplex}
+# ============================================================================ house
+def build_house(level: int) -> Blueprint:
+    """Regular two-storey family house with a sloping (mono-pitch) roof, garage and gardens.
+
+    L1 house: kitchen, living, dining, master bedroom upstairs (1 bed)
+    L2 garage workshop + driveway, porch canopy, 2nd bedroom, trees
+    L3 back deck + pergola, hedges, 3rd bedroom
+    L4 premium; guest room downstairs (4th bed), garage roof terrace, hot tub, lamp spires
+    L5 attic loft bed under the high roof (5th bed), glowing corners, ender chest, jukebox
+    """
+    L, st = level, Style(level)
+    SX, SY, SZ = 21, 19, 21
+    bp = Blueprint(SX, SY, SZ, f"house{L}.blueprint")
+    W, G, T, D = st.WHITE, st.GLASS, st.TRIM, st.DECK
+    glow, band = st.GLOW, st.band
+    sit = []
+    HX1, HX2, HZ1, HZ2 = 3, 14, 5, 14        # house shell
+    MID = 6                                  # upper floor slab
+
+    def roof_y(z):
+        k = z - (HZ1 - 1)
+        return 11 + k // 2, ("bottom" if k % 2 == 0 else "top")
+
+    def gfn(x, z):
+        if 8 <= x <= 10 and z < HZ1:
+            return W if x in (8, 10) else "smooth_stone"                # front path
+        if L >= 2 and 15 <= x <= 19 and z < 7:
+            return "smooth_stone" if x in (15, 19) else "polished_andesite"   # driveway
+        return "grass_block[snowy=false]"
+    ground(bp, gfn)
+
+    # walls (ground + upper floor, gables up to the sloping roof)
+    for x in range(HX1, HX2 + 1):
+        for z in range(HZ1, HZ2 + 1):
+            if not rect_edge(x, z, HX1, HX2, HZ1, HZ2):
+                bp.set(x, 1, z, st.floor(x, z))
+                bp.set(x, MID, z, st.floor(x, z))
+                continue
+            top = roof_y(z)[0] - 1 if x in (HX1, HX2) else (10 if z == HZ1 else roof_y(z)[0] - 1)
+            for y in range(2, top + 1):
+                corner = x in (HX1, HX2) and z in (HZ1, HZ2)
+                if y == MID:
+                    s = band
+                elif corner:
+                    s = W
+                elif z == HZ1 and y in (3, 4, 8, 9) and x not in (9,):
+                    s = G if x % 4 else st.WOOD                          # big front windows
+                elif x in (HX1, HX2) and y >= 11 and not st.early:
+                    s = G                                                # glazed gable (premium)
+                elif x in (HX1, HX2) and y in (3, 4, 8, 9) and (z - HZ1) % 3:
+                    s = G
+                elif z == HZ2 and y in (3, 4, 12, 13) and (x - HX1) % 3:
+                    s = G                                                # back windows + clerestory
+                else:
+                    s = W
+                bp.set(x, y, z, s)
+    door(bp, 9, 2, HZ1, "south", "birch" if st.early else "waxed_copper")
+    # sloping roof (1 in 2) from front to back, with overhangs
+    for x in range(HX1 - 1, HX2 + 2):
+        for z in range(HZ1 - 1, HZ2 + 2):
+            y, half = roof_y(z)
+            if st.early:
+                bp.set(x, y, z, f"smooth_stone_slab[type={half},waterlogged=false]")
+            else:
+                put(bp, x, y, z, do_slab(W, half))
+    # lights
+    for x, z in ((6, 8), (11, 8), (7, 12)):
+        st.ceiling_light(bp, x, MID, z)
+    for x, z in ((7, 9), (11, 11)):
+        y, _ = roof_y(z)
+        bp.set(x, y - 1, z, "lantern[hanging=true,waterlogged=false]")
+
+    # stairs up along the west wall (x4, rising north z12 -> z8)
+    for i in range(5):
+        z, y = 12 - i, 2 + i
+        if y > 2:
+            bp.fill(4, 2, z, 4, y - 1, z, W)
+        bp.set(4, y, z, f"{st.SEAT}[facing=north,half=bottom,shape=straight,waterlogged=false]")
+    for z in range(9, 13):
+        bp.set(4, MID, z, "air")
+        put(bp, 5, MID + 1, z, st.railing)
+
+    # ground floor: hut, living, dining, kitchen
+    hut = (12, 2, 6)
+    for x in (7, 8):
+        chair(bp, x, 2, 7, st.SEAT, "north", sit)                       # sofa facing the room
+    put(bp, 10, 2, 10, st.counter)                                       # dining table
+    chair(bp, 9, 2, 10, st.SEAT, "west", sit)
+    chair(bp, 11, 2, 10, st.SEAT, "east", sit)
+    bp.set(6, 2, 13, "furnace[facing=north,lit=false]")
+    bp.set(7, 2, 13, "smoker[facing=north,lit=false]")
+    bp.set(8, 2, 13, "crafting_table")
+    bp.set(9, 2, 13, "barrel[facing=up,open=false]")
+    # upper floor: bedrooms along the back wall
+    bed(bp, 7, MID + 1, 12, "south")
+    if L >= 2:
+        bed(bp, 9, MID + 1, 12, "south")
+    if L >= 3:
+        bed(bp, 11, MID + 1, 12, "south")
+    bp.set(13, MID + 1, 13, "barrel[facing=up,open=false]")
+    put(bp, 11, MID + 1, 6, st.counter)                                 # desk at the front window
+    chair(bp, 11, MID + 1, 7, st.SEAT, "south", sit)
+
+    # L2: garage workshop + porch canopy
+    GX1, GX2, GZ1, GZ2 = 15, 19, 7, 14
+    if L >= 2:
+        for x in range(GX1, GX2 + 1):
+            for z in range(GZ1, GZ2 + 1):
+                edge = rect_edge(x, z, GX1, GX2, GZ1, GZ2)
+                bp.set(x, 6, z, band if edge else ("smooth_stone" if L < 4 else D))
+                if not edge:
+                    bp.set(x, 1, z, "polished_andesite")
+                    continue
+                for y in range(2, 6):
+                    if z == GZ1 and GX1 < x < GX2 and y <= 4:
+                        s = "air"                                        # garage door opening
+                    elif z == GZ1 and GX1 < x < GX2:
+                        s = T
+                    elif x == GX2 and y in (3, 4) and (z - GZ1) % 3:
+                        s = G
+                    else:
+                        s = W
+                    bp.set(x, y, z, s)
+        for y in (2, 3):
+            bp.set(HX2, y, 10, "air")                                    # house <-> garage door
+        for (x, z), s in (((19 - 1, 13), "anvil[facing=west]"), ((18, 12), "smithing_table"),
+                          ((18, 11), "grindstone[face=floor,facing=west]"), ((16, 13), "crafting_table"),
+                          ((17, 13), "barrel[facing=up,open=false]")):
+            bp.set(x, 2, z, s)
+        st.ceiling_light(bp, 17, 6, 10)
+        for x in range(7, 12):                                           # porch canopy
+            for z in range(2, HZ1):
+                bp.set(x, MID, z, (glow or band) if z == 2 or x in (7, 11) else D)
+        tree(bp, 2, 2, 2, h=3)
+        tree(bp, 3, 2, 18, h=4)
+
+    # L3: back deck with pergola, hedges
+    if L >= 3:
+        for x in range(4, 14):
+            for z in range(HZ2 + 1, 19):
+                bp.set(x, 1, z, D)
+        for x in (4, 13):
+            bp.fill(x, 2, 18, x, 4, 18, st.WOOD)
+        for x in range(4, 14):
+            bp.set(x, 5, 18, st.WOOD if x % 2 else W)
+        put(bp, 8, 2, 16, st.counter)                                    # outdoor table
+        chair(bp, 7, 2, 16, st.SEAT, "west", sit)
+        chair(bp, 9, 2, 16, st.SEAT, "east", sit)
+        for x in range(SX):
+            if not (8 <= x <= 10 or 15 <= x <= 19):
+                bp.set(x, 2, 0, st.LEAVES)
+
+    # L4: guest room downstairs, garage roof terrace, hot tub, lamps
+    if L >= 4:
+        bed(bp, 12, 2, 12, "south")
+        for x in range(GX1, GX2 + 1):
+            for z in range(GZ1, GZ2 + 1):
+                if rect_edge(x, z, GX1, GX2, GZ1, GZ2):
+                    put(bp, x, 7, z, st.railing)
+        for y in (MID + 1, MID + 2):
+            bp.set(HX2, y, 9, "air")                                     # upstairs door to the terrace
+        for x, z in ((16, 9), (17, 9)):
+            chair(bp, x, 7, z, st.SEAT, "west" if x == 16 else "east", sit)
+        for x in range(15, 19):
+            for z in range(16, 20):
+                edge = rect_edge(x, z, 15, 18, 16, 19)
+                bp.set(x, 1, z, W if edge else "water[level=0]")
+                if not edge:
+                    bp.set(x, 0, z, "sea_lantern")
+        street_lamp(bp, 7, 2, 0, premium=True)
+        street_lamp(bp, 14, 2, 0, premium=True)
+
+    # L5: attic loft (5th bed) under the high back of the roof, glowing roof edge
+    if L >= 5:
+        for x in range(5, 13):
+            for z in range(10, 14):
+                bp.set(x, 11, z, D)
+        for x in range(5, 13):
+            put(bp, x, 12, 9, st.railing)
+        for y in range(MID + 1, 12):
+            bp.set(13, y, 11, "ladder[facing=west,waterlogged=false]")
+        bed(bp, 8, 12, 12, "south")
+        bp.set(11, 12, 13, "jukebox[has_record=false]")
+        bp.set(6, 12, 13, "ender_chest[facing=north,waterlogged=false]")
+        for x in (HX1, HX2):                                             # glowing corner strips
+            for z in (HZ1, HZ2):
+                bp.fill(x, MID + 1, z, x, 10, z, "sea_lantern")
+    return finish(bp, "house", L, hut, sit, (SX, SY, SZ))
+
+
+BUILDERS = {"cottage": build_cottage, "house": build_house, "apartment": build_apartment,
+            "quadplex": build_quadplex}
 
 if __name__ == "__main__":
     out_dir = Path(sys.argv[1])

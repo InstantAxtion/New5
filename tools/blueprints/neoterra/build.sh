@@ -20,7 +20,7 @@ for l in 1 2 3 4 5; do
   python3 $T/render.py "$PACK/craftsmanship/storage/deliveryman$l.blueprint" "$PREV/deliveryman$l" >/dev/null
   python3 $T/render.py "$PACK/craftsmanship/storage/warehouse$l.blueprint" "$PREV/warehouse$l" >/dev/null
   python3 $T/render.py "$PACK/fundamentals/builder$l.blueprint" "$PREV/builder$l" >/dev/null
-  for r in cottage apartment quadplex; do
+  for r in cottage house apartment quadplex; do
     python3 $T/render.py "$PACK/fundamentals/$r$l.blueprint" "$PREV/$r$l" >/dev/null
   done
 done

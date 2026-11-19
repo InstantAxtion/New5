@@ -120,6 +120,11 @@ def iso(bp, rot, path, scale=14):
         top = 0.5 if (b in HALF or "slab" in b) else 1.0
         if b == "rail":
             top = 0.1
+        yb = y
+        if "slab" in b:
+            ox_, oz_ = orig(x, z)
+            if "type=top" in bp.grid[y][oz_][ox_]:
+                yb, top = y + 0.5, 1.0                    # top slab: upper half of the block
         yt = y + top
 
         def nb(dx, dy, dz):
@@ -130,9 +135,9 @@ def iso(bp, rot, path, scale=14):
         if not nb(0, 1, 0) or top < 1:
             faces.append(([P(x, yt, z), P(x + 1, yt, z), P(x + 1, yt, z + 1), P(x, yt, z + 1)], 1.0))
         if not nb(1, 0, 0):
-            faces.append(([P(x + 1, yt, z), P(x + 1, yt, z + 1), P(x + 1, y, z + 1), P(x + 1, y, z)], 0.78))
+            faces.append(([P(x + 1, yt, z), P(x + 1, yt, z + 1), P(x + 1, yb, z + 1), P(x + 1, yb, z)], 0.78))
         if not nb(0, 0, 1):
-            faces.append(([P(x, yt, z + 1), P(x + 1, yt, z + 1), P(x + 1, y, z + 1), P(x, y, z + 1)], 0.62))
+            faces.append(([P(x, yt, z + 1), P(x + 1, yt, z + 1), P(x + 1, yb, z + 1), P(x, yb, z + 1)], 0.62))
         for poly, k in faces:
             dr.polygon(poly, fill=shade(c, k) + (a,), outline=shade(c, k * 0.85) + (min(255, a + 40),))
     img = img.crop(img.getbbox())
