@@ -20,10 +20,10 @@ Copy `stylepacks/Neoterra` into `.minecraft/blueprints/` (so you get
 | Level | Adds | Player use |
 |---|---|---|
 | 1 Founding Hall | Round glass podium, reception with the hut block, stair core to a roof terrace | Crafting table, 2 furnaces, 4 barrels, bed (respawn) |
-| 2 Civic Ring | Second-floor ring building with cyan band, terrace railings | Full workshop: smithing table, stonecutter, grindstone, anvil, loom, cartography & fletching tables, blast furnace, smoker, furnace, brewing stand, water cauldron, 10 barrels |
+| 2 Civic Ring | Second-floor ring building with cyan band, planted green-roof ring, lawn ring with 8 trees | Full workshop: smithing table, stonecutter, grindstone, anvil, loom, cartography & fletching tables, blast furnace, smoker, furnace, brewing stand, water cauldron, 10 barrels |
 | 3 Archive Tower | Two-storey glass tower, balcony | Enchanting library (max level enchants: 30 bookshelves), lectern, anvil, grindstone, 4 beds |
 | 4 Sky Lounge | Glass sky lounge, roof deck, plaza fountains; premium upgrade (light-blue glass, quartz, DO pillars, eaves and recessed lights, light-strip ring) | Ender chest, jukebox, bar; **glass bubble-column elevator** from the lobby (copper door) straight to the roof deck |
-| 5 Spire | Glowing halo ring, light fins, lamp spires, tapered spire with antenna | **Elytra launch pad** cantilevered off the roof deck (~40 blocks up) |
+| 5 Spire | Glowing halo ring, light fins, lamp spires, roof garden with trees, tapered spire with antenna | **Elytra launch pad** cantilevered off the roof deck (~40 blocks up) |
 
 Approximate blocks: L1 ≈ 3.8k, L2 ≈ 5.1k, L3 ≈ 7.6k, L4 ≈ 9.0k, L5 ≈ 9.4k (mostly concrete and glass).
 Levels 1–3 are the cheaper versions (plain glass, gray concrete, cyan concrete accents, smooth
@@ -57,8 +57,8 @@ Hut block: `minecolonies:blockhutdeliveryman` (MineColonies calls it the Courier
 | 1 Depot Hall | Glass depot hall with a 7-wide loading door, reception counter with the hut block | 8 parcel lockers (barrels), crafting table, cartography table |
 | 2 Loading Canopy | Canopy on charcoal columns, loading-bay markings, green roof | 21 lockers + 10 storage barrels, lectern, waiting bench |
 | 3 Dispatch Office | Upper floor, staircase through a double-height void, roof terrace with planters | Office desks, 12 bookshelves, lectern, cartography table, 10 more lockers |
-| 4 Drone Port | Roof drone pad, roof railing + ladder, lamp spires; premium upgrade (light-blue glass, quartz, light strips, DO lights/railings) | Bed (respawn) |
-| 5 Landmark | Full-height quartz fins on side and back facades, terrace planters, antenna mast | Ender chest |
+| 4 Drone Port | Roof drone pad, roof railing + ladder, street trees and lamp spires; premium upgrade (light-blue glass, quartz, light strips, DO lights/railings) | Bed (respawn) |
+| 5 Landmark | Full-height quartz fins on side and back facades, terrace trees, antenna mast | Ender chest |
 
 Approximate blocks: L1 ≈ 1.2k, L2 ≈ 1.3k, L3 ≈ 1.7k, L4 ≈ 1.8k, L5 ≈ 2.1k.
 
@@ -73,8 +73,8 @@ max 3 high, every rack next to an aisle so couriers can reach it).
 | 1 | 36 | Tall distribution hall: clerestory glass band, two 5×5 loading docks, glazed entrance, reception counter | Crafting table |
 | 2 | 72 | Dock canopy on charcoal columns, dock bay markings | – |
 | 3 | 144 | Office mezzanine reached by stairs, skylights | Desk, crafting & cartography tables, lectern, barrels |
-| 4 | 216 | Roof railing + ladder, green roof strips, lamp spires; premium upgrade (light-blue glass, quartz mullions, light strips, DO lights) | Roof access |
-| 5 | 324 | Full-height quartz fins, roof planters, antenna mast | Ender chest |
+| 4 | 216 | Roof railing + ladder, green roof strips, street trees and lamp spires; premium upgrade (light-blue glass, quartz mullions, light strips, DO lights) | Roof access |
+| 5 | 324 | Full-height quartz fins, roof garden with trees, antenna mast | Ender chest |
 
 Approximate blocks (including racks): L1 ≈ 2.0k, L2 ≈ 2.5k, L3 ≈ 2.4k, L4 ≈ 2.7k, L5 ≈ 3.1k.
 

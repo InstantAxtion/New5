@@ -174,8 +174,10 @@ def build(level: int) -> Blueprint:
                 if x % 3 == 0:
                     bp.set(x, ROOF + 1, z, "short_grass" if x % 2 else "flowering_azalea")
         pass  # (no solar panels in this style)
-        street_lamp(bp, 1, 2, 1, premium=True)
-        street_lamp(bp, 29, 2, 1, premium=True)
+        tree(bp, 1, 2, 1, h=4)
+        tree(bp, 29, 2, 1, h=4)
+        street_lamp(bp, 1, 2, 4, premium=True)
+        street_lamp(bp, 29, 2, 4, premium=True)
 
     # ------------------------------------------------------------ L5: louvres, roof garden, mast
     if L >= 5:
@@ -186,7 +188,7 @@ def build(level: int) -> Blueprint:
             bp.fill(x, 2, Z2 + 1, x, ROOF - 1, Z2 + 1, WOOD)
         for x in (8, 22):
             planter(bp, x, ROOF + 1, 17, "moss_carpet")
-            bp.set(x, ROOF + 2, 17, "flowering_azalea")
+            tree(bp, x, ROOF + 2, 17, h=2)
         bp.set(26, ROOF + 1, 19, T)
         for y in range(ROOF + 2, SY - 1):
             bp.set(26, y, 19, "chain[axis=y,waterlogged=false]")

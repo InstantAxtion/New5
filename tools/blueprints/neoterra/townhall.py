@@ -28,7 +28,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    Blueprint, Spec, Style, put, hut_te, dist, toward_center, angle, connect_panes,
+    Blueprint, Spec, Style, put, tree, hut_te, dist, toward_center, angle, connect_panes,
     do_slab, do_stairs, do_pillar, do_paperwall, do_light,
 )
 
@@ -105,15 +105,16 @@ def build(level: int) -> Blueprint:
     for x in range(SX):
         for z in range(SZ):
             d = dist(x, z, C)
-            if d >= 21.5:
-                bp.set(x, 1, z, "grass_block[snowy=false]")
+            on_path = abs(x - C) <= 2 or abs(z - C) <= 2
+            if d >= 21.5 or (18.5 <= d < 21.5 and not on_path):
+                bp.set(x, 1, z, "grass_block[snowy=false]")     # lawn ring + corners
             elif early:
                 bp.set(x, 1, z, "polished_andesite" if 17.5 <= d < 18.5 else "smooth_stone")
             else:
                 if 17.5 <= d < 18.5:
                     bp.set(x, 1, z, "sea_lantern" if pillar_slot(x, z, 32, 0.12) else WHITE)
                 elif 19.5 <= d < 20.5:
-                    bp.set(x, 1, z, ACCENT)
+                    bp.set(x, 1, z, ACCENT)                      # cyan ring across the paths
                 else:
                     bp.set(x, 1, z, "light_gray_concrete" if (x + z) % 2 else "smooth_stone")
 
@@ -360,6 +361,23 @@ def build(level: int) -> Blueprint:
         for x, z in ((C - 4, C - 4), (C + 4, C - 4)):
             bp.set(x, y, z, "potted_flowering_azalea_bush")
 
+    # ---------------------------------------------------------------- greenery
+    if L >= 2:
+        # trees around the lawn ring
+        for a in range(8):
+            ang = math.radians(a * 45 + 22.5)
+            tree(bp, round(C + 20 * math.cos(ang)), 2, round(C + 20 * math.sin(ang)), h=4)
+        # planted green-roof ring on the podium, around the civic ring
+        for x in range(SX):
+            for z in range(SZ):
+                d = dist(x, z, C)
+                if 12.5 <= d < 14.5 and not cardinal_gap(x, z, 1):
+                    bp.set(x, 9, z, "grass_block[snowy=false]")
+                    if pillar_slot(x, z, 16, 0.08):
+                        bp.set(x, 10, z, "flowering_azalea" if not early else "azalea")
+                    elif (x + z) % 3 == 0:
+                        bp.set(x, 10, z, "short_grass")
+
     # ---------------------------------------------------------------- exterior extras
     if L >= 3:  # planters + benches around the plaza
         for a in range(12):
@@ -379,6 +397,14 @@ def build(level: int) -> Blueprint:
             for x in range(cx - 1, cx + 2):
                 for z in range(cz - 1, cz + 2):
                     bp.set(x, 0, z, "smooth_stone")
+    if L >= 5:  # roof garden with trees on the deck
+        for x in range(SX):
+            for z in range(SZ):
+                if 7.5 <= dist(x, z, C) < 9.5 and not cardinal_gap(x, z, 1):
+                    bp.set(x, 41, z, "grass_block[snowy=false]")
+        for a in range(4):
+            ang = math.radians(a * 90 + 45)
+            tree(bp, round(C + 8 * math.cos(ang)), 42, round(C + 8 * math.sin(ang)), h=3)
     if L >= 5:  # lamp spires on the plaza ring + elytra launch pad
         for a in range(4):
             ang = math.radians(a * 90 + 45)

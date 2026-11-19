@@ -284,7 +284,7 @@ def build(level: int) -> Blueprint:
             sit.append((x, y, 3))
         pass  # (no solar panels in this style)
         bp.set(9, 2, 17, "domum_ornamentum:architectscutter[facing=north]")
-        street_lamp(bp, 1, 2, 1, premium=True)
+        tree(bp, 1, 2, 1, h=3)
         street_lamp(bp, 14, 2, 1, premium=True)
         street_lamp(bp, 27, 2, 1, premium=True)
 

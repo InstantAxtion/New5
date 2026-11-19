@@ -212,8 +212,10 @@ def build(level: int) -> Blueprint:
         for y in range(GROUND_TOP + 1, top + 1):
             bp.set(3, y, 17, "ladder[facing=east,waterlogged=false]")
         # street trees + lamps on the forecourt
-        street_lamp(bp, 1, 2, 1, premium=True)
-        street_lamp(bp, 21, 2, 1, premium=True)
+        tree(bp, 1, 2, 1, h=3)
+        tree(bp, 21, 2, 1, h=3)
+        street_lamp(bp, 1, 2, 4, premium=True)
+        street_lamp(bp, 21, 2, 4, premium=True)
 
     # ------------------------------------------------------------ L5: louvres, mast, terrace trees
     if L >= 5:
@@ -228,7 +230,7 @@ def build(level: int) -> Blueprint:
         bp.set(19, SY - 1, 17, "lightning_rod[facing=up,powered=false,waterlogged=false]")
         for x in (4, 14):
             bp.set(x, GROUND_TOP + 2, HZ1 + 1, "air")
-            bp.set(x, GROUND_TOP + 2, HZ1 + 1, "flowering_azalea")
+            tree(bp, x, GROUND_TOP + 2, HZ1 + 1, h=2)
 
     # ------------------------------------------------------------ interior & function
     sit = []
