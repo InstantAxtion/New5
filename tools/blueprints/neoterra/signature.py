@@ -764,7 +764,7 @@ class Signature(Massing):
             horiz = side in ("north", "south")
             span = range(x1 + 1, x2) if horiz else range(z1 + 1, z2)
             for u in span:
-                if (u - span.start) % 4 != 1:
+                if (u - span.start) % 6 != 2:
                     continue
                 for y in range(self.gy + 3, top + 1):
                     if horiz:

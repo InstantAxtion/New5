@@ -12,10 +12,10 @@ Requires: MineColonies, Structurize, Domum Ornamentum (all on NeoForge 1.21.1).
 
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.4.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.4.1.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that only carries the style pack;
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.4.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.4.1.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>`.
 
 ## Install
