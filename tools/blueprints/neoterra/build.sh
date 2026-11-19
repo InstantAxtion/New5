@@ -41,6 +41,8 @@ python3 $T/neoterra/plot.py "$PACK" > /dev/null
 python3 $T/neoterra/support.py "$PACK" Neoterra > /dev/null
 # Twin Builders' Yard: one building, two builder huts (parent + child annex)
 python3 $T/neoterra/twinbuilder.py "$PACK" Neoterra
+# Grand Projects (wonders) with wing child huts
+python3 $T/neoterra/wonders.py "$PACK" Neoterra
 
 for l in 1 2 3 4 5; do
   for f in fundamentals/townhall fundamentals/builder fundamentals/cottage fundamentals/house \
@@ -81,7 +83,7 @@ for f in decorations/supplies/supplycamp decorations/supplies/supplyship decorat
 done
 python3 $T/neoterra/make_images.py "$PACK" "$PREV"
 # buildings with child huts (Skytower, barracks, bunker) are checked as assembled copies
-python3 $T/walkcheck.py $(find "$PACK" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|twinbuilder[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint") \
+python3 $T/walkcheck.py $(find "$PACK" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|twinbuilder[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint|/wonders/") \
   "$FURN"/*_furnished.blueprint >/dev/null \
   && echo "walkcheck: everything reachable"
 # Hearthwood (cozy modern) and Cascadia (Oregon / Pacific Northwest): their own shape passes (roof forms,
@@ -103,6 +105,7 @@ for STY in Hearthwood Cascadia; do
   # walls, roads, rails, canals, bridges, subway, boardwalk, cliff climb and parks in the pack's own design
   python3 $T/neoterra/styleinfra.py "$OUT" $STY
   python3 $T/neoterra/twinbuilder.py "$OUT" $STY
+  python3 $T/neoterra/wonders.py "$OUT" $STY
   mkdir -p "$SP"
   for f in fundamentals/townhall5 craftsmanship/storage/deliveryman5 decorations/housing/playerhouse5 \
            education/university5 military/barracks5 agriculture/horticulture/farmer5 fundamentals/miner5 \
@@ -114,10 +117,10 @@ for STY in Hearthwood Cascadia; do
     for l in 1 2 3 4 5; do python3 $T/render.py "$OUT/$b$l.blueprint" "$SP/$(basename $b)$l" >/dev/null; done
   done
   python3 $T/neoterra/make_images.py "$OUT" "$SP" "$(echo $STY | tr 'A-Z' 'a-z').png"
-  python3 $T/walkcheck.py $(find "$OUT" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|twinbuilder[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint") >/dev/null \
+  python3 $T/walkcheck.py $(find "$OUT" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|twinbuilder[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint|/wonders/") >/dev/null \
     && echo "$STY walkcheck: everything reachable"
 done
-# Farmworks: decorations-only pack of automatic mob and food farms
+# Farmworks: automatic mob and food farms + Trade Post / Supply Depot huts
 FW=stylepacks/Farmworks
 FP=docs/previews/farmworks
 rm -rf "$FW"

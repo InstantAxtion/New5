@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "T": {
+      "item": "structurize:sceptergold"
+    },
+    "C": {
+      "item": "minecraft:golden_helmet"
+    },
+    "X": {
+      "item": "minecraft:stone_bricks"
+    }
+  },
+  "pattern": [
+    "XTX",
+    "XCX",
+    "XXX"
+  ],
+  "result": {
+    "count": 1,
+    "id": "neoterra:blockhutcolossus"
+  }
+}

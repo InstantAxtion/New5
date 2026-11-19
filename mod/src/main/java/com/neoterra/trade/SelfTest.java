@@ -35,6 +35,7 @@ final class SelfTest
     private IColony    a, b;
     private BuildingTradePost postA, postB;
     private IBuilding  hallA;
+    private BuildingSupplyDepot depot;
     private IToken<?>  token;
 
     static void register()
@@ -70,7 +71,7 @@ final class SelfTest
         }
     }
 
-    private void step(final ServerLevel level)
+    private void step(final ServerLevel level) throws ReflectiveOperationException
     {
         switch (stage)
         {
@@ -131,12 +132,175 @@ final class SelfTest
                             }
                         }
                         log("arrived: Alpha town hall holds %d stone bricks, request state %s", bricks, r == null ? "gone" : r.getState());
-                        finish(level, bricks == 16);
+                        if (bricks != 16)
+                        {
+                            finish(level, false);
+                            return;
+                        }
+                        stage = 4;
                     }
                 }
             }
+            case 4 ->
+            {
+                // Supply Depot: a request nobody makes is crafted from delivered ingredients
+                postA.unlink();
+                postB.unlink();
+                depot = (BuildingSupplyDepot) hut(level, a, NeoterraTrade.SUPPLY_DEPOT_BLOCK, new BlockPos(0, 0, 10));
+                token = hallA.createRequest(new Stack(new ItemStack(Items.OAK_SLAB), 12, 12), false);
+                log("town hall of Alpha requests 12 oak slabs");
+                stage = 5;
+            }
+            case 5 ->
+            {
+                if (tick % 20 == 0)
+                {
+                    final int taken = depot.planOrders();
+                    log("depot orders %d (new %d)", depot.openOrders(), taken);
+                    if (depot.openOrders() > 0)
+                    {
+                        final ItemStack rest = ItemHandlerHelper.insertItemStacked(depot.getItemHandlerCap(), new ItemStack(Items.OAK_PLANKS, 6), false);
+                        final BuildingSupplyDepot.Order o = depot.nextCraftable();
+                        log("6 oak planks delivered (left %d), craftable: %s", rest.getCount(), o != null);
+                        final boolean crafted = o != null && depot.craft(o);
+                        final IBuilding target = o == null ? null : depot.deliveryTarget(o);
+                        log("crafted %s, delivering to %s", crafted, target == null ? null : target.getSchematicName());
+                        if (o != null && target != null)
+                        {
+                            depot.deliver(o, target);
+                        }
+                        final int slabs = countIn(hallA, Items.OAK_SLAB);
+                        final IRequest<?> r = a.getRequestManager().getRequestForToken(token);
+                        log("Alpha town hall holds %d oak slabs, request %s", slabs, r == null ? "gone" : r.getState());
+                        if (slabs != 12)
+                        {
+                            finish(level, false);
+                            return;
+                        }
+                        stage = 6;
+                    }
+                }
+            }
+            case 6 ->
+            {
+                // Grand Project bonus + builder speed through research effects
+                final IBuilding cathedral = hut(level, a, NeoterraTrade.WONDER_BLOCKS.get(WonderType.CATHEDRAL), new BlockPos(-12, 0, 0));
+                cathedral.setBuildingLevel(2);
+                ColonyBoosts.applyBoosts(a);
+                final var fx = a.getResearchManager().getResearchEffects();
+                final double happy = fx.getEffectStrength(com.minecolonies.api.research.util.ResearchConstants.HAPPINESS);
+                final double place = fx.getEffectStrength(com.minecolonies.api.research.util.ResearchConstants.BLOCK_PLACE_SPEED);
+                log("cathedral level 2: happiness +%.2f, block place speed %.3f", happy, place);
+                cathedral.setBuildingLevel(0);
+                ColonyBoosts.applyBoosts(a);
+                final double after = fx.getEffectStrength(com.minecolonies.api.research.util.ResearchConstants.HAPPINESS);
+                log("cathedral gone: happiness +%.2f", after);
+                if (!(Math.abs(happy - 0.06) < 1e-6 && Math.abs(place - (1 - 1 / 1.5)) < 1e-6 && after == 0))
+                {
+                    finish(level, false);
+                    return;
+                }
+                // up-front materials: a builder with a calculated material list asks for all of it at once
+                final var builder = (com.minecolonies.core.colony.buildings.AbstractBuildingStructureBuilder)
+                    hut(level, a, ModBlocks.blockHutBuilder, new BlockPos(12, 0, 10));
+                depot.setStructurePack("Farmworks");
+                depot.setBlueprintPath("trade/supplydepot1.blueprint");
+                final var wo = com.minecolonies.core.colony.workorders.WorkOrderBuilding.create(
+                    com.minecolonies.api.colony.workorders.WorkOrderType.UPGRADE, depot);
+                a.getWorkManager().addWorkOrder(wo, false);
+                wo.setClaimedBy(builder.getID());
+                builder.setWorkOrder(wo);
+                wo.setRequested(true);
+                final java.util.Map<String, com.minecolonies.core.colony.buildings.utils.BuildingBuilderResource> needed = neededMap(builder);
+                needed.put("STONE_BRICKS", new com.minecolonies.core.colony.buildings.utils.BuildingBuilderResource(new ItemStack(Items.STONE_BRICKS), 200));
+                needed.put("GLASS", new com.minecolonies.core.colony.buildings.utils.BuildingBuilderResource(new ItemStack(Items.GLASS), 40));
+                needed.put("OAK_LOG", new com.minecolonies.core.colony.buildings.utils.BuildingBuilderResource(new ItemStack(Items.OAK_LOG), 8));
+                ItemHandlerHelper.insertItemStacked(builder.getItemHandlerCap(), new ItemStack(Items.OAK_LOG, 8), false);
+                final int made = ColonyBoosts.requestUpfront(a);
+                final int again = ColonyBoosts.requestUpfront(a);
+                final StringBuilder sb = new StringBuilder();
+                builder.getOpenRequestsOfType(-1, com.google.common.reflect.TypeToken.of(Stack.class))
+                    .forEach(r -> sb.append(r.getRequest().getCount()).append("x").append(r.getRequest().getStack().getItem()).append(' '));
+                log("builder up-front requests: %d made, %d on second pass; open: %s", made, again, sb.toString().trim());
+                if (made != 2 || again != 0)
+                {
+                    finish(level, false);
+                    return;
+                }
+                finish(level, checkBlueprints(level));
+            }
             default -> { }
         }
+    }
+
+    /** Every hut blueprint of ours loads through Structurize, with the right hut block and (wonders) two wing huts. */
+    private static boolean checkBlueprints(final ServerLevel level)
+    {
+        boolean ok = true;
+        final java.util.List<String[]> list = new java.util.ArrayList<>();
+        for (int l = 1; l <= 5; l++)
+        {
+            list.add(new String[] {"Farmworks", "trade/tradepost" + l, "blockhuttradepost", "0"});
+            list.add(new String[] {"Farmworks", "trade/supplydepot" + l, "blockhutsupplydepot", "0"});
+            for (final String pack : new String[] {"Neoterra", "Hearthwood", "Cascadia"})
+            {
+                for (final WonderType t : WonderType.values())
+                {
+                    list.add(new String[] {pack, "wonders/" + t.id + l, "blockhut" + t.id, "2"});
+                    list.add(new String[] {pack, "wonders/" + t.id + "wing" + l, "blockhutwonderwing", "0"});
+                }
+            }
+        }
+        int checked = 0;
+        for (final String[] e : list)
+        {
+            final com.ldtteam.structurize.blueprints.v1.Blueprint bp =
+                com.ldtteam.structurize.storage.StructurePacks.getBlueprint(e[0], e[1] + ".blueprint", level.registryAccess());
+            if (bp == null)
+            {
+                log("blueprint %s/%s did not load", e[0], e[1]);
+                ok = false;
+                continue;
+            }
+            final var info = bp.getBlockInfoAsMap();
+            final var anchor = info.get(bp.getPrimaryBlockOffset());
+            final String anchorId = anchor == null ? "none" : net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(anchor.getState().getBlock()).toString();
+            final long wings = info.values().stream()
+                .filter(b -> b.getState().getBlock() == NeoterraTrade.WING_BLOCK && b.getTileEntityData() != null).count();
+            final long expectWings = Long.parseLong(e[3]);
+            if (!anchorId.equals("neoterra:" + e[2]) || (expectWings > 0 && wings != expectWings))
+            {
+                log("blueprint %s/%s: anchor %s, wing huts %d", e[0], e[1], anchorId, wings);
+                ok = false;
+            }
+            checked++;
+        }
+        log("%d hut blueprints loaded through Structurize, all anchors right: %s", checked, ok);
+        return ok;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static java.util.Map<String, com.minecolonies.core.colony.buildings.utils.BuildingBuilderResource> neededMap(
+        final com.minecolonies.core.colony.buildings.AbstractBuildingStructureBuilder builder) throws ReflectiveOperationException
+    {
+        final var module = builder.getFirstModuleOccurance(com.minecolonies.core.colony.buildings.modules.BuildingResourcesModule.class);
+        final java.lang.reflect.Field f = module.getClass().getDeclaredField("neededResources");
+        f.setAccessible(true);
+        return (java.util.Map<String, com.minecolonies.core.colony.buildings.utils.BuildingBuilderResource>) f.get(module);
+    }
+
+    private static int countIn(final IBuilding b, final net.minecraft.world.item.Item item)
+    {
+        int n = 0;
+        final IItemHandler h = b.getItemHandlerCap();
+        for (int i = 0; i < h.getSlots(); i++)
+        {
+            if (h.getStackInSlot(i).is(item))
+            {
+                n += h.getStackInSlot(i).getCount();
+            }
+        }
+        return n;
     }
 
     private IColony colony(final ServerLevel level, final BlockPos at, final String name)

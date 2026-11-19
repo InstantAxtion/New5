@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "neoterra:block/blockhutgrandbridge",
+      "y": 0
+    },
+    "facing=south": {
+      "model": "neoterra:block/blockhutgrandbridge",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "neoterra:block/blockhutgrandbridge",
+      "y": 180
+    },
+    "facing=north": {
+      "model": "neoterra:block/blockhutgrandbridge",
+      "y": 270
+    }
+  }
+}

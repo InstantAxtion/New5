@@ -223,12 +223,78 @@ class Post:
         return bp
 
 
+DEPOT_MATS = {
+    1: dict(post="spruce_log[axis=y]", wall="spruce_planks", base="cobblestone", floor="spruce_planks",
+            roof="spruce", glass="air", apron="gravel"),
+    2: dict(post="spruce_log[axis=y]", wall="bricks", base="cobblestone", floor="spruce_planks",
+            roof="spruce", glass="glass_pane", apron="gravel"),
+    3: dict(post="stripped_spruce_log[axis=y]", wall="bricks", base="stone_bricks", floor="spruce_planks",
+            roof="deepslate_tile", glass="glass_pane", apron="cobblestone"),
+    4: dict(post="stripped_dark_oak_log[axis=y]", wall="bricks", base="stone_bricks", floor="polished_andesite",
+            roof="deepslate_tile", glass="glass_pane", apron="stone_bricks"),
+    5: dict(post="stripped_dark_oak_log[axis=y]", wall="tuff_bricks", base="polished_tuff", floor="polished_tuff",
+            roof="waxed_exposed_cut_copper", glass="glass_pane", apron="tuff_bricks"),
+}
+
+
+class Depot(Post):
+    """Supply Depot: brick storehouse with crafting benches, racks and a crate yard."""
+
+    def __init__(self, L):
+        super().__init__(L)
+        self.m = DEPOT_MATS[L]
+        self.tower = False
+        self.sy = self.H + 3 + (self.D + 3) // 2 + 1
+
+    def furnish(self, bp):
+        hut = super().furnish(bp)
+        W, D, ox, oz, L = self.W, self.D, self.ox, self.oz, self.L
+        x2 = ox + W - 2
+        for z in range(oz + 4, oz + 4 + min(L, 3)):          # crafting benches on the right wall
+            bp.set(x2, 2, z, "minecraft:crafting_table")
+        if L >= 3:
+            bp.set(x2, 2, oz + 7, "minecraft:smithing_table")
+        if L >= 4:
+            bp.set(x2, 2, oz + 8, "minecraft:stonecutter[facing=west]")
+        return hut
+
+    def yard(self, bp):
+        W, ox, oz, L = self.W, self.ox, self.oz, self.L
+        mid = ox + W // 2
+        for z in range(0, oz):
+            for x in range(mid - 1, mid + 2):
+                bp.set(x, 1, z, mc(self.m["apron"]))
+        if L == 1:
+            return
+        for x in range(ox, ox + 2 + L):                      # crate yard: stacked barrels
+            for y in range(2, 2 + (1 if x % 2 else min(2, L - 1))):
+                bp.set(x, y, 1, "minecraft:barrel[facing=up,open=false]")
+        if L >= 3:                                            # loading crane
+            cx = ox + W - 2
+            for y in range(2, self.H + 3):
+                bp.set(cx, y, 1, mc(self.m["post"]))
+            for z in range(1, oz):
+                bp.set(cx, self.H + 3, z, mc(self.m["post"].replace("axis=y", "axis=z")))
+            bp.set(cx, self.H + 2, oz - 1, "minecraft:chain[axis=y,waterlogged=false]")
+            bp.set(cx, self.H + 1, oz - 1, "minecraft:chain[axis=y,waterlogged=false]")
+
+    def build(self):
+        bp = super().build()
+        x, y, z = bp.primary_offset
+        path = f"trade/supplydepot{self.L}.blueprint"
+        bp.set(x, y, z, "neoterra:blockhutsupplydepot[facing=north]",
+               hut_te(PACK, path, (self.sx, self.sy, self.sz), (x, y, z), {(0, 1, 0): ["groundlevel"]}))
+        bp.name = f"supplydepot{self.L}.blueprint"
+        return bp
+
+
 def build_all(root: Path):
     d = root / "trade"
     d.mkdir(parents=True, exist_ok=True)
     for L in range(1, 6):
         Post(L).build().save(d / f"tradepost{L}.blueprint")
-    print(f"{PACK}: trade post 1-5")
+        Depot(L).build().save(d / f"supplydepot{L}.blueprint")
+    print(f"{PACK}: trade post 1-5, supply depot 1-5")
 
 
 if __name__ == "__main__":

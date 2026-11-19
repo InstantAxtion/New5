@@ -113,6 +113,11 @@ public class BuildingTradePost extends AbstractBuilding
         markDirty();
     }
 
+    public boolean isMirrored(final UUID token)
+    {
+        return mirrored.contains(token);
+    }
+
     public int getMode()
     {
         return mode;
@@ -178,7 +183,7 @@ public class BuildingTradePost extends AbstractBuilding
     public void onColonyTick(@NotNull final IColony colony)
     {
         super.onColonyTick(colony);
-        if (getBuildingLevel() <= 0 || ++tickCounter % 5 != 0)
+        if (getBuildingLevel() <= 0 || ++tickCounter % 5 != 0 || !NeoterraConfig.get(NeoterraConfig.TRADE_POST, true))
         {
             return;
         }
@@ -220,7 +225,7 @@ public class BuildingTradePost extends AbstractBuilding
                 continue;
             }
             open.add(uuid);
-            if (mirrored.contains(uuid) || partner.orders.size() >= partner.capacity())
+            if (mirrored.contains(uuid) || partner.orders.size() >= partner.capacity() || BuildingSupplyDepot.willCraft(colony, uuid, stack.getStack()))
             {
                 continue;
             }
@@ -297,7 +302,15 @@ public class BuildingTradePost extends AbstractBuilding
     {
         final double dist = getPartnerDim().equals(getColony().getDimension()) ? Math.sqrt(getPosition().distSqr(partnerPos)) : 3000;
         final double ticks = Math.min(12000, Math.max(400, dist * 1.5));
-        return (int) (ticks * (1.0 - 0.1 * (Math.max(1, getBuildingLevel()) - 1)));
+        // higher post levels and a Grand Bridge in either colony make the trip shorter
+        int bridge = BuildingWonder.level(getColony(), WonderType.GRANDBRIDGE);
+        final BuildingTradePost partner = getPartner();
+        if (partner != null)
+        {
+            bridge = Math.max(bridge, BuildingWonder.level(partner.getColony(), WonderType.GRANDBRIDGE));
+        }
+        final double bridgeCut = 0.08 * bridge * NeoterraConfig.get(NeoterraConfig.WONDER_BONUS, 1.0);
+        return (int) Math.max(200, ticks * (1.0 - 0.1 * (Math.max(1, getBuildingLevel()) - 1)) * Math.max(0.2, 1.0 - bridgeCut));
     }
 
     public ResourceKey<Level> getPartnerDim()

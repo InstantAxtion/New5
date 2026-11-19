@@ -108,14 +108,50 @@ for an order are kept in the post until the courier leaves. Each post level allo
 
 ![Trade Post](docs/previews/farmworks/tradepost5_front.png)
 
+## Builder fixes, Supply Depot and Grand Projects (also in the jar)
+
+**Settings** – `serverconfig/neoterra-server.toml` in the world folder (created on first start):
+
+| Setting | Default | What it does |
+|---|---|---|
+| `builders.builderSpeed` | 1.5 | builder block-placing speed (1.0 = MineColonies normal, 2.0 = twice as fast); stacks with research |
+| `builders.upfrontMaterials` | true | builders request the whole missing material list at once instead of stage by stage |
+| `huts.supplyDepot` | true | Supply Depot on/off |
+| `huts.tradePost` | true | Trade Post on/off |
+| `wonders.wonderBonus` | 1.0 | strength of Grand Project bonuses (0 = off) |
+
+**Up-front materials** – as soon as a builder has worked out a build's material list, everything still missing is
+requested in one go, so the warehouse, crafters, Supply Depot and Trade Post work on all of it in parallel and
+the builder doesn't stall between stages.
+
+**Supply Depot** (Farmworks → `trade/supplydepot1-5`, hut `neoterra:blockhutsupplydepot`, job Quartermaster) – takes
+requests nobody in the colony makes (the ones that would land on you), picks the simplest crafting recipe,
+requests its ingredients from the colony, crafts the items and walks them to whoever asked. 3 open orders per
+level. It has priority over the Trade Post: the colony makes what it can before trading for it.
+
+**Grand Projects** – a new *wonders* tab in Neoterra, Hearthwood and Cascadia, each in the pack's own style. Every
+wonder has two **wing** huts (child buildings), so up to three builders can work on it at once; the bonus counts
+the lowest level of the core and both wings, and adds to MineColonies' own research effects.
+
+| Wonder | Wings | Bonus per completed level |
+|---|---|---|
+| Cathedral | two bell towers | +3% happiness, +10% regeneration, +1 citizen HP |
+| Grand Bridge | two end pylons | +3% walking speed, Trade Couriers 8% faster |
+| Colossus | two fire braziers | guards +0.4 damage and +4% armour |
+| Royal Granary | two silos | meals +4% saturation, farmers +10% crops |
+
+![Hearthwood wonders](docs/previews/wonders/hearthwood_wonders.png)
+
 Build the mod: `cd mod && gradle jar` (NeoForge 21.1 / ModDevGradle, MineColonies 1.1.1420). `gradle runServer` boots a dev
-server with a self-test that creates two colonies and pushes a request through the whole trade loop (`SELFTEST PASS`).
+server with a self-test: two colonies trade a request, the Supply Depot crafts one, a wonder bonus and builder speed
+are applied and removed, a builder requests its materials up front, and all 130 hut blueprints load through
+Structurize (`SELFTEST PASS`).
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.11.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.12.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a NeoForge mod that carries the Trade Post and all four style packs (Neoterra, Hearthwood, Cascadia and Farmworks);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.11.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.12.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>` (compiles `mod/` with Gradle).
 
 ## Install

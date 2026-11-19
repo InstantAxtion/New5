@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "neoterra:block/blockhutsupplydepot",
+      "y": 0
+    },
+    "facing=south": {
+      "model": "neoterra:block/blockhutsupplydepot",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "neoterra:block/blockhutsupplydepot",
+      "y": 180
+    },
+    "facing=north": {
+      "model": "neoterra:block/blockhutsupplydepot",
+      "y": 270
+    }
+  }
+}

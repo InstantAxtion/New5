@@ -1,0 +1,8 @@
+{
+  "parent": "minecolonies:block/blockhutdeliveryman",
+  "textures": {
+    "0": "minecraft:block/barrel_side",
+    "1": "minecraft:block/barrel_top",
+    "particle": "minecraft:block/barrel_side"
+  }
+}

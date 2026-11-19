@@ -17,6 +17,8 @@ MODDED = {
     "minecolonies:blockhutdeliveryman": {"facing"},
     "minecolonies:blockhutwarehouse": {"facing"},
     "minecolonies:blockhutbuilder": {"facing"},
+    "neoterra:blockhutsupplydepot": {"facing"}, "neoterra:blockhutcathedral": {"facing"}, "neoterra:blockhutgrandbridge": {"facing"},
+    "neoterra:blockhutcolossus": {"facing"}, "neoterra:blockhutroyalgranary": {"facing"}, "neoterra:blockhutwonderwing": {"facing"},
     "neoterra:blockhuttradepost": {"facing"},
     "minecolonies:blockhutcitizen": {"facing"},
     "minecolonies:blockhutcook": {"facing"},
