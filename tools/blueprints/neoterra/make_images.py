@@ -13,7 +13,10 @@ CATEGORIES = {"fundamentals": "townhall5", "craftsmanship": "deliveryman5", "dec
 BUILDINGS = ["townhall", "builder", "cottage", "house", "apartment", "quadplex", "skytower", "bunker",
              "cook", "lumberjack", "sawmill", "stonemason", "mechanic", "deliveryman", "warehouse",
              "school", "library", "university", "guardtower", "barracks", "archery", "combatacademy", "stable",
-             "playerhouse", "miner", "farmer", "hospital", "tavern", "fisherman", "smeltery", "blacksmith", "baker"]
+             "playerhouse", "miner", "farmer", "hospital", "tavern", "fisherman", "smeltery", "blacksmith", "baker",
+             "fletcher", "cookery", "alchemist", "dyer", "glassblower", "concretemixer", "crusher", "sifter",
+             "stonesmeltery", "florist", "plantation", "composter", "beekeeper", "chickenherder", "cowboy",
+             "shepherd", "swineherder", "rabbithutch"]
 
 
 def square(im, bg=BG):

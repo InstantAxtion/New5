@@ -60,6 +60,20 @@ COLORS = {
 SOLID_GUESS = (180, 120, 200)
 GLASS = {"light_blue_stained_glass", "glass_pane", "glass", "tinted_glass", "blockpaperwall", "water"}
 HALF = {"smooth_quartz_slab", "smooth_stone_slab", "rail", "daylight_detector"}
+COLORS.update({
+    "coarse_dirt": (119, 85, 59), "dirt": (134, 96, 67), "mud": (60, 57, 61), "composted_dirt": (70, 50, 35),
+    "soul_sand": (81, 62, 50), "nether_wart": (150, 30, 35), "cobblestone": (122, 122, 122),
+    "red_concrete": (142, 32, 32), "blue_concrete": (44, 46, 143), "lime_concrete": (94, 168, 24),
+    "magenta_concrete": (169, 48, 159), "purple_concrete": (100, 31, 156),
+    "barrel_block": (140, 100, 60), "beehive": (190, 150, 90), "magma_block": (140, 60, 20),
+    "fern": (80, 130, 50), "poppy": (200, 30, 30), "dandelion": (240, 220, 40), "cornflower": (70, 100, 220),
+    "allium": (180, 110, 220), "azure_bluet": (220, 230, 240), "oxeye_daisy": (240, 240, 230),
+    "lily_of_the_valley": (245, 245, 245), "cave_vines": (90, 110, 40), "campfire": (100, 70, 40),
+    "birch_fence_gate": (200, 180, 120), "fletching_table": (180, 160, 110), "loom": (150, 120, 90),
+    "grindstone": (140, 140, 140), "brewing_stand": (120, 100, 80), "water_cauldron": (60, 90, 200),
+    "cyan_stained_glass": (60, 130, 150), "lime_stained_glass": (120, 200, 40),
+    "magenta_stained_glass": (190, 80, 180), "yellow_stained_glass": (230, 220, 50),
+})
 
 
 def short(state):

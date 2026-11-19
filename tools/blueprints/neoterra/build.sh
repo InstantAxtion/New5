@@ -22,6 +22,7 @@ python3 $T/neoterra/military.py "$PACK" "$FURN"
 python3 $T/neoterra/bunker.py "$PACK/fundamentals" "$FURN"
 python3 $T/neoterra/unique.py "$PACK"
 python3 $T/neoterra/update1.py "$PACK"
+python3 $T/neoterra/update2.py "$PACK"
 python3 $T/neoterra/deliveryman.py "$PACK/craftsmanship/storage"
 python3 $T/neoterra/warehouse.py "$PACK/craftsmanship/storage"
 
@@ -34,7 +35,13 @@ for l in 1 2 3 4 5; do
            military/guardtower military/archery military/combatacademy military/stable \
            decorations/housing/playerhouse fundamentals/miner fundamentals/hospital \
            agriculture/horticulture/farmer agriculture/husbandry/fisherman \
-           craftsmanship/metallurgy/smeltery craftsmanship/metallurgy/blacksmith craftsmanship/luxury/baker; do
+           craftsmanship/metallurgy/smeltery craftsmanship/metallurgy/blacksmith craftsmanship/luxury/baker \
+           craftsmanship/carpentry/fletcher craftsmanship/luxury/cookery craftsmanship/luxury/alchemist \
+           craftsmanship/luxury/dyer craftsmanship/luxury/glassblower craftsmanship/luxury/concretemixer \
+           craftsmanship/masonry/crusher craftsmanship/masonry/sifter craftsmanship/masonry/stonesmeltery \
+           agriculture/horticulture/florist agriculture/horticulture/plantation agriculture/horticulture/composter \
+           agriculture/husbandry/beekeeper agriculture/husbandry/chickenherder agriculture/husbandry/cowboy \
+           agriculture/husbandry/shepherd agriculture/husbandry/swineherder agriculture/husbandry/rabbithutch; do
     python3 $T/render.py "$PACK/$f$l.blueprint" "$PREV/$(basename $f)$l" >/dev/null
   done
   python3 $T/render.py "$FURN/skytower${l}_furnished.blueprint" "$PREV/skytower$l" >/dev/null
@@ -44,7 +51,8 @@ done
 for l in 1 2 3; do
   python3 $T/render.py "$PACK/fundamentals/tavern$l.blueprint" "$PREV/tavern$l" >/dev/null
 done
-for f in decorations/supplies/supplycamp decorations/supplies/supplyship decorations/fields/neofield; do
+for f in decorations/supplies/supplycamp decorations/supplies/supplyship decorations/fields/neofield \
+         agriculture/fields/neobamboo agriculture/fields/neocactus agriculture/fields/neosugar agriculture/fields/neokelp; do
   python3 $T/render.py "$PACK/$f.blueprint" "$PREV/$(basename $f)" >/dev/null
 done
 python3 $T/neoterra/make_images.py "$PACK" "$PREV"
