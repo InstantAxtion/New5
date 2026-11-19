@@ -31,6 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from blueprint import load  # noqa: E402
 from detail import h, nm, CHEAP_FORBIDDEN, DIRS  # noqa: E402
 from massing import Massing, NATURE, kind_level  # noqa: E402
+import themes  # noqa: E402
 
 ROOFS = ["gable", "barrel", "hip", "sawtooth", "overhang"]
 CROWNS = ["dome", "pyramid", "halo", "spire"]
@@ -364,6 +365,19 @@ class Reshape(Massing):
         v = int(h("form", self.base) * 1000)
         form = ROOFS[(v + L) % len(ROOFS)]
         crown = CROWNS[v % len(CROWNS)]
+        rec = themes.recipe(self.name)
+        if rec:
+            form = rec["roofs"][min(L, 4) - 2] if L <= 4 else form
+            crown = rec["crown"]
+            th = themes.theme(self.name)
+            tier = "c" if L <= 3 else "p"
+            pick = lambda k, i=0: (th[f"{k}_{tier}"][i % len(th[f"{k}_{tier}"])] if isinstance(th[f"{k}_{tier}"], list)
+                                   else th[f"{k}_{tier}"])
+            light = pick("light")
+            self.M = dict(wall="white_concrete" if L <= 3 else "smooth_quartz", wall2=pick("wall2"), trim=pick("trim"),
+                          glass="glass" if L <= 3 else th["glass_p"][0],
+                          light=f"{light}[hanging=false,waterlogged=false]" if light in ("lantern", "soul_lantern") else light,
+                          fin=pick("trim"), roof=pick("feature"), accent=pick("accent"), deck=pick("accent", 1))
         glass = ["ribbon", "grid", "slit"][v % 3]
         stepped = h("step", self.base) < .5
         storeys = 0 if tall else {2: 0, 3: 1, 4: 2, 5: 3}[L]

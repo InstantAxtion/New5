@@ -12,10 +12,10 @@ Requires: MineColonies, Structurize, Domum Ornamentum (all on NeoForge 1.21.1).
 
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.3.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.4.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that only carries the style pack;
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.3.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.4.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>`.
 
 ## Install
@@ -163,6 +163,29 @@ gate blocks) is not included yet.
 
 ![Barracks](docs/previews/neoterra/barracks_levels.png)
 
+### Building identities (themes + signature modules)
+![Identities 1](docs/previews/neoterra/neoterra_identity_overview_1.png)
+![Identities 2](docs/previews/neoterra/neoterra_identity_overview_2.png)
+![Levels](docs/previews/neoterra/neoterra_identity_levels.png)
+
+Every hut has its own identity, defined in `tools/blueprints/neoterra/themes.py`:
+
+- **Theme** – its own accent blocks, secondary wall blocks, glass colours, light source, trim and garden style on top
+  of the shared Neoterra white. Examples: forge (blackstone, copper, shroomlight – smeltery, blacksmith), bloom
+  (cherry, pink – florist, cottage), arcane (purpur, amethyst – enchanter), nether (nether bricks, crimson –
+  nether worker), scholar (dark oak, deepslate tiles – library), civic (gold, quartz – town hall), medical
+  (red cross accents – hospital), honey (honeycomb – beekeeper), rainbow (dyer), prism (glassblower), copper
+  (mechanic), steel (warehouse), ranch / wool / mud / carrot / coop (animal huts) and more – 36 themes.
+- **Signature modules** (`signature.py`) – landmark features that appear at a set level and grow afterwards:
+  clock tower, bell tower, lighthouse, watch post, silos, water tower, wind turbines, radar dish, observatory,
+  greenhouse dome, foundry tower, twisting tower, chimneys, gantry crane, crate yard, log stacks, solar canopy,
+  pergola, terraced ziggurat, amphitheatre, sculptures (ring, orb, arch, red cross, anvil, arrow), honeycomb
+  pillars, glass atrium, helipad, sky bridge + pavilion, monumental gate, reflecting pools, obelisks, hanging
+  gardens and cantilevered glass pods. No two buildings share a recipe.
+- **Roof sequence and crown** – each building has its own roof forms for levels 2-4 and its own level-5 crown.
+- **Garden style** – meadow, flower fields, orchard, forest, hedges, formal topiary, gravel yard, desert,
+  ponds, crystal, crimson or pasture.
+
 ### Reshape pass (the main building changes every level)
 ![Reshape](docs/previews/neoterra/neoterra_reshape_overview.png)
 
@@ -182,7 +205,7 @@ Roof forms (gable, barrel vault, hip, sawtooth, overhang deck) rotate per level 
 reached by a ladder from the floor below. Very tall buildings (24+ blocks) keep their height and only get the roof
 or crown; a few vaulted/ring-shaped buildings keep their core and grow through the massing pass instead.
 
-### Massing pass (bigger buildings every level)
+### Massing pass (buildings without a recipe)
 ![Massing](docs/previews/neoterra/neoterra_massing_overview.png)
 
 `tools/blueprints/neoterra/massing.py` runs before the detail pass and grows each building's actual shape:

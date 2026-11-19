@@ -58,6 +58,53 @@ COLORS = {
     "blockhutcitizen": (255, 60, 200), "jukebox": (110, 75, 55), "smoker": (90, 85, 80), "quartz_pillar": (232, 226, 218), "quartz_block": (235, 229, 222),
 }
 SOLID_GUESS = (180, 120, 200)
+
+DYE = {"white": (233, 236, 236), "light_gray": (142, 142, 134), "gray": (62, 68, 71), "black": (20, 21, 25),
+       "brown": (114, 71, 40), "red": (160, 39, 34), "orange": (240, 118, 19), "yellow": (248, 197, 39),
+       "lime": (112, 185, 25), "green": (84, 109, 27), "cyan": (21, 137, 145), "light_blue": (58, 175, 217),
+       "blue": (53, 57, 157), "purple": (121, 42, 172), "magenta": (189, 68, 179), "pink": (237, 141, 172)}
+TERRA = {"white": (209, 178, 161), "light_gray": (135, 106, 97), "gray": (57, 42, 35), "black": (37, 22, 16),
+         "brown": (77, 51, 35), "red": (143, 61, 46), "orange": (161, 83, 37), "yellow": (186, 133, 35),
+         "lime": (103, 117, 52), "green": (76, 83, 42), "cyan": (86, 91, 91), "light_blue": (113, 108, 137),
+         "blue": (74, 59, 91), "purple": (118, 70, 86), "magenta": (149, 88, 108), "pink": (161, 78, 78)}
+WOOD = {"oak": (162, 130, 78), "spruce": (114, 84, 48), "birch": (192, 175, 121), "jungle": (160, 115, 80),
+        "acacia": (168, 90, 50), "dark_oak": (66, 43, 20), "mangrove": (117, 54, 48), "cherry": (226, 178, 172),
+        "bamboo": (193, 173, 80), "crimson": (101, 48, 70), "warped": (43, 104, 99)}
+NAMED = {"honeycomb": (229, 148, 29), "bee_nest": (202, 160, 74), "purpur": (169, 125, 169), "amethyst": (133, 97, 191),
+         "end_stone": (219, 222, 158), "nether_brick": (44, 21, 26), "red_nether": (69, 7, 9), "shroomlight": (240, 146, 70),
+         "ochre_froglight": (250, 245, 206), "mud_brick": (137, 104, 79), "packed_mud": (142, 106, 79), "mud": (60, 57, 61),
+         "moss": (89, 109, 45), "mossy": (115, 121, 105), "sandstone": (216, 203, 155), "red_sandstone": (186, 99, 29),
+         "copper": (190, 110, 80), "exposed": (161, 125, 103), "weathered": (108, 153, 110), "oxidized": (82, 162, 132),
+         "iron_block": (220, 220, 220), "gold_block": (246, 208, 61), "tinted": (43, 38, 46), "crying": (32, 10, 60),
+         "blackstone": (42, 35, 40), "hay": (166, 136, 38), "bricks": (150, 97, 83), "cobble": (122, 122, 122),
+         "stone": (125, 125, 125), "nylium": (130, 31, 31), "crimson_roots": (126, 8, 41), "crimson_fungus": (141, 44, 30),
+         "dead_bush": (107, 79, 40), "tall_grass": (90, 140, 50), "large_fern": (80, 125, 45), "sweet_berry": (60, 100, 40),
+         "lily_pad": (30, 110, 40), "redstone_lamp": (95, 54, 30), "bell": (250, 210, 60), "campfire": (100, 70, 40),
+         "lantern": (220, 170, 90), "magma": (140, 60, 20), "calcite": (223, 224, 220), "glass": (200, 220, 230),
+         "wool": (233, 236, 236), "coarse_dirt": (119, 85, 59), "gravel": (131, 127, 126), "amethyst_bud": (160, 120, 220),
+         "ladder": (150, 120, 70), "chain": (60, 65, 80), "bars": (140, 140, 140), "barrel": (140, 100, 60)}
+
+
+def guess_color(name):
+    """Best-effort colour for blocks without an explicit entry (keeps previews honest)."""
+    base = name.replace("_stairs", "").replace("_slab", "").replace("_wall", "")
+    for d in sorted(DYE, key=len, reverse=True):
+        if base.startswith(d + "_"):
+            if "terracotta" in base:
+                return TERRA[d]
+            if "stained_glass" in base:
+                r, g, b = DYE[d]
+                return (min(255, r + 40), min(255, g + 40), min(255, b + 40))
+            return DYE[d]
+    if base == "terracotta":
+        return (152, 94, 67)
+    for k in sorted(NAMED, key=len, reverse=True):
+        if k in base:
+            return NAMED[k]
+    for w in sorted(WOOD, key=len, reverse=True):
+        if w in base:
+            return WOOD[w]
+    return SOLID_GUESS
 GLASS = {"light_blue_stained_glass", "glass_pane", "glass", "tinted_glass", "blockpaperwall", "water"}
 HALF = {"smooth_quartz_slab", "smooth_stone_slab", "rail", "daylight_detector"}
 COLORS.update({
@@ -170,7 +217,7 @@ def iso(bp, rot, path, scale=14):
         if b is None:
             continue
         base = b[:-8] if b.endswith("_slab_do") else b
-        c = COLORS.get(base) or COLORS.get(base.replace("_stairs", "").replace("_slab", "")) or SOLID_GUESS
+        c = COLORS.get(base) or COLORS.get(base.replace("_stairs", "").replace("_slab", "")) or guess_color(base)
         a = 120 if b in GLASS or "glass" in b else (150 if b == "water" else 255)
         top = 0.5 if (b in HALF or "slab" in b) else 1.0
         if b == "rail":
@@ -209,7 +256,7 @@ def plan(bp, path, cell=16):
             for y in range(4, -1, -1):
                 s = material(bp, x, y, z)
                 if s != "air":
-                    col = COLORS.get(s, SOLID_GUESS)
+                    col = COLORS.get(s) or guess_color(s)
                     break
             dr.rectangle([x * cell, z * cell, (x + 1) * cell - 1, (z + 1) * cell - 1], fill=col, outline=(200, 200, 200))
     img.save(path)
@@ -225,7 +272,7 @@ def plan_at(bp, path, y_top, cell=12):
             for y in range(y_top, -1, -1):
                 s = material(bp, x, y, z)
                 if s != "air":
-                    col = COLORS.get(s, SOLID_GUESS)
+                    col = COLORS.get(s) or guess_color(s)
                     if y < y_top - 1:
                         col = shade(col, 0.55)
                     break

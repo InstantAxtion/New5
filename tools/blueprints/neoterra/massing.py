@@ -481,7 +481,12 @@ def process(path_str):
     if not L:
         return f"{path.name}: kept"
     bp = load(path)
-    ms = Massing(bp, L, path.stem)
+    import themes
+    if themes.recipe(path.stem):
+        from signature import Signature
+        ms = Signature(bp, L, path.stem)
+    else:
+        ms = Massing(bp, L, path.stem)
     added = ms.run()
     if L <= 3:
         for x, y, z, s in bp.blocks():

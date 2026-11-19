@@ -31,6 +31,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from blueprint import load, parse_state, AIR  # noqa: E402
 import walkcheck  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import themes  # noqa: E402
 
 MC = "minecraft:"
 CHEAP_FORBIDDEN = ("domum", "quartz", "deepslate", "sea_lantern", "stained_glass", "end_rod")
@@ -111,6 +113,8 @@ def nm(s):
 class Detailer:
     def __init__(self, bp, level, name):
         self.bp, self.L, self.name = bp, level, name
+        self.T = themes.theme(name)
+        self.G = themes.GROUND[self.T["ground"]] if self.T else None
         self._score = None
         self.tags = self._tags()
         self.protect = set(bp.tile_entities)
@@ -241,6 +245,9 @@ class Detailer:
                     new = course
                 elif L >= 4 and (x % 6 == 0 or z % 6 == 0) and not (x % 6 == 0 and z % 6 == 0):
                     new = "quartz_pillar[axis=y]"
+                elif self.T and L >= 2 and h("w2", x // 3, y // 2, z // 3, self.name) < (.16 if L <= 3 else .22):
+                    w2 = self.T["wall2_c" if L <= 3 else "wall2_p"]
+                    new = w2[int(h("w3", x, z) * len(w2))]
                 else:
                     new = pick(WALL_MIX[L], h("w", x // 2, y, z // 2, self.name))
             elif (n in FLOORS or (n in WHITE and top_open)) and any(k in self.name for k in HOMES) \
@@ -258,9 +265,13 @@ class Detailer:
                 else:
                     new = pick(FLOOR_FIELD[L], h("f", x // 2, z // 2, self.name))
             elif n in CYAN:
-                new = pick(CYAN_MIX[L], r)
+                if self.T:
+                    acc = self.T["accent_c" if L <= 3 else "accent_p"]
+                    new = acc[int(r * len(acc))]
+                else:
+                    new = pick(CYAN_MIX[L], r)
             elif n in GLASS and L >= 4:
-                band = GLASS_BANDS[L]
+                band = self.T["glass_p"] if self.T else GLASS_BANDS[L]
                 new = band[(y // 2) % len(band)]
             else:
                 continue
@@ -455,10 +466,14 @@ class Detailer:
     # -------------------------------------------------------------- 4. ground
     def ground(self):
         bp, L = self.bp, self.L
-        p_plant = [.1, .15, .2, .24, .28][L - 1]
+        G = self.G or dict(plants=1.0, hedge=True, trees=1.0, extra=None)
+        p_plant = [.1, .15, .2, .24, .28][L - 1] * G["plants"]
+        tree_cut = 1 - .035 * G["trees"]
         trees = []
-        if L >= 4:
+        if L >= 4 and G["hedge"]:
             self.hedges()
+        if G["extra"]:
+            self.ground_extra(G["extra"])
         for x in range(bp.sx):
             for z in range(bp.sz):
                 for y in range(1, bp.sy - 2):
@@ -469,7 +484,7 @@ class Detailer:
                     deep = all(self.n(x + dx, y, z + dz) == "grass_block" and self.air(x + dx, y + 1, z + dz)
                                for dx in (-1, 0, 1) for dz in (-1, 0, 1))
                     r = h("g", x, z, self.name)
-                    if L >= 4 and deep and r > .965 and all(abs(x - tx) + abs(z - tz) > 7 for tx, tz in trees) \
+                    if L >= 4 and deep and r > tree_cut and all(abs(x - tx) + abs(z - tz) > 7 for tx, tz in trees) \
                             and self.tree_fits(x, y + 1, z, 3 + (L == 5)):
                         self.tree(x, y + 1, z, 3 + (L == 5))
                         trees.append((x, z))
@@ -489,6 +504,51 @@ class Detailer:
                             self.put(x, y + 1, z, "short_grass" if rr < .4 else "fern" if rr < .5 else
                                      FLOWERS[int(rr * 997) % len(FLOWERS)])
                     break
+
+    def ground_extra(self, kind):
+        """Theme-specific ground treatment on open lawn."""
+        bp, L = self.bp, self.L
+        for x in range(bp.sx):
+            for z in range(bp.sz):
+                y = next((yy for yy in range(1, min(8, bp.sy - 2)) if self.n(x, yy, z) == "grass_block"
+                          and self.sky(x, yy + 1, z)), None)
+                if y is None or self.near_sensitive(x, y + 1, z, 1) or (x, y, z) in self.protect:
+                    continue
+                r = h("gx", x, z, self.name)
+                patch = h("gp", x // 3, z // 3, self.name)
+                if kind == "gravel" and patch < .35:
+                    self.put(x, y, z, "gravel" if r < .6 else "coarse_dirt")
+                elif kind == "desert" and patch < .45:
+                    self.put(x, y, z, "coarse_dirt" if r < .5 else "dirt")
+                    if r > .9:
+                        self.put(x, y + 1, z, "dead_bush")
+                elif kind == "crystal" and patch < .2:
+                    self.put(x, y, z, "calcite")
+                    if r > .8:
+                        self.put(x, y + 1, z, "amethyst_cluster[facing=up,waterlogged=false]" if L >= 4 else
+                                 "small_amethyst_bud[facing=up,waterlogged=false]")
+                elif kind == "crimson" and patch < .3:
+                    self.put(x, y, z, "crimson_nylium")
+                    if r > .7:
+                        self.put(x, y + 1, z, "crimson_roots" if r < .9 else "crimson_fungus")
+                elif kind == "ponds" and patch < .08 and all(self.n(x + dx, y, z + dz) == "grass_block"
+                                                             for dx in (-1, 0, 1) for dz in (-1, 0, 1)):
+                    self.put(x, y, z, "water[level=0]")
+                    if r > .7:
+                        self.put(x, y + 1, z, "lily_pad")
+                elif kind == "hay" and r < .015 * L:
+                    self.put(x, y + 1, z, "hay_block[axis=y]")
+                elif kind == "fruit" and r < .02 * L:
+                    self.put(x, y + 1, z, "sweet_berry_bush[age=3]")
+                elif kind == "topiary" and r < .008 * L and self.air(x, y + 2, z):
+                    self.put(x, y + 1, z, LEAVES)
+                    self.put(x, y + 2, z, LEAVES)
+                elif kind == "ferns" and r < .05 * L and self.air(x, y + 2, z):
+                    self.put(x, y + 1, z, "large_fern[half=lower]")
+                    self.put(x, y + 2, z, "large_fern[half=upper]")
+                elif kind == "tallgrass" and r < .05 * L and self.air(x, y + 2, z):
+                    self.put(x, y + 1, z, "tall_grass[half=lower]")
+                    self.put(x, y + 2, z, "tall_grass[half=upper]")
 
     def hedges(self):
         """Clipped hedge round the lot (gaps at paths), lantern posts on it; flowering at level 5."""
