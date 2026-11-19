@@ -61,6 +61,11 @@ SOLID_GUESS = (180, 120, 200)
 GLASS = {"light_blue_stained_glass", "glass_pane", "glass", "tinted_glass", "blockpaperwall", "water"}
 HALF = {"smooth_quartz_slab", "smooth_stone_slab", "rail", "daylight_detector"}
 COLORS.update({
+    "light_blue_stained_glass_pane": (130, 190, 230), "cyan_stained_glass_pane": (76, 127, 153),
+    "tuff_bricks": (98, 103, 95), "polished_tuff": (97, 104, 99), "chiseled_tuff": (93, 99, 93), "bone_block": (229, 225, 207),
+    "deepslate_tiles": (54, 54, 55), "polished_blackstone_bricks": (48, 42, 49), "white_glazed_terracotta": (188, 212, 202),
+    "stripped_warped_stem": (57, 150, 147), "pearlescent_froglight": (245, 240, 239), "verdant_froglight": (229, 244, 228),
+    "stone_bricks": (122, 121, 122), "polished_diorite_stairs": (193, 193, 195), "smooth_quartz_stairs": (235, 229, 222),
     "potted_fern": (120, 140, 70), "potted_azalea_bush": (120, 140, 70), "potted_flowering_azalea_bush": (120, 140, 70), "potted_bamboo": (120, 140, 70), "potted_oak_sapling": (120, 140, 70), "potted_lily_of_the_valley": (120, 140, 70), "potted_cornflower": (120, 140, 70), "potted_blue_orchid": (120, 140, 70), "potted_cactus": (120, 140, 70), "potted_birch_sapling": (120, 140, 70),
     "calcite": (223, 224, 220), "diorite": (188, 188, 188), "polished_diorite": (193, 193, 195), "birch_planks": (192, 175, 121),
     "smooth_quartz": (235, 229, 222), "quartz_bricks": (234, 229, 221), "chiseled_quartz_block": (231, 226, 218),

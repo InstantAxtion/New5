@@ -60,12 +60,19 @@ GLASS = {"glass", "light_blue_stained_glass"}
 WALL_MIX = {
     1: [(.78, "white_concrete"), (.22, "calcite")],
     2: [(.6, "white_concrete"), (.25, "calcite"), (.15, "polished_diorite")],
-    3: [(.45, "white_concrete"), (.3, "calcite"), (.15, "polished_diorite"), (.1, "birch_planks")],
-    4: [(.35, "smooth_quartz"), (.25, "quartz_bricks"), (.25, "white_concrete"), (.15, "calcite")],
-    5: [(.3, "smooth_quartz"), (.25, "quartz_bricks"), (.15, "calcite"), (.15, "white_concrete"),
-        (.1, "polished_diorite"), (.05, "chiseled_quartz_block")],
+    3: [(.4, "white_concrete"), (.28, "calcite"), (.14, "polished_diorite"), (.1, "birch_planks"), (.08, "bone_block[axis=y]")],
+    4: [(.32, "smooth_quartz"), (.24, "quartz_bricks"), (.22, "white_concrete"), (.14, "calcite"),
+        (.08, "white_glazed_terracotta[facing=north]")],
+    5: [(.27, "smooth_quartz"), (.22, "quartz_bricks"), (.13, "calcite"), (.12, "white_concrete"),
+        (.08, "polished_diorite"), (.06, "chiseled_quartz_block"), (.06, "bone_block[axis=y]"),
+        (.06, "white_glazed_terracotta[facing=north]")],
 }
-COURSE = {1: None, 2: "smooth_stone", 3: "smooth_stone", 4: "quartz_bricks", 5: "chiseled_quartz_block"}
+COURSE = {1: None, 2: "smooth_stone", 3: "polished_tuff", 4: "quartz_bricks", 5: "chiseled_quartz_block"}
+HOMES = ("cottage", "house", "apartment", "quadplex", "playerhouse", "skytower", "tavern", "library", "school",
+         "university", "communitycollege", "bunker")
+WOOD_FIELD = {1: "birch_planks", 2: "birch_planks", 3: "bamboo_mosaic", 4: "birch_planks", 5: "bamboo_mosaic"}
+WOOD_GROUT = {1: "stripped_birch_log[axis=x]", 2: "stripped_birch_log[axis=x]", 3: "stripped_bamboo_block[axis=x]",
+              4: "stripped_warped_stem[axis=x]", 5: "stripped_warped_stem[axis=x]"}
 FLOOR_FIELD = {1: [(.6, "polished_andesite"), (.4, "smooth_stone")],
                2: [(1.0, "polished_andesite")],
                3: [(.7, "polished_diorite"), (.3, "calcite")],
@@ -235,6 +242,9 @@ class Detailer:
                     new = "quartz_pillar[axis=y]"
                 else:
                     new = pick(WALL_MIX[L], h("w", x // 2, y, z // 2, self.name))
+            elif (n in FLOORS or (n in WHITE and top_open)) and any(k in self.name for k in HOMES) \
+                    and top_open and self.covered(x, y, z, 8) and L >= 2:
+                new = WOOD_GROUT[L] if z % 4 == 0 else WOOD_FIELD[L]
             elif n in FLOORS or (n in WHITE and top_open):
                 grid = 4 if L <= 3 else 5
                 gx, gz = x % grid == 0, z % grid == 0
@@ -444,7 +454,7 @@ class Detailer:
     # -------------------------------------------------------------- 4. ground
     def ground(self):
         bp, L = self.bp, self.L
-        p_plant = [.1, .16, .22, .3, .38][L - 1]
+        p_plant = [.1, .15, .2, .24, .28][L - 1]
         trees = []
         if L >= 4:
             self.hedges()
@@ -464,6 +474,8 @@ class Detailer:
                         trees.append((x, z))
                     elif L >= 3 and deep and r < .05 * (L - 2):
                         self.put(x, y + 1, z, FLEAVES if r < .025 * (L - 2) else LEAVES)
+                    elif L >= 4 and deep and r < .05 * (L - 2) + .03:
+                        self.put(x, y + 1, z, "flowering_azalea" if r < .05 * (L - 2) + .015 else "azalea")
                     elif L == 5 and deep and r > .93 and self.air(x, y + 2, z):
                         tall = ["lilac", "rose_bush", "peony"][int(r * 1000) % 3]
                         self.put(x, y + 1, z, f"{tall}[half=lower]")
@@ -488,7 +500,7 @@ class Detailer:
                 continue
             path_near = any(self.n(x + dx, y, z + dz) not in ("grass_block", "air") and self.air(x + dx, y + 1, z + dz)
                             for dx in range(-2, 3) for dz in range(-2, 3) if bp.inside(x + dx, y, z + dz))
-            if path_near:
+            if path_near or i % 11 >= 8:              # gaps every few blocks so the lot stays open
                 continue
             self.put(x, y + 1, z, FLEAVES if self.L == 5 and (x + z) % 3 == 0 else LEAVES)
             if (x + z) % 6 == 0:
@@ -522,12 +534,29 @@ class Detailer:
                 border = not all((x + dx, y, z + dz) in cellset for dx in (-2, 0, 2) for dz in (-2, 0, 2))
                 inner, edge = rug[L]
                 self.put(x, y, z, edge if border else inner)
-        # counter-top plants
+        # bookshelves along walls, spore blossoms under high ceilings
+        if L >= 3:
+            for x, y, z in cells:
+                if (x, y, z) in self.protect or self.near_sensitive(x, y, z, 1) or not self.air(x, y, z):
+                    continue
+                walls = [d for d, (dx, dz) in DIRS.items() if self.solid(x + dx, y, z + dz)]
+                if len(walls) == 1 and h("bs", x, y, z) < .07 + .02 * (L - 3):
+                    away = {"north": "south", "south": "north", "east": "west", "west": "east"}[walls[0]]
+                    slots = ",".join(f"slot_{i}_occupied={'true' if h('sl', x, z, i) < .6 else 'false'}" for i in range(6))
+                    self.put(x, y, z, f"chiseled_bookshelf[facing={away},{slots}]")
+        if L >= 4:
+            for x, y, z, s in list(bp.blocks()):
+                if self.solid(x, y, z) and all(self.air(x, y - k, z) for k in range(1, 5)) \
+                        and self.covered(x, y - 1, z, 1) and h("sb", x, y, z) < .04 \
+                        and self.solid_floor_below(x, y - 5, z, 4):
+                    self.put(x, y - 1, z, "spore_blossom")
+        # counter-top plants and candles
         if L >= 3:
             for x, y, z, s in list(bp.blocks()):
                 if "slab" in s and "type=top" in s and self.air(x, y + 1, z) and h("c", x, y, z) < .3 \
                         and self.covered(x, y, z, 6) and not self.near_sensitive(x, y + 1, z, 0):
-                    self.put(x, y + 1, z, POTS[int(h("cp", x, z) * 100) % len(POTS)])
+                    self.put(x, y + 1, z, POTS[int(h("cp", x, z) * 100) % len(POTS)] if h("cc", x, z) < .6 else
+                             f"white_candle[candles={1 + int(h('cn', x, z) * 4) % 4},lit=false,waterlogged=false]")
         # pendant lights
         if L >= 4:
             for x, y, z, s in list(bp.blocks()):

@@ -12,10 +12,10 @@ Requires: MineColonies, Structurize, Domum Ornamentum (all on NeoForge 1.21.1).
 
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.1.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.2.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that only carries the style pack;
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.1.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.2.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>`.
 
 ## Install
@@ -163,6 +163,26 @@ gate blocks) is not included yet.
 
 ![Barracks](docs/previews/neoterra/barracks_levels.png)
 
+### Massing pass (bigger buildings every level)
+![Massing](docs/previews/neoterra/neoterra_massing_overview.png)
+
+`tools/blueprints/neoterra/massing.py` runs before the detail pass and grows each building's actual shape:
+
+| Level | Added architecture |
+|---|---|
+| 1 | the core building |
+| 2 | entrance canopy |
+| 3 | front colonnade (columns or arches) + two corner towers at the back |
+| 4 | four corner towers (floors, ladders, doors, roof terraces) + single-storey side wings |
+| 5 | taller towers with glowing caps, spires and lightning rods, two-storey side and back wings, front plaza with a fountain |
+
+Every building gets its own variant from its name – tower shape (square / round / octagon / stepped), wing style
+(glass hall / stepped terraces / sawtooth roof), colonnade style and material set (tuff bricks, bone blocks,
+calcite, oxidised copper, warped stems, froglights, glazed terracotta, deepslate tiles, blackstone bricks...).
+The lot grows to fit. Huts with child buildings, tunnels or ponds (Skytower, barracks, bunker, miner, fisherman,
+plantation, tavern, gatehouse, wall tower) keep their exact frame. Wings never cover paths, nothing protected is
+overwritten and each element is walk-checked and dropped if it would block anything.
+
 ### Detail pass (all buildings)
 ![Detail pass](docs/previews/neoterra/neoterra_detail_overview.png)
 
@@ -176,7 +196,8 @@ After the generators lay out each building, `tools/blueprints/neoterra/detail.py
   edges (L4-5) and a glass **sky lounge with a spire** on the highest roof at level 5 (the blueprint grows taller).
 - **Grounds** – grass and flowers, bushes (L3+), trees, pink petals and a lantern-lit hedge border (L4+),
   tall flowers (L5).
-- **Interiors** – potted plants in corners, rugs (L2+), plants on counters (L3+), pendant lights (L4-5).
+- **Interiors** – potted plants in corners, rugs (L2+), wood floors in homes and schools, plants and candles on
+  counters and chiseled bookshelves (L3+), pendant lights and spore blossoms (L4-5).
 
 Block entities, tags and hut requirements are never touched, and each step is walk-checked and rolled back if it
 would block a bed, hut block, rack, workstation, seat or guard post. Levels 1-3 stay on cheap blocks.

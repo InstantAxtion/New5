@@ -27,6 +27,8 @@ python3 $T/neoterra/update3.py "$PACK"
 python3 $T/neoterra/deliveryman.py "$PACK/craftsmanship/storage"
 python3 $T/neoterra/warehouse.py "$PACK/craftsmanship/storage"
 # detail pass: richer materials, facades, roofs, gardens and interiors (level-scaled, walk-checked)
+# massing pass: towers, wings, colonnades and plazas that make each level bigger (walk-checked)
+python3 $T/neoterra/massing.py "$PACK" > /dev/null
 python3 $T/neoterra/detail.py "$PACK" "$FURN" > /dev/null
 
 for l in 1 2 3 4 5; do
