@@ -1,0 +1,10 @@
+{
+  "block.neoterra.blockhuttradepost": "Trade Post",
+  "item.neoterra.blockhuttradepost": "Trade Post",
+  "item.neoterra.trade_ledger": "Trade Ledger",
+  "com.neoterra.building.tradepost": "Trade Post",
+  "com.neoterra.job.tradecourier": "Trade Courier",
+  "com.neoterra.gui.workerhuts.tradepost": "Trade Post",
+  "com.minecolonies.coremod.gui.workerhuts.tradepost_work": "Trade Courier",
+  "com.minecolonies.core.gui.modules.tradepost_work": "Trade Courier"
+}

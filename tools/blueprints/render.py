@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from blueprint import load, parse_state  # noqa: E402
 
 COLORS = {
+    "dirt_path": (148, 122, 65), "blockhuttradepost": (120, 85, 50),
     "stone": (125, 125, 125), "smooth_stone": (158, 158, 158), "gravel": (131, 127, 126),
     "polished_andesite": (132, 135, 134), "light_gray_concrete": (125, 125, 115),
     "white_concrete": (207, 213, 214), "gray_concrete": (55, 58, 62), "black_concrete": (8, 10, 15),

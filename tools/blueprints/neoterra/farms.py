@@ -295,8 +295,8 @@ def build_all(root: Path):
         bp.save(f)
     (root / "pack.json").write_text(json.dumps({
         "icon": "farmworks.png", "name": PACK, "authors": ["New5"],
-        "desc": "Decorations only: automatic mob farms (mob tower, iron farm, cactus farm) and food farms "
-                "(egg farm, auto-smoker kitchen, bone-meal composters, super-smelter). No timing-sensitive redstone.",
+        "desc": "Automatic mob farms (mob tower, iron farm, cactus farm) and food farms "
+                "(egg farm, auto-smoker kitchen, bone-meal composters, super-smelter). No timing-sensitive redstone. Plus the Trade Post hut: link two of your colonies and a Trade Courier carries what one needs from the other.",
         "mods": ["structurize", "minecolonies"], "version": "1", "pack-format": "1"}, indent=2) + "\n")
     print(f"{PACK}: {len(out)} farms")
 

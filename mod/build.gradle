@@ -16,10 +16,21 @@ repositories {
 neoForge {
     version = project.neo_version
     mods { neoterra { sourceSet sourceSets.main } }
+    runs { server { server(); programArgument '--nogui'; systemProperty 'neoterra.selftest', 'true' } }
 }
 
 dependencies {
-    compileOnly("com.ldtteam:minecolonies:${minecolonies_version}") { transitive = true }
+    implementation("com.ldtteam:minecolonies:${minecolonies_version}") { transitive = true }
+    implementation("com.ldtteam:structurize:1.0.837-1.21.1-snapshot")
+    implementation("com.ldtteam:blockui:1.0.199-1.21.1-snapshot")
 }
 
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+
+// the four style packs ship inside the same jar
+processResources {
+    ['Neoterra', 'Hearthwood', 'Cascadia', 'Farmworks'].each { p ->
+        from("../stylepacks/${p}") { into "blueprints/neoterra/${p}" }
+    }
+    from('../stylepacks/Neoterra/neoterra.png')
+}

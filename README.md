@@ -67,7 +67,7 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
-## Farmworks – automatic farms (decorations only)
+## Farmworks – automatic farms + the Trade Post
 The fourth pack in the jar. Every farm uses mechanics that need no timing-sensitive redstone:
 
 | Farm | How it works |
@@ -82,12 +82,41 @@ The fourth pack in the jar. Every farm uses mechanics that need no timing-sensit
 
 ![Farmworks](docs/previews/farmworks/farmworks_overview.png)
 
+## Trade Post – trade between your colonies (mod code in `mod/`)
+The jar also contains a small MineColonies add-on: the **Trade Post** hut (`neoterra:blockhuttradepost`, blueprints
+`Farmworks/trade/tradepost1-5`) with the **Trade Courier** job, and the **Trade Ledger** item.
+
+1. Build a Trade Post in two of your colonies (recipe: spruce planks around a golden build tool and a compass).
+2. Craft a Trade Ledger (book + compass + gold ingot). Use it on the first post, then on the post in the other colony – they are linked.
+3. Sneak-use the ledger on a post to switch it between *import & export*, *export only* and *import only*.
+4. Hire a Trade Courier at every post that should export.
+
+How it works: requests a colony can't fulfil itself (the ones that end up "waiting for the player" or being retried)
+are copied by its post to the partner post. The partner colony makes or fetches them like any other request
+(stonemason, sawmill, warehouse, …) and its couriers deliver them to its Trade Post. The Trade Courier packs a finished
+order and sets off (the citizen is away for the round trip – 20 s to 10 min each way depending on distance, shorter at higher post
+levels); on arrival the goods are put into the building that asked for them and the original request is closed. Goods
+for an order are kept in the post until the courier leaves. Each post level allows 4 more open orders.
+
+| Level | Trade Post |
+|---|---|
+| 1 | open timber market stall, 2 racks |
+| 2 | closed oak store, cartography table, 4 racks |
+| 3 | spruce depot, hay cart and hitching rail, 6 racks |
+| 4 | stone-and-spruce trading house, bell, 8 racks |
+| 5 | deepslate & copper caravanserai with lookout tower and loading awning, 10 racks |
+
+![Trade Post](docs/previews/farmworks/tradepost5_front.png)
+
+Build the mod: `cd mod && gradle jar` (NeoForge 21.1 / ModDevGradle, MineColonies 1.1.1420). `gradle runServer` boots a dev
+server with a self-test that creates two colonies and pushes a request through the whole trade loop (`SELFTEST PASS`).
+
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.10.0.jar` into the instance's `mods` folder (CurseForge: right-click the
-  profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that carries all four style packs (Neoterra, Hearthwood, Cascadia and Farmworks);
+- **Easiest:** put `dist/Neoterra-1.11.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+  profile → *Open Folder* → `mods`). It is a NeoForge mod that carries the Trade Post and all four style packs (Neoterra, Hearthwood, Cascadia and Farmworks);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.10.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
-- Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>`.
+- `dist/Neoterra-1.11.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>` (compiles `mod/` with Gradle).
 
 ## Install
 Copy `stylepacks/Neoterra` into `.minecraft/blueprints/` (so you get

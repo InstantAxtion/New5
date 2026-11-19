@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "neoterra:block/blockhuttradepost",
+      "y": 0
+    },
+    "facing=south": {
+      "model": "neoterra:block/blockhuttradepost",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "neoterra:block/blockhuttradepost",
+      "y": 180
+    },
+    "facing=north": {
+      "model": "neoterra:block/blockhuttradepost",
+      "y": 270
+    }
+  }
+}

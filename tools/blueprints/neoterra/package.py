@@ -1,10 +1,12 @@
 """
 Package the Neoterra style pack for players.
 
-  dist/Neoterra-<ver>.jar   no-code NeoForge mod (lowcodefml) – drop into the instance's `mods` folder.
-                            Structurize loads packs from  blueprints/<modid>/<Pack>/pack.json  inside mod jars.
+  dist/Neoterra-<ver>.jar   NeoForge mod – drop into the instance's `mods` folder. Holds the compiled Trade Post
+                            mod (built with Gradle from mod/) and the four style packs; Structurize loads packs
+                            from  blueprints/<modid>/<Pack>/pack.json  inside mod jars.
   dist/Neoterra-<ver>.zip   download bundle containing the jar.
 """
+import subprocess
 import sys
 import zipfile
 from pathlib import Path
@@ -12,10 +14,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 PACK = ROOT / "stylepacks" / "Neoterra"
 DIST = ROOT / "dist"
-VERSION = sys.argv[1] if len(sys.argv) > 1 else "1.10.0"
+VERSION = sys.argv[1] if len(sys.argv) > 1 else "1.11.0"
+MOD = ROOT / "mod"
 MODID = "neoterra"
 
-MODS_TOML = f'''modLoader = "lowcodefml"
+MODS_TOML = f'''modLoader = "javafml"
 loaderVersion = "[1,)"
 license = "GPL-3.0"
 issueTrackerURL = ""
@@ -23,7 +26,7 @@ issueTrackerURL = ""
 [[mods]]
 modId = "{MODID}"
 version = "{VERSION}"
-displayName = "Neoterra Style Packs (Neoterra, Hearthwood, Cascadia, Farmworks)"
+displayName = "Neoterra Style Packs + Trade Post"
 authors = "New5"
 logoFile = "neoterra.png"
 description = """
@@ -31,6 +34,8 @@ Three MineColonies style packs: Neoterra (semi-futuristic white, glass and light
 theme and landmarks) and Hearthwood (cozy modern: warm plaster, wood cladding, brick and lantern light, easy-to-
 medium blocks until level 5) and Cascadia (Oregon / Pacific Northwest: cedar and fir timber, river rock, moss
 roofs, basalt), plus Farmworks: automatic mob and food farms as decorations. Every hut levels 1-5, residences, player house and bunker, walls, roads and parks.
+Trade Post hut + Trade Courier job: link Trade Posts of two of your colonies with a Trade Ledger; requests one
+colony cannot fulfil are passed to the other, made there, and carried over by the courier.
 """
 
 [[dependencies.{MODID}]]
@@ -67,20 +72,30 @@ def pack_files(pack):
             yield f, f.relative_to(pack).as_posix()
 
 
+def gradle_jar():
+    """Compile the Trade Post mod; its jar already contains the four packs (see mod/build.gradle)."""
+    subprocess.run(["gradle", "jar", "--no-daemon", "-q", f"-Pmod_version={VERSION}"], cwd=MOD, check=True)
+    return MOD / "build" / "libs" / f"neoterra-{VERSION}.jar"
+
+
 def main():
     DIST.mkdir(exist_ok=True)
+    built = gradle_jar()
     jar = DIST / f"Neoterra-{VERSION}.jar"
-    with zipfile.ZipFile(jar, "w", zipfile.ZIP_DEFLATED) as z:
+    names = set()
+    with zipfile.ZipFile(jar, "w", zipfile.ZIP_DEFLATED) as z, zipfile.ZipFile(built) as src:
         z.writestr("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\nImplementation-Title: Neoterra\n"
                    f"Implementation-Version: {VERSION}\n")
         z.writestr("META-INF/neoforge.mods.toml", MODS_TOML)
         z.writestr("pack.mcmeta", PACK_MCMETA)
-        z.write(PACK / "neoterra.png", "neoterra.png")
-        for pack in PACKS:
-            if not pack.exists():
+        for info in src.infolist():
+            if info.filename in ("META-INF/MANIFEST.MF", "META-INF/neoforge.mods.toml", "pack.mcmeta") or info.is_dir():
                 continue
-            for f, rel in pack_files(pack):
-                z.write(f, f"blueprints/{MODID}/{pack.name}/{rel}")
+            z.writestr(info.filename, src.read(info.filename))
+            names.add(info.filename)
+    missing = [p.name for p in PACKS if f"blueprints/{MODID}/{p.name}/pack.json" not in names]
+    if missing or "com/neoterra/trade/NeoterraTrade.class" not in names:
+        raise SystemExit(f"jar incomplete: missing packs {missing} or classes")
     bundle = DIST / f"Neoterra-{VERSION}.zip"                          # download: the zip holds the jar
     with zipfile.ZipFile(bundle, "w", zipfile.ZIP_DEFLATED) as z:
         z.write(jar, jar.name)

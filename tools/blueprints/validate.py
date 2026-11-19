@@ -17,6 +17,7 @@ MODDED = {
     "minecolonies:blockhutdeliveryman": {"facing"},
     "minecolonies:blockhutwarehouse": {"facing"},
     "minecolonies:blockhutbuilder": {"facing"},
+    "neoterra:blockhuttradepost": {"facing"},
     "minecolonies:blockhutcitizen": {"facing"},
     "minecolonies:blockhutcook": {"facing"},
     "minecolonies:blockhutlumberjack": {"facing"},

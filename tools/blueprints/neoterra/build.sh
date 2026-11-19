@@ -122,6 +122,7 @@ FW=stylepacks/Farmworks
 FP=docs/previews/farmworks
 rm -rf "$FW"
 python3 $T/neoterra/farms.py "$FW"
+python3 $T/neoterra/tradepost.py "$FW"
 mkdir -p "$FP"
 for f in $(find "$FW" -name "*.blueprint"); do
   python3 $T/render.py "$f" "$FP/$(basename "$f" .blueprint)" >/dev/null
@@ -137,7 +138,7 @@ def square(im, bg):
 im = Image.open(prev / "mobtower_front.png").convert("RGBA")
 square(im, (236, 240, 244, 255)).resize((128, 128), Image.LANCZOS).save(pack / "farmworks.png")
 icon = square(im, (0, 0, 0, 0)).resize((20, 20), Image.LANCZOS)
-for cat in ("decorations",):
+for cat in ("decorations", "trade"):
     icon.save(pack / cat / "icon.png")
     g = ImageOps.grayscale(icon.convert("RGB")).convert("RGBA"); g.putalpha(icon.getchannel("A"))
     g.save(pack / cat / "icon_disabled.png")

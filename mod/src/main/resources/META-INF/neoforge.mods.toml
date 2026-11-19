@@ -1,0 +1,16 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "GPL-3.0"
+
+[[mods]]
+modId = "neoterra"
+version = "${file.jarVersion}"
+displayName = "Neoterra"
+description = "Neoterra style packs and the Trade Post (dev build)."
+
+[[dependencies.neoterra]]
+modId = "minecolonies"
+type = "required"
+versionRange = "*"
+ordering = "AFTER"
+side = "BOTH"
