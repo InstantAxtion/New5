@@ -76,9 +76,12 @@ class Hall:
         self.s, self.L = style, L
         t = 1 if L >= 4 else 0
         self.m = {k: (v[t] if isinstance(v, tuple) else v) for k, v in MATS[style].items()}
-        self.W = 23 + 2 * L                            # hall length (x)
-        self.D = 9 + (L >= 3) * 2                      # hall depth (z)
-        self.H = 5 + (L >= 3) * 4                      # wall height (two floors from level 3)
+        # proportions per pack: Neoterra wide and tall, Hearthwood compact, Cascadia long and low
+        w0, d0, h0, h3 = {"Neoterra": (27, 11, 6, 5), "Hearthwood": (19, 9, 5, 4), "Cascadia": (29, 13, 4, 4)}[style]
+        self.W = w0 + 2 * L                            # hall length (x)
+        self.D = d0 + (L >= 3) * 2                     # hall depth (z)
+        self.H = h0 + (L >= 3) * h3                    # wall height (two floors from level 3)
+        self.loft = {"Neoterra": 7, "Hearthwood": 6, "Cascadia": 6}[style]
         self.half = self.W // 2                        # x of the dividing wall
         self.ox, self.oz = 3, 5                        # hall offset inside the plot (yard in front)
         self.sx, self.sz = self.W + 6, self.D + 10
@@ -107,13 +110,13 @@ class Hall:
                         s = m["base"]
                     elif y in (4, 5) and x != ox + self.half and along % 4 in (1, 2, 3) and y != H + 1:
                         s = m["glass"]
-                    elif y == H + 1 or (H > 6 and y == 6):
+                    elif y == H + 1 or (H > 6 and y == self.loft):
                         s = m["accent"]
                     else:
                         s = m["wall"]
                     bp.set(x, y, z, "minecraft:" + s)
                 if H > 6 and not e:                     # loft floor
-                    bp.set(x, 6, z, "minecraft:" + m["floor"])
+                    bp.set(x, self.loft, z, "minecraft:" + m["floor"])
         # doors in the front wall, one per half, and a door through the dividing wall
         for cx in (ox + self.half // 2, ox + self.half + (W - self.half) // 2):
             for y, half in ((2, "lower"), (3, "upper")):
@@ -249,24 +252,36 @@ class Hall:
         if H > 6:                                       # loft floor continues in the annex
             for x in range(cw):
                 for z in range(cd):
-                    cb.set(x, 6 - 2, z, "minecraft:" + self.m["floor"])
-            for y in range(0, 4):                       # ladder to the loft
+                    cb.set(x, self.loft - 2, z, "minecraft:" + self.m["floor"])
+            for y in range(0, self.loft - 1):           # ladder to the loft
                 cb.set(0, y, cd - 1, "minecraft:ladder[facing=north,waterlogged=false]")
-            cb.set(0, 4, cd - 1, "minecraft:ladder[facing=north,waterlogged=false]")
         racks = 2 + 2 * self.L
+        chx0, chz0 = child_hut[0] - ax1, child_hut[2] - az1
+        spots = []
+        if self.s == "Neoterra":                        # free-standing rack island down the middle
+            for z in (cd // 2, cd // 2 + 2, cd // 2 - 2):
+                spots += [(x, z, "north") for x in range(2, cw - 2)]
+        elif self.s == "Cascadia":                      # racks along both side walls
+            spots += [(0, z, "east") for z in range(1, cd - 1)]
+            spots += [(cw - 1, z, "west") for z in range(cd - 2, 0, -1)]
+        else:                                           # back wall, then the side wall
+            spots += [(x, cd - 1, "north") for x in range(1, cw)]
+            spots += [(cw - 1, z, "west") for z in range(1, cd - 1)]
         placed = 0
-        for x in range(1, cw):
+        for x, z, f in spots:
             if placed >= racks:
                 break
-            cb.set(x, 0, cd - 1, RACK.format("north"), rack_te())
+            if (x, z) == (chx0, chz0) or (x == 0 and z == cd - 1) or not (0 <= z < cd):
+                continue
+            if abs(x - chx0) + abs(z - chz0) == 1:
+                continue
+            cb.set(x, 0, z, RACK.format(f), rack_te())
             placed += 1
-        for z in range(1, cd - 1):
-            if placed >= racks:
-                break
-            cb.set(cw - 1, 0, z, RACK.format("west"), rack_te())
-            placed += 1
-        cb.set(1, 0, 1, "minecraft:crafting_table")
-        cb.set(2, 0, 1, "minecraft:dark_oak_planks")
+        bench = {"Neoterra": ((1, 1), "minecraft:smooth_stone"), "Cascadia": ((cw // 2, cd - 1), "minecraft:spruce_planks"),
+                 "Hearthwood": ((1, 1), "minecraft:dark_oak_planks")}[self.s]
+        (bx, bz), bmat = bench
+        cb.set(bx, 0, bz, "minecraft:crafting_table")
+        cb.set(bx + 1, 0, bz, bmat)
         cb.set(cw // 2, min(ch - 1, 2 if H <= 6 else 3), cd // 2, "minecraft:lantern[hanging=true,waterlogged=false]")
         chx, chy, chz = child_hut[0] - ax1, 0, child_hut[2] - az1
         cpath = f"fundamentals/twinbuilderannex{self.L}.blueprint"

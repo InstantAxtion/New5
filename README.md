@@ -67,6 +67,27 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## Every pack is its own world (1.16.0)
+The same hut type is a completely different building in each pack – own plan, size, roof, storey height, wall
+treatment, materials and decorations (`typology.py` has a separate table per pack):
+
+| | Neoterra | Hearthwood | Cascadia |
+|---|---|---|---|
+| Character | modern city: concrete, glass, steel, flat roofs, tall storeys | cosy market town: brick, plaster, half-timber, gables and hips | Pacific Northwest backcountry: logs, cedar, river rock, moss, long low lodges |
+| Decorations (pack-only) | glass canopies, solar roofs, light strips, fins, roof terraces, antennas, glass cubes, screens, cooling towers | shutters, wall lanterns, bay windows, gable clocks, benches, dovecotes, hoists, chimney pots | log porches, firewood stacks, rain barrels, mossy ridges, lantern posts, rock piles, hay lofts, mine portals |
+| Military | security compound, concrete watch towers, checkpoint gatehouse | stone castle, round conical towers | log stockade, overhanging blockhouses, timber watch-deck gatehouse, fire lookout |
+| Grand Projects | A-frame cathedral, cable-stayed bridge, android guardian, grain elevator | gothic church, stone viaduct, knight statue, tithe barn with dovecotes | stave church, covered bridge, Paul Bunyan, log barn with corn cribs |
+| Sky tower | glass high-rise with roof garden | red-brick mansion block, bay windows, mansard roof | stepped timber terrace lodge with decks |
+| Bunker | four-deck glass-atrium bunker | brick undercroft with a vaulted gallery and farm vault | mine refuge: portal, timber-shored drifts, farm cavern |
+| Twin builder | wide tall workshop, central rack island | compact hall, racks on the back wall | long low barn, racks along the side walls |
+
+`tools/blueprints/neoterra/uniqueness.py` compares every building between the packs (same size, block palette
+overlap > 35 %, 3D shape overlap > 55 %): **0 of 1107 pairs** are too alike. Only the mine shafts and quarries keep
+the same dimensions in every pack – their size is the area MineColonies' miner and quarrier dig.
+
+![Same building, three packs](docs/previews/packs_compare.png)
+![Sky towers](docs/previews/skytower_packs.png)
+
 ## Every hut as its real-world building (1.14.0)
 All regular huts in Neoterra, Hearthwood and Cascadia are now generated from a building **typology**
 (`tools/blueprints/neoterra/typology.py`): each hut type gets the plan, roof, storeys, wall treatment and features
@@ -197,10 +218,10 @@ server with a self-test: two colonies trade a request, the Supply Depot crafts o
 Structurize (`SELFTEST PASS`).
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.15.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.16.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a NeoForge mod that carries the Trade Post and all four style packs (Neoterra, Hearthwood, Cascadia and Farmworks);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.15.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.16.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>` (compiles `mod/` with Gradle).
 
 ## Install

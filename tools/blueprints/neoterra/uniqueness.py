@@ -23,6 +23,8 @@ from blueprint import load, AIR  # noqa: E402
 ROOT = Path(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--root=")), Path(__file__).resolve().parents[3] / "stylepacks"))
 PACKS = ("Neoterra", "Hearthwood", "Cascadia")
 MAXPAL, MAXIOU = 0.35, 0.55
+# mining structures: their size is the area MineColonies' miner / quarrier digs, so it must stay the same
+EXEMPT = ("/mineshafts/",)
 IGNORE = ("substitution", "blockhut", "rack", "_bed", "ladder", "door", "air", "lantern", "carpet", "torch",
           # blocks MineColonies requires in every version (work blocks), identical by necessity
           "crafting_table", "furnace", "smoker", "barrel", "anvil", "lectern", "bookshelf", "stonecutter", "grindstone",
@@ -67,12 +69,13 @@ def main(show_all=False):
             va, vb = info[a][1], info[b][1]
             iou = len(va & vb) / max(1, len(va | vb))
             stats.append((rel, a, b, same, pal, iou))
-            if same or pal > MAXPAL or iou > MAXIOU:
+            if (same or pal > MAXPAL or iou > MAXIOU) and not any(e in "/" + rel for e in EXEMPT):
                 bad.append((rel, a, b, same, pal, iou))
     for rel, a, b, same, pal, iou in (stats if show_all else bad):
         print(f"{rel:55s} {a[:4]}-{b[:4]}  size {'SAME' if same else 'diff'}  palette {pal:.2f}  shape {iou:.2f}")
     n = len(stats)
-    print(f"\n{len(bad)} of {n} pairs too alike  (same size {sum(s[3] for s in stats)}, "
+    print(f"\n(exempt: mining structures with fixed MineColonies dimensions)")
+    print(f"{len(bad)} of {n} pairs too alike  (same size {sum(s[3] for s in stats)}, "
           f"palette>{MAXPAL} {sum(s[4] > MAXPAL for s in stats)}, shape>{MAXIOU} {sum(s[5] > MAXIOU for s in stats)})")
     return bad
 

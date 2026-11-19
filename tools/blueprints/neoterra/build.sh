@@ -112,7 +112,9 @@ for STY in Hearthwood Cascadia; do
   if [ "$STY" = Cascadia ]; then python3 $T/neoterra/university_cascadia.py "$OUT"; fi
   python3 $T/neoterra/support.py "$OUT" $STY > /dev/null
   python3 $T/neoterra/military_styles.py "$OUT" $STY
-  python3 $T/neoterra/skyskin.py "$OUT" $STY > /dev/null
+  # own sky tower (with flats) and own bunker (with rooms) per pack
+  python3 $T/neoterra/skytower_styles.py "$OUT" $STY
+  python3 $T/neoterra/bunker_styles.py "$OUT" $STY
   # walls, roads, rails, canals, bridges, subway, boardwalk, cliff climb and parks in the pack's own design
   python3 $T/neoterra/styleinfra.py "$OUT" $STY
   python3 $T/neoterra/twinbuilder.py "$OUT" $STY

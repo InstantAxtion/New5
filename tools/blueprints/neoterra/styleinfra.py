@@ -210,7 +210,8 @@ def build_walls(style):
         out[f"walls/wall{kind}corner"] = p.done((4, 1, 4))
 
     for L in (1, 2, 3):
-        H = WH + 4 + 3 * L
+        # Cascadia: tall fire-lookout on timber legs; Hearthwood: squat stone tower
+        H = WH + 4 + 3 * L if style != "Cascadia" else WH + 9 + 5 * L
         p = P(style, (9, H + 8, 9), f"watchtower{L}", "walls")
         p.found()
         wall_run(p, 0, 8, z0=3)
