@@ -11,11 +11,26 @@ Requires: MineColonies, Structurize, Domum Ornamentum (all on NeoForge 1.21.1).
 ![Town hall levels 1–5](docs/previews/neoterra/townhall_levels.png)
 
 
+## Hearthwood – cozy modern style pack
+A second style pack shipped in the same jar (`stylepacks/Hearthwood`, built by
+`tools/blueprints/neoterra/restyle.py` from the finished Neoterra pack). Same buildings, levels, hut requirements and
+paths – so every hut works identically – but a warm, cozy modern feel:
+
+- warm plaster walls (white terracotta) with vertical wood-cladding panels and a stone-brick base course
+- dark wood trim, spruce / dark oak stair roofs, stone-brick or tiled flat roofs, plank floors inside
+- one cozy accent palette per building: terracotta, brick, sage, rose, honey, walnut, slate, plum (wool rainbow
+  for the dyer)
+- lanterns and glowstone, warm rugs
+- levels 1-4 use only easy-to-medium blocks (planks, logs, stone, bricks, terracotta, wool, glass, copper,
+  glowstone, mud bricks, honeycomb...); level 5 may use anything (deepslate, cherry, froglights, ...)
+
+![Hearthwood](docs/previews/hearthwood/hearthwood_overview.png)
+
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.5.0.jar` into the instance's `mods` folder (CurseForge: right-click the
-  profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that only carries the style pack;
+- **Easiest:** put `dist/Neoterra-1.6.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+  profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that carries both style packs (Neoterra and Hearthwood);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.5.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.6.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>`.
 
 ## Install

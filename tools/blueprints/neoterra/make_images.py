@@ -5,6 +5,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageOps
 
 pack, prev = Path(sys.argv[1]), Path(sys.argv[2])
+ICON = sys.argv[3] if len(sys.argv) > 3 else "neoterra.png"
 BG = (236, 240, 244, 255)
 # category folder -> building whose level-5 render is used as the tab icon
 CATEGORIES = {"fundamentals": "townhall5", "craftsmanship": "deliveryman5", "decorations": "playerhouse5",
@@ -28,7 +29,7 @@ def square(im, bg=BG):
 
 
 square(Image.open(prev / "townhall5_front.png").convert("RGBA")).resize((128, 128), Image.LANCZOS) \
-    .save(pack / "neoterra.png")
+    .save(pack / ICON)
 
 for cat, b in CATEGORIES.items():
     src = prev / f"{b}_front.png"

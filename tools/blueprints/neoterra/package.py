@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 PACK = ROOT / "stylepacks" / "Neoterra"
 DIST = ROOT / "dist"
-VERSION = sys.argv[1] if len(sys.argv) > 1 else "1.5.0"
+VERSION = sys.argv[1] if len(sys.argv) > 1 else "1.6.0"
 MODID = "neoterra"
 
 MODS_TOML = f'''modLoader = "lowcodefml"
@@ -23,13 +23,13 @@ issueTrackerURL = ""
 [[mods]]
 modId = "{MODID}"
 version = "{VERSION}"
-displayName = "Neoterra Style Pack"
+displayName = "Neoterra & Hearthwood Style Packs"
 authors = "New5"
 logoFile = "neoterra.png"
 description = """
-Neoterra – a semi-futuristic MineColonies style pack: white concrete, light-blue glass, cyan accents,
-glowing light strips and trees. 372 blueprints: every hut levels 1-5 (1-3 cheaper, 4-5 premium),
-residences, player house and bunker, walls, roads, rails, canals, bridges, subway and parks.
+Two MineColonies style packs: Neoterra (semi-futuristic white, glass and light, every building with its own
+theme and landmarks) and Hearthwood (cozy modern: warm plaster, wood cladding, brick and lantern light, easy-to-
+medium blocks until level 5). Every hut levels 1-5, residences, player house and bunker, walls, roads and parks.
 """
 
 [[dependencies.{MODID}]]
@@ -57,10 +57,13 @@ side = "BOTH"
 PACK_MCMETA = '{"pack": {"description": "Neoterra style pack resources", "pack_format": 34}}\n'
 
 
-def pack_files():
-    for f in sorted(PACK.rglob("*")):
+PACKS = [ROOT / "stylepacks" / n for n in ("Neoterra", "Hearthwood")]
+
+
+def pack_files(pack):
+    for f in sorted(pack.rglob("*")):
         if f.is_file():
-            yield f, f.relative_to(PACK).as_posix()
+            yield f, f.relative_to(pack).as_posix()
 
 
 def main():
@@ -72,8 +75,11 @@ def main():
         z.writestr("META-INF/neoforge.mods.toml", MODS_TOML)
         z.writestr("pack.mcmeta", PACK_MCMETA)
         z.write(PACK / "neoterra.png", "neoterra.png")
-        for f, rel in pack_files():
-            z.write(f, f"blueprints/{MODID}/Neoterra/{rel}")
+        for pack in PACKS:
+            if not pack.exists():
+                continue
+            for f, rel in pack_files(pack):
+                z.write(f, f"blueprints/{MODID}/{pack.name}/{rel}")
     bundle = DIST / f"Neoterra-{VERSION}.zip"                          # download: the zip holds the jar
     with zipfile.ZipFile(bundle, "w", zipfile.ZIP_DEFLATED) as z:
         z.write(jar, jar.name)

@@ -77,4 +77,21 @@ python3 $T/neoterra/make_images.py "$PACK" "$PREV"
 python3 $T/walkcheck.py $(find "$PACK" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint") \
   "$FURN"/*_furnished.blueprint >/dev/null \
   && echo "walkcheck: everything reachable"
-echo "built $PACK"
+# Hearthwood: cozy modern pack derived from the finished Neoterra pack
+HW=stylepacks/Hearthwood
+HWP=docs/previews/hearthwood
+python3 $T/neoterra/restyle.py "$PACK" "$HW"
+mkdir -p "$HWP"
+for f in fundamentals/townhall5 craftsmanship/storage/deliveryman5 decorations/housing/playerhouse5 \
+         education/university5 military/barracks5 agriculture/horticulture/farmer5 fundamentals/miner5 \
+         mystic/enchanter5 walls/watchtower3; do
+  python3 $T/render.py "$HW/$f.blueprint" "$HWP/$(basename $f)" >/dev/null
+done
+for b in fundamentals/house fundamentals/cottage fundamentals/apartment craftsmanship/luxury/cookery \
+         craftsmanship/metallurgy/smeltery education/library craftsmanship/luxury/baker agriculture/horticulture/florist; do
+  for l in 1 2 3 4 5; do python3 $T/render.py "$HW/$b$l.blueprint" "$HWP/$(basename $b)$l" >/dev/null; done
+done
+python3 $T/neoterra/make_images.py "$HW" "$HWP" hearthwood.png
+python3 $T/walkcheck.py $(find "$HW" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint") >/dev/null \
+  && echo "hearthwood walkcheck: everything reachable"
+echo "built $PACK" and $HW

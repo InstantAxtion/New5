@@ -1,0 +1,15 @@
+{
+  "icon": "hearthwood.png",
+  "name": "Hearthwood",
+  "authors": [
+    "New5"
+  ],
+  "desc": "Cozy modern: warm plaster and wood cladding, brick, terracotta and lantern light. Same buildings as Neoterra, levels 1-4 built from easy-to-medium blocks, level 5 from anything.",
+  "mods": [
+    "structurize",
+    "minecolonies",
+    "domum_ornamentum"
+  ],
+  "version": "1",
+  "pack-format": "1"
+}
