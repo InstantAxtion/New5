@@ -61,6 +61,11 @@ SOLID_GUESS = (180, 120, 200)
 GLASS = {"light_blue_stained_glass", "glass_pane", "glass", "tinted_glass", "blockpaperwall", "water"}
 HALF = {"smooth_quartz_slab", "smooth_stone_slab", "rail", "daylight_detector"}
 COLORS.update({
+    "gate_iron": (90, 95, 100), "blockminecoloniesnamedgrave": (150, 150, 155), "decorationcontroller": (200, 200, 200),
+    "amethyst_block": (133, 97, 191), "amethyst_cluster": (160, 120, 220), "obsidian": (20, 18, 30), "crying_obsidian": (40, 10, 70),
+    "soul_lantern": (90, 200, 210), "soul_sand": (81, 62, 50), "netherrack": (110, 50, 50), "moss_block": (89, 109, 45),
+    "polished_blackstone": (53, 48, 56), "bookshelf": (120, 90, 50), "enchanting_table": (60, 20, 60), "lectern": (170, 130, 80),
+    "lily_pad": (30, 110, 40), "rail": (110, 100, 80), "beacon": (120, 220, 220),
     "coarse_dirt": (119, 85, 59), "dirt": (134, 96, 67), "mud": (60, 57, 61), "composted_dirt": (70, 50, 35),
     "soul_sand": (81, 62, 50), "nether_wart": (150, 30, 35), "cobblestone": (122, 122, 122),
     "red_concrete": (142, 32, 32), "blue_concrete": (44, 46, 143), "lime_concrete": (94, 168, 24),

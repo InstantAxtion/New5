@@ -23,6 +23,7 @@ python3 $T/neoterra/bunker.py "$PACK/fundamentals" "$FURN"
 python3 $T/neoterra/unique.py "$PACK"
 python3 $T/neoterra/update1.py "$PACK"
 python3 $T/neoterra/update2.py "$PACK"
+python3 $T/neoterra/update3.py "$PACK"
 python3 $T/neoterra/deliveryman.py "$PACK/craftsmanship/storage"
 python3 $T/neoterra/warehouse.py "$PACK/craftsmanship/storage"
 
@@ -41,7 +42,9 @@ for l in 1 2 3 4 5; do
            craftsmanship/masonry/crusher craftsmanship/masonry/sifter craftsmanship/masonry/stonesmeltery \
            agriculture/horticulture/florist agriculture/horticulture/plantation agriculture/horticulture/composter \
            agriculture/husbandry/beekeeper agriculture/husbandry/chickenherder agriculture/husbandry/cowboy \
-           agriculture/husbandry/shepherd agriculture/husbandry/swineherder agriculture/husbandry/rabbithutch; do
+           agriculture/husbandry/shepherd agriculture/husbandry/swineherder agriculture/husbandry/rabbithutch \
+           mystic/enchanter mystic/graveyard mystic/mysticalsite mystic/netherworker \
+           military/wallguardtower education/communitycollege; do
     python3 $T/render.py "$PACK/$f$l.blueprint" "$PREV/$(basename $f)$l" >/dev/null
   done
   python3 $T/render.py "$FURN/skytower${l}_furnished.blueprint" "$PREV/skytower$l" >/dev/null
@@ -50,6 +53,12 @@ for l in 1 2 3 4 5; do
 done
 for l in 1 2 3; do
   python3 $T/render.py "$PACK/fundamentals/tavern$l.blueprint" "$PREV/tavern$l" >/dev/null
+  python3 $T/render.py "$PACK/military/gatehouse$l.blueprint" "$PREV/gatehouse$l" >/dev/null
+  python3 $T/render.py "$PACK/walls/watchtower$l.blueprint" "$PREV/watchtower$l" >/dev/null
+done
+for f in $(find "$PACK/walls" "$PACK/decorations/parks" "$PACK/infrastructure" -name "*.blueprint" \
+           | grep -vE "/mineshafts/(miner|.*shaft)|watchtower[0-9]"); do
+  python3 $T/render.py "$f" "$PREV/$(basename "$f" .blueprint)" >/dev/null
 done
 for f in decorations/supplies/supplycamp decorations/supplies/supplyship decorations/fields/neofield \
          agriculture/fields/neobamboo agriculture/fields/neocactus agriculture/fields/neosugar agriculture/fields/neokelp; do
@@ -57,7 +66,7 @@ for f in decorations/supplies/supplycamp decorations/supplies/supplyship decorat
 done
 python3 $T/neoterra/make_images.py "$PACK" "$PREV"
 # buildings with child huts (Skytower, barracks, bunker) are checked as assembled copies
-python3 $T/walkcheck.py $(find "$PACK" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|/mineshafts/|ship\.blueprint") \
+python3 $T/walkcheck.py $(find "$PACK" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint") \
   "$FURN"/*_furnished.blueprint >/dev/null \
   && echo "walkcheck: everything reachable"
 echo "built $PACK"
