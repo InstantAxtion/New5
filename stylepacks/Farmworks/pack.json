@@ -1,0 +1,14 @@
+{
+  "icon": "farmworks.png",
+  "name": "Farmworks",
+  "authors": [
+    "New5"
+  ],
+  "desc": "Decorations only: automatic mob farms (mob tower, iron farm, cactus farm) and food farms (egg farm, auto-smoker kitchen, bone-meal composters, super-smelter). No timing-sensitive redstone.",
+  "mods": [
+    "structurize",
+    "minecolonies"
+  ],
+  "version": "1",
+  "pack-format": "1"
+}

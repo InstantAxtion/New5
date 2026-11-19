@@ -30,6 +30,10 @@ conservatories, gazebos, bay windows, striped awnings, ...) – then its own mat
 
 ![Hearthwood](docs/previews/hearthwood/hearthwood_overview.png)
 
+The fixed-frame huts (Skytower, barracks, miner, fisherman, plantation, tavern, gatehouse, wall tower) also get
+each pack's own roof forms and crowns in Hearthwood and Cascadia (roofs only – their child buildings, shafts,
+ponds and wall alignment stay untouched). Only the underground bunker is shared between packs apart from materials.
+
 ## Cascadia – Oregon / Pacific Northwest style pack
 The third pack in the jar (`stylepacks/Cascadia`). Its own shapes: steep A-frame and gambrel barn roofs from level
 1, lookout and cupola crowns, and per-building landmarks – red covered-bridge entrances, timber fire-lookout towers,
@@ -44,11 +48,45 @@ Pacific Northwest materials:
 
 ![Cascadia](docs/previews/cascadia/cascadia_overview.png)
 
+## Own architecture per pack
+Hearthwood and Cascadia no longer derive any shapes from Neoterra. `tools/blueprints/neoterra/archgen.py` takes only
+each hut's *requirements* from the raw generator output (hut block and tags, beds, racks, workstations,
+bookshelves, seats, tagged spots, outdoor fixtures, and the exact functional layouts that game logic depends on:
+fishing pond, plantation beds, mine-shaft head, nether portal, concrete basin) and designs a new building in the
+pack's own architecture – plan shape, storeys, walls, windows, roofs, porches / decks, chimneys, towers, silos,
+water wheels, cupolas, awnings, sunrooms – with a unique variant per building and growth level by level.
+`styleinfra.py` does the same for walls, gates, watchtowers, roads, rails, canals, bridges, subway, boardwalk,
+cliff climbs and parks. (Skytower, barracks, bunker, gatehouse and wall tower still use the shared frames with each
+pack's own roofs and materials.)
+
+## Twin Builders' Yard (all packs)
+![Twin builders](docs/previews/twinbuilder/twinbuilder_overview.png)
+
+`fundamentals/twinbuilder1-5` – one building, two builders: the main builder's hut plus a child builder's hut
+(`twinbuilderannex1-5`) in the second half of the hall. Each builder has its own workshop half, racks and crafting
+table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
+barn workshop).
+
+## Farmworks – automatic farms (decorations only)
+The fourth pack in the jar. Every farm uses mechanics that need no timing-sensitive redstone:
+
+| Farm | How it works |
+|---|---|
+| Mob tower | dark spawning platform 25 blocks up, water channels push mobs into the drop shaft, the fall kills them, hoppers collect into chests (stay within 24-128 blocks) |
+| Iron farm | 3 villager pods + zombie cell above a spawning floor; water pushes golems under a sign-held lava blade, drops fall into a floor hopper and chest (bring the villagers and a name-tagged zombie) |
+| Cactus farm | three tiers of cactus on fence-supported sand break themselves on fence posts; a water stream carries drops to a hopper row and chest |
+| Egg farm | chicken coop floored with hoppers – eggs and feathers go straight into chests (throw in a few eggs to start) |
+| Auto kitchen | six hopper-fed smokers: raw food in the top chest, fuel in the side chest, cooked food in the front chests |
+| Super smelter | the same layout with four furnaces for ores, sand and kelp |
+| Bone-meal line | hopper-fed composters: seeds/crops in, bone meal out |
+
+![Farmworks](docs/previews/farmworks/farmworks_overview.png)
+
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.8.0.jar` into the instance's `mods` folder (CurseForge: right-click the
-  profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that carries all three style packs (Neoterra, Hearthwood and Cascadia);
+- **Easiest:** put `dist/Neoterra-1.10.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+  profile → *Open Folder* → `mods`). It is a no-code NeoForge mod that carries all four style packs (Neoterra, Hearthwood, Cascadia and Farmworks);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.8.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.10.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>`.
 
 ## Install

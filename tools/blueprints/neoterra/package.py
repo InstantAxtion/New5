@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 PACK = ROOT / "stylepacks" / "Neoterra"
 DIST = ROOT / "dist"
-VERSION = sys.argv[1] if len(sys.argv) > 1 else "1.8.0"
+VERSION = sys.argv[1] if len(sys.argv) > 1 else "1.10.0"
 MODID = "neoterra"
 
 MODS_TOML = f'''modLoader = "lowcodefml"
@@ -23,14 +23,14 @@ issueTrackerURL = ""
 [[mods]]
 modId = "{MODID}"
 version = "{VERSION}"
-displayName = "Neoterra, Hearthwood & Cascadia Style Packs"
+displayName = "Neoterra Style Packs (Neoterra, Hearthwood, Cascadia, Farmworks)"
 authors = "New5"
 logoFile = "neoterra.png"
 description = """
 Three MineColonies style packs: Neoterra (semi-futuristic white, glass and light, every building with its own
 theme and landmarks) and Hearthwood (cozy modern: warm plaster, wood cladding, brick and lantern light, easy-to-
 medium blocks until level 5) and Cascadia (Oregon / Pacific Northwest: cedar and fir timber, river rock, moss
-roofs, basalt). Every hut levels 1-5, residences, player house and bunker, walls, roads and parks.
+roofs, basalt), plus Farmworks: automatic mob and food farms as decorations. Every hut levels 1-5, residences, player house and bunker, walls, roads and parks.
 """
 
 [[dependencies.{MODID}]]
@@ -58,7 +58,7 @@ side = "BOTH"
 PACK_MCMETA = '{"pack": {"description": "Neoterra style pack resources", "pack_format": 34}}\n'
 
 
-PACKS = [ROOT / "stylepacks" / n for n in ("Neoterra", "Hearthwood", "Cascadia")]
+PACKS = [ROOT / "stylepacks" / n for n in ("Neoterra", "Hearthwood", "Cascadia", "Farmworks")]
 
 
 def pack_files(pack):

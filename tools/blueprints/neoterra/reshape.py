@@ -435,11 +435,17 @@ class Reshape(Massing):
         glass = ["ribbon", "grid", "slit"][v % 3]
         stepped = h("step", self.base) < .5
         storeys = 0 if tall else {1: 0, 2: 0, 3: 1, 4: 2, 5: 3}[L]
+        if not neo and not rec:                               # fixed-frame huts: roofs from the style pool
+            import random as _r
+            pool = themes.STYLE_POOLS[themes.STYLE]
+            rng = _r.Random(f"{themes.STYLE}:{self.base}")
+            rec = dict(roofs=tuple(rng.choice(pool["roofs"]) for _ in range(4)), crown=rng.choice(pool["crowns"]))
+            crown = rec["crown"]
         if not neo and rec:
             form = rec["roofs"][min(L, 4) - 1]
             glass, stepped = "grid", False
-            storeys = 0 if tall else ({1: 0, 2: 0, 3: 1, 4: 1, 5: 2} if themes.STYLE == "Hearthwood"
-                                      else {1: 0, 2: 0, 3: 0, 4: 1, 5: 1})[L]
+            storeys = 0 if (tall or getattr(self, "roof_only", False)) else \
+                ({1: 0, 2: 0, 3: 1, 4: 1, 5: 2} if themes.STYLE == "Hearthwood" else {1: 0, 2: 0, 3: 0, 4: 1, 5: 1})[L]
         done = []
 
         def try_(label, fn):
@@ -490,12 +496,18 @@ class Reshape(Massing):
 def process(path_str):
     path = Path(path_str)
     L = kind_level(path)
+    roof_only = False
+    m = re.search(r"(\d+)\.blueprint$", path.name)
+    if not L and themes.STYLE != "Neoterra" and m and 1 <= int(m.group(1)) <= 5 \
+            and re.match(r"(skytower|barracks|miner|fisherman|plantation|tavern|gatehouse|wallguardtower)\d", path.name):
+        L, roof_only = int(m.group(1)), True          # fixed-frame huts: their own roofs, nothing else
     if not L:
         return f"{path.name}: kept"
     bp = load(path)
     rs = Reshape(bp, L, path.stem)
+    rs.roof_only = roof_only
     done = rs.run()
-    if L <= 3:
+    if L <= 3 and not roof_only:
         for x, y, z, s in bp.blocks():
             assert (x, y, z) in rs.protect or not any(w in s for w in CHEAP_FORBIDDEN), f"{path.name}: {s}"
     bp.save(path)

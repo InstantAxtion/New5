@@ -39,6 +39,8 @@ python3 $T/neoterra/detail.py "$PACK" "$FURN" > /dev/null
 python3 $T/neoterra/plot.py "$PACK" > /dev/null
 # support pass: nothing floats (posts down to the ground, or stray bits removed; walk-checked)
 python3 $T/neoterra/support.py "$PACK" Neoterra > /dev/null
+# Twin Builders' Yard: one building, two builder huts (parent + child annex)
+python3 $T/neoterra/twinbuilder.py "$PACK" Neoterra
 
 for l in 1 2 3 4 5; do
   for f in fundamentals/townhall fundamentals/builder fundamentals/cottage fundamentals/house \
@@ -79,7 +81,7 @@ for f in decorations/supplies/supplycamp decorations/supplies/supplyship decorat
 done
 python3 $T/neoterra/make_images.py "$PACK" "$PREV"
 # buildings with child huts (Skytower, barracks, bunker) are checked as assembled copies
-python3 $T/walkcheck.py $(find "$PACK" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint") \
+python3 $T/walkcheck.py $(find "$PACK" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|twinbuilder[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint") \
   "$FURN"/*_furnished.blueprint >/dev/null \
   && echo "walkcheck: everything reachable"
 # Hearthwood (cozy modern) and Cascadia (Oregon / Pacific Northwest): their own shape passes (roof forms,
@@ -96,6 +98,11 @@ for STY in Hearthwood Cascadia; do
   NEOTERRA_STYLE=$STY python3 $T/neoterra/plot.py "$OUT" > /dev/null
   NEOTERRA_STYLE=$STY python3 $T/neoterra/support.py "$OUT" $STY > /dev/null
   python3 $T/neoterra/restyle.py "$OUT" "$OUT" $STY
+  # every regular hut: designed from scratch in the pack's own architecture (only requirements are shared)
+  python3 $T/neoterra/archgen.py "$RAW" "$OUT" $STY > /dev/null
+  # walls, roads, rails, canals, bridges, subway, boardwalk, cliff climb and parks in the pack's own design
+  python3 $T/neoterra/styleinfra.py "$OUT" $STY
+  python3 $T/neoterra/twinbuilder.py "$OUT" $STY
   mkdir -p "$SP"
   for f in fundamentals/townhall5 craftsmanship/storage/deliveryman5 decorations/housing/playerhouse5 \
            education/university5 military/barracks5 agriculture/horticulture/farmer5 fundamentals/miner5 \
@@ -107,7 +114,32 @@ for STY in Hearthwood Cascadia; do
     for l in 1 2 3 4 5; do python3 $T/render.py "$OUT/$b$l.blueprint" "$SP/$(basename $b)$l" >/dev/null; done
   done
   python3 $T/neoterra/make_images.py "$OUT" "$SP" "$(echo $STY | tr 'A-Z' 'a-z').png"
-  python3 $T/walkcheck.py $(find "$OUT" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint") >/dev/null \
+  python3 $T/walkcheck.py $(find "$OUT" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|twinbuilder[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint") >/dev/null \
     && echo "$STY walkcheck: everything reachable"
 done
-echo "built $PACK, stylepacks/Hearthwood and stylepacks/Cascadia"
+# Farmworks: decorations-only pack of automatic mob and food farms
+FW=stylepacks/Farmworks
+FP=docs/previews/farmworks
+rm -rf "$FW"
+python3 $T/neoterra/farms.py "$FW"
+mkdir -p "$FP"
+for f in $(find "$FW" -name "*.blueprint"); do
+  python3 $T/render.py "$f" "$FP/$(basename "$f" .blueprint)" >/dev/null
+done
+python3 - "$FW" "$FP" <<'PY'
+import sys
+from pathlib import Path
+from PIL import Image, ImageOps
+pack, prev = Path(sys.argv[1]), Path(sys.argv[2])
+def square(im, bg):
+    side = max(im.size); out = Image.new("RGBA", (side, side), bg)
+    out.paste(im, ((side - im.width) // 2, (side - im.height) // 2), im); return out
+im = Image.open(prev / "mobtower_front.png").convert("RGBA")
+square(im, (236, 240, 244, 255)).resize((128, 128), Image.LANCZOS).save(pack / "farmworks.png")
+icon = square(im, (0, 0, 0, 0)).resize((20, 20), Image.LANCZOS)
+for cat in ("decorations",):
+    icon.save(pack / cat / "icon.png")
+    g = ImageOps.grayscale(icon.convert("RGB")).convert("RGBA"); g.putalpha(icon.getchannel("A"))
+    g.save(pack / cat / "icon_disabled.png")
+PY
+echo "built $PACK, stylepacks/Hearthwood, stylepacks/Cascadia and stylepacks/Farmworks"

@@ -1,0 +1,25 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.148'
+}
+
+version = mod_version
+group = 'com.neoterra'
+base { archivesName = 'neoterra' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+repositories {
+    maven { url = 'https://ldtteam.jfrog.io/ldtteam/modding/' }
+    mavenCentral()
+}
+
+neoForge {
+    version = project.neo_version
+    mods { neoterra { sourceSet sourceSets.main } }
+}
+
+dependencies {
+    compileOnly("com.ldtteam:minecolonies:${minecolonies_version}") { transitive = true }
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
