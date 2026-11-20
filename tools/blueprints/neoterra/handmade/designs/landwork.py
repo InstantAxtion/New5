@@ -1486,6 +1486,7 @@ def fisherman_neoterra(rel, L):
         for x in range(10, 19, 4):                                      # quay lamps and benches by the pier gate
             lamp_post(d, x, 21)
             bench(d, x + 1, 21, "south", 2)
+        flowerbed(d, 1, 19, 7, 20, ("cornflower", "white_tulip", "azure_bluet"))
         for x in (12, 16):
             d.chair(x - 1, 2, 17, "west", "birch", sit=False)
             d.table(x, 2, 17, "birch", "slab", "smooth_quartz_slab")
@@ -1768,6 +1769,9 @@ def fisherman_cascadia(rel, L):
         oh = bld(d, 44, 14, 46, 16, floors=1, axis="x", doors=[(45, 14, "n")], win=9, lamps=False,
                  pal=dict(wall="spruce_planks", siding="spruce_planks", batten="stripped_spruce_log", roof="spruce"))
         d.set(45, 2, 15, "spruce_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
+        lamp_post(d, 24, 22)
+        lamp_post(d, 13, 17)
+        bench(d, 25, 25, "west", 2)
     if fl == 2:
         run(d, bh, "n", 6, [P.b("barrel[facing=up,open=false]")] * 2 + [P.rack()] * min(2, need_racks(d)) +
             [P.b("chest[facing={f},type=single,waterlogged=false]")], skip=2)
@@ -1890,99 +1894,6 @@ def planter_row(d, x1, x2, z, y, crops=("wheat[age=7]", "carrots[age=7]", "potat
         d.set(x, y, z, crops[(i // 2) % len(crops)])
 
 
-def plantation_neoterra(rel, L):
-    d = Design("Neoterra", rel, (33, 14, 31), gy=1, paving="smooth_stone")
-    d.cluster(0, 4)                                                   # beds 0..26 x 4..30
-    x1, x2, z1, z2 = 22, 31, 1, 9
-    d.box(x1, 2, z1, x2, 5, z2, "white_concrete", floor="polished_diorite")
-    for x in range(x1 + 1, x2):                                       # glass curtain wall to the street
-        if x not in (26, 27):
-            d.window(x, 2, z1, x, 4, z1, "glass_pane")
-    for z in range(z1 + 1, z2):
-        d.window(x1, 3, z, x1, 4, z, "glass_pane")
-    d.fill(x1, 5, z1, x2, 5, z1, "lime_terracotta")
-    d.double_door(26, 2, z1, "x", "south", "birch")
-    d.flat(x1, z1, x2, z2, 6, "smooth_quartz", "white_concrete", "smooth_quartz_slab")
-    for x in range(25, 29):
-        d.set(x, 5, z1 - 1, "smooth_quartz_slab[type=top,waterlogged=false]")
-    d.sign(24, 4, z1 - 1, "north", ["AGRI", "LAB"], "birch", glow=True, color="lime")
-    # office: seed bank and sample bench
-    d.hut(x1 + 1, 2, z1 + 1)
-    racks(d, [(x2 - 1, 2, z) for z in range(z1 + 2, z2)], d.req["racks"], "west")
-    for x in range(x1 + 1, x1 + 5):
-        d.set(x, 2, z2 - 1, "smooth_quartz_slab[type=top,waterlogged=false]")
-    d.set(x1 + 1, 3, z2 - 1, "potted_cactus")
-    d.set(x1 + 2, 3, z2 - 1, "potted_bamboo")
-    d.set(x1 + 3, 3, z2 - 1, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]")
-    d.chair(x1 + 2, 2, z2 - 2, "north", "birch", sit=False)
-    d.set(x1 + 1, 2, z1 + 4, "barrel[facing=up,open=false]")
-    d.set(x1 + 1, 2, z1 + 5, "barrel[facing=up,open=false]")
-    d.set(x1 + 5, 2, z1 + 4, "smooth_quartz_slab[type=top,waterlogged=false]")
-    d.set(x1 + 5, 2, z1 + 5, "smooth_quartz_slab[type=top,waterlogged=false]")
-    d.chair(x1 + 4, 2, z1 + 4, "west", "birch", sit=False)
-    for x in (x1 + 3, x1 + 7):
-        d.set(x, 5, z1 + 4, "sea_lantern")
-    # side door toward the beds
-    d.door(x1, 2, z2 - 1, "east", "birch")
-    if L >= 2:                                                        # planters along the street front
-        for x in range(x1, x2 + 1):
-            if x not in (25, 26, 27, 28):
-                d.set(x, 1, z1 - 1, "moss_block")
-                d.set(x, 2, z1 - 1, "azalea" if x % 3 == 0 else "fern")
-    if L >= 3:                                                        # hydroponic greenhouse wing
-        gz2 = 14
-        for y in range(2, 6):
-            for x in range(x1, x2 + 1):
-                for z in range(z2, gz2 + 1):
-                    edge = x in (x1, x2) or z in (z2, gz2)
-                    if z == z2:
-                        continue
-                    if edge:
-                        corner = x in (x1, x2) and z == gz2
-                        d.set(x, y, z, "white_concrete" if corner or y == 2 else "glass")
-                    else:
-                        d.set(x, y, z, AIR)
-        d.fill(x1 + 1, 6, z2 + 1, x2 - 1, 6, gz2 - 1, "light_blue_stained_glass")
-        for x in range(x1, x2 + 1):
-            d.set(x, 6, gz2, "white_concrete")
-        for z in range(z2, gz2 + 1):
-            d.set(x1, 6, z, "white_concrete")
-            d.set(x2, 6, z, "white_concrete")
-        d.fill(x1 + 1, 1, z2 + 1, x2 - 1, 1, gz2 - 1, "polished_diorite")
-        for z in (z2 + 1, z2 + 3):
-            planter_row(d, x1 + 2, x2 - 2, z, 2, ("carrots[age=7]", "beetroots[age=3]"))
-        d.set(x1 + 1, 2, z2 + 1, "composter[level=4]")
-        d.set(x2 - 1, 2, gz2 - 1, "water_cauldron[level=3]")
-        d.door(27, 2, z2, "south", "birch")
-        d.set(27, 1, z2 + 1, "polished_diorite")
-        d.set(27, 2, z2 + 1, AIR)
-        d.set(27, 1, z2 + 3, "polished_diorite")
-        d.set(27, 2, z2 + 3, AIR)
-        for x in range(x1 + 2, x2 - 1, 3):
-            d.set(x, 5, z2 + 2, "end_rod[facing=down]")
-    if L >= 4:                                                        # solar array on the office roof
-        for x in range(x1 + 1, x2, 2):
-            for z in range(z1 + 2, z2 - 1):
-                d.set(x, 7, z, "daylight_detector[inverted=false,power=0]")
-    if L >= 5:                                                        # seed vault & packing annex on the east
-        ax1, ax2, az1, az2 = 27, 32, 16, 23
-        d.box(ax1, 2, az1, ax2, 5, az2, "white_concrete", floor="polished_diorite")
-        d.flat(ax1, az1, ax2, az2, 6, "smooth_quartz", "white_concrete", "smooth_quartz_slab")
-        d.fill(ax1, 5, az1, ax2, 5, az1, "lime_terracotta")
-        d.door(29, 2, az1, "south", "birch")
-        for z in range(az1 + 2, az2, 2):
-            d.window(ax1, 3, z, ax1, 4, z, "glass_pane")
-        d.set(ax2 - 1, 2, az2 - 1, "bamboo_block[axis=y]")
-        d.set(ax2 - 1, 3, az2 - 1, "bamboo_block[axis=y]")
-        d.set(ax2 - 2, 2, az2 - 1, "bamboo_block[axis=y]")
-        d.set(ax2 - 1, 2, az2 - 2, "barrel[facing=up,open=false]")
-        d.set(ax1 + 1, 2, az2 - 1, "potted_cactus")
-        d.set(29, 5, az1 + 3, "sea_lantern")
-        for z in range(15, 16):
-            d.set(29, 1, z, "smooth_stone")
-    return d
-
-
 def lean_glass(d, xa, xb, za, zb, ends=(True, True)):
     """Victorian lean-to glasshouse along x: brick back wall at za (street), glass slope down to a low brick wall at
     zb (south, toward the beds). Inside: a staging bench along the back wall and an aisle."""
@@ -2014,178 +1925,280 @@ def lean_glass(d, xa, xb, za, zb, ends=(True, True)):
     d.fill(xa, 2 + 0, za, xb, 2, za, "bricks")
 
 
+def plantation_neoterra(rel, L):
+    d = Design("Neoterra", rel, (42, 26, 34), gy=1, paving="smooth_stone")
+    P.d = d
+    d.palette = dict(wall="light_gray_concrete", post="orange_terracotta", band="white_concrete", accent="orange_concrete",
+                     plinth="polished_andesite", deck="moss_block", doorwood="mangrove")
+    fl = 1 if L == 1 else 2
+    of = bld(d, 27, 1, 35, 8, floors=fl, roof="flat", doors=[(31, 1, "n"), (27, 6, "w")], ribbon=True)
+    if fl == 2:
+        stairs_up(d, 34, 2, "south", 2, rail=False)
+    d.hut(28, 2, 2)
+    run(d, of, "s", 2, [P.shelf("smooth_quartz", "potted_cactus"), P.shelf("smooth_quartz", "potted_bamboo"),
+                        P.shelf("smooth_quartz", "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]"),
+                        P.b("water_cauldron[level=3]")], skip=1)
+    run(d, of, "e", 2, [P.rack()] * min(2, need_racks(d)) + [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]")], skip=4)
+    d.set(31, 2, 4, "smooth_quartz_slab[type=top,waterlogged=false]")
+    d.chair(30, 2, 4, "west", "mangrove", sit=False)
+    d.set(31, 3, 4, "lantern[hanging=false,waterlogged=false]")
+    room_rug(d, of, 2, ("orange_carpet", "white_carpet"), inset=3)
+    d.sign(33, 5, 0, "north", ["AGRI", "LAB"], "mangrove", glow=True, color="orange")
+    for x in range(27, 36, 2):
+        d.set(x, 2, 0, "moss_block")
+        d.set(x, 3, 0, "fern" if x % 4 == 1 else "azalea")
+    lamp_post(d, 36, 1)
+    if fl == 2:
+        run(d, of, "w", 6, [P.b("lectern[facing={f},has_book=true,powered=false]"), P.books(), P.books()], skip=1)
+        run(d, of, "n", 6, [P.shelf("smooth_quartz", "potted_fern"), P.chair("mangrove"), P.b("cartography_table"),
+                            P.shelf("smooth_quartz", "potted_azalea_bush")], skip=1)
+        rest_racks(d, of, "e", 6, skip=4)
+        room_rug(d, of, 6, ("light_gray_carpet", "orange_carpet"), inset=2)
+        bench(d, 22, 1, "north", 3)
+        lamp_post(d, 21, 1)
+    # ---- L3: hydroponic greenhouse wing ----
+    if L >= 3:
+        gh = bld(d, 27, 10, 37, 16, floors=1, fh=5, roof="flat", doors=[(31, 10, "n"), (27, 13, "w")], win=99,
+                 wallfn=glasswall("Neoterra", "light_gray_concrete"), lamps=False)
+        d.fill(28, 7, 11, 36, 7, 15, "light_blue_stained_glass")
+        door_cells(d).add((31, 2, 9))
+        for z in (12, 14):
+            for x in range(29, 37):
+                d.set(x, 1, z, "farmland[moisture=7]")
+                d.set(x, 2, z, ("carrots[age=7]", "beetroots[age=3]")[x % 2])
+                if x % 2:
+                    d.set(x, 5, z, "end_rod[facing=down]")
+        for x in range(29, 37):
+            d.set(x, 2, 15, "potted_cactus" if x % 2 else "potted_bamboo")
+        rest_racks(d, gh, "e", 2)
+    # ---- L4: research tower ----
+    if L >= 4:
+        rt = bld(d, 38, 1, 41, 8, floors=5, roof="flat", doors=[(38, 4, "w")], ribbon=True,
+                 pal=dict(wall="white_concrete", post="orange_concrete", band="orange_terracotta", accent="orange_concrete"))
+        ladder(d, 40, 7, 2, 21, "west")
+        for k in range(5):
+            y = 2 + 4 * k
+            d.set(39, y, 2, "smooth_quartz_slab[type=top,waterlogged=false]")
+            d.set(39, y + 1, 2, ("potted_cactus", "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=false]",
+                                 "potted_bamboo", "lantern[hanging=false,waterlogged=false]", "potted_fern")[k])
+            d.set(40, y, 2, "barrel[facing=up,open=false]" if k % 2 else "composter[level=4]")
+        for x in range(28, 37, 2):
+            for z in range(2, 8):
+                d.set(x, 10 if fl == 2 else 6, z, "daylight_detector[inverted=false,power=0]")
+        tree(d, 37, 20, 4, "azalea_leaves", "birch_log", 1)
+    # ---- L5: packing hall & seed vault with a green roof, staff garden ----
+    if L >= 5:
+        ph = bld(d, 28, 19, 41, 30, floors=2, roof="flat", doors=[(32, 19, "n"), (28, 26, "w")], ribbon=True,
+                 pal=dict(wall="white_terracotta", post="brown_terracotta", band="orange_terracotta", accent="lime_concrete",
+                          deck="moss_block"))
+        stairs_up(d, 40, 21, "south", 2, rail=False)
+        for x in range(30, 39, 3):
+            for z in (23, 24):
+                d.set(x, 2, z, "smooth_quartz_slab[type=top,waterlogged=false]")
+                d.set(x + 1, 2, z, "smooth_quartz_slab[type=top,waterlogged=false]")
+                d.set(x, 3, z, "bamboo_block[axis=y]" if z == 23 else "potted_cactus")
+        run(d, ph, "s", 2, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]")] * 6, skip=1)
+        run(d, ph, "s", 6, [P.books()] * 6 + [P.b("lectern[facing={f},has_book=true,powered=false]")], skip=1)
+        run(d, ph, "w", 6, [P.b("chest[facing={f},type=single,waterlogged=false]")] * 3, skip=1)
+        room_rug(d, ph, 6, ("lime_carpet", "white_carpet"), inset=3)
+        for x in range(29, 41):
+            for z in range(20, 30):
+                if (x * 3 + z) % 4 == 0:
+                    d.set(x, 11, z, ("azalea", "fern", "flowering_azalea")[x % 3])
+        for x in (30, 34):
+            tree(d, x, 32, 3, "azalea_leaves", "birch_log", 1)
+        lamp_post(d, 37, 32)
+        bench(d, 38, 33, "south", 2)
+    d.cluster(0, 4)                                                   # beds 0..26 x 4..30
+    return d
+
+
 def plantation_hearthwood(rel, L):
-    d = Design("Hearthwood", rel, (31, 18, 33), gy=1)
-    d.cluster(2, 6)                                                   # beds 2..28 x 6..32
-    beam = "stripped_dark_oak_log"
-    x1, x2, z1, z2 = 11, 16, 1, 12
-    # potting shed: brick plinth, plaster and dark-oak frame, gable to the street
-    d.box(x1, 2, z1, x2, 5, z2, "calcite", floor="spruce_planks")
-    for x in range(x1, x2 + 1):
-        for z in range(z1, z2 + 1):
-            if x in (x1, x2) or z in (z1, z2):
-                d.set(x, 2, z, "bricks")
-    for z in range(z1, z2 + 1, 3):
-        for x in (x1, x2):
-            posts(d, [(x, z)], 3, 5, logb(beam, "y"))
-    for x in (x1, x2):
-        for z in (z1, z2):
-            posts(d, [(x, z)], 3, 5, logb(beam, "y"))
-    for z in range(z1, z2 + 1):
-        d.set(x1, 5, z, logb(beam, "z"))
-        d.set(x2, 5, z, logb(beam, "z"))
-    ridge = d.gable(x1, z1, x2, z2, 6, "z", "deepslate_tile_stairs", "deepslate_tile_slab", "calcite", overhang=1)
-    for z in (z1, z2):
-        for x in range(x1, x2 + 1):
-            d.set(x, 5, z, logb(beam, "x"))
-        for y in range(6, ridge):
-            d.set((x1 + x2) // 2, y, z, logb(beam, "y")) if d.get((x1 + x2) // 2, y, z) == "minecraft:calcite" else None
-    d.door(13, 2, z1, "south", "dark_oak")
-    d.window(15, 3, z1, 15, 4, z1)
-    d.window(13, 6, z1, 14, 6, z1)
-    for z in (4, 7, 10):
-        d.window(x1, 3, z - 1, x1, 4, z - 1) if z != 4 else None
-    d.window(x2, 3, 8, x2, 4, 8)
-    d.window(x2, 3, 10, x2, 4, 10)
-    d.door(13, 2, z2, "north", "dark_oak")
-    d.sign(12, 4, z1 - 1, "north", ["Kitchen", "Garden"], "dark_oak")
-    d.set(15, 2, z1 - 1, "potted_red_tulip")
-    # inside: potting bench, seed drawers, racks, sink
-    d.hut(x1 + 1, 2, z1 + 1)
-    racks(d, [(x1 + 1, 2, z) for z in range(z1 + 4, z1 + 9)], d.req["racks"], "east")
-    for z in range(z1 + 4, z1 + 9):
-        d.set(x2 - 1, 2, z, "dark_oak_slab[type=top,waterlogged=false]" if z != z1 + 6 else "water_cauldron[level=3]")
-        if z in (z1 + 4, z1 + 8):
-            d.set(x2 - 1, 3, z, "flower_pot")
-        if z == z1 + 5:
-            d.set(x2 - 1, 3, z, "potted_cactus")
-    d.set(x2 - 1, 2, z2 - 1, "barrel[facing=up,open=false]")
-    d.set(x2 - 2, 2, z2 - 1, "barrel[facing=up,open=false]")
-    d.set(x1 + 1, 2, z2 - 1, "composter[level=6]")
-    d.lamp(13, 5, 4)
-    d.lamp(13, 5, 9)
-    if L >= 2:                                                        # glasshouse east of the shed
+    d = Design("Hearthwood", rel, (46, 26, 35), gy=1)
+    P.d = d
+    d.palette = dict(wall="white_terracotta", end="white_terracotta", frame="stripped_oak_log", roof="granite",
+                     shutter="bamboo", doorwood="oak", plinth="bricks", chimney="bricks")
+    ps = bld(d, 11, 1, 16, 12, floors=1, axis="z", doors=[(13, 1, "n"), (13, 12, "s")])
+    d.hut(12, 2, 2)
+    run(d, ps, "w", 2, [P.rack()] * min(2, need_racks(d)) + [P.b("composter[level=6]")], skip=3)
+    run(d, ps, "e", 2, [P.shelf("oak", "flower_pot"), P.shelf("oak", "potted_cactus"), P.b("water_cauldron[level=3]"),
+                        P.shelf("oak", "potted_red_tulip"), P.shelf("oak", "flower_pot"),
+                        P.b("barrel[facing=up,open=false]", "white_wool")], skip=1)
+    room_rug(d, ps, 2, ("green_carpet", "lime_carpet"), inset=2)
+    d.sign(12, 4, 0, "north", ["Kitchen", "Garden"], "oak")
+    flowerbed(d, 17, 0, 22, 0, ("poppy", "oxeye_daisy", "cornflower"))
+    lamp_post(d, 10, 0)
+    # ---- L2+: lean-to glasshouses along the street wall ----
+    if L >= 2:
         xb = 22 if L == 2 else 28
-        lean_glass(d, x2, xb, z1, 5, ends=(False, True))
-        d.door(x2, 2, 3, "east", "dark_oak")
-        racks_extra = []
-    if L >= 4:                                                        # glasshouse west of the shed
-        lean_glass(d, 2, x1, z1, 5, ends=(True, False))
-        d.door(x1, 2, 3, "west", "dark_oak")
-    if L >= 5:                                                        # espaliered fruit on the back walls, gate
-        for x in list(range(4, 10, 2)) + list(range(18, 28, 3)):
-            d.set(x, 4, 0, "oak_leaves[distance=7,persistent=true,waterlogged=false]")
-            d.set(x, 5, 0, "oak_leaves[distance=7,persistent=true,waterlogged=false]")
-            d.set(x - 1, 4, 0, "oak_leaves[distance=7,persistent=true,waterlogged=false]")
-            d.set(x + 1, 4, 0, "oak_leaves[distance=7,persistent=true,waterlogged=false]")
-        for x in (12, 15):
-            posts(d, [(x, 0)], 2, 3, "bricks")
-            d.set(x, 4, 0, "lantern[hanging=false,waterlogged=false]")
+        lean_glass(d, 16, xb, 1, 5, ends=(False, True))
+        d.door(16, 2, 3, "east", "oak")
+        door_cells(d).update({(15, 2, 3), (17, 2, 3)})
+        rest_racks(d, ps, "w", 2, skip=3)
+        for x in range(18, 29, 1):                                     # cold frames along the street wall
+            if x % 4 != 3:
+                d.set(x, 2, 7, "bricks" if x % 4 == 0 else "glass")
+        for x, z in ((18, 9), (22, 9)):
+            d.set(x, 2, z, "water_cauldron[level=3]")
+        bench(d, 20, 9, "south", 2)
+    # ---- L3: head gardener's cottage ----
+    if L >= 3:
+        hc = bld(d, 31, 1, 40, 9, floors=2, axis="x", doors=[(35, 9, "s")], chimney=(40, 5),
+                 pal=dict(wall="smooth_sandstone", end="smooth_sandstone", framing=False, roof="brick",
+                          frame="stripped_oak_log", shutter="warped", plinth="stone_bricks"))
+        stairs_up(d, 32, 7, "east", 2, rail=False)
+        d.hearth(39, 2, 5, "west", 5, "bricks", "campfire")
+        run(d, hc, "n", 2, [P.books(), P.books(), P.b("lectern[facing={f},has_book=true,powered=false]"), P.chair("oak")], skip=1)
+        d.dining(35, 2, 5, 2, "x", "oak", chairs=("n", "s"), sit=False)
+        d.bed(32, 6, 2, "west")
+        run(d, hc, "n", 6, [P.b("chest[facing={f},type=single,waterlogged=false]"), P.b("barrel[facing=up,open=false]"),
+                            P.shelf("oak", "candle[candles=2,lit=false,waterlogged=false]")], skip=3)
+        room_rug(d, hc, 2, inset=3)
+        room_rug(d, hc, 6, inset=2)
+        flowerbed(d, 31, 11, 40, 12)
+        rest_racks(d, hc, "e", 6, skip=0)
+    # ---- L4: west glasshouse, bothy for the garden boys ----
+    if L >= 4:
+        lean_glass(d, 2, 11, 1, 5, ends=(True, False))
+        d.door(11, 2, 3, "west", "oak")
+        door_cells(d).update({(10, 2, 3), (12, 2, 3)})
+        bo = bld(d, 31, 14, 40, 21, floors=1, axis="x", doors=[(35, 14, "n")], chimney=(31, 17),
+                 pal=dict(wall="bricks", end="bricks", framing=False, roof="mud_brick", frame="stripped_spruce_log",
+                          shutter="spruce", plinth="stone_bricks"))
+        d.hearth(32, 2, 17, "east", 5, "bricks", "campfire")
+        for x in (34, 36, 38):
+            d.bed(x, 2, 20, "south")
+        run(d, bo, "e", 2, [P.b("chest[facing={f},type=single,waterlogged=false]"), P.b("barrel[facing=up,open=false]")], skip=0)
+        tree(d, 42, 12, 4)
+        # walled orchard path with espaliers and a sundial
+        for x in range(30, 46):
+            if x not in (35, 36):
+                d.set(x, 2, 22, "bricks")
+                d.set(x, 3, 22, "brick_slab[type=bottom,waterlogged=false]")
+        for z in range(10, 22):
+            d.set(45, 2, z, "bricks")
+            d.set(45, 3, z, "brick_slab[type=bottom,waterlogged=false]")
+            if z % 3 == 0:
+                d.set(44, 2, z, leaves("oak_leaves"))
+        d.set(42, 2, 17, "chiseled_stone_bricks")
+        d.set(42, 3, 17, "stone_brick_slab[type=bottom,waterlogged=false]")
+    # ---- L5: orangery (classical glass pavilion) ----
+    if L >= 5:
+        og = bld(d, 30, 23, 43, 33, floors=1, fh=6, roof="hip", doors=[(36, 23, "n")], win=99, lamps=False,
+                 wallfn=lambda x, y, z, rel, c, a, k: "smooth_sandstone" if c or y == 2 or rel == 5 or
+                 (x if a == "x" else z) % 3 == 0 else "glass",
+                 pal=dict(roof="granite"))
+        for x in range(32, 42, 3):
+            for z in (25, 31):
+                d.set(x, 1, z, "grass_block[snowy=false]")
+                tree(d, x, z, 3, "azalea_leaves", "oak_log", 1)
+        for x in range(32, 42):
+            d.set(x, 1, 28, "smooth_sandstone")
+        for x in (33, 39):
+            bench(d, x, 27, "north", 2)
+        d.set(36, 2, 28, "water_cauldron[level=3]")
+        for x in (29, 42):
+            lamp_post(d, x, 22)
+    d.cluster(2, 6)                                                   # beds 2..28 x 6..32
     return d
 
 
 def plantation_cascadia(rel, L):
-    d = Design("Cascadia", rel, (33, 20, 33), gy=1, paving="coarse_dirt")
-    d.cluster(0, 6)                                                   # beds 0..26 x 6..32
-    x1, x2, z1 = 22, 31, 3
-    big = L >= 3
-    z2 = 14 if big else 9
-    d.fill(x1, 1, z1, x2, 1, z2, "spruce_planks")
-    for y in range(2, 7):
-        for x in range(x1, x2 + 1):
-            for z in range(z1, z2 + 1):
-                if x in (x1, x2) or z in (z1, z2):
-                    if y == 2:
-                        d.set(x, y, z, "cobblestone" if (x + z) % 4 else "mossy_cobblestone")
-                    else:
-                        d.set(x, y, z, "spruce_planks" if (x if z in (z1, z2) else z) % 2 else "stripped_spruce_log[axis=y]")
-                else:
-                    d.set(x, y, z, AIR)
-    for x, z in ((x1, z1), (x2, z1), (x1, z2), (x2, z2)):
-        posts(d, [(x, z)], 2, 6, "spruce_log[axis=y]")
-    if big:
-        d.fill(x1 + 1, 7, z1 + 4, x2 - 1, 7, z2 - 1, "spruce_planks")         # hay loft
-        ridge = gambrel(d, x1, z1, x2, z2, 7, "dark_oak", "dark_oak_planks", "spruce_planks")
-        # loft door and hay hood on the street gable
-        d.set(26, 9, z1, AIR)
-        d.set(27, 9, z1, AIR)
-        d.set(26, 10, z1, AIR)
-        d.set(27, 10, z1, AIR)
-        d.set(26, 9, z1, "spruce_trapdoor[facing=north,half=bottom,open=true,powered=false,waterlogged=false]")
-        d.set(27, 9, z1, "spruce_trapdoor[facing=north,half=bottom,open=true,powered=false,waterlogged=false]")
-    else:
-        ridge = d.gable(x1, z1, x2, z2, 7, "z", "dark_oak_stairs", "dark_oak_slab", "spruce_planks", overhang=1)
-    # sliding barn doors (open) and windows
-    for x in (26, 27):
-        for y in (2, 3, 4):
-            d.set(x, y, z1, AIR)
-    d.set(25, 5, z1, "stripped_spruce_log[axis=x]")
-    d.set(28, 5, z1, "stripped_spruce_log[axis=x]")
-    for x in (25, 28):
-        for y in (2, 3, 4):
-            d.set(x, y, z1, "spruce_planks")
-    for z in range(z1 + 2, z2, 3):
-        d.window(x2, 3, z, x2, 4, z)
-    d.door(x1, 2, z1 + 3, "east", "spruce")
-    # farm stand on the street: produce crates under a shed roof
-    sz = z1 - 3
-    for x in range(x1 - 1, x2 + 2):
-        d.set(x, 6, sz - 1 if sz - 1 >= 0 else sz, stair("spruce", "south")) if sz - 1 >= 0 else None
-    for x in range(x1, x2 + 1):
-        for z in range(max(sz, 0), z1):
-            d.set(x, 6, z, slab("spruce"))
-    posts(d, [(x1, 0), (x2, 0)], 2, 5, "spruce_log[axis=y]")
-    for x, b in ((x1 + 1, "melon"), (x1 + 2, "pumpkin"), (x2 - 2, "hay_block[axis=y]"), (x2 - 1, "melon")):
-        d.set(x, 2, 1, "spruce_slab[type=top,waterlogged=false]")
+    d = Design("Cascadia", rel, (46, 26, 34), gy=1, paving="coarse_dirt")
+    P.d = d
+    d.palette = dict(wall="dark_oak_log", siding="dark_oak_planks", batten="stripped_dark_oak_log", end="dark_oak_planks",
+                     trim="yellow_terracotta", roof="mangrove", shutter="bamboo", doorwood="dark_oak", plinth="tuff")
+    fs = bld(d, 22, 2, 31, 9, floors=1, axis="z", doors=[(26, 2, "n")])
+    d.hut(23, 2, 3)
+    run(d, fs, "e", 2, [P.rack()] * min(2, need_racks(d)) + [P.b("bamboo_block[axis=y]", "bamboo_block[axis=y]"),
+                        P.b("barrel[facing=up,open=false]", "brown_wool")], skip=0)
+    run(d, fs, "s", 2, [P.b("bamboo_block[axis=x]")] * 3 + [P.shelf("dark_oak", "potted_cactus")], skip=1)
+    room_rug(d, fs, 2, ("yellow_carpet", "brown_carpet"), inset=2)
+    # farm stand on the street
+    for x in range(22, 32):
+        d.set(x, 5, 0, "yellow_terracotta" if x % 2 else "dark_oak_slab[type=bottom,waterlogged=false]")
+    posts(d, [(22, 0), (31, 0)], 2, 4, "dark_oak_fence")
+    for x, b in ((23, "melon"), (24, "pumpkin"), (29, "hay_block[axis=y]"), (30, "melon")):
         d.set(x, 2, 0, b)
-    d.set(x1 + 3, 2, 1, "barrel[facing=up,open=false]")
-    d.set(x2 - 3, 2, 1, "barrel[facing=up,open=false]")
-    d.sign(24, 5, z1 - 1, "north", ["CEDAR CREEK", "FARM STAND"], "spruce")
-    d.lamp(26, 5, 1)
-    # interior: bundles of cane & bamboo, racks, tool corner
-    d.hut(x1 + 1, 2, z1 + 1)
-    racks(d, [(x2 - 1, 2, z) for z in range(z1 + 1, z1 + 6)], d.req["racks"], "west")
-    for z in (z1 + 4, z1 + 5):
-        d.set(x1 + 1, 2, z, "bamboo_block[axis=y]")
-        d.set(x1 + 1, 3, z, "bamboo_block[axis=y]")
-    d.set(x1 + 2, 2, z1 + 5, "bamboo_block[axis=x]")
-    d.set(x1 + 1, 2, z1 + 2, "barrel[facing=up,open=false]")
-    d.set(28, 2, z1 + 4, "spruce_fence")
-    d.set(28, 3, z1 + 4, "spruce_pressure_plate[powered=false]")
-    d.lamp(26, 6, z1 + 3)
-    if big:
-        for z in range(z1 + 8, z2):
-            d.set(x1 + 1, 2, z, "hay_block[axis=z]")
-            d.set(x1 + 1, 3, z, "hay_block[axis=z]") if z % 2 else None
-        for x in range(x1 + 1, x2):
-            for z in (z2 - 1,):
-                d.set(x, 8, z, "hay_block[axis=x]")
-        ladder(d, x2 - 1, z2 - 1, 2, 7, "west")
-        d.lamp(26, 6, z2 - 3)
-        d.set(26, 2, z2 - 2, "grindstone[face=floor,facing=north]")
-        d.set(27, 2, z2 - 1, "crafting_table")
-    if L >= 4:                                                        # lean-to cane drying shed on the east band
-        for z in range(z1 + 2, z2 + 1, 3):
-            posts(d, [(32, z)], 2, 4, "spruce_log[axis=y]")
-        for z in range(z1 + 1, z2 + 1):
-            d.set(32, 5, z, slab("spruce"))
-            if z % 3 != (z1 + 2) % 3:
-                d.set(32, 2, z, "bamboo_block[axis=z]" if z % 2 else "hay_block[axis=y]")
-    if L >= 5:                                                        # water tower by the beds
-        tx, tz = 17, 1
-        posts(d, [(tx, tz), (tx + 3, tz), (tx, tz + 3), (tx + 3, tz + 3)], 2, 8, "spruce_log[axis=y]")
+    d.set(25, 2, 0, "barrel[facing=up,open=false]")
+    d.sign(27, 4, 1, "north", ["CEDAR CREEK", "FARM STAND"], "dark_oak")
+    lamp_post(d, 33, 1)
+    if L >= 2:                                                        # cane press lean-to
+        lp = bld(d, 32, 3, 37, 9, floors=1, axis="x", doors=[(34, 3, "n")],
+                 pal=dict(wall="spruce_planks", siding="spruce_planks", batten="stripped_spruce_log", roof="spruce"))
+        d.set(34, 2, 5, "grindstone[face=floor,facing=north]")
+        d.set(35, 2, 5, "water_cauldron[level=3]")
+        d.set(36, 2, 5, "composter[level=4]")
+        for z in (7, 8):
+            d.set(36, 2, z, "barrel[facing=up,open=false]")
+        rest_racks(d, lp, "s", 2)
+        woodpile(d, 38, 5, 3, "z")
+        for x in range(33, 37):                                       # cane bundles drying on racks
+            d.set(x, 2, 11, "spruce_fence")
+            d.set(x, 3, 11, "bamboo_block[axis=x]" if x % 2 else "spruce_fence")
+        cart(d, 35, 1, "x", "melon")
+    if L >= 3:                                                        # gambrel barn replacing the shed's back
+        bn = bld(d, 22, 11, 31, 22, floors=1, fh=6, roof="gambrel", axis="z", doors=[(26, 11, "n")], win=4,
+                 pal=dict(roof="deepslate_tile"))
+        for x in (25, 27):
+            for y in (2, 3, 4):
+                d.set(x, y, 11, AIR)
+        door_cells(d).update({(25, 2, 12), (27, 2, 12), (25, 2, 10), (27, 2, 10)})
+        run(d, bn, "w", 2, [P.b("bamboo_block[axis=y]", "bamboo_block[axis=y]")] * 5, skip=2)
+        run(d, bn, "e", 2, [P.b("hay_block[axis=y]", "hay_block[axis=z]")] * 4, skip=2)
+        rest_racks(d, bn, "s", 2)
+        cart(d, 26, 17, "z", "melon")
+    if L >= 4:                                                        # sugar mill with a water wheel
+        sm = bld(d, 34, 12, 43, 21, floors=2, fh=5, axis="z", doors=[(38, 12, "n")], chimney=(43, 16),
+                 pal=dict(wall="stripped_spruce_log", siding="mangrove_planks", batten="stripped_spruce_log",
+                          end="mangrove_planks", roof="spruce", shutter="spruce", plinth="cobblestone"))
+        stairs_up(d, 35, 20, "north", 2, fh=5, rail=False)
+        for z in (14, 16, 18):
+            d.set(38, 2, z, "grindstone[face=floor,facing=north]")
+            d.set(40, 2, z, "water_cauldron[level=3]")
+        d.set(42, 2, 16, "blast_furnace[facing=west,lit=true]")
+        run(d, sm, "e", 7, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]")] * 4, skip=1)
+        for dy in range(-3, 4):                                       # water wheel on the west wall
+            for dz in range(-3, 4):
+                if 2 <= abs(dy) + abs(dz) <= 4 and (abs(dy) == 3 or abs(dz) == 3 or dy == 0 or dz == 0):
+                    y, z = 7 + dy, 16 + dz
+                    if y >= 2:
+                        d.set(33, y, z, "stripped_spruce_log[axis=x]" if dy == 0 or dz == 0 else "spruce_planks")
+        d.set(33, 7, 16, "spruce_log[axis=x]")
+        for z in range(13, 20):
+            d.set(32, 1, z, "water")
+    if L >= 5:                                                        # water tower and cutters' cabins
+        tx, tz = 40, 1
+        posts(d, [(tx, tz), (tx + 3, tz), (tx, tz + 3), (tx + 3, tz + 3)], 2, 9, "spruce_log[axis=y]")
         for x in range(tx, tx + 4):
             for z in range(tz, tz + 4):
-                d.set(x, 9, z, "spruce_planks")
-                corner = x in (tx, tx + 3) and z in (tz, tz + 3)
-                for y in (10, 11, 12):
-                    if not corner and (x in (tx, tx + 3) or z in (tz, tz + 3)):
-                        d.set(x, y, z, "stripped_spruce_log[axis=y]" if y != 11 else "spruce_planks")
-                    elif not corner:
+                d.set(x, 10, z, "spruce_planks")
+                for y in (11, 12, 13):
+                    if x in (tx, tx + 3) or z in (tz, tz + 3):
+                        d.set(x, y, z, "stripped_spruce_log[axis=y]" if y != 12 else "spruce_planks")
+                    else:
                         d.set(x, y, z, "water")
-        d.hip(tx, tz, tx + 3, tz + 3, 13, "dark_oak_stairs", "dark_oak_slab", overhang=0)
-        for x in (tx + 1, tx + 2):
-            d.set(x, 5, tz, "spruce_fence")
+        d.hip(tx, tz, tx + 3, tz + 3, 14, "dark_oak_stairs", "dark_oak_slab", overhang=0)
+        for i, x0 in enumerate((30, 37)):
+            cb = bld(d, x0, 25, x0 + 6, 31, floors=1, axis="x", doors=[(x0 + 3, 25, "n")], chimney=(x0 + 6, 28),
+                     pal=dict(wall="spruce_log", siding="birch_planks", batten="stripped_spruce_log",
+                              roof=("mangrove", "deepslate_tile")[i], shutter=("bamboo", "mangrove")[i]))
+            d.bed(x0 + 1, 2, 30, "south")
+            d.bed(x0 + 3, 2, 30, "south")
+            d.set(x0 + 5, 2, 28, "campfire[facing=west,lit=true,signal_fire=false,waterlogged=false]")
+            run(d, cb, "n", 2, [P.b("chest[facing={f},type=single,waterlogged=false]")], skip=0)
+            porch(d, x0, x0 + 6, 25, 2, "n", gaps=(x0 + 3,))
+        for x, z in ((44, 24), (44, 32), (28, 32), (36, 33)):
+            tree(d, x, z, 6, "spruce_leaves", "spruce_log", 2)
+        mh = bld(d, 22, 24, 28, 31, floors=2, axis="z", doors=[(25, 24, "n")], chimney=(22, 28),
+                 pal=dict(wall="spruce_log", siding="dark_oak_planks", batten="stripped_dark_oak_log",
+                          roof="dark_prismarine", shutter="mangrove", plinth="cobblestone"))
+        d.hearth(23, 2, 28, "east", 5, "cobblestone", "campfire")
+        d.dining(25, 2, 27, 3, "z", "spruce", chairs=("e", "w"), sit=False)
+        stairs_up(d, 27, 26, "south", 2, rail=False)
+        run(d, mh, "n", 6, [P.b("barrel[facing=up,open=false]")] * 3 + [P.b("chest[facing={f},type=single,waterlogged=false]")], skip=0)
+        d.bed(23, 6, 30, "south")
+    d.cluster(0, 6)                                                   # beds 0..26 x 6..32
     return d
 
 

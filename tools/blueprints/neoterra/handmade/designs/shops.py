@@ -162,7 +162,7 @@ def awning_z(d, z1, z2, x, y, colors=("red_wool", "white_wool"), outward="east")
 # Neoterra "LUMEN BAKERY": white box with a full glass shopfront, cyan canopy, glass display counter, stacked
 #   deck ovens in polished andesite; L3 adds an upper café floor (glass) and roof terrace by L5.
 def baker_hw(rel, L):
-    d = Design("Hearthwood", rel, (40, 30, 36))
+    d = Design("Hearthwood", rel, (40, 42, 36))
     x1, z1, x2, z2, y0, y1 = 3, 5, 15, 11, 2, 5
     oak = "dark_oak"
     hw_body(d, x1, z1, x2, z2, y0, y1)
@@ -313,7 +313,7 @@ def porch(d, x1, x2, z1, z2, y0, ytop, posts, wood="spruce", rail=True, gap=(), 
 
 
 def baker_cas(rel, L):
-    d = Design("Cascadia", rel, (42, 30, 44), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (42, 42, 44), paving="coarse_dirt")
     x1, z1, x2, z2, y0, y1 = 6, 7, 16, 19, 2, 6
     cas_body(d, x1, z1, x2, z2, y0, y1)
     ridge = roof(d, x1, z1, x2, z2, 7, "z", "dark_oak", "dark_oak_slab", "spruce_planks", ends=(2, 1),
@@ -476,7 +476,7 @@ def planter(d, x, z, y, plant="flowering_azalea", box="smooth_quartz"):
 
 
 def baker_neo(rel, L):
-    d = Design("Neoterra", rel, (42, 36, 38), paving="smooth_stone")
+    d = Design("Neoterra", rel, (42, 42, 38), paving="smooth_stone")
     x1, z1, z2, y0, y1 = 3, 4, 11, 2, 5
     x2 = 13 if L == 1 else 21
     neo_body(d, x1, z1, x2, z2, y0, y1)
@@ -904,7 +904,7 @@ def cook_cas(rel, L):
 
 
 def cook_neo(rel, L):
-    d = Design("Neoterra", rel, (42, 36, 40), paving="smooth_stone")
+    d = Design("Neoterra", rel, (42, 42, 40), paving="smooth_stone")
     x1, z1, x2, z2, y0 = 3, 4, 19, 16, 2
     two = L >= 3
     neo_body(d, x1, z1, x2, z2, y0, 5, roof_=None)
@@ -1033,7 +1033,7 @@ def cook(pack, rel, L):
 #   (andesite/iron) cooking line, walk-in cold room of packed ice with the racks, loading bay with a roller
 #   door, extract ducts and condensers on the roof growing with each level.
 def cookery_hw(rel, L):
-    d = Design("Hearthwood", rel, (40, 30, 42))
+    d = Design("Hearthwood", rel, (40, 42, 42))
     x1, z1, x2, z2, y0, y1 = 5, 5, 15, 15, 2, 6
     d.box(x1, y0, z1, x2, y1, z2, "stone_bricks", floor="stone_bricks")
     for x, z in perim(x1, z1, x2, z2):
@@ -1172,7 +1172,7 @@ def cookery_hw(rel, L):
 
 
 def cookery_cas(rel, L):
-    d = Design("Cascadia", rel, (42, 30, 42), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (42, 42, 42), paving="coarse_dirt")
     x1, z1, x2, z2, y0, y1 = 4, 5, 12, 17, 2, 5
     cas_body(d, x1, z1, x2, z2, y0, y1, ceiling=None)
     ridge = roof(d, x1, z1, x2, z2, 6, "z", "spruce", "spruce_slab", "spruce_planks", ends=(1, 1),
@@ -1273,7 +1273,7 @@ def cookery_cas(rel, L):
 
 
 def cookery_neo(rel, L):
-    d = Design("Neoterra", rel, (44, 36, 36), paving="smooth_stone")
+    d = Design("Neoterra", rel, (44, 42, 36), paving="smooth_stone")
     x1, z1, z2, y0, y1 = 3, 4, 14, 2, 5
     x2 = 15 if L == 1 else 22
     neo_body(d, x1, z1, x2, z2, y0, y1, wall="light_gray_concrete", pillar="gray_concrete", floor="smooth_stone",
@@ -1447,7 +1447,7 @@ def flower_stall(d, x1, x2, z, y, wood="spruce"):
 # Neoterra "BLOOM LAB": a single glass pavilion on a concrete frame, living green wall, flower bar at the
 #   front, grid of quartz-edged planters; grows in length, L4 green roof edges, L5 glowing sign + benches.
 def florist_hw(rel, L):
-    d = Design("Hearthwood", rel, (40, 30, 40))
+    d = Design("Hearthwood", rel, (40, 42, 40))
     y0, y1 = 2, 5
     oak = "dark_oak"
     hw_body(d, 3, 4, 12, 10, y0, y1)
@@ -1545,7 +1545,7 @@ def florist_hw(rel, L):
 
 
 def florist_cas(rel, L):
-    d = Design("Cascadia", rel, (42, 30, 42), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (42, 42, 42), paving="coarse_dirt")
     y0 = 2
     x1, z1, x2, z2 = 4, 7, 10, 15
     cas_body(d, x1, z1, x2, z2, y0, 3)
@@ -1631,7 +1631,7 @@ def florist_cas(rel, L):
 
 
 def florist_neo(rel, L):
-    d = Design("Neoterra", rel, (42, 36, 42), paving="smooth_stone")
+    d = Design("Neoterra", rel, (42, 42, 42), paving="smooth_stone")
     y0, y1 = 2, 6
     x1, z1, x2 = 4, 4, 18
     z2 = 12 if L < 3 else 18
@@ -1710,7 +1710,7 @@ def drying_line(d, x1, x2, z, y, beam="stripped_spruce_log", post="spruce_log", 
     (kind 'banner') or hanks of wool under it (kind 'wool')."""
     for x in (x1, x2):
         for yy in range(2, y + 1):
-            d.set(x, yy, z, lg(post))
+            d.set(x, yy, z, lg(post) if post.endswith("_log") else post)
     for x in range(x1 + 1, x2):
         d.set(x, y, z, lg(beam, "x"))
         c = dy(d, x + k)
@@ -1740,7 +1740,7 @@ def vats(d, cells, y, n):
 # Neoterra "CHROMA TEXTILES": concrete studio with a facade of rainbow concrete fins, glass front, vat line
 #   inside, rooftop drying deck with banners on rails (L3+).
 def dyer_hw(rel, L):
-    d = Design("Hearthwood", rel, (42, 30, 40))
+    d = Design("Hearthwood", rel, (42, 42, 40))
     y0, y1 = 2, 5
     oak = "dark_oak"
     nv = {1: 2, 2: 3, 3: 4}.get(L, 5)
@@ -1832,7 +1832,7 @@ def dyer_hw(rel, L):
 
 
 def dyer_cas(rel, L):
-    d = Design("Cascadia", rel, (42, 30, 44), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (42, 42, 44), paving="coarse_dirt")
     y0 = 2
     nv = {1: 2, 2: 3, 3: 4}.get(L, 5)
     x1, x2, z1 = 5, 13, 4
@@ -1923,7 +1923,7 @@ def dyer_cas(rel, L):
 
 
 def dyer_neo(rel, L):
-    d = Design("Neoterra", rel, (44, 36, 38), paving="smooth_stone")
+    d = Design("Neoterra", rel, (44, 42, 38), paving="smooth_stone")
     y0, y1 = 2, 6
     nv = {1: 2, 2: 3, 3: 4}.get(L, 5)
     x1, z1, z2 = 3, 5, 13
@@ -2006,7 +2006,7 @@ def glass_c(d, i, pane=False):
 # Neoterra "PRISM GLASS STUDIO": white concrete cube with a stained-glass mosaic curtain wall, furnace island
 #   under an extract hood in the middle; L3 a cantilevered glass display box over the entrance, L5 roof sign.
 def glassblower_hw(rel, L):
-    d = Design("Hearthwood", rel, (42, 30, 40))
+    d = Design("Hearthwood", rel, (42, 42, 40))
     y0 = 2
     cx, cz = 15, 13
     top = 16
@@ -2102,7 +2102,7 @@ def glassblower_hw(rel, L):
 
 
 def glassblower_cas(rel, L):
-    d = Design("Cascadia", rel, (42, 30, 40), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (42, 42, 41), paving="coarse_dirt")
     y0, y1 = 2, 5
     x1, z1, z2 = 3, 7, 14
     x2 = 13 if L < 3 else 20
@@ -2174,7 +2174,7 @@ def glassblower_cas(rel, L):
 
 
 def glassblower_neo(rel, L):
-    d = Design("Neoterra", rel, (40, 36, 40), paving="smooth_stone")
+    d = Design("Neoterra", rel, (40, 42, 40), paving="smooth_stone")
     y0, y1 = 2, 7
     x1, z1, x2, z2 = 4, 5, 16, 15
     neo_body(d, x1, z1, x2, z2, y0, y1)
@@ -2274,7 +2274,7 @@ def silo(d, cx, cz, y0, h, wall="white_concrete", band="cyan_concrete", r=2.3, c
 # Neoterra "NEOCRETE PLANT": glass control office with cyan trim, a row of white banded silos (1 at L1, 2 at
 #   L2, 3 at L3+) with chutes down to the basin, L4 conveyor bridge, L5 roof sign.
 def concretemixer_hw(rel, L):
-    d = Design("Hearthwood", rel, (42, 30, 40))
+    d = Design("Hearthwood", rel, (42, 42, 40))
     y0 = 2
     d.cluster(3, 17)                                             # basin x3..21, z17..20
     # workshop
@@ -2355,7 +2355,7 @@ def concretemixer_hw(rel, L):
 
 
 def concretemixer_cas(rel, L):
-    d = Design("Cascadia", rel, (42, 30, 44), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (42, 42, 44), paving="coarse_dirt")
     y0 = 2
     d.cluster(2, 21)                                             # basin x2..20, z21..24
     # office shack
@@ -2432,7 +2432,7 @@ def concretemixer_cas(rel, L):
 
 
 def concretemixer_neo(rel, L):
-    d = Design("Neoterra", rel, (42, 36, 42), paving="smooth_stone")
+    d = Design("Neoterra", rel, (42, 42, 42), paving="smooth_stone")
     y0 = 2
     d.cluster(2, 18)                                             # basin x2..20, z18..21
     # glass control office (two storeys at L3+)
@@ -3083,7 +3083,12 @@ def facade_banners(color):
 
 
 def B(*args, **kw):
-    return lambda d: building(d, *args, **kw)
+    def make(d):
+        k = dict(kw)
+        if k.get("glass") == "STAINED":
+            k["glass"] = glass_c(d, 1, True)
+        return building(d, *args, **k)
+    return make
 
 
 WOOL = ["block:red_wool", "block:yellow_wool", "block:blue_wool"]
@@ -3092,148 +3097,148 @@ WOOL = ["block:red_wool", "block:yellow_wool", "block:blue_wool"]
 GROW = {
     # ---------------------------------------------------------------- restaurant: pantry, staff house, banquet
     ("cook", "Hearthwood"): [
-        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "x", sign=["Pantry"])),
-        (3, B(26, 12, 36, 20, ["living", "dorm"], ("west", 4), "z", sign=["Staff", "House"])),
-        (4, B(3, 30, 15, 38, ["dining", "dining", "bedroom"], ("north", 6), "x", sign=["Banquet", "Hall"])),
-        (5, B(22, 26, 35, 37, ["dining", "bedroom", "bedroom", "bedroom"], ("north", 6), "x", sign=["Guest", "Rooms"])),
+        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "x", sign=["Pantry"], extra=["block:melon", "block:pumpkin", "block:hay_block[axis=y]"], feature=yard_f("crates", "melon", "pumpkin"))),
+        (3, B(26, 12, 36, 20, ["living", "dorm"], ("west", 4), "z", sign=["Staff", "House"], feature=yard_f("terrace", "stone_bricks", "polished_andesite"))),
+        (4, B(3, 30, 15, 38, ["dining", "dining", "bedroom"], ("north", 6), "x", sign=["Banquet", "Hall"], extra=["sideboard", "block:brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]"], feature=F(awning_f(("red_wool", "white_wool")), yard_f("terrace", "stone_bricks", "andesite")))),
+        (5, B(22, 26, 35, 37, ["dining", "bedroom", "bedroom", "bedroom", "living"], ("north", 6), "x", sign=["Guest", "Rooms"], feature=F(facade_banners("red"), yard_f("terrace", "polished_andesite", "stone_bricks")))),
     ],
     ("cook", "Cascadia"): [
-        (2, B(31, 3, 39, 9, ["store"], ("west", 3), "z", sign=["Root", "Cellar"])),
-        (3, B(31, 13, 41, 22, ["living", "dorm"], ("west", 4), "z", sign=["Bunkhouse"])),
-        (4, B(3, 24, 13, 35, ["dining", "dining", "bedroom"], ("north", 5), "z", sign=["Mess", "Hall"])),
-        (5, B(18, 27, 30, 40, ["dining", "bedroom", "bedroom", "bedroom"], ("north", 6), "z", sign=["Lodge"])),
+        (2, B(31, 3, 39, 9, ["store"], ("west", 3), "z", sign=["Root", "Cellar"], extra=["block:melon", "block:pumpkin", "block:hay_block[axis=y]"], feature=yard_f("crates", "melon", "pumpkin"))),
+        (3, B(31, 13, 41, 22, ["living", "dorm"], ("west", 4), "z", sign=["Bunkhouse"], feature=yard_f("terrace", "stone_bricks", "polished_andesite"))),
+        (4, B(3, 24, 13, 35, ["dining", "dining", "bedroom"], ("north", 5), "z", sign=["Mess", "Hall"], extra=["sideboard", "block:brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]"], feature=F(awning_f(("red_wool", "white_wool")), yard_f("terrace", "stone_bricks", "andesite")))),
+        (5, B(18, 27, 30, 40, ["dining", "bedroom", "bedroom", "bedroom"], ("north", 6), "z", sign=["Lodge"], feature=F(facade_banners("red"), yard_f("terrace", "polished_andesite", "stone_bricks")))),
     ],
     ("cook", "Neoterra"): [
-        (2, B(24, 3, 32, 9, ["store"], ("west", 3), sign=["COLD", "STORE"])),
-        (3, B(24, 12, 33, 20, ["office", "living", "dorm"], ("west", 4), sign=["STAFF"])),
-        (4, B(3, 21, 13, 29, ["dining", "dining", "bedroom", "bedroom"], ("north", 5), sign=["SKY", "DINING"])),
-        (5, B(18, 24, 29, 34, ["dining", "dining", "bedroom", "bedroom", "bedroom", "living"], ("north", 5), sign=["ORBIT", "HOTEL"])),
+        (2, B(24, 3, 32, 9, ["store"], ("west", 3), sign=["COLD", "STORE"], extra=["block:melon", "block:pumpkin", "block:hay_block[axis=y]"], feature=yard_f("crates", "melon", "pumpkin"))),
+        (3, B(24, 12, 33, 20, ["office", "living", "dorm"], ("west", 4), sign=["STAFF"], feature=yard_f("terrace", "stone_bricks", "polished_andesite"))),
+        (4, B(3, 21, 13, 29, ["dining", "dining", "bedroom", "bedroom"], ("north", 5), sign=["SKY", "DINING"], extra=["sideboard", "block:brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]"], feature=F(awning_f(("red_wool", "white_wool")), yard_f("terrace", "stone_bricks", "andesite")))),
+        (5, B(18, 24, 29, 34, ["dining", "dining", "bedroom", "bedroom", "bedroom", "living"], ("north", 5), sign=["ORBIT", "HOTEL"], feature=F(facade_banners("red"), yard_f("terrace", "polished_andesite", "stone_bricks")))),
     ],
     # ---------------------------------------------------------------- kitchen: larder, scullery, staff
     ("cookery", "Hearthwood"): [
-        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "x", sign=["Larder"])),
-        (3, B(26, 12, 36, 20, ["kitchen", "dorm"], ("west", 4), "z", sign=["Scullery"])),
-        (4, B(3, 24, 13, 33, ["store", "office", "bedroom"], ("north", 5), "x", sign=["Stores"])),
-        (5, B(17, 26, 29, 37, ["kitchen", "dining", "dorm", "bedroom"], ("north", 6), "x", sign=["Servants'", "Hall"])),
+        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "x", sign=["Larder"], extra=["block:hay_block[axis=y]", "block:melon", "block:pumpkin"], feature=yard_f("crates", "pumpkin", "melon"))),
+        (3, B(26, 12, 36, 20, ["kitchen", "dorm"], ("west", 4), "z", sign=["Scullery"], extra=["sink", "sink", "counter"], feature=cart_f("hay_block[axis=x]"))),
+        (4, B(3, 24, 13, 33, ["store", "office", "bedroom"], ("north", 5), "x", sign=["Stores"], feature=F(hoist, yard_f("crates", "hay_block[axis=y]", "melon")))),
+        (5, B(17, 26, 29, 37, ["kitchen", "dining", "dorm", "bedroom"], ("north", 6), "x", sign=["Servants'", "Hall"], feature=F(facade_banners("green"), yard_f("terrace", "stone_bricks", "polished_andesite")))),
     ],
     ("cookery", "Cascadia"): [
-        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "z", sign=["Larder"])),
-        (3, B(26, 12, 36, 20, ["kitchen", "dorm"], ("west", 4), "z", sign=["Camp", "Kitchen"])),
-        (4, B(2, 26, 12, 36, ["store", "office"], ("north", 5), "z", sign=["Supply"])),
-        (5, B(25, 25, 37, 37, ["kitchen", "dining", "dorm"], ("north", 6), "z", sign=["Cook", "Shack"])),
+        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "z", sign=["Larder"], extra=["block:hay_block[axis=y]", "block:melon", "block:pumpkin"], feature=yard_f("crates", "pumpkin", "melon"))),
+        (3, B(26, 12, 36, 20, ["kitchen", "dorm"], ("west", 4), "z", sign=["Camp", "Kitchen"], extra=["sink", "sink", "counter"], feature=cart_f("hay_block[axis=x]"))),
+        (4, B(2, 26, 12, 36, ["store", "office"], ("north", 5), "z", sign=["Supply"], feature=F(hoist, yard_f("crates", "hay_block[axis=y]", "melon")))),
+        (5, B(25, 25, 37, 37, ["kitchen", "dining", "dorm", "living"], ("north", 6), "z", sign=["Cook", "Shack"], feature=F(facade_banners("green"), yard_f("terrace", "stone_bricks", "polished_andesite")))),
     ],
     ("cookery", "Neoterra"): [
-        (2, B(27, 3, 35, 9, ["store"], ("west", 3), sign=["DRY", "STORE"])),
-        (3, B(31, 12, 40, 20, ["kitchen", "office", "dorm"], ("north", 4), sign=["PREP"])),
-        (4, B(3, 19, 13, 27, ["store", "kitchen", "office"], ("north", 5), sign=["LABS"])),
-        (5, B(16, 22, 27, 32, ["kitchen", "dining", "dorm", "living"], ("north", 5), sign=["STAFF"])),
+        (2, B(27, 3, 35, 9, ["store"], ("west", 3), sign=["DRY", "STORE"], extra=["block:hay_block[axis=y]", "block:melon", "block:pumpkin"], feature=yard_f("crates", "pumpkin", "melon"))),
+        (3, B(31, 12, 40, 20, ["kitchen", "office", "dorm"], ("north", 4), sign=["PREP"], extra=["sink", "sink", "counter"], feature=cart_f("hay_block[axis=x]"))),
+        (4, B(3, 19, 13, 27, ["store", "kitchen", "office", "bedroom"], ("north", 5), sign=["LABS"], feature=F(hoist, yard_f("crates", "hay_block[axis=y]", "melon")))),
+        (5, B(16, 22, 27, 32, ["kitchen", "dining", "dorm", "living", "bedroom", "living"], ("north", 5), sign=["STAFF"], feature=F(facade_banners("green"), yard_f("terrace", "stone_bricks", "polished_andesite")))),
     ],
     # ---------------------------------------------------------------- bakery
     ("baker", "Hearthwood"): [
-        (3, B(25, 3, 35, 11, ["living", "bedroom"], ("west", 4), "z", sign=["Baker's", "House"])),
-        (4, B(3, 22, 14, 30, ["store", "store"], ("north", 5), "x", sign=["Granary"])),
-        (5, B(24, 22, 36, 32, ["kitchen", "dining", "bedroom"], ("north", 6), "x", sign=["Pastry", "School"])),
+        (3, B(25, 3, 35, 11, ["living", "bedroom"], ("west", 4), "z", sign=["Baker's", "House"], feature=yard_f("frames"))),
+        (4, B(3, 22, 14, 30, ["store", "store", "bedroom"], ("north", 5), "x", sign=["Granary"], extra=["sack", "hay", "sack"], feature=F(hoist, yard_f("piles", "hay_block[axis=y]", "white_wool")))),
+        (5, B(24, 22, 36, 32, ["kitchen", "dining", "bedroom", "bedroom", "living"], ("north", 6), "x", sign=["Pastry", "School"], feature=F(awning_f(("red_wool", "white_wool")), yard_f("terrace", "bricks", "stone_bricks")))),
     ],
     ("baker", "Cascadia"): [
-        (2, B(26, 3, 35, 10, ["store"], ("west", 3), "z", sign=["Flour", "Shed"])),
-        (3, B(27, 14, 37, 23, ["living", "bedroom"], ("west", 4), "z", sign=["Baker's", "Cabin"])),
-        (4, B(4, 29, 14, 38, ["kitchen", "store", "bedroom"], ("north", 5), "z", sign=["Bake", "House"])),
-        (5, B(19, 28, 31, 40, ["shop", "dining", "bedroom", "bedroom"], ("north", 6), "z", sign=["Cafe"])),
+        (2, B(26, 3, 35, 10, ["store"], ("west", 3), "z", sign=["Flour", "Shed"], extra=["sack", "sack", "hay"], feature=cart_f("white_wool"))),
+        (3, B(27, 14, 37, 23, ["living", "bedroom"], ("west", 4), "z", sign=["Baker's", "Cabin"], feature=yard_f("frames"))),
+        (4, B(4, 29, 14, 38, ["kitchen", "store", "bedroom"], ("north", 5), "z", sign=["Bake", "House"], extra=["sack", "hay", "sack"], feature=F(hoist, yard_f("piles", "hay_block[axis=y]", "white_wool")))),
+        (5, B(19, 28, 31, 40, ["shop", "dining", "bedroom", "bedroom", "living"], ("north", 6), "z", sign=["Cafe"], feature=F(awning_f(("red_wool", "white_wool")), yard_f("terrace", "bricks", "stone_bricks")))),
     ],
     ("baker", "Neoterra"): [
-        (2, B(24, 3, 32, 9, ["store"], ("west", 3), sign=["FLOUR"])),
-        (3, B(25, 12, 34, 20, ["kitchen", "office", "living"], ("west", 4), sign=["PATISSERIE"])),
-        (4, B(3, 15, 13, 23, ["store", "kitchen", "dorm"], ("north", 5), sign=["LAB"])),
-        (5, B(16, 25, 27, 35, ["shop", "dining", "dining", "bedroom"], ("north", 5), sign=["LUMEN", "CAFE"])),
+        (2, B(24, 3, 32, 9, ["store"], ("west", 3), sign=["FLOUR"], extra=["sack", "sack", "hay"], feature=cart_f("white_wool"))),
+        (3, B(25, 12, 34, 20, ["kitchen", "office", "living"], ("west", 4), sign=["PATISSERIE"], feature=yard_f("frames"))),
+        (4, B(3, 15, 13, 23, ["store", "kitchen", "dorm"], ("north", 5), sign=["LAB"], extra=["sack", "hay", "sack"], feature=F(hoist, yard_f("piles", "hay_block[axis=y]", "white_wool")))),
+        (5, B(16, 25, 27, 35, ["shop", "dining", "dining", "bedroom", "living"], ("north", 5), sign=["LUMEN", "CAFE"], feature=F(awning_f(("red_wool", "white_wool")), yard_f("terrace", "bricks", "stone_bricks")))),
     ],
     # ---------------------------------------------------------------- florist
     ("florist", "Hearthwood"): [
-        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "x", sign=["Potting", "Shed"])),
-        (3, B(26, 20, 36, 28, ["shop", "office"], ("west", 4), "z", sign=["Seed", "Shop"])),
-        (4, B(3, 24, 13, 32, ["workshop", "store", "bedroom"], ("north", 5), "x", sign=["Wreaths"])),
-        (5, B(15, 29, 27, 38, ["shop", "living", "bedroom", "bedroom"], ("north", 6), "x", sign=["Florist's", "House"])),
+        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "x", sign=["Potting", "Shed"], extra=["block:flower_pot", "block:composter[level=5]", "pots"], feature=yard_f("frames"))),
+        (3, B(26, 20, 36, 28, ["shop", "office"], ("west", 4), "z", sign=["Seed", "Shop"], feature=awning_f(("green_wool", "white_wool")))),
+        (4, B(3, 24, 13, 32, ["workshop", "store", "bedroom"], ("north", 5), "x", sign=["Wreaths"], extra=["block:flowering_azalea", "block:azalea"], feature=yard_f("frames"))),
+        (5, B(15, 29, 27, 38, ["shop", "living", "bedroom", "bedroom"], ("north", 6), "x", sign=["Florist's", "House"], feature=F(facade_banners("green"), yard_f("terrace", "moss_block", "grass_block[snowy=false]")))),
     ],
     ("florist", "Cascadia"): [
-        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "z", sign=["Tool", "Shed"])),
-        (3, B(25, 25, 35, 33, ["shop", "office"], ("north", 4), "z", sign=["Seed", "Store"])),
-        (4, B(2, 27, 12, 36, ["workshop", "store", "bedroom"], ("north", 5), "z", sign=["Bulbs"])),
-        (5, B(14, 29, 24, 40, ["shop", "living", "bedroom", "bedroom"], ("north", 5), "z", sign=["Cabin"])),
+        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "z", sign=["Tool", "Shed"], extra=["block:flower_pot", "block:composter[level=5]", "pots"], feature=yard_f("frames"))),
+        (3, B(25, 25, 35, 33, ["shop", "office"], ("north", 4), "z", sign=["Seed", "Store"], feature=awning_f(("green_wool", "white_wool")))),
+        (4, B(2, 27, 12, 36, ["workshop", "store", "bedroom"], ("north", 5), "z", sign=["Bulbs"], extra=["block:flowering_azalea", "block:azalea"], feature=yard_f("frames"))),
+        (5, B(14, 29, 24, 40, ["shop", "living", "bedroom", "bedroom", "living"], ("north", 5), "z", sign=["Cabin"], feature=F(facade_banners("green"), yard_f("terrace", "moss_block", "grass_block[snowy=false]")))),
     ],
     ("florist", "Neoterra"): [
-        (2, B(25, 4, 33, 10, ["store"], ("west", 3), sign=["SEEDS"])),
-        (3, B(25, 14, 34, 22, ["shop", "office", "living"], ("west", 4), sign=["BLOOM", "SHOP"])),
-        (4, B(3, 23, 13, 31, ["workshop", "store", "office"], ("north", 5), sign=["LAB"])),
-        (5, B(18, 26, 29, 37, ["shop", "office", "living", "bedroom"], ("north", 5), sign=["BLOOM", "TOWER"])),
+        (2, B(25, 4, 33, 10, ["store"], ("west", 3), sign=["SEEDS"], extra=["block:flower_pot", "block:composter[level=5]", "pots"], feature=yard_f("frames"))),
+        (3, B(25, 14, 34, 22, ["shop", "office", "living"], ("west", 4), sign=["BLOOM", "SHOP"], feature=awning_f(("green_wool", "white_wool")))),
+        (4, B(3, 23, 13, 31, ["workshop", "store", "office"], ("north", 5), sign=["LAB"], extra=["block:flowering_azalea", "block:azalea"], feature=yard_f("frames"))),
+        (5, B(18, 26, 29, 37, ["shop", "office", "living", "bedroom", "living"], ("north", 5), sign=["BLOOM", "TOWER"], feature=F(facade_banners("green"), yard_f("terrace", "moss_block", "grass_block[snowy=false]")))),
     ],
     # ---------------------------------------------------------------- dye works
     ("dyer", "Hearthwood"): [
-        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "x", sign=["Wool", "Store"])),
-        (3, B(27, 12, 37, 20, ["workshop", "store"], ("west", 4), "z", sign=["Weaving", "Shed"])),
-        (4, B(3, 24, 13, 33, ["office", "dorm"], ("north", 5), "x", sign=["Counting", "House"])),
-        (5, B(17, 24, 29, 35, ["workshop", "store", "dorm"], ("north", 6), "x", sign=["Cloth", "Hall"])),
+        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "x", sign=["Wool", "Store"], extra=WOOL, feature=yard_f("crates", "red_wool", "blue_wool", "yellow_wool"))),
+        (3, B(27, 12, 37, 20, ["workshop", "store"], ("west", 4), "z", sign=["Weaving", "Shed"], extra=["block:loom[facing=north]"], feature=yard_f("drying"))),
+        (4, B(3, 24, 13, 33, ["office", "dorm"], ("north", 5), "x", sign=["Counting", "House"], feature=facade_banners("blue"))),
+        (5, B(17, 24, 29, 35, ["workshop", "store", "dorm", "living"], ("north", 6), "x", sign=["Cloth", "Hall"], extra=WOOL, feature=F(facade_banners("purple"), hoist, yard_f("drying")))),
     ],
     ("dyer", "Cascadia"): [
-        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "z", sign=["Wool", "Shed"])),
-        (3, B(25, 13, 35, 21, ["workshop", "store"], ("west", 4), "z", sign=["Loom", "House"])),
-        (4, B(25, 25, 35, 34, ["office", "dorm"], ("north", 5), "z", sign=["Office"])),
-        (5, B(10, 31, 22, 42, ["workshop", "store", "dorm"], ("north", 6), "z", sign=["Mill"])),
+        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "z", sign=["Wool", "Shed"], extra=WOOL, feature=yard_f("crates", "red_wool", "blue_wool", "yellow_wool"))),
+        (3, B(25, 13, 35, 21, ["workshop", "store"], ("west", 4), "z", sign=["Loom", "House"], extra=["block:loom[facing=north]"], feature=yard_f("drying"))),
+        (4, B(25, 25, 35, 34, ["office", "dorm", "bedroom"], ("north", 5), "z", sign=["Office"], feature=facade_banners("blue"))),
+        (5, B(10, 31, 22, 42, ["workshop", "store", "dorm", "bedroom", "living"], ("north", 6), "z", sign=["Mill"], extra=WOOL, feature=F(facade_banners("purple"), hoist, yard_f("drying")))),
     ],
     ("dyer", "Neoterra"): [
-        (2, B(26, 4, 34, 10, ["store"], ("west", 3), sign=["YARN"])),
-        (3, B(26, 13, 35, 21, ["workshop", "store", "office"], ("west", 4), sign=["STUDIO"])),
-        (4, B(3, 18, 13, 26, ["workshop", "office", "dorm"], ("north", 5), sign=["LAB"])),
-        (5, B(17, 24, 28, 34, ["workshop", "store", "office", "living"], ("north", 5), sign=["CHROMA"])),
+        (2, B(26, 4, 34, 10, ["store"], ("west", 3), sign=["YARN"], extra=WOOL, feature=yard_f("crates", "red_wool", "blue_wool", "yellow_wool"))),
+        (3, B(26, 13, 35, 21, ["workshop", "store", "office"], ("west", 4), sign=["STUDIO"], extra=["block:loom[facing=north]"], feature=yard_f("drying"))),
+        (4, B(3, 18, 13, 26, ["workshop", "office", "dorm", "bedroom"], ("north", 5), sign=["LAB"], feature=facade_banners("blue"))),
+        (5, B(17, 24, 28, 34, ["workshop", "store", "office", "living", "bedroom", "living"], ("north", 5), sign=["CHROMA"], extra=WOOL, feature=F(facade_banners("purple"), hoist, yard_f("drying")))),
     ],
     # ---------------------------------------------------------------- glassworks
     ("glassblower", "Hearthwood"): [
-        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "x", sign=["Sand &", "Cullet"])),
-        (3, B(27, 12, 37, 20, ["shop", "workshop"], ("west", 4), "z", sign=["Glass", "Shop"])),
-        (4, B(3, 24, 13, 33, ["workshop", "store", "bedroom"], ("north", 5), "x", sign=["Cutting", "Room"])),
-        (5, B(20, 24, 32, 35, ["shop", "office", "living", "bedroom"], ("north", 6), "x", sign=["Master's", "House"])),
+        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "x", sign=["Sand &", "Cullet"], feature=yard_f("piles", "sand", "gravel", "red_sand"))),
+        (3, B(27, 12, 37, 20, ["shop", "workshop"], ("west", 4), "z", sign=["Glass", "Shop"], feature=awning_f(("blue_wool", "white_wool")), glass="STAINED")),
+        (4, B(3, 24, 13, 33, ["workshop", "store", "bedroom"], ("north", 5), "x", sign=["Cutting", "Room"], extra=["block:stonecutter[facing=north]", "block:sand"], feature=yard_f("crates", "sand", "gravel"))),
+        (5, B(20, 24, 32, 35, ["shop", "office", "living", "bedroom"], ("north", 6), "x", sign=["Master's", "House"], feature=facade_banners("yellow"), glass="STAINED")),
     ],
     ("glassblower", "Cascadia"): [
-        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "z", sign=["Sand", "Shed"])),
-        (3, B(27, 12, 37, 20, ["shop", "workshop"], ("west", 4), "z", sign=["Gallery"])),
-        (4, B(2, 19, 12, 28, ["workshop", "store", "bedroom"], ("north", 5), "z", sign=["Kiln", "Shed"])),
-        (5, B(15, 24, 27, 35, ["shop", "office", "living", "bedroom"], ("north", 6), "z", sign=["Lodge"])),
+        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "z", sign=["Sand", "Shed"], feature=yard_f("piles", "sand", "gravel", "red_sand"))),
+        (3, B(27, 12, 37, 20, ["shop", "workshop"], ("west", 4), "z", sign=["Gallery"], feature=awning_f(("blue_wool", "white_wool")), glass="STAINED")),
+        (4, B(2, 19, 12, 28, ["workshop", "store", "bedroom"], ("north", 5), "z", sign=["Kiln", "Shed"], extra=["block:stonecutter[facing=north]", "block:sand"], feature=yard_f("crates", "sand", "gravel"))),
+        (5, B(15, 24, 27, 35, ["shop", "office", "living", "bedroom"], ("north", 6), "z", sign=["Lodge"], feature=facade_banners("yellow"), glass="STAINED")),
     ],
     ("glassblower", "Neoterra"): [
-        (2, B(23, 3, 31, 9, ["store"], ("west", 3), sign=["SILICA"])),
-        (3, B(24, 12, 33, 20, ["shop", "workshop", "office"], ("west", 4), sign=["GALLERY"])),
-        (4, B(3, 19, 13, 27, ["workshop", "store", "office"], ("north", 5), sign=["KILN", "LAB"])),
-        (5, B(17, 24, 28, 34, ["shop", "shop", "office", "living"], ("north", 5), sign=["PRISM"])),
+        (2, B(23, 3, 31, 9, ["store"], ("west", 3), sign=["SILICA"], feature=yard_f("piles", "sand", "gravel", "red_sand"))),
+        (3, B(24, 12, 33, 20, ["shop", "workshop", "office"], ("west", 4), sign=["GALLERY"], feature=awning_f(("blue_wool", "white_wool")), glass="STAINED")),
+        (4, B(3, 19, 13, 27, ["workshop", "store", "office"], ("north", 5), sign=["KILN", "LAB"], extra=["block:stonecutter[facing=north]", "block:sand"], feature=yard_f("crates", "sand", "gravel"))),
+        (5, B(17, 24, 28, 34, ["shop", "shop", "office", "living", "living"], ("north", 5), sign=["PRISM"], feature=facade_banners("yellow"), glass="STAINED")),
     ],
     # ---------------------------------------------------------------- concrete plant
     ("concretemixer", "Hearthwood"): [
-        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "x", sign=["Lime", "Store"])),
-        (3, B(27, 12, 37, 20, ["office", "dorm"], ("west", 4), "z", sign=["Works", "Office"])),
-        (4, B(3, 26, 13, 35, ["workshop", "store", "bedroom"], ("north", 5), "x", sign=["Mason's", "Shop"])),
-        (5, B(17, 26, 29, 37, ["store", "office", "dorm", "bedroom"], ("north", 6), "x", sign=["Foreman's", "House"])),
+        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "x", sign=["Lime", "Store"], feature=yard_f("piles", "white_concrete_powder", "light_gray_concrete_powder", "sand"))),
+        (3, B(27, 12, 37, 20, ["office", "dorm"], ("west", 4), "z", sign=["Works", "Office"], feature=facade_banners("orange"))),
+        (4, B(3, 26, 13, 35, ["workshop", "store", "bedroom"], ("north", 5), "x", sign=["Mason's", "Shop"], extra=["block:stonecutter[facing=north]", "grindstone"], feature=yard_f("piles", "stone", "cobblestone", "gravel"))),
+        (5, B(17, 26, 29, 37, ["store", "office", "dorm", "bedroom", "living"], ("north", 6), "x", sign=["Foreman's", "House"], feature=F(hoist, cart_f("gravel")))),
     ],
     ("concretemixer", "Cascadia"): [
-        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "z", sign=["Powder", "Shed"])),
-        (3, B(27, 13, 37, 21, ["office", "dorm"], ("west", 4), "z", sign=["Office"])),
-        (4, B(2, 28, 12, 37, ["workshop", "store"], ("north", 5), "z", sign=["Repair", "Shop"])),
-        (5, B(16, 29, 28, 40, ["store", "office", "dorm"], ("north", 6), "z", sign=["Bunks"])),
+        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "z", sign=["Powder", "Shed"], feature=yard_f("piles", "white_concrete_powder", "light_gray_concrete_powder", "sand"))),
+        (3, B(27, 13, 37, 21, ["office", "dorm"], ("west", 4), "z", sign=["Office"], feature=facade_banners("orange"))),
+        (4, B(2, 28, 12, 37, ["workshop", "store", "bedroom"], ("north", 5), "z", sign=["Repair", "Shop"], extra=["block:stonecutter[facing=north]", "grindstone"], feature=yard_f("piles", "stone", "cobblestone", "gravel"))),
+        (5, B(16, 29, 28, 40, ["store", "office", "dorm", "bedroom"], ("north", 6), "z", sign=["Bunks"], feature=F(hoist, cart_f("gravel")))),
     ],
     ("concretemixer", "Neoterra"): [
-        (2, B(25, 3, 33, 9, ["store"], ("west", 3), sign=["POWDER"])),
-        (3, B(25, 12, 34, 20, ["office", "office", "dorm"], ("west", 4), sign=["NEOCRETE", "HQ"])),
-        (4, B(3, 24, 13, 32, ["workshop", "store", "office"], ("north", 5), sign=["LAB"])),
-        (5, B(17, 25, 28, 35, ["store", "office", "office", "dorm", "bedroom"], ("north", 5), sign=["TOWER"])),
+        (2, B(25, 3, 33, 9, ["store"], ("west", 3), sign=["POWDER"], feature=yard_f("piles", "white_concrete_powder", "light_gray_concrete_powder", "sand"))),
+        (3, B(25, 12, 34, 20, ["office", "office", "dorm"], ("west", 4), sign=["NEOCRETE", "HQ"], feature=facade_banners("orange"))),
+        (4, B(3, 24, 13, 32, ["workshop", "store", "office"], ("north", 5), sign=["LAB"], extra=["block:stonecutter[facing=north]", "grindstone"], feature=yard_f("piles", "stone", "cobblestone", "gravel"))),
+        (5, B(17, 25, 28, 35, ["store", "office", "office", "dorm", "bedroom"], ("north", 5), sign=["TOWER"], feature=F(hoist, cart_f("gravel")))),
     ],
     # ---------------------------------------------------------------- tavern: coach house, stables, hotel
     ("tavern", "Hearthwood"): [
-        (2, B(24, 3, 34, 11, ["dining", "bedroom"], ("west", 4), "z", sign=["Coach", "House"])),
-        (3, B(4, 26, 16, 36, ["store", "dorm", "bedroom"], ("north", 6), "x", sign=["Stables &", "Rooms"])),
+        (2, B(24, 3, 34, 11, ["dining", "bedroom"], ("west", 4), "z", sign=["Coach", "House"], feature=cart_f("hay_block[axis=x]"))),
+        (3, B(4, 26, 16, 36, ["store", "dorm", "bedroom"], ("north", 6), "x", sign=["Stables &", "Rooms"], extra=["hay", "crate"], feature=F(hoist, yard_f("paddock")))),
     ],
     ("tavern", "Cascadia"): [
-        (2, B(25, 3, 35, 11, ["dining", "bedroom"], ("west", 4), "z", sign=["Bunk", "House"])),
-        (3, B(25, 16, 37, 28, ["store", "dorm", "bedroom"], ("west", 5), "z", sign=["Livery"])),
+        (2, B(25, 3, 35, 11, ["dining", "bedroom"], ("west", 4), "z", sign=["Bunk", "House"], feature=cart_f("hay_block[axis=x]"))),
+        (3, B(25, 16, 37, 28, ["store", "dorm", "bedroom"], ("west", 5), "z", sign=["Livery"], extra=["hay", "crate"], feature=F(hoist, yard_f("paddock")))),
     ],
     ("tavern", "Neoterra"): [
-        (2, B(24, 3, 32, 11, ["dining", "bedroom"], ("west", 4), sign=["SKY", "BAR"])),
-        (3, B(4, 21, 14, 29, ["dining", "bedroom", "bedroom", "living"], ("north", 5), sign=["SKYLINE", "HOTEL"])),
+        (2, B(24, 3, 32, 11, ["dining", "bedroom"], ("west", 4), sign=["SKY", "BAR"], feature=cart_f("hay_block[axis=x]"))),
+        (3, B(4, 21, 14, 29, ["dining", "bedroom", "bedroom", "living"], ("north", 5), sign=["SKYLINE", "HOTEL"], extra=["hay", "crate"], feature=F(hoist, yard_f("paddock")))),
     ],
 }
 

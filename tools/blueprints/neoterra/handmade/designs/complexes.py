@@ -1534,7 +1534,7 @@ def annex_hw(rel, L):
     for z in (6, 10):
         d.set(x1, 2, z, "glass_pane")
         d.set(x1, 3, z, "glass_pane")
-    d.gable(x1, z1, x2, z2, 6, "x", "deepslate_tile_stairs", "deepslate_tile_slab", "bricks")
+    d.gable(x1, z1, x2, z2, 6, "x", "brick_stairs", "brick_slab", "bricks")
     d.hut(*G["HUT"])
     units = [(3, 12, "east", 2, "north"), (7, 12, "east", 2, "north")]
     racks_in(d, units, 1, d.req["racks"], fence("dark_oak"), slab("oak", "top"),
@@ -1584,7 +1584,7 @@ def twin_hw(rel, L):
                 d.set(x, y, z, log("dark_oak_log", "y"))
         if x in (X1, X2) or z in (Z1, Z2):
             d.set(x, 9, z, log("dark_oak_log", "x" if z in (Z1, Z2) else "z"))
-    ridge = d.gable(X1, Z1, X2, Z2, 10, "z", "deepslate_tile_stairs", "deepslate_tile_slab", "calcite")
+    ridge = d.gable(X1, Z1, X2, Z2, 10, "z", "dark_prismarine_stairs", "dark_prismarine_slab", "calcite")
     for z in (Z1, Z2):
         for y in range(10, ridge):
             if d.get(7, y, z) == "minecraft:calcite":
@@ -1717,7 +1717,7 @@ def annex_ca(rel, L):
         d.set(x, 0, z, "spruce_planks")
     ca_logwalls(d, x1, z1, x2, z2, 1, 5)
     d.clear(x1 + 1, 1, z1 + 1, x2 - 1, 5, z2 - 1)
-    d.gable(x1, z1, x2, z2, 6, "x", "dark_oak_stairs", "dark_oak_slab", "spruce_planks")
+    d.gable(x1, z1, x2, z2, 6, "x", "spruce_stairs", "spruce_slab", "spruce_planks")
     d.double_door(5, 1, z1, "x", "north", "spruce")
     d.door(5, 1, z2, "south", "spruce")
     win_ca(d, 2, 2, z1, "north")
@@ -1795,7 +1795,7 @@ def twin_ca(rel, L):
     for z in (Z1, Z2):
         for y in range(2, 8):
             d.set(10, y, z, log("spruce_log", "y"))
-    ridge = d.gable(X1, Z1, X2, Z2, 8, "x", "dark_oak_stairs", "dark_oak_slab", "spruce_planks")
+    ridge = d.gable(X1, Z1, X2, Z2, 8, "x", "mangrove_stairs", "mangrove_slab", "spruce_planks")
     for x in (X1, X2):
         for y in range(8, ridge):
             if d.get(x, y, 8) == "minecraft:spruce_planks":
@@ -2537,6 +2537,19 @@ def grow_sky_hw(d, L):
                 for zz in (28, 31):
                     for k in (0, 1, 2):
                         d.set(xx, Y + k, zz, AIR)
+    if L >= 5:                                        # bandstand and lamps in the court
+        for x, z in cells(38, 31, 42, 35):
+            d.set(x, 1, z, "stone_bricks")
+            if x in (38, 42) and z in (31, 35):
+                for y in range(2, 5):
+                    d.set(x, y, z, "oak_fence")
+            elif (x in (38, 42) or z in (31, 35)) and not (x == 40 and z == 31):
+                d.set(x, 2, z, "oak_fence")
+        d.hip(38, 31, 42, 35, 5, "granite_stairs", "granite_slab")
+        d.set(40, 4, 33, lantern())
+        d.chair(40, 2, 34, "south", "oak", sit=False)
+        for x, z in ((20, 26), (42, 26), (20, 36), (24, 31)):
+            lamp_post(d, x, z, 2, P, 3)
     if L >= 5:                                        # clock tower over the south range gate
         tx1, tz1 = 28, 33
         for y in range(2, 33):
@@ -2617,3 +2630,229 @@ def grow_sky_ca(d, L):
 def skytower(pack, rel, L):
     core = {"Neoterra": skytower_nt, "Hearthwood": skytower_hw, "Cascadia": skytower_ca}[pack](rel, L)
     return {"Neoterra": grow_sky_nt, "Hearthwood": grow_sky_hw, "Cascadia": grow_sky_ca}[pack](core, L)
+
+
+# ---------------------------------------------------------------------------------------------- twin builder growth
+NT_DEPOT_STORE = dict(trim="gray_concrete", fin="yellow_concrete", glass="gray_stained_glass_pane", clad="gray_concrete",
+                      band=("yellow_concrete", "black_concrete"), edge="gray_concrete", parapet="gray_concrete",
+                      coping="smooth_stone", door="spruce")
+NT_DEPOT_OFFICE = dict(trim="orange_terracotta", fin="birch_planks", glass="glass_pane", clad="orange_terracotta",
+                       band=("white_concrete", "orange_terracotta"), edge="smooth_quartz", parapet="white_concrete",
+                       coping="smooth_quartz", door="birch", green=True)
+NT_DEPOT_HALL = dict(trim="polished_blackstone", fin="brown_terracotta", glass="light_gray_stained_glass_pane",
+                     clad="brown_terracotta", band=("polished_blackstone", "yellow_terracotta"),
+                     edge="polished_blackstone", parapet="polished_blackstone", coping="polished_blackstone",
+                     door="dark_oak", roof="deepslate_tile", gable="brown_terracotta")
+NT_DEPOT_CANTEEN = dict(trim="white_concrete", fin="magenta_concrete", glass="light_blue_stained_glass_pane",
+                        clad="white_terracotta", band=("white_concrete", "magenta_terracotta"), edge="smooth_quartz",
+                        parapet="white_concrete", coping="cut_copper", door="cherry", green=True)
+HW_YARD_BARN = dict(wall0="stone_bricks", wall="spruce_planks", frame="spruce_log", plinth="cobblestone",
+                    quoin="stone_bricks", lintel="spruce_planks", band="spruce_planks", roof="spruce",
+                    gable="spruce_planks", door="spruce", box="spruce")
+HW_YARD_OFFICE = dict(wall0="bricks", wall="pink_terracotta", frame="oak_log", plinth="stone_bricks", quoin="bricks",
+                      lintel="oak_planks", band="oak_planks", roof="mud_brick", gable="pink_terracotta", door="oak",
+                      box="oak", chimney="bricks")
+HW_YARD_JOINERY = dict(wall0="stone_bricks", wall="white_terracotta", frame="dark_oak_log", plinth="mossy_stone_bricks",
+                       quoin="stone_bricks", lintel="dark_oak_planks", band="dark_oak_planks", roof="deepslate_tile",
+                       gable="white_terracotta", door="dark_oak", box="dark_oak", chimney="stone_bricks")
+HW_YARD_MASONS = dict(wall0="sandstone", wall="smooth_sandstone", plinth="cut_sandstone", quoin="chiseled_sandstone",
+                      lintel="cut_sandstone", band="cut_sandstone", roof="granite", gable="smooth_sandstone",
+                      door="jungle", box="jungle", chimney="sandstone")
+CA_YARD_SHED = dict(wall="birch_planks", trim="spruce_log", band="dark_oak_planks", roof="cobbled_deepslate",
+                    gable="birch_planks", shutter="spruce", door="birch")
+CA_YARD_BUNK = dict(wall="mangrove_planks", trim="dark_oak_log", band="yellow_terracotta", roof="spruce",
+                    gable="mangrove_planks", shutter="dark_oak", door="mangrove")
+CA_YARD_MILL = dict(wall0="tuff", wall="dark_oak_planks", trim="stripped_spruce_log", band="red_terracotta",
+                    roof="dark_prismarine", gable="dark_oak_planks", shutter="spruce", door="dark_oak")
+CA_YARD_COOK = dict(wall="spruce_log", trim="stripped_spruce_log", band="green_terracotta", roof="deepslate_tile",
+                    gable="spruce_planks", shutter="mangrove", door="spruce")
+
+
+def loading_dock(d, x1, x2, z, y, pack):
+    """Raised dock apron with bollards and pallets in front of a store door row."""
+    for x in range(x1, x2 + 1):
+        d.set(x, y - 1, z, "smooth_stone" if pack == "Neoterra" else "stone_bricks")
+    for x in (x1, x2):
+        d.set(x, y, z, "yellow_concrete" if pack == "Neoterra" else "barrel[facing=up,open=false]")
+
+
+def grow_twin_nt(d, L):
+    P = "Neoterra"
+    regrid(d, 52, 56, 0, 0, 44)
+    lv = [2]
+    for x, z in cells(33, 0, 51, 55):
+        d.set(x, 1, z, "smooth_stone" if (x // 3 + z // 3) % 2 else "light_gray_concrete")
+    for x in range(0, 52, 7):
+        lamp_post(d, x, 0, 2, P, 4) if not 14 <= x <= 18 else None
+    if L >= 2:                                        # materials store hall with roller doors and a dock
+        lv += wing(d, P, 34, 4, 48, 16, 2, 1, ["store"], H=6, doors=[(41, 4, "north")], st=NT_DEPOT_STORE)
+        for x in (37, 45):
+            d.clear(x, 2, 4, x + 1, 4, 4)
+            for xx in (x - 1, x + 2):
+                for y in range(2, 6):
+                    d.set(xx, y, 4, "yellow_concrete" if y % 2 else "black_concrete")
+        loading_dock(d, 35, 47, 3, 2, P)
+        d.sign(41, 6, 3, "north", ["MATERIALS", "STORE"], "birch", glow=True, color="yellow")
+        for x, z in cells(35, 18, 38, 18):
+            pallet_stack(d, x, z, 2, ("bricks", "white_concrete", "glass", "smooth_stone")[x % 4], 2)
+    if L >= 3:                                        # site management offices (plans room, offices, lounge)
+        lv += wing(d, P, 34, 21, 48, 31, 2, 3, ["office", "drawing", "lounge"], doors=[(41, 21, "north")],
+                   st=NT_DEPOT_OFFICE)
+        d.sign(41, 6, 20, "north", ["SITE", "MANAGEMENT"], "birch", glow=True, color="cyan")
+        for x in (36, 46):
+            tree(d, x, 19, 2, h=4)
+    if L >= 4:                                        # precast production hall behind the yard
+        for x in range(14, 19):
+            d.set(x, 2, 26, AIR)
+            d.set(x, 3, 26, AIR)
+        lv += wing(d, P, 2, 29, 30, 44, 2, 2, ["workshop", "store"], H=6, roof="gable", axis="x", chimneys=False,
+                   doors=[(16, 29, "north"), (2, 36, "west")], st=NT_DEPOT_HALL)
+        for x in range(8, 26, 5):                      # gantry rail along the hall front
+            for y in range(2, 9):
+                d.set(x, y, 27, "yellow_concrete" if y % 3 == 2 else "iron_bars")
+        for x in range(7, 27):
+            d.set(x, 9, 27, "yellow_concrete")
+        for y in range(5, 9):
+            d.set(18, y, 27, chain()) if False else None
+        d.sign(16, 8, 28, "north", ["PRECAST", "WORKS"], "birch", glow=True, color="yellow")
+    if L >= 5:                                        # workers' canteen, lockers and gym; second crane
+        lv += wing(d, P, 34, 35, 49, 53, 2, 5, ["dining", "kitchen", "gym", "lounge", "office"], doors=[(41, 35, "north")],
+                   st=NT_DEPOT_CANTEEN)
+        d.sign(41, 6, 34, "north", ["CANTEEN"], "birch", glow=True, color="magenta")
+        for x, z in cells(2, 47, 30, 54):
+            d.set(x, 1, z, "gray_concrete")
+        for x in range(4, 30, 6):                      # plant yard: excavator stand-ins and skips
+            for z in (49, 52):
+                d.set(x, 2, z, "yellow_concrete")
+                d.set(x + 1, 2, z, "yellow_concrete")
+                d.set(x, 3, z, "black_concrete")
+                d.set(x + 1, 3, z, "glass")
+        for y in range(2, 26):
+            d.set(16, y, 46, "yellow_concrete" if y % 3 == 2 else "iron_bars")
+        for x in range(6, 32):
+            d.set(x, 26, 46, "yellow_concrete")
+        d.set(16, 27, 46, "yellow_concrete")
+        d.set(16, 28, 46, "red_concrete")
+        for y in range(16, 26):
+            d.set(28, y, 46, chain())
+        d.set(28, 15, 46, "white_concrete")
+    rail_openings(d, "iron_bars", tuple(sorted(set(lv))))
+    return d
+
+
+def grow_twin_hw(d, L):
+    P = "Hearthwood"
+    regrid(d, 56, 54, 0, 0, 34)
+    lv = [2, 7]
+    path_line(d, [(x, 0) for x in range(0, 56)], 1, "gravel")
+    for x in range(1, 56, 9):
+        lamp_post(d, x, 0, 2, P, 3) if d.air(x, 2, 0) else None
+    if L >= 2:                                        # timber seasoning barn behind the workshop
+        lv += wing(d, P, 2, 21, 12, 35, 2, 2, ["store", "store"], roof="gable", axis="z", chimneys=False,
+                   doors=[(7, 21, "north")], st=HW_YARD_BARN)
+        for z in range(37, 41):                        # log pile outside
+            for x in range(3, 11):
+                d.set(x, 2, z, log("oak_log", "x"))
+                if z < 40:
+                    d.set(x, 3, z, log("oak_log", "x"))
+    if L >= 3:                                        # clerk of works' office and drawing room
+        lv += wing(d, P, 33, 2, 45, 12, 2, 3, ["drawing", "office", "library"], roof="gable", axis="x",
+                   doors=[(39, 12, "south")], st=HW_YARD_OFFICE)
+        flowerbed(d, 34, 14, 37, 15, 2, P)
+        flowerbed(d, 41, 14, 44, 15, 2, P)
+        d.sign(39, 5, 13, "south", ["Clerk of", "Works"], "dark_oak")
+    if L >= 4:                                        # joinery shop with timber store above
+        lv += wing(d, P, 33, 17, 53, 31, 2, 2, ["workshop", "store"], roof="gable", axis="x",
+                   doors=[(43, 17, "north"), (33, 24, "west")], st=HW_YARD_JOINERY)
+        d.sign(43, 5, 16, "north", ["Joinery"], "dark_oak")
+        for x in range(35, 52, 2):                     # seasoned boards stacked on bearers by the shop
+            pallet_stack(d, x, 33, 2, "oak_planks" if x % 4 == 1 else "spruce_planks", 4,
+                         "oak_slab[type=bottom,waterlogged=false]")
+        lamp_post(d, 33, 33, 2, P, 3)
+        for x in range(31, 33):
+            for z in range(14, 33):
+                d.set(x, 1, z, "gravel")
+    if L >= 5:                                        # masons' hall with the workers' mess upstairs
+        lv += wing(d, P, 2, 39, 30, 51, 2, 3, ["workshop", "dining", "lounge"], roof="gable", axis="x",
+                   doors=[(16, 39, "north"), (30, 45, "east")], st=HW_YARD_MASONS)
+        for z in range(37, 41):                        # move the log pile out of the way of the hall
+            for x in range(3, 11):
+                for y in (2, 3):
+                    if d.get(x, y, z).startswith("minecraft:oak_log"):
+                        d.set(x, y, z, AIR)
+        for x, z in cells(34, 34, 52, 50):
+            if (x + z) % 7 == 0 and d.air(x, 2, z):
+                pallet_stack(d, x, z, 2, ("stone_bricks", "bricks", "cobblestone")[x % 3], 2,
+                             "oak_slab[type=bottom,waterlogged=false]")
+        for x in (14, 18):
+            for y in range(2, 9):
+                d.set(x, y, 36, log("dark_oak_log", "y"))
+        for x in range(13, 20):
+            d.set(x, 9, 36, log("dark_oak_log", "x"))
+        for y in range(5, 9):
+            d.set(16, y, 36, chain())
+        d.set(16, 4, 36, "stone_bricks")
+    rail_openings(d, "dark_oak_fence", tuple(sorted(set(lv))))
+    return d
+
+
+def grow_twin_ca(d, L):
+    P = "Cascadia"
+    regrid(d, 56, 54, 0, 0, 34)
+    lv = [2]
+    for x, z in cells(33, 0, 55, 53):
+        d.set(x, 1, z, "grass_block[snowy=false]" if (x * 5 + z * 3) % 7 else "moss_block")
+    for x, z in cells(0, 31, 32, 53):
+        d.set(x, 1, z, "coarse_dirt" if (x + z) % 5 else "gravel")
+    if L >= 2:                                        # open-sided lumber drying shed (birch board ends)
+        lv += wing(d, P, 34, 3, 50, 13, 2, 1, ["store"], roof="gable", axis="x", chimneys=False,
+                   doors=[(42, 13, "south"), (42, 3, "north")], st=CA_YARD_SHED)
+        for x in list(range(35, 40)) + list(range(45, 50)):    # stickered lumber outside
+            for y in (2, 3):
+                d.set(x, y, 15, log("stripped_spruce_log", "x"))
+    if L >= 3:                                        # framers' bunkhouse and office
+        lv += wing(d, P, 36, 18, 48, 29, 2, 2, ["office", "lounge"], roof="gable", axis="x",
+                   doors=[(42, 18, "north")], st=CA_YARD_BUNK)
+        for x in range(36, 49):                         # porch
+            d.set(x, 6, 16, slab("spruce"))
+            d.set(x, 6, 17, slab("spruce"))
+        for x in (36, 48):
+            for y in range(2, 6):
+                d.set(x, y, 16, log("spruce_log", "y"))
+        d.chair(38, 2, 17, "west", "spruce", sit=False)
+        d.chair(46, 2, 17, "east", "spruce", sit=False)
+    if L >= 4:                                        # sawmill hall with log deck and chute
+        lv += wing(d, P, 2, 33, 24, 47, 2, 2, ["workshop", "store"], roof="gable", axis="x",
+                   doors=[(13, 33, "north"), (24, 40, "east")], st=CA_YARD_MILL)
+        for x in range(4, 22):
+            for y in (2, 3):
+                d.set(x, y, 50, log("spruce_log", "x"))
+            d.set(x, 4, 50, log("spruce_log", "x")) if x % 2 else None
+        d.sign(13, 6, 32, "north", ["SAWMILL"], "spruce")
+    if L >= 5:                                        # cookhouse with dining hall and a log water tower
+        lv += wing(d, P, 30, 34, 50, 48, 2, 3, ["dining", "kitchen", "lounge"], roof="gable", axis="x",
+                   doors=[(40, 34, "north")], st=CA_YARD_COOK)
+        for x, z in ((52, 36), (54, 36), (52, 38), (54, 38)):
+            for y in range(2, 10):
+                d.set(x, y, z, log("spruce_log", "y"))
+        for x, z in cells(51, 35, 55, 39):
+            d.set(x, 10, z, "spruce_planks")
+        for y in (11, 12, 13):
+            for x, z in cells(52, 36, 54, 38):
+                d.set(x, y, z, "barrel[facing=up,open=false]" if (x, z) == (53, 37) and False else
+                      log("stripped_spruce_log", "y"))
+        for x, z in cells(51, 35, 55, 39):
+            d.set(x, 14, z, slab("dark_oak"))
+    rail_openings(d, "spruce_fence", tuple(sorted(set(lv))))
+    return d
+
+
+@design("twinbuilder")
+def twinbuilder(pack, rel, L):
+    core = {"Neoterra": twin_nt, "Hearthwood": twin_hw, "Cascadia": twin_ca}[pack](rel, L)
+    return {"Neoterra": grow_twin_nt, "Hearthwood": grow_twin_hw, "Cascadia": grow_twin_ca}[pack](core, L)
+
+
+@design("twinbuilderannex")
+def twinbuilderannex(pack, rel, L):
+    return {"Neoterra": annex_nt, "Hearthwood": annex_hw, "Cascadia": annex_ca}[pack](rel, L)

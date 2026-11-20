@@ -2722,6 +2722,8 @@ def outbuilding(d, x1, z1, x2, z2, kind, door_x=None, h=4, roof_axis=None):
         d.set(ix2, y0, iz2, "smooth_quartz")
         d.set(ix2, y0 + 1, iz2, "potted_bamboo")
         d.set(ix2, y0, iz1 + 1, "white_carpet")
+    elif kind == "empty":
+        pass
     elif kind == "garage":
         for x in range(ix1, ix2 + 1):
             if (x, iz2) not in keep:
@@ -3470,6 +3472,8 @@ def player_estate(rel, L):
     if L >= 5:
         ph_tower(d, T2[0], T2[1], 5, ("armory", "library", "study", "alchemy", "observatory"))
         ph_tower(d, 2, 50, 4, ("study", "library", "alchemy", "observatory"))
+        T3 = {"Hearthwood": (42, 50), "Cascadia": (50, 50), "Neoterra": (50, 54)}[pack]
+        ph_tower(d, T3[0], T3[1], 3, ("armory", "study", "observatory"))
         ph_hall(d, 12, 50, 30, 61, h=5)
         # estate wall with a gate on the street and piers with lamps
         wall = {"Hearthwood": "stone_brick_wall", "Cascadia": "cobblestone_wall", "Neoterra": "polished_blackstone_wall"}[pack]
@@ -3499,3 +3503,173 @@ REQ_PACK = [None]
 def playerhouse(pack, rel, L):
     REQ_PACK[0] = pack
     return player_estate(rel, L)
+
+
+# ============================================================================================ palette variety
+FAM = {
+    "deepslate_tile": ("deepslate_tiles", "deepslate_tile_stairs", "deepslate_tile_slab", "deepslate_tile_wall"),
+    "brick": ("bricks", "brick_stairs", "brick_slab", "brick_wall"),
+    "mud_brick": ("mud_bricks", "mud_brick_stairs", "mud_brick_slab", "mud_brick_wall"),
+    "dark_prismarine": ("dark_prismarine", "dark_prismarine_stairs", "dark_prismarine_slab", "prismarine_wall"),
+    "granite": ("polished_granite", "polished_granite_stairs", "polished_granite_slab", "granite_wall"),
+    "cobbled_deepslate": ("cobbled_deepslate", "cobbled_deepslate_stairs", "cobbled_deepslate_slab",
+                          "cobbled_deepslate_wall"),
+    "stone_brick": ("stone_bricks", "stone_brick_stairs", "stone_brick_slab", "stone_brick_wall"),
+    "spruce": ("spruce_planks", "spruce_stairs", "spruce_slab", None),
+    "dark_oak": ("dark_oak_planks", "dark_oak_stairs", "dark_oak_slab", None),
+    "mangrove": ("mangrove_planks", "mangrove_stairs", "mangrove_slab", None),
+    "cherry": ("cherry_planks", "cherry_stairs", "cherry_slab", None),
+    "warped": ("warped_planks", "warped_stairs", "warped_slab", None),
+    "birch": ("birch_planks", "birch_stairs", "birch_slab", None),
+    "smooth_quartz": ("smooth_quartz", "smooth_quartz_stairs", "smooth_quartz_slab", None),
+    "cut_copper": ("waxed_cut_copper", "waxed_cut_copper_stairs", "waxed_cut_copper_slab", None),
+}
+
+
+def recolor(d, pairs, box=None, parts=("stairs", "slab")):
+    """Swap material families in `d` (optionally only inside box=(x1,z1,x2,z2[,y1])):
+    pairs = [(src, dst)] where src/dst are FAM keys (only the given parts: full/stairs/slab/wall) or plain
+    block ids (exact block swap, properties kept)."""
+    table = {}
+    for src, dst in pairs:
+        if src in FAM and dst in FAM:
+            for i, part in enumerate(("full", "stairs", "slab", "wall")):
+                if part in parts and FAM[src][i] and FAM[dst][i]:
+                    table["minecraft:" + FAM[src][i]] = "minecraft:" + FAM[dst][i]
+        else:
+            table["minecraft:" + src] = "minecraft:" + dst
+    bp = d.bp
+    x1, z1, x2, z2 = (box[:4] if box else (0, 0, bp.sx - 1, bp.sz - 1))
+    y1 = box[4] if box and len(box) > 4 else 0
+    for y in range(y1, bp.sy):
+        layer = bp.grid[y]
+        for z in range(max(0, z1), min(bp.sz - 1, z2) + 1):
+            row = layer[z]
+            for x in range(max(0, x1), min(bp.sx - 1, x2) + 1):
+                st = row[x]
+                name = st.split("[")[0]
+                if name in table:
+                    row[x] = table[name] + st[len(name):]
+    return d
+
+
+# ============================================================================================ cottage / camp add-ons
+def addon(d, x1, z1, x2, z2, kind, h=3):
+    """Small type-specific outbuildings for cottages and the cabin camp (shell from outbuilding()):
+    potting (potting shed), cartshed, sauna, teahouse, cookhouse, bathhouse, store."""
+    pack = d.pack
+    W = SHELL[pack]["wood"]
+    y0 = d.gy + 1
+    door_x = (x1 + x2) // 2
+    ix1, ix2, iz1, iz2 = x1 + 1, x2 - 1, z1 + 1, z2 - 1
+    if kind == "cartshed":
+        outbuilding(d, x1, z1, x2, z2, "empty", h=h)
+        for x in range(x1 + 1, x2):                         # open front on posts
+            for y in range(y0, y0 + h - 1):
+                d.set(x, y, z1, AIR)
+        for x in range(x1, x2 + 1, 3):
+            for y in range(y0, y0 + h - 1):
+                d.set(x, y, z1, log("spruce_log" if pack != "Hearthwood" else "dark_oak_log", "y"))
+        wagon(d, ix1 + 1, iz1 + 2, y0, W)
+        d.set(ix2, y0, iz2, "grindstone[face=floor,facing=west]")
+        d.set(ix2 - 1, y0, iz2, "barrel[facing=north,open=false]")
+        return
+    outbuilding(d, x1, z1, x2, z2, "empty", h=h)
+    if kind == "potting":
+        for x in range(ix1, ix2 + 1):
+            if x == door_x:
+                continue
+            d.set(x, y0, iz2, slab(W, "top"))
+            d.set(x, y0 + 1, iz2, ("potted_red_tulip", "flower_pot", "potted_cornflower", "decorated_pot[cracked=false,"
+                                   "facing=north,waterlogged=false]")[x % 4])
+        for x in range(ix1, ix2 + 1):
+            if x != door_x:
+                d.window(x, y0 + 1, z1, x, y0 + 1, z1)
+        d.set(ix1, y0, iz1, "composter[level=6]")
+        d.set(ix2, y0, iz1, "barrel[facing=west,open=false]")
+    elif kind == "sauna":
+        d.set(ix2, y0, iz2, "smoker[facing=west,lit=true]")
+        d.set(ix2, y0 + 1, iz2, "cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
+        for x in range(ix1, ix2):
+            d.set(x, y0, iz2, stair(W, "south"))
+        d.set(ix1, y0, iz1, "water_cauldron[level=3]")
+        d.set(ix1 + 1, y0, iz1, "barrel[facing=up,open=false]")
+    elif kind == "teahouse":
+        for x, z in cells(ix1, iz1, ix2, iz2):
+            if x != door_x:
+                d.set(x, y0, z, "green_carpet" if (x + z) % 2 else "lime_carpet")
+        d.set(door_x, y0, iz2, "bamboo_slab[type=top,waterlogged=false]")
+        d.set(door_x - 1, y0, iz2, "potted_bamboo")
+        d.set(door_x + 1, y0, iz2, "potted_bamboo")
+        d.set(door_x, y0 + 1, iz2, "candle[candles=2,lit=false,waterlogged=false]")
+    elif kind == "cookhouse":
+        for x in range(ix1, ix2 + 1):
+            if x != door_x:
+                d.set(x, y0, iz2, "smoker[facing=north,lit=true]" if x % 3 == 0 else
+                      "barrel[facing=north,open=false]" if x % 3 == 1 else slab(W, "top"))
+        tz = (iz1 + iz2) // 2
+        for x in range(ix1 + 1, ix2):
+            if abs(x - door_x) > 0:
+                d.table(x, y0, tz, W, "slab")
+                d.chair(x, y0, tz - 1, "north", W, sit=False)
+                d.chair(x, y0, tz + 1, "south", W, sit=False)
+        d.set(door_x, y0, tz, AIR)
+    elif kind == "bathhouse":
+        for x in range(ix1, ix2 + 1):
+            if x != door_x:
+                d.set(x, y0, iz2, "water_cauldron[level=3]" if x % 2 else stair(W, "south"))
+        d.set(ix1, y0, iz1, "barrel[facing=east,open=false]")
+        d.set(ix1, y0 + 1, iz1, "white_wool")
+    elif kind == "store":
+        for x in range(ix1, ix2 + 1):
+            if x != door_x:
+                d.set(x, y0, iz2, "barrel[facing=north,open=false]" if x % 2 else "chest[facing=north,type=single,"
+                                                                                  "waterlogged=false]")
+                d.set(x, y0 + 1, iz2, slab(W, "top"))
+        for x in range(ix1, ix2 + 1):
+            if abs(x - door_x) > 1:
+                d.set(x, y0, iz1 + 2, slab(W, "top"))
+        d.sign(door_x + 1, y0 + 2, z1 - 1, "north", ["", "GENERAL", "STORE"], W)
+
+
+def dovecote(d, x, z, pack):
+    """Square stone dovecote with nest holes and a pyramid cap."""
+    y0 = d.gy + 1
+    wall = {"Hearthwood": "smooth_sandstone", "Cascadia": "spruce_planks", "Neoterra": "white_concrete"}[pack]
+    for y in range(y0, y0 + 6):
+        for ax, az in cells(x, z, x + 4, z + 4):
+            if ax in (x, x + 4) or az in (z, z + 4):
+                d.set(ax, y, az, wall if (y < y0 + 4 or (ax + az + y) % 2) else
+                      trap("spruce" if pack != "Neoterra" else "birch", "north", "top"))
+    d.door(x + 2, y0, z, "south", SHELL[pack]["wood"])
+    rb = {"Hearthwood": "mud_brick", "Cascadia": "dark_oak", "Neoterra": "smooth_quartz"}[pack]
+    _spire(d, x + 1, z + 1, x + 3, z + 3, y0 + 6, rb)
+
+
+def aframe_hut(d, x1, z1, bedc):
+    """Small guest A-frame (9 wide) with a bunk, a stove and a reading chair, door to the north."""
+    y0 = d.gy + 1
+    x2, z2 = x1 + 8, z1 + 7
+    for x, z in cells(x1, z1, x2, z2):
+        d.set(x, d.gy, z, "spruce_planks" if x1 < x < x2 and z1 < z < z2 else "cobblestone")
+    aframe(d, x1, x2, z1, z2, y0, "mangrove", "mangrove_planks")
+    for x in range(x1 + 1, x2):
+        j = min(x - x1, x2 - x)
+        for y in range(y0, y0 + 2 * j):
+            d.set(x, y, z1, "glass_pane" if x != x1 + 4 else log("stripped_spruce_log", "y"))
+            d.set(x, y, z2, "spruce_planks")
+    d.door(x1 + 4, y0, z1, "south", "spruce")
+    d.set(x1 + 4, y0 + 2, z1, log("stripped_spruce_log", "x"))
+    d.bed(x1 + 2, y0, z2 - 1, "south", bedc)
+    d.set(x1 + 2, y0, z2 - 3, "chest[facing=north,type=single,waterlogged=false]")
+    d.set(x2 - 2, y0, z2 - 1, "smoker[facing=north,lit=true]")
+    for y in range(y0 + 1, y0 + 12):
+        if d.air(x2 - 2, y, z2 - 1):
+            d.set(x2 - 2, y, z2 - 1, "cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,"
+                                     "west=none]")
+    d.chair(x2 - 2, y0, z1 + 2, "north", "spruce", sit=False)
+    d.set(x1 + 4, y0 + 5, z1 + 3, "chain[axis=y,waterlogged=false]")
+    d.set(x1 + 4, y0 + 4, z1 + 3, lantern(True))
+    rugc(d, x1 + 3, z1 + 2, x1 + 5, z1 + 4, y0, "red")
+    for x in range(x1 - 1, x2 + 2):                       # little deck
+        d.set(x, d.gy, z1 - 1, "spruce_planks")

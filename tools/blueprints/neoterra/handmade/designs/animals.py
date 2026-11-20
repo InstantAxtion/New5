@@ -2594,7 +2594,7 @@ def hall(d, pack, kind, x1, z1, size):
 # ------------------------------------------------------------------------------------------- L5: hay barn
 def haybarn(d, pack, x1, z1, size=(11, 9)):
     """Big hay / threshing barn n x dep plus granary or silos to the east (x2+2..x2+4)."""
-    n, dep = size
+    n, dep, sh = size
     x2, z2 = x1 + n - 1, z1 + dep - 1
     xm = (x1 + x2) // 2
     if pack == "Hearthwood":                                           # stone threshing barn + granary
@@ -2670,7 +2670,7 @@ def haybarn(d, pack, x1, z1, size=(11, 9)):
         d.set(xm, 2, z1 + 3, "spruce_fence")
         hang(d, xm, ridge - 1, z1 + 2, 6)
         sx = x2 + 2                                                    # stave silo
-        for y in range(2, 15):
+        for y in range(2, sh - 1):
             for dx in range(3):
                 for dz in range(3):
                     if (dx, dz) != (1, 1):
@@ -2679,9 +2679,9 @@ def haybarn(d, pack, x1, z1, size=(11, 9)):
                         d.set(sx + dx, y, z1 + 2 + dz, "hay_block[axis=y]")
         for dx in range(3):
             for dz in range(3):
-                d.set(sx + dx, 15, z1 + 2 + dz, slab("dark_oak_slab") if (dx, dz) != (1, 1) else "dark_oak_planks")
-        d.set(sx + 1, 16, z1 + 3, "lightning_rod[facing=up,powered=false,waterlogged=false]")
-        for y in range(2, 14):
+                d.set(sx + dx, sh - 1, z1 + 2 + dz, slab("dark_oak_slab") if (dx, dz) != (1, 1) else "dark_oak_planks")
+        d.set(sx + 1, sh, z1 + 3, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        for y in range(2, sh - 2):
             d.set(sx + 1, y, z1 + 1, "ladder[facing=north,waterlogged=false]")
     else:                                                              # feed hub: machine hall + two silos
         nt_walls(d, x1, z1, x2, z2, 6, sides="nwe", col_step=5, floor="smooth_stone")
@@ -2702,7 +2702,7 @@ def haybarn(d, pack, x1, z1, size=(11, 9)):
             d.set(x, 6, z1 + 4, "sea_lantern")
         for sz_ in (z1, z1 + 5):                                       # silos
             sx = x2 + 2
-            for y in range(2, 16):
+            for y in range(2, sh):
                 for dx in range(3):
                     for dz in range(3):
                         if (dx, dz) != (1, 1):
@@ -2711,8 +2711,8 @@ def haybarn(d, pack, x1, z1, size=(11, 9)):
                             d.set(sx + dx, y, sz_ + dz, "hay_block[axis=y]")
             for dx in range(3):
                 for dz in range(3):
-                    d.set(sx + dx, 16, sz_ + dz, slab("smooth_quartz_slab"))
-            d.set(sx + 1, 17, sz_ + 1, "end_rod[facing=up]")
+                    d.set(sx + dx, sh, sz_ + dz, slab("smooth_quartz_slab"))
+            d.set(sx + 1, sh + 1, sz_ + 1, "end_rod[facing=up]")
         for x in range(x2 + 1, x2 + 2):
             d.set(x, 13, z1 + 1, "iron_bars")
             d.set(x, 12, z1 + 1, slab("smooth_stone_slab", "top"))
@@ -2936,6 +2936,26 @@ def extra(d, pack, kind, x1, z1):
         d.sign(x1 + 5, 4, fz1 - 1, "north", ["Farrier"], w)
 
 
+def rick(d, pack, x1, z1, big=False):
+    """Thatched hay rick (5 x 5, or 7 x 7) or a wrapped-bale stack for Neoterra."""
+    if big:
+        x1 -= 1
+        z1 -= 1
+    lay = ((2, 3), (3, 3), (4, 3), (5, 2), (6, 1), (7, 0)) if big else ((2, 2), (3, 2), (4, 2), (5, 1), (6, 0))
+    for y, r in lay:
+        for dx in range(-r, r + 1):
+            for dz in range(-r, r + 1):
+                cx, cz = x1 + 2 + dx, z1 + 2 + dz
+                if pack == "Neoterra":
+                    if y < 5:
+                        d.set(cx, y, cz, "white_wool")
+                else:
+                    d.set(cx, y, cz, "hay_block[axis=y]")
+    if pack != "Neoterra":
+        d.set(x1 + 2, 7, z1 + 2, slab("spruce_slab"))
+    return True
+
+
 def shed_fit(d, pack, kind, x1, z1, w):
     """Type-specific fit-out of the L2 shed's east bay and a sign naming it."""
     M = MAT[pack]
@@ -3024,9 +3044,9 @@ def recolor(d, mapping):
 def street_front(d, pack, paving):
     """Street edge (z = 1): flower beds, hedges / rails, benches and lamp posts, kept clear of every path."""
     M = MAT[pack]
-    pav = "minecraft:" + paving
+    pav = "minecraft:" + paving.split("[")[0]
     for x in range(1, d.sx - 1):
-        if any(d.get(x + dx, 1, z) != pav for dx in (-1, 0, 1) for z in (0, 1, 2)):
+        if any(d.get(x + dx, 1, z).split("[")[0] != pav for dx in (-1, 0, 1) for z in (0, 1, 2)):
             continue
         if not all(d.air(x, y, 1) and d.air(x, y, 2) for y in (2, 3)):
             continue
@@ -3096,16 +3116,19 @@ def farmstead(core, pack, rel, L, kind):
     if L >= 2:
         path(d, ex, 0, ex, ez, lane)
         if L == 2:
-            _SIZES[(core.__name__, pack, 2)] = _grow(d, target, (7, 9, 11, 13, 15, 17, 19),
-                                                     lambda w: (shed(d, pack, ex + 1, 2, w),
-                                                                shed_fit(d, pack, kind, ex + 1, 2, w)))
+            _SIZES[(core.__name__, pack, 2)] = _grow(
+                d, target, [(w, 0) for w in (7, 9, 11, 13, 15, 17, 19)] + [(19, 1), (19, 2)],
+                lambda sz: (shed(d, pack, ex + 1, 2, sz[0]), shed_fit(d, pack, kind, ex + 1, 2, sz[0]),
+                            sz[1] and rick(d, pack, ex + 22, 2, sz[1] == 2)))
         else:
-            sw = _SIZES.get((core.__name__, pack, 2), 7)
-            shed(d, pack, ex + 1, 2, sw)
-            shed_fit(d, pack, kind, ex + 1, 2, sw)
+            sz = _SIZES.get((core.__name__, pack, 2), (7, 0))
+            shed(d, pack, ex + 1, 2, sz[0])
+            shed_fit(d, pack, kind, ex + 1, 2, sz[0])
+            if sz[1]:
+                rick(d, pack, ex + 22, 2, sz[1] == 2)
     if L >= 3:
         if L == 3:
-            _SIZES[(core.__name__, pack, 3)] = _grow(d, target, (9, 11, 13), lambda w: cottage(d, pack, ex + 2, 10, w))
+            _SIZES[(core.__name__, pack, 3)] = _grow(d, target, (9, 11, 13, 15), lambda w: cottage(d, pack, ex + 2, 10, w))
         else:
             cottage(d, pack, ex + 2, 10, _SIZES.get((core.__name__, pack, 3), 9))
     if L >= 4:
@@ -3117,14 +3140,11 @@ def farmstead(core, pack, rel, L, kind):
         else:
             hall(d, pack, kind, 2, ez + 2, _SIZES.get((core.__name__, pack, 4), ws[-1]))
     if L >= 5:
-        extra(d, pack, kind, ex + 16, 8)
-        _grow(d, target, [(n, 9) for n in range(11, 24, 2)] + [(n, 11) for n in range(11, 24, 2)],
+        extra(d, pack, kind, ex + 17, 8)
+        _grow(d, target, [(n, 9, 16) for n in range(11, 26, 2)] + [(n, 11, 16) for n in range(11, 26, 2)] +
+              [(25, 11, 20)],
               lambda n: haybarn(d, pack, ex - 2, ez + 2, n))
-        if pack != "Neoterra":
-            tree(d, ex + 24, 3, "oak_log" if pack == "Hearthwood" else "spruce_log",
-                 "oak_leaves" if pack == "Hearthwood" else "spruce_leaves", 5, 2 if pack == "Hearthwood" else 1)
-    street_front(d, pack, {"Hearthwood": "grass_block[snowy=false]", "Cascadia": GRASS,
-                           "Neoterra": "smooth_stone"}[pack].split("[")[0] if pack != "Neoterra" else "smooth_stone")
+    street_front(d, pack, "smooth_stone" if pack == "Neoterra" else "grass_block")
     recolor(d, RECOLOR[(pack, kind)])
     if pack != "Neoterra":
         dress_windows(d, wood)

@@ -1418,3 +1418,414 @@ def builder_cas(rel, L):
 @design("builder")
 def builder(pack, rel, L):
     return {"Neoterra": builder_neo, "Hearthwood": builder_hw, "Cascadia": builder_cas}[pack](rel, L)
+
+
+# =============================================================================================== SAWMILL
+"""
+Sawmill
+  Neoterra   "Timber processing plant" (copper roofs, light-grey + mangrove cladding, orange bands): north-light
+             sawtooth saw hall with a straight saw line, lengthened at L2; glazed mill office (L3, 3 storeys at L5);
+             lumber drying kiln with roof vents (L4); covered log yard with a gantry crane (L5).
+  Hearthwood "Watermill" (sandstone & stone, oak framing, red clay-tile roofs): stone mill house over a mill race
+             with an undershot water wheel and gear train, timber upper floor from L2; the sawyer's cottage (L3),
+             a plank drying barn (L4), a cart shed and wheelwright's loft (L5).
+  Cascadia   "Steam sawmill" (dark-oak siding, blue-green metal roofs, mustard trim): open pole saw shed with a
+             log deck, longer at L2 with a teepee burner; false-front mill office (L3); planing mill (L4, 2
+             storeys); bunkhouse and log flume (L5).
+"""
+SAWS = {1: 3, 2: 4, 3: 5, 4: 6, 5: 7}
+
+
+def saw_line(d, cells, y, n, feed="stripped_birch_log", axis="x"):
+    """Stonecutters (the saws) on consecutive cells with a log on the in-feed and out-feed end."""
+    d.set(cells[0][0], y, cells[0][1], lg(feed, axis))
+    for c in cells[1:n + 1]:
+        d.item(c[0], y, c[1], "stonecutter", "north" if axis == "x" else "west")
+    d.set(cells[n + 1][0], y, cells[n + 1][1], lg(feed, axis))
+
+
+def sawtooth(d, b, glass="light_blue_stained_glass"):
+    """North-light sawtooth roof on a flat roof: glazing rows with sloping quartz backs."""
+    y = b.yr + 1
+    for z in range(b.z1 + 1, b.z2):
+        k = (z - b.z1) % 3
+        for x in range(b.x1 + 1, b.x2):
+            if k == 1:
+                d.set(x, y, z, glass)
+            elif k == 2:
+                d.set(x, y, z, st("cut_copper", "north"))
+
+
+def saw_neo(rel, L):
+    d = Design("Neoterra", rel, (36, 18, 32), paving="smooth_stone")
+    P, y0 = "Neoterra", 2
+    x2 = 15 if L == 1 else 21
+    a = build(d, 3, 4, x2, 13, 1, H=5, roof="flat")
+    sawtooth(d, a)
+    a.door(6, 4, "north", double=True)
+    a.opening(x2, 8, x2, 10, 3, "orange_concrete")
+    d.hut(4, y0, 5)
+    d.sign(9, 5, 3, "north", ["NEOTERRA", "TIMBER WORKS"], "mangrove", glow=True, color="orange")
+    ra = a.room(0)
+    n = SAWS[L]
+    saw_line(d, [(x, 9) for x in range(6, 6 + n + 2)], y0, n, "stripped_mangrove_log")
+    for x in range(6, 8 + n):
+        ra.used.update({(x, 9)})
+    ra.item("crafting_table", sides=("west",))
+    ra.racks(L, 1, sides=("south",))
+    ra.fill(["planks", "logs", "crate", "shelf_quartz"], sides=("south", "north"))
+    ra.lights()
+    for x in range(6, 8 + n):
+        d.set(x, 1, 8, "orange_concrete")
+        d.set(x, 1, 10, "orange_concrete")
+    # forecourt
+    for x in (1, x2 + 2):
+        d.set(x, y0, 3, "moss_block")
+        tree(d, x, 3, y0 + 1, "birch", 3, 1)
+    lamp_post(d, 13, 2, y0, P)
+    # log yard behind the hall
+    log_pile(d, 3, 16, 9, 18, y0, 2, "birch_log", "x")
+    if L >= 2:
+        log_pile(d, 11, 16, 18, 18, y0, 3, "spruce_log", "x")
+        for z in range(15, 21):
+            d.set(2, y0, z, "light_gray_concrete")
+            d.set(2, y0 + 1, z, "glass_pane")
+        wagon(d, 23, 14, y0, "mangrove", lg("birch_log", "x"))
+        for x in (24, 30):
+            lamp_post(d, x, 2, y0, P)
+        bench(d, 17, 2, y0, "north", 2, "mangrove", sit=False)
+        for z in range(3, 16):                                      # planter strip along the west wall
+            d.set(1, y0, z, "moss_block")
+            d.set(1, y0 + 1, z, "azalea" if z % 2 else "fern")
+    # ---- mill office (L3+)
+    if L >= 3:
+        so = 3 if L >= 5 else 2
+        b = build(d, 24, 4, 32, 12, so, roof="flat", core=(30, 6), street_glass=True)
+        b.door(26, 4, "north")
+        rb = b.room(0)
+        rb.item("lectern", sides=("west", "south"))
+        rb.item("cartography_table", sides=("west", "south"))
+        rb.chairs_desk(2, "mangrove", top=sl("smooth_quartz", "top"), sit=False)
+        rb.fill(["shelf_quartz", "bamboo", "crate"])
+        rr = b.room(1)
+        rr.table_group("mangrove", 4, "slab", rug="orange_carpet", sit=False)
+        for blk in ("smoker[facing=north,lit=false]", "water_cauldron[level=3]", sl("smooth_quartz", "top")):
+            t = rr.take(("south",))
+            if t:
+                d.set(t[0][0], rr.y, t[0][1], blk)
+        rr.fill(["shelf_quartz", "bamboo", "banner_cyan"])
+        if so >= 3:
+            r3 = b.room(2)
+            r3.chairs_desk(3, "mangrove", top=sl("smooth_quartz", "top"), sit=False)
+            r3.books(6, sides=("west",))
+            r3.fill(["shelf_quartz", "bamboo"])
+            neo_roof(d, b, "garden")
+        else:
+            neo_roof(d, b, "solar")
+        bench(d, 28, 2, y0, "north", 2, "mangrove", sit=False)
+    # ---- drying kiln (L4+)
+    if L >= 4:
+        k = build(d, 21, 16, 32, 25, 2 if L == 4 else 3, roof="flat", core=(22, 18))
+        k.door(27, 16, "north", double=True)
+        rk = k.room(0)
+        rk.item("domum_ornamentum:architectscutter", sides=("east", "south"))
+        rk.fill(["planks", "planks", "logs"])
+        rk.center_line([lg("stripped_birch_log", "x")] * 5)
+        rk2 = k.room(1)
+        rk2.fill(["planks", "logs", "crate"])
+        rk2.center_line(["birch_planks", "birch_planks", "birch_planks", "birch_planks"])
+        if L >= 5:
+            rk3 = k.room(2)
+            rk3.fill(["planks", "logs"])
+            rk3.center_line([lg("stripped_mangrove_log", "x")] * 5)
+        for x in range(23, 31, 3):                                    # roof vents
+            d.set(x, k.yr + 1, 20, "campfire[facing=north,lit=false,signal_fire=false,waterlogged=false]")
+            d.set(x, k.yr + 1, 22, tr("iron", "north", "bottom"))
+    # ---- covered log yard with gantry crane (L5)
+    if L >= 5:
+        for x in (2, 19):
+            for z in (15, 27):
+                d.fill(x, y0, z, x, 9, z, "gray_concrete")
+        for x in range(2, 20):
+            d.set(x, 10, 15, "orange_concrete")
+            d.set(x, 10, 27, "orange_concrete")
+            for z in range(15, 28):
+                if x in (2, 19) or z % 4 == 3:
+                    d.set(x, 10, z, "orange_concrete" if x in (2, 19) else "iron_bars")
+        for x in range(1, 21):
+            for z in range(14, 29):
+                if z % 2 == 0:
+                    d.set(x, 11, z, sl("cut_copper"))
+        for y in range(6, 10):
+            d.set(10, y, 21, CHAIN)
+        d.set(10, 5, 21, lg("birch_log", "x"))
+        log_pile(d, 3, 21, 9, 25, y0, 3, "birch_log", "x")
+        log_pile(d, 11, 21, 18, 25, y0, 2, "dark_oak_log", "x")
+        for z in (28, 31):
+            for x in (24, 30):
+                d.set(x, y0, z, "moss_block")
+                tree(d, x, z, y0 + 1, "birch", 3, 1)
+        for x in (21, 27, 33):
+            lamp_post(d, x, 27, y0, P)
+    return d
+
+
+def water_wheel(d, x, wy, wc, r=3, wood="dark_oak"):
+    """Undershot wheel in the plane x (axle along x): rim of planks/logs, spokes, hub."""
+    for dy in range(-r, r + 1):
+        for dz in range(-r, r + 1):
+            rr = (dy * dy + dz * dz) ** 0.5
+            if r - 0.5 <= rr < r + 0.6:
+                d.set(x, wy + dy, wc + dz, f"{wood}_planks" if (dy + dz) % 2 else lg(f"stripped_{wood}_log", "x"))
+            elif rr < r - 0.5 and (dy == 0 or dz == 0):
+                d.set(x, wy + dy, wc + dz, lg("stripped_spruce_log", "x" if (dy, dz) == (0, 0) else
+                                              "y" if dz == 0 else "z"))
+
+
+def saw_hw(rel, L):
+    d = Design("Hearthwood", rel, (33, 22, 30), paving="gravel")
+    P, y0 = "Hearthwood", 2
+    sto = {1: 1, 2: 2, 3: 2, 4: 2, 5: 3}[L]
+    z2 = 12 if L == 1 else 15
+    a = build(d, 4, 4, 14, z2, sto, roof="gable", axis="z", core=(12, 8) if sto > 1 else None)
+    a.door(10, 4, "north")
+    d.hut(5, y0, 5)
+    d.sign(11, 4, 3, "north", ["Wheelwright", "Saw Mill"], "oak")
+    # mill race, wheel, axle and gear train
+    for z in range(0, 30):
+        d.set(16, 1, z, "water[level=0]")
+        d.set(17, 1, z, "water[level=0]")
+        d.set(15, 1, z, "stone_bricks")
+        d.set(18, 1, z, "stone_bricks")
+        if z not in (1, 2):
+            d.set(18, y0, z, "stone_brick_wall")
+    for x in (16, 17):
+        d.set(x, y0, 2, sl("oak"))
+        d.set(x, y0, 1, sl("oak"))
+    water_wheel(d, 16, 4, 9, 3 if L < 3 else 3)
+    if L >= 3:
+        water_wheel(d, 17, 4, 9, 3)
+    for x in (14, 15):
+        d.set(x, 4, 9, lg("dark_oak_log", "x"))
+    ra = a.room(0)
+    n = SAWS[L]
+    saw_line(d, [(8, z) for z in range(5, 5 + n + 2)], y0, n, "stripped_oak_log", "z")
+    ra.used.update({(8, z) for z in range(5, 7 + n)})
+    d.set(13, y0, 9, "grindstone[face=floor,facing=east]")       # gear train
+    d.fill(13, y0 + 1, 9, 13, 3, 9, lg("dark_oak_log", "y"))
+    d.set(13, 4, 9, lg("dark_oak_log", "x"))
+    ra.used.add((13, 9))
+    ra.item("crafting_table", sides=("west",))
+    ra.racks(min(L, 3), 1, sides=("west", "south"))
+    ra.fill(["logs", "planks", "keg", "shelf_oak"])
+    ra.lights()
+    racks = min(L, 3)
+    if sto >= 2:
+        r1 = a.room(1)
+        racks += r1.racks(L - racks, 1, sides=("west", "south"))
+        r1.fill(["sack", "planks", "logs", "crate"])
+        r1.center_line([lg("stripped_oak_log", "z")] * 4, "z")
+        r1.lights()
+    if sto >= 3:
+        r2 = a.room(2)
+        r2.fill(["sack", "hay", "crate"])
+        r2.lights()
+    log_pile(d, 4, z2 + 3, 12, z2 + 4, y0, 2, "oak_log", "x")
+    flower_bed(d, 5, 1, 8, 2, y0, seed=3)
+    lamp_post(d, 12, 1, y0, P)
+    # ---- sawyer's cottage (L3+)
+    if L >= 3:
+        d.sty_over = dict(wall="calcite", wall0="bricks", post="stripped_dark_oak_log[axis=y]",
+                          beam="stripped_dark_oak_log", end="calcite")
+        b = build(d, 20, 4, 30, 11, 2 if L < 5 else 3, roof="gable", axis="x", core=(28, 6), chimney=(21, 8, "east"))
+        d.sty_over = {}
+        b.door(24, 4, "north")
+        rb = b.room(0)
+        rb.item("lectern", sides=("south", "east"))
+        rb.item("cartography_table", sides=("south", "east"))
+        rb.chairs_desk(2, "oak", sit=False)
+        rb.rug(RUG[P])
+        rb.fill(["shelf_dark", "plant", "keg"])
+        rb.lights()
+        rb1 = b.room(1)
+        rb1.bed("oak", sides=("south", "north"))
+        rb1.bed("oak", sides=("south", "north"))
+        rb1.fill(["wardrobe", "shelf_dark", "plant"])
+        rb1.lights()
+        if L >= 5:
+            rb2 = b.room(2)
+            rb2.bed("oak", sides=("south", "north"))
+            rb2.table_group("oak", 4, "post", rug="orange_carpet", sit=False)
+            rb2.fill(["shelf_dark", "plant", "sack"])
+            rb2.lights()
+        for x in range(20, 31):
+            if x not in (24,):
+                d.set(x, y0, 2, "oak_fence")
+        flower_bed(d, 21, 3, 22, 3, y0, seed=2) if False else None
+        tree(d, 32, 3, y0, "oak", 4, 1)
+    # ---- plank drying barn (L4+), wheelwright & cart shed (L5)
+    if L >= 4:
+        c = build(d, 20, 15, 30, 25, 2, roof="gable", axis="z", core=(28, 17))
+        c.opening(24, 15, 26, 15, 3, lg("stripped_oak_log", "x"))
+        rc = c.room(0)
+        rc.item("domum_ornamentum:architectscutter", sides=("west",))
+        for z in (16, 20, 24):
+            lamp_post(d, 32, z, y0, P)
+        rc.fill(["planks", "planks", "logs"])
+        rc.center_line([lg("stripped_oak_log", "z")] * 6, "z")
+        rc.lights()
+        if L >= 4:
+            rc2 = c.room(1)
+            rc2.fill(["planks", "sack", "planks"])
+            rc2.center_line(["oak_planks"] * 5, "z")
+            rc2.lights()
+    if L >= 5:
+        e = build(d, 3, 19, 13, 27, 2, roof="gable", axis="x", core=(4, 21))
+        e.opening(7, 19, 9, 19, 3, lg("stripped_oak_log", "x"))
+        re = e.room(0)
+        wagon(d, 8, 24, y0, "oak", "oak_planks")
+        re.used.update({(x, 24) for x in range(7, 11)})
+        re.fill(["logs", "keg", "planks"])
+        re.lights()
+        re2 = e.room(1)
+        re2.center_line(["anvil[facing=north]", "oak_planks", "grindstone[face=floor,facing=north]"])
+        re2.fill(["logs", "shelf_oak", "crate"])
+        re2.lights()
+    return d
+
+
+def saw_cas(rel, L):
+    d = Design("Cascadia", rel, (34, 22, 40), paving="coarse_dirt")
+    P, y0 = "Cascadia", 2
+    x1, z1, z2 = 4, 7, 14
+    x2 = 15 if L == 1 else 22
+    d.fill(x1, 1, z1, x2, 1, z2, "spruce_planks")
+    for x, z in ring(x1, z1, x2, z2):
+        if (z in (z1, z2) and ((x - x1) % 4 == 0 or x == x2)) or (x in (x1, x2) and z in (z1, z2)):
+            d.fill(x, y0, z, x, 5, z, lg("spruce_log", "y"))
+            d.set(x, 1, z, "cobblestone")
+        elif z == z2 or (x == x2 and z > z1):
+            d.fill(x, y0, z, x, 3, z, "dark_oak_planks")
+            d.set(x, 4, z, tr("spruce", "north" if z == z2 else "east", "bottom"))
+    for x in range(x1, x2 + 1):
+        d.set(x, 6, z1, lg("stripped_spruce_log", "x"))
+        d.set(x, 6, z2, lg("stripped_spruce_log", "x"))
+    for z in range(z1, z2 + 1):
+        d.set(x1, 6, z, lg("stripped_spruce_log", "z"))
+        d.set(x2, 6, z, lg("stripped_spruce_log", "z"))
+    for x in range(x1 + 4, x2, 4):
+        for z in range(z1 + 1, z2):
+            d.set(x, 6, z, lg("stripped_spruce_log", "z"))
+        d.set(x, 5, 10, LANT)
+    d.gable(x1, z1, x2, z2, 7, "x", "dark_prismarine_stairs", "dark_prismarine_slab", "dark_oak_planks")
+    for x in range(x1, x2 + 1):
+        d.set(x, 6, z1 - 1, "yellow_terracotta") if False else None
+    n = SAWS[L]
+    saw_line(d, [(x, 10) for x in range(x1 + 3, x1 + 5 + n)], y0, n, "stripped_spruce_log", "x")
+    d.hut(x1 + 1, y0, z1 + 1)
+    d.item(x1 + 2, y0, z2 - 1, "crafting_table")
+    rack_line(d, [(x, z2 - 1) for x in range(x1 + 4, x2, 2)], y0, L, 1, "north")
+    for x in range(x1 + 5, x2, 2):
+        if d.air(x, y0, z2 - 1):
+            d.set(x, y0, z2 - 1, "spruce_planks")
+            d.set(x, y0 + 1, z2 - 1, sl("spruce"))
+    log_pile(d, 0, z1 + 1, 2, z2 - 1, y0, 2, "spruce_log", "z")
+    for x in range(x1 + 2, x1 + 6):
+        d.set(x, y0, z1 - 2, "stripped_spruce_wood[axis=x]")
+    lamp_post(d, x1 - 1, 4, y0, P)
+    # ---- teepee burner (L2+)
+    if L >= 2:
+        cx, cz = 29, 17
+        for y in range(y0, 13):
+            rr = 3 if y < 6 else 2 if y < 9 else 1 if y < 12 else 0
+            for dx in range(-3, 4):
+                for dz in range(-3, 4):
+                    dist = (dx * dx + dz * dz) ** 0.5
+                    if rr - 0.5 <= dist < rr + 0.5 or (rr == 0 and dist < 0.5):
+                        b_ = "iron_bars" if y >= 11 else ("weathered_cut_copper" if (y + dx) % 3 else "exposed_cut_copper")
+                        d.set(cx + dx, y, cz + dz, b_)
+        for k in (0, 1):
+            d.set(cx, y0 + k, cz - 3, AIR)
+        d.set(cx, y0, cz, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+        for z in range(z1 + 4, cz - 3):                               # sawdust conveyor on trestles
+            d.set(24, 4, z, "smooth_stone_slab[type=bottom,waterlogged=false]")
+        log_pile(d, 1, 17, 8, 19, y0, 3, "spruce_log", "x")
+    # ---- false-front mill office (L3+)
+    if L >= 3:
+        b = build(d, 25, 2, 31, 9, 2, roof="gable", axis="z", core=(28, 4))
+        for x in range(24, 33):
+            for y in range(y0, b.ridge + 2):
+                if y >= b.yr or x in (24, 32):
+                    d.set(x, y, 1, "dark_oak_planks" if x not in (24, 32) else lg("spruce_log", "y"))
+            d.set(x, b.ridge + 2, 1, sl("dark_oak"))
+            d.set(x, b.yr, 1, "yellow_terracotta")
+        b.door(26, 2, "north")
+        d.set(26, y0, 1, AIR)
+        d.set(26, y0 + 1, 1, AIR)
+        d.sign(28, b.ridge, 0, "north", ["MILL", "OFFICE"], "spruce")
+        rb = b.room(0)
+        rb.item("lectern", sides=("west", "south"))
+        rb.item("cartography_table", sides=("west", "south"))
+        rb.fill(["shelf_spruce", "keg", "plant"])
+        rb.lights()
+        rb1 = b.room(1)
+        rb1.chairs_desk(2, "spruce", sit=False)
+        rb1.fill(["shelf_spruce", "chisel", "plant"])
+        rb1.lights()
+    # ---- planing mill (L4+)
+    if L >= 4:
+        c = build(d, 4, 21, 16, 29, 2, roof="gable", axis="x", core=(14, 23))
+        c.opening(8, 21, 10, 21, 3, lg("spruce_log", "x"))
+        rc = c.room(0)
+        rc.item("domum_ornamentum:architectscutter", sides=("west", "south"))
+        rc.center_line(["spruce_planks", "stonecutter[facing=north]" if False else lg("stripped_spruce_log", "x"),
+                        "grindstone[face=floor,facing=north]", lg("stripped_spruce_log", "x"), "spruce_planks"])
+        rc.fill(["planks", "planks", "logs", "keg"])
+        rc.lights()
+        rc2 = c.room(1)
+        rc2.fill(["planks", "sack", "planks", "crate"])
+        rc2.center_line(["spruce_planks"] * 6)
+        rc2.lights()
+    # ---- bunkhouse and log flume (L5)
+    if L >= 5:
+        e = build(d, 19, 22, 25, 31, 2, roof="gable", axis="z", core=(20, 24), chimney=(24, 28, "west"))
+        e.door(22, 22, "north")
+        re = e.room(0)
+        re.table_group("spruce", 4, "post", sit=False) or re.chairs_desk(2, "spruce", sit=False)
+        re.fill(["keg", "shelf_spruce", "plant"])
+        re.lights()
+        re2 = e.room(1)
+        for _ in range(3):
+            re2.bed("spruce", sides=("east", "west", "south"))
+        re2.fill(["wardrobe", "plant"])
+        re2.lights()
+        for x in range(27, 34):                                         # flume on trestles
+            for z in (26, 27):
+                d.set(x, 5, z, "spruce_planks" if z == 26 else "water_cauldron[level=3]")
+            if x % 3 == 0:
+                d.fill(x, y0, 26, x, 4, 26, "spruce_fence")
+        log_pile(d, 27, 28, 33, 31, y0, 2, "spruce_log", "x")
+        # open lumber shed with graded stacks
+        lx1, lz1, lx2, lz2 = 3, 32, 25, 38
+        for x, z in ring(lx1, lz1, lx2, lz2):
+            if (x - lx1) % 4 == 0 and z in (lz1, lz2) or x in (lx1, lx2) and z in (lz1, lz2):
+                d.fill(x, y0, z, x, 5, z, lg("spruce_log", "y"))
+                d.set(x, 1, z, "cobblestone")
+        for x in range(lx1, lx2 + 1):
+            d.set(x, 6, lz1, lg("stripped_spruce_log", "x"))
+            d.set(x, 6, lz2, lg("stripped_spruce_log", "x"))
+        d.gable(lx1, lz1, lx2, lz2, 7, "x", "dark_prismarine_stairs", "dark_prismarine_slab", "dark_oak_planks")
+        for x in range(lx1 + 1, lx2, 3):
+            for z in (lz1 + 1, lz1 + 2, lz2 - 2, lz2 - 1):
+                for k in range(3 if z in (lz1 + 1, lz2 - 1) else 2):
+                    d.set(x, y0 + k, z, "spruce_planks" if k % 2 == 0 else "stripped_spruce_wood[axis=x]")
+                    d.set(x + 1, y0 + k, z, "dark_oak_planks" if k % 2 == 0 else "stripped_spruce_wood[axis=x]")
+        for x in range(lx1 + 2, lx2, 4):
+            d.set(x, 6, 35, lg("stripped_spruce_log", "z")) if False else None
+            d.set(x, 6, 35, LANT) if False else None
+    return d
+
+
+@design("sawmill")
+def sawmill(pack, rel, L):
+    return {"Neoterra": saw_neo, "Hearthwood": saw_hw, "Cascadia": saw_cas}[pack](rel, L)

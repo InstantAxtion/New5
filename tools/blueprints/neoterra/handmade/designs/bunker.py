@@ -30,7 +30,7 @@ from hm import Design, design, AIR, D4, OPP, CW, SOLID, KEEP
 
 GY = 24
 SW = GY + 1                                  # surface walk level
-LV = {"A": (18, 21), "B": (13, 17)}          # deck -> (floor y, top air y); ceiling = top + 1
+LV = {"A": (18, 21), "B": (13, 17), "C": (8, 12)}          # deck -> (floor y, top air y); ceiling = top + 1
 CHILD_PATH = {"kitchen": "fundamentals/bunkerkitchen0.blueprint", "clinic": "fundamentals/bunkerclinic0.blueprint",
               "school": "fundamentals/bunkerschool0.blueprint", "farm": "fundamentals/bunkerfarm0.blueprint"}
 CHILD_KINDS = set(CHILD_PATH)
@@ -50,7 +50,7 @@ def H(x, y, z, salt=0):
 BASE = dict(
     ramp=(26, 3, 5),
     hut=(22, 19, 14),
-    wells=[(30, 28, "A", "B", 2, +1)],          # lane-1 x, z0, upper deck, lower deck, minL, lane-2 side
+    wells=[(30, 28, "A", "B", 2, +1), (30, 46, "B", "C", 5, +1)],          # lane-1 x, z0, upper deck, lower deck, minL, lane-2 side
     spaces=[
         # ---- deck A
         ("hall", "A", 22, 11, 32, 14, 1),
@@ -58,37 +58,37 @@ BASE = dict(
         ("corr", "A", 2, 24, 25, 26, 1),
         ("corr", "A", 29, 24, 40, 26, 1),
         ("corr", "A", 41, 24, 52, 26, 2),
-        ("corr", "A", 26, 34, 28, 52, 4),
-        ("corr", "A", 2, 42, 52, 44, 4),
+        ("corr", "A", 26, 34, 28, 52, 3),
+        ("corr", "A", 2, 42, 52, 44, 3),
         ("vault", "A", 13, 1, 23, 9, 1),
-        ("archive", "A", 31, 1, 42, 9, 1),
-        ("radio", "A", 44, 1, 52, 9, 5),
+        ("archive", "A", 31, 1, 44, 9, 1),
+        ("radio", "A", 46, 1, 52, 9, 4),
         ("clinic", "A", 2, 16, 12, 22, 1),
         ("kitchen", "A", 14, 16, 24, 22, 1),
         ("dorm", "A", 30, 16, 40, 22, 1),
-        ("mess", "A", 42, 16, 52, 22, 2),
+        ("mess", "A", 42, 16, 52, 22, 3),
         ("school", "A", 2, 28, 12, 34, 1),
         ("common", "A", 14, 28, 24, 34, 1),
         ("workroom", "A", 33, 28, 40, 34, 1),
         ("ops", "A", 42, 28, 52, 34, 3),
-        ("laundry", "A", 2, 36, 12, 40, 4),
-        ("lab", "A", 14, 36, 24, 40, 4),
+        ("laundry", "A", 2, 36, 12, 40, 3),
+        ("lab", "A", 14, 36, 24, 40, 3),
         ("gym", "A", 30, 36, 40, 40, 4),
-        ("office", "A", 42, 36, 52, 40, 5),
+        ("office", "A", 42, 36, 52, 40, 4),
         ("chapel", "A", 2, 46, 12, 52, 4),
         ("bunks", "A", 14, 46, 24, 52, 5),
-        ("store", "A", 30, 46, 40, 52, 5),
-        ("canteen", "A", 42, 46, 52, 52, 5),
+        ("store", "A", 30, 46, 40, 52, 4),
+        ("canteen", "A", 42, 46, 52, 52, 4),
         # ---- deck B
         ("corr", "B", 2, 24, 52, 26, 2),
-        ("corr", "B", 26, 2, 28, 23, 3),
+        ("corr", "B", 26, 2, 28, 23, 2),
         ("corr", "B", 26, 27, 28, 52, 4),
         ("fabrication", "B", 2, 16, 12, 22, 3),
-        ("generator", "B", 14, 16, 24, 22, 2),
+        ("generator", "B", 14, 16, 24, 22, 3),
         ("farm", "B", 30, 16, 40, 22, 2),
         ("pantry", "B", 42, 16, 52, 22, 2),
         ("water", "B", 2, 2, 12, 14, 4),
-        ("vault", "B", 14, 2, 24, 14, 3),
+        ("vault", "B", 14, 2, 24, 14, 2),
         ("records", "B", 30, 2, 40, 14, 3),
         ("power", "B", 42, 2, 52, 14, 4),
         ("armory", "B", 2, 28, 12, 34, 4),
@@ -99,9 +99,23 @@ BASE = dict(
         ("turbine", "B", 14, 36, 24, 44, 5),
         ("hydro", "B", 30, 36, 40, 44, 5),
         ("bunks", "B", 42, 36, 52, 44, 5),
+        ("fabrication", "B", 2, 46, 12, 52, 5),
+        ("records", "B", 14, 46, 24, 52, 5),
+        ("mess", "B", 33, 46, 40, 52, 5),
+        # ---- deck C (plant deck)
+        ("corr", "C", 2, 42, 52, 44, 5),
+        ("reactor", "C", 2, 34, 12, 40, 5),
+        ("turbine", "C", 14, 34, 24, 40, 5),
+        ("power", "C", 26, 34, 36, 40, 5),
+        ("water", "C", 38, 34, 52, 40, 5),
+        ("cistern", "C", 2, 46, 12, 52, 5),
+        ("server", "C", 14, 46, 27, 52, 5),
+        ("armory", "C", 34, 46, 44, 52, 5),
+        ("store", "C", 46, 46, 52, 52, 5),
+        ("power", "B", 42, 46, 52, 52, 5),
     ],
-    doors=[(43, 5, "A", 5, "door"), (7, 15, "B", 4, "door"), (47, 15, "B", 4, "door"),
-           (13, 40, "B", 5, "door"), (41, 40, "B", 5, "door"),
+    doors=[(45, 5, "A", 4, "door"), (13, 49, "B", 5, "door"), (41, 49, "B", 5, "door"), (7, 15, "B", 4, "door"), (47, 15, "B", 4, "door"),
+           (13, 40, "B", 5, "door"), (41, 40, "B", 5, "door"), (29, 46, "B", 5, "open"), (31, 45, "C", 5, "open"),
            (29, 28, "A", 2, "open"), (31, 27, "B", 2, "open")],
     child_huts={"kitchen": (24, 16), "clinic": (12, 16), "school": (2, 34), "farm": (30, 16)},
 )
@@ -133,7 +147,7 @@ def _transform(base, sx, mirror=False, dz=0):
 
 
 PLANS = {
-    "Neoterra": dict(size=(55, 52, 55), **_transform(BASE, 55)),
+    "Neoterra": dict(size=(55, 58, 55), **_transform(BASE, 55)),
     "Hearthwood": dict(size=(61, 52, 55), **_transform(BASE, 61, mirror=True)),
     "Cascadia": dict(size=(55, 52, 61), **_transform(BASE, 55, dz=6)),
 }
@@ -605,7 +619,7 @@ def f_archive(d, R, M, L, n_shelf, n_chis, pack):
             if (x, z) in R.keep or any((x, z) == c[:2] for c in cells):
                 continue
             # keep the cells next to a door free so the door is not walled in
-            if any(abs(x - kx) + abs(z - kz) == 1 and (x in (R.x1, R.x2) and z in (R.z1, R.z2)) for kx, kz in R.keep):
+            if any(abs(x - kx) + abs(z - kz) == 1 for kx, kz in R.keep):
                 continue
             cells.append((x, z, INTO[s]))
     need = n_shelf + n_chis
@@ -1197,7 +1211,7 @@ def carve_underground(d, pack, L):
                 for x in range(x1 - 1, x2 + 2):
                     put_wall(d, pack, x, y, z, fy)
     # interiors: deck B first, deck A's floor wins on the shared slab
-    for deck in ("B", "A"):
+    for deck in ("C", "B", "A"):
         fy, top = LV[deck]
         for kind, dk, x1, z1, x2, z2, _ in spaces:
             if dk != deck:
@@ -1567,7 +1581,7 @@ def f_generic(d, R, M, L, pack, kind):
     for side in ("north", "east", "south", "west"):
         cells = wallcells(R, side)
         for j, (x, z) in enumerate(cells):
-            if (x, z) in protect or not d.air(x, R.y, z) or j % 4 == 3:
+            if (x, z) in protect or not d.air(x, R.y, z) or j % 4 == 3 or j in (0, len(cells) - 1):
                 continue
             w_recipe(walls[i % len(walls)], d, x, R.y, z, INTO[side], pack, M, i, R.top)
             i += 1
@@ -2027,7 +2041,7 @@ def neoterra(rel, L):
                    floor="smooth_stone", roof="cut_copper", roofblock="cut_copper", parapet="gray_concrete",
                    accent="cyan_terracotta", fin="cyan_concrete", glass="glass_pane", door="mangrove",
                    stairs="polished_blackstone_stairs", rail="iron_bars", shutter="iron")
-        building(d, pal, 3, 30, 19, 42, 1, (11, 30, "north"), ["garage"], L, "modern")
+        building(d, pal, 3, 30, 19, 42, 2, (11, 30, "north"), ["garage", "store"], L, "modern")
         d.fill(3, GY, 26, 19, GY, 29, "polished_andesite")
         for x in range(4, 19, 3):
             d.set(x, GY, 27, "yellow_concrete")
@@ -2049,18 +2063,37 @@ def neoterra(rel, L):
                    floor="polished_diorite", roof="smooth_quartz", roofblock="moss_block", parapet="white_concrete",
                    accent="lime_terracotta", fin="lime_concrete", glass="glass_pane", door="birch",
                    stairs="smooth_quartz_stairs", rail="birch_fence", shutter="birch")
-        building(d, pal, 32, 32, 50, 48, 3, (41, 32, "north"), ["lobby", "briefing", "office"], L, "modern")
+        building(d, pal, 32, 32, 50, 48, 5, (41, 32, "north"), ["lobby", "briefing", "office", "ops", "radio"], L,
+                 "modern")
+        pal3 = dict(wall="white_terracotta", wall2="brown_terracotta", plinth="polished_deepslate",
+                    trim="polished_deepslate", floor="birch_planks", roof="deepslate_tile", roofblock="deepslate_tiles",
+                    parapet="polished_deepslate", accent="yellow_terracotta", fin="yellow_concrete",
+                    glass="glass_pane", door="cherry", stairs="birch_stairs", rail="birch_fence", shutter="cherry")
+        building(d, pal3, 3, 45, 17, 53, 2, (10, 45, "north"), ["bunkhouse", "canteen"], L, "modern")
+        for x in range(4, 17, 3):
+            d.set(x, SW, 44, "potted_bamboo" if x % 2 else "andesite_wall")
+        # water tower
+        wx, wz = 24, 47
+        for y in range(SW, SW + 7):
+            for (ax, az) in ((-1, -1), (1, -1), (-1, 1), (1, 1)):
+                d.set(wx + ax, y, wz + az, "andesite_wall")
+        for y in range(SW + 7, SW + 10):
+            for ax in (-2, -1, 0, 1, 2):
+                for az in (-2, -1, 0, 1, 2):
+                    if abs(ax) == 2 or abs(az) == 2:
+                        d.set(wx + ax, y, wz + az, "light_gray_concrete" if y != SW + 8 else "cyan_terracotta")
+        d.fill(wx - 2, SW + 10, wz - 2, wx + 2, SW + 10, wz + 2, "smooth_quartz_slab[type=bottom,waterlogged=false]")
         d.fill(30, GY, 28, 52, GY, 31, "polished_diorite")
         for x in range(31, 52, 4):
             d.set(x, SW, 29, "potted_bamboo")
             lamp_post(d, x + 2, 28, "andesite_wall", "sea_lantern", 2)
         mx, mz = 47, 45
-        for y in range(GY + 13, GY + 22):
+        for y in range(GY + 21, GY + 28):
             d.set(mx, y, mz, "iron_bars" if y % 3 else "andesite_wall")
-        d.set(mx, GY + 22, mz, "redstone_lamp[lit=true]")
-        d.set(mx, GY + 23, mz, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        d.set(mx, GY + 28, mz, "redstone_lamp[lit=true]")
+        d.set(mx, GY + 29, mz, "lightning_rod[facing=up,powered=false,waterlogged=false]")
         for x in range(34, 45, 3):
-            d.set(x, GY + 13, 46, "daylight_detector[inverted=false,power=0]")
+            d.set(x, GY + 21, 46, "daylight_detector[inverted=false,power=0]")
     return d
 
 
@@ -2203,6 +2236,22 @@ def hearthwood(rel, L):
         flowerbed(d, 14, 19, 20, 19, 4)
         for x in (3, 21):
             lamp_post(d, x, 18, "dark_oak_fence", "lantern[hanging=false,waterlogged=false]", 3)
+    if L >= 4:              # smithy: stone and oak frame, spruce shingles, yellow shutters
+        pal = dict(wall="stone_bricks", wall2="stone_bricks", plinth="cobblestone", trim="stripped_oak_log",
+                   floor="cobblestone", roof="spruce", gable="oak_planks", accent="oak_planks", glass="glass_pane",
+                   door="oak", stairs="oak_stairs", rail="oak_fence", shutter="bamboo", chimney="cobblestone")
+        building(d, pal, 44, 46, 56, 53, 1, (50, 46, "north"), ["smithy"], L, "tudor", "gable", chimney=(57, 49))
+        d.set(42, SW, 47, "anvil[facing=north]")
+        d.set(42, SW, 49, "water_cauldron[level=3]")
+    if L >= 5:              # vicarage: light-blue colour-washed walls, rose granite roof, red door
+        pal = dict(wall="light_blue_terracotta", wall2="white_terracotta", plinth="stone_bricks",
+                   trim="stripped_dark_oak_log", floor="oak_planks", roof="granite", gable="white_terracotta",
+                   accent="dark_oak_planks", glass="glass_pane", door="crimson", stairs="dark_oak_stairs",
+                   rail="dark_oak_fence", shutter="warped", chimney="bricks")
+        building(d, pal, 3, 41, 15, 51, 2, (9, 41, "north"), ["parlour", "bedroom"], L, "tudor", "gable",
+                 chimney=(2, 46))
+        flowerbed(d, 3, 39, 7, 39, 5)
+        flowerbed(d, 11, 39, 15, 39, 6)
     if L >= 5:              # tithe barn (mud brick and oak frame, brown tile roof) and the bell tower
         pal = dict(wall="mud_bricks", wall2="white_terracotta", plinth="cobblestone", trim="stripped_oak_log",
                    floor="spruce_planks", roof="mud_brick", gable="white_terracotta", accent="oak_planks",
@@ -2354,10 +2403,28 @@ def cascadia(rel, L):
                         d.set(hx + ax, y, hz + az, "spruce_planks")
         for a in range(-2, 3):
             d.set(hx + a, SW + 12, hz, "spruce_log[axis=x]")
-        d.set(hx, SW + 13, hz, "grindstone[face=floor,facing=north]")
+        d.set(hx, SW + 13, hz, "lantern[hanging=false,waterlogged=false]")
         for y in range(SW, SW + 12):
             d.set(hx, y, hz, "chain[axis=y,waterlogged=false]")
         d.set(hx, GY, hz, "cobblestone")
+    if L >= 4:              # hoist house by the headframe: dark oak, slate roof, mustard trim
+        pal = dict(wall="dark_oak_planks", wall2="dark_oak_planks", plinth="andesite", trim="stripped_spruce_log",
+                   floor="spruce_planks", roof="deepslate_tile", gable="dark_oak_planks", accent="yellow_terracotta",
+                   glass="glass_pane", door="spruce", stairs="spruce_stairs", rail="spruce_fence", shutter="spruce",
+                   chimney="cobblestone")
+        building(d, pal, 42, 27, 52, 35, 1, (47, 27, "north"), ["hoist"], L, "timber", "gable")
+    if L >= 5:              # general store & assay office: rose cherry siding, red cedar roof, green trim
+        pal = dict(wall="cherry_planks", wall2="stripped_spruce_log", plinth="mossy_cobblestone",
+                   trim="spruce_log", floor="spruce_planks", roof="mangrove", gable="cherry_planks",
+                   accent="green_terracotta", glass="glass_pane", door="spruce", stairs="spruce_stairs",
+                   rail="spruce_fence", shutter="spruce", chimney="cobblestone")
+        building(d, pal, 38, 44, 52, 56, 2, (45, 44, "north"), ["store", "office"], L, "timber", "gable",
+                 chimney=(53, 50))
+        for x in range(38, 53):
+            d.set(x, GY, 42, "spruce_planks")
+            d.set(x, GY, 43, "spruce_planks")
+        for x in (38, 52):
+            lamp_post(d, x, 41, "spruce_fence", "lantern[hanging=false,waterlogged=false]", 3)
     if L >= 5:              # stamp mill: pale birch boards, spruce frame, spruce roof, mustard trim; lookout
         pal = dict(wall="birch_planks", wall2="stripped_birch_log", plinth="tuff", trim="spruce_log",
                    floor="spruce_planks", roof="spruce", gable="birch_planks", accent="yellow_terracotta",

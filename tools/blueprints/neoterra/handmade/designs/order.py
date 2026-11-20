@@ -257,9 +257,19 @@ def building(d, x1, z1, x2, z2, nf=1, axis="x", roof="gable", doors=(("north", N
                     d.set(x, y + 4, z, LOG(band, "x" if s in ("north", "south") else "z" if s != "c" else "y"))
                 else:
                     d.set(x, y + 4, z, "cyan_terracotta" if i < nf - 1 else "white_concrete")
-    # ---- windows
+    # ---- windows (none on or right beside a door)
+    dcells = set()
+    for side, pos in doors:
+        if side in ("north", "south"):
+            px = pos if pos is not None else (x1 + x2) // 2
+            dcells |= {(px + k, z1 if side == "north" else z2) for k in (-1, 0, 1)}
+        else:
+            pz = pos if pos is not None else (z1 + z2) // 2
+            dcells |= {(x1 if side == "west" else x2, pz + k) for k in (-1, 0, 1)}
     for i, y in enumerate(b.walks):
         for s, x, z in _sides(x1, z1, x2, z2):
+            if i == 0 and (x, z) in dcells:
+                continue
             along = (x - x1) if s in ("north", "south") else (z - z1)
             length = (x2 - x1) if s in ("north", "south") else (z2 - z1)
             if P == "Neoterra":
@@ -2151,9 +2161,9 @@ def ca_cascadia(rel, L):
         bench(d, 24, 3, "south", 2)
         lamp_post(d, 21, 1)
     if L >= 3:                                                    # cook shack and mess with a sauna loft
-        building(d, 23, 14, 34, 21, nf=2, axis="z", doors=(("north", 28), ("west", 18)), chimney=(35, 18),
+        building(d, 23, 14, 36, 21, nf=2, axis="z", doors=(("north", 28), ("west", 18)), chimney=(37, 18),
                  kinds=["kitchen", "lounge"])
-        cart(d, 37, 14, "z")
+        cart(d, 39, 14, "z")
     if L >= 4:                                                    # timbersports yard: chopping blocks, log toss
         for x in range(3, 20, 3):
             d.set(x, 2, 30, LOG("spruce_log"))
@@ -2161,14 +2171,20 @@ def ca_cascadia(rel, L):
         for x in range(2, 21):
             for z in (28, 34):
                 d.set(x, 2, z, "spruce_fence")
-        building(d, 23, 25, 36, 33, nf=2, axis="x", doors=(("north", 29), ("west", 29)), chimney=(37, 29),
+        building(d, 23, 24, 41, 34, nf=2, axis="x", doors=(("north", 29), ("west", 29)), chimney=(42, 29),
                  kinds=["gym", "bunks"])
     if L >= 5:                                                    # trophy lodge and boathouse-style gym
         building(d, 2, 36, 20, 43, nf=2, axis="x", doors=(("north", 11), ("east", 40)), chimney=(1, 40),
                  kinds=["mess", "lounge"])
         building(d, 23, 36, 37, 43, nf=2, axis="x", doors=(("north", 30),), kinds=["gym", "office"])
         for z in range(3, 40, 6):
-            tree(d, 43, 2, z, "spruce_log", "spruce_leaves", 7, 2, cone=True)
+            tree(d, 43, 2, z, "dark_oak_log", "spruce_leaves", 7, 2, cone=True)
+        for x in (8, 14):                                         # log gate arch to the timbersports yard
+            for y in range(2, 7):
+                d.set(x, y, 27, LOG("spruce_log"))
+        for x in range(7, 16):
+            d.set(x, 7, 27, LOG("stripped_spruce_log", "x"))
+        d.sign(11, 6, 26, "north", ["TIMBER", "GAMES"], "spruce")
     return d
 
 
@@ -2366,7 +2382,7 @@ def line_walls(d, x1, z1, x2, z2, y, h, skip=()):
 
 
 def en_hearthwood(rel, L):
-    d = Design("Hearthwood", rel, (24, 20, 20))
+    d = Design("Hearthwood", rel, (44, 30, 34))
     x1, z1, x2, z2 = 3, 3, 13, 11
     d.box(x1, 2, z1, x2, 5, z2, "stone_bricks", floor="spruce_planks")
     for x in range(x1, x2 + 1):
@@ -2478,11 +2494,35 @@ def en_hearthwood(rel, L):
         d.fill(8, 1, z2 + 1, 8, 1, gz2 - 1, "gravel")
         d.set(9, 2, gz2 - 1, "stone_brick_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
         d.set(gx1 + 1, 2, gz2 - 1, "oak_sapling[stage=0]") if False else None
+    # ---- growth: a small college of lore along the lane
+    if L >= 3:                                                    # scriptorium with copyists' desks, archive above
+        building(d, 26, 3, 34, 10, nf=2, axis="z", doors=(("north", 30), ("west", 7)), chimney=(35, 7),
+                 kinds=["office", "library"])
+        d.sign(28, 4, 2, "north", ["Scriptorium"], "dark_oak")
+        flowerbed(d, 27, 0, 28, 1)
+        flowerbed(d, 32, 0, 33, 1)
+        lamp_post(d, 25, 1)
+    if L >= 4:                                                    # star tower (observatory) with a weather vane
+        t = building(d, 36, 3, 42, 9, nf=3, roof="hip", ground="stone_bricks", doors=(("north", None),),
+                     kinds=["library", "office", "office"])
+        for y in range(t.ridge + 1, t.ridge + 3):
+            d.set(39, y, 6, "iron_bars")
+        d.set(39, t.ridge + 3, 6, ROD())
+    if L >= 5:                                                    # college hall round a quad
+        building(d, 3, 22, 24, 31, nf=2, axis="x", doors=(("north", 13), ("east", 27)), chimney=(2, 27),
+                 kinds=["library", "bunks"])
+        for x in range(26, 43):
+            for z in range(13, 21):
+                d.set(x, 1, z, "grass_block[snowy=false]" if (x + z) % 7 else "gravel")
+        tree(d, 34, 2, 16, "oak_log", "oak_leaves", 4, 2)
+        for x in (28, 40):
+            bench(d, x, 19, "south", 2)
+        path(d, 26, 12, 42, 12)
     return d
 
 
 def en_cascadia(rel, L):
-    d = Design("Cascadia", rel, (17, 18, 30), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (44, 28, 34), paving="coarse_dirt")
     x1, x2, z1 = 3, 13, 3
     Z2 = {1: 12, 2: 15, 3: 18, 4: 23, 5: 28}[L]
     cs_walls(d, x1, z1, x2, Z2, 2, 4)
@@ -2547,11 +2587,41 @@ def en_cascadia(rel, L):
         for z in (Z2 + 1,):
             for x in range(x1, x2 + 1, 2):
                 d.set(x, 2, z, "spruce_fence")
+    # ---- growth: a mountain retreat of scholars
+    if L >= 2:                                                    # scribe's cabin (L3: loft)
+        building(d, 20, 3, 28, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 24), ("west", 6)),
+                 chimney=(29, 6), kinds=["office", "bunks"])
+        bench(d, 21, 2, "south", 2)
+        lamp_post(d, 18, 1)
+    if L >= 3:                                                    # bindery with a drying porch
+        building(d, 20, 13, 30, 20, nf=1, axis="z", doors=(("north", 25),), kinds=["workshop"])
+        for z in range(13, 21):
+            d.set(31, 1, z, "spruce_planks")
+            d.set(32, 1, z, "spruce_planks")
+            d.set(32, 5, z, ST("spruce", "east"))
+            d.set(31, 5, z, SL("spruce", "top"))
+        drying_beam(d, 31, 31, 16, 4, "stripped_spruce_log") if False else None
+    if L >= 4:                                                    # star-gazing lookout
+        t = building(d, 34, 3, 40, 9, nf=4, roof="hip", doors=(("north", None),),
+                     kinds=["library", "office", "bunks", "office"])
+        for y in range(t.ridge + 1, t.ridge + 3):
+            d.set(37, y, 6, "spruce_fence")
+        d.set(37, t.ridge + 3, 6, "lantern[hanging=false,waterlogged=false]")
+        for x in range(33, 42):                                   # wrap-around deck at the foot
+            for z in (11, 12):
+                d.set(x, 1, z, "spruce_planks")
+            d.set(x, 2, 12, "spruce_fence")
+        d.set(37, 2, 12, AIR)
+    if L >= 5:                                                    # guest lodge for visiting scholars
+        building(d, 20, 23, 38, 31, nf=2, axis="x", doors=(("north", 29), ("west", 27)), chimney=(39, 27),
+                 kinds=["lounge", "bunks"])
+        for z in range(12, 33, 5):
+            tree(d, 42, 2, z, "spruce_log", "spruce_leaves", 7, 2, cone=True)
     return d
 
 
 def en_neoterra(rel, L):
-    d = Design("Neoterra", rel, (19, 32, 19), paving="smooth_stone")
+    d = Design("Neoterra", rel, (32, 34, 32), paving="smooth_stone")
     x1, z1, x2, z2 = 4, 4, 14, 14
     nf = {1: 1, 2: 2, 3: 2, 4: 3, 5: 4}[L]
     H = 5
@@ -2627,6 +2697,36 @@ def en_neoterra(rel, L):
                     d.set(x, 1, z, "moss_block")
                     if x % 3 == 0:
                         d.set(x, 2, z, "azalea")
+    # ---- growth: an arcane institute round the tower
+    if L >= 3:                                                    # library annex linked to the tower
+        building(d, 17, 4, 29, 14, nf=2, roof="flat", doors=(("north", 23), ("west", 9)),
+                 kinds=["library", "library"])
+        d.set(x2, 2, 9, AIR) if False else None
+        d.sign(26, 5, 3, "north", ["", "LIBRARY"], "birch", glow=True, color="magenta")
+        lamp_post(d, 16, 1)
+        lamp_post(d, 30, 1)
+    if L >= 4:                                                    # observatory with a glass dome
+        ob = building(d, 17, 18, 29, 28, nf=1, roof="flat", doors=(("north", 23), ("west", 23)), kinds=["office"],
+                      flat_deco=False)
+        cx, cz, r = 23, 23, 4
+        for x in range(cx - r, cx + r + 1):
+            for z in range(cz - r, cz + r + 1):
+                for y in range(ob.top + 1, ob.top + r + 2):
+                    dd = ((x - cx) ** 2 + (z - cz) ** 2 + (y - ob.top - 1) ** 2) ** 0.5
+                    if r - 0.6 <= dd < r + 0.4:
+                        d.set(x, y, z, "purple_stained_glass" if (x + z + y) % 3 else "white_concrete")
+        for y in range(ob.top + 1, ob.top + 4):
+            d.set(cx, y, cz, "iron_bars")
+        d.set(cx, ob.top + 4, cz, ENDROD("north"))
+        for x in range(18, 29, 3):
+            d.set(x, 1, 16, "moss_block")
+            d.set(x, 2, 16, "flowering_azalea")
+    if L >= 5:                                                    # scriptorium and dormitory for adepts
+        building(d, 2, 20, 14, 30, nf=3, roof="flat", doors=(("north", 8), ("east", 25)),
+                 kinds=["library", "office", "bunks"])
+        for z in range(18, 31, 3):
+            d.set(16, 1, z, "moss_block")
+            d.set(16, 2, z, "azalea")
     return d
 
 
@@ -2660,7 +2760,7 @@ def drying_beam(d, x1, x2, z, y, beam):
 
 
 def al_hearthwood(rel, L):
-    d = Design("Hearthwood", rel, (22, 20, 23))
+    d = Design("Hearthwood", rel, (43, 26, 37))
     x1, x2, z1, z2 = 4, 12, 3, 12
     d.box(x1, 2, z1, x2, 5, z2, "calcite", floor="oak_planks")
     hw_frame(d, x1, z1, x2, z2, 2, 5, 2)
@@ -2788,11 +2888,33 @@ def al_hearthwood(rel, L):
         d.set(8, 4, z1 - 1, "lantern[hanging=false,waterlogged=false]") if False else None
         d.wall_torch(7, 4, z1 - 1, "north")
         d.wall_torch(9, 4, z1 - 1, "north")
+    # ---- growth: an apothecaries' row with a physic garden
+    if L >= 2:                                                    # still-house for distilling cordials
+        building(d, 17, 4, 24, 11, nf=1, axis="z", doors=(("north", 20),), chimney=(25, 8), kinds=["lab"])
+        d.sign(22, 4, 3, "north", ["Still", "House"], "dark_oak")
+        lamp_post(d, 15, 1)
+    if L >= 3:                                                    # herbalist's cottage (two storeys)
+        building(d, 27, 3, 35, 10, nf=2, axis="x", doors=(("north", 31), ("west", 7)), chimney=(36, 7),
+                 kinds=["kitchen", "bunks"])
+        flowerbed(d, 28, 0, 29, 1)
+        flowerbed(d, 33, 0, 34, 1)
+        d.set(31, 1, 1, "gravel")
+        d.set(31, 1, 0, "gravel")
+    if L >= 4:                                                    # drying barn for herbs, store above
+        building(d, 17, 24, 30, 31, nf=2, axis="x", doors=(("north", 23), ("west", 28)), kinds=["store", "store"])
+        for x in range(18, 30, 3):
+            drying_beam(d, x, x + 1, 23, 5, "stripped_dark_oak_log") if False else None
+    if L >= 5:                                                    # guild hall of apothecaries
+        building(d, 27, 13, 40, 21, nf=2, axis="x", doors=(("north", 33), ("west", 17)), chimney=(41, 17),
+                 kinds=["library", "office"])
+        building(d, 32, 24, 40, 31, nf=1, axis="z", doors=(("north", 36),), kinds=["lab"])
+        for x in (36, 38):
+            tree(d, x, 2, 34, "oak_log", "flowering_azalea_leaves", 3, 1)
     return d
 
 
 def al_cascadia(rel, L):
-    d = Design("Cascadia", rel, (26, 16, 21), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (37, 26, 35), paving="coarse_dirt")
     x1, z1, z2 = 3, 6, 12
     X2 = {1: 11, 2: 13, 3: 15, 4: 15, 5: 15}[L]
     cs_walls(d, x1, z1, X2, z2, 2, 5)
@@ -2889,11 +3011,33 @@ def al_cascadia(rel, L):
                 d.set(x, 5, z, "glass")
         d.set(X2, 2, 9, AIR)
         d.set(X2, 3, 9, AIR)
+    # ---- growth: a forest herb farm
+    if L >= 2:                                                    # root cellar & seed store
+        building(d, 3, 15, 10, 20, nf=1, axis="x", doors=(("north", 6),), kinds=["store"])
+        lamp_post(d, 12, 15)
+    if L >= 3:                                                    # tincture workshop with a loft
+        building(d, 18, 15, 26, 21, nf=2, axis="z", doors=(("north", 22),), chimney=(27, 18), kinds=["lab", "store"])
+        cart(d, 13, 18, "z")
+    if L >= 4:                                                    # bunk cabin for the pickers
+        building(d, 3, 24, 13, 31, nf=2, axis="x", doors=(("north", 8),), chimney=(14, 27), kinds=["kitchen", "bunks"])
+        for x in range(3, 14):
+            d.set(x, 1, 23, "spruce_planks")
+            d.set(x, 1, 22, "spruce_planks")
+            d.set(x, 5, 22, SL("spruce", "top"))
+            d.set(x, 5, 23, SL("spruce", "top"))
+        for x in (3, 8, 13):
+            for y in (2, 3, 4):
+                d.set(x, y, 22, LOG("spruce_log"))
+    if L >= 5:                                                    # trading post for remedies
+        building(d, 17, 25, 30, 32, nf=2, axis="x", doors=(("north", 23), ("west", 29)), chimney=(31, 29),
+                 kinds=["office", "lounge"])
+        for z in range(3, 33, 6):
+            tree(d, 34, 2, z, "spruce_log", "spruce_leaves", 7, 2, cone=True)
     return d
 
 
 def al_neoterra(rel, L):
-    d = Design("Neoterra", rel, (19, 14, 17), paving="smooth_stone")
+    d = Design("Neoterra", rel, (40, 26, 39), paving="smooth_stone")
     x1, z1, z2 = 2, 3, 13
     X2 = 12 if L < 3 else 16
     nt_walls(d, x1, z1, X2, z2, 2, 6)
@@ -2973,6 +3117,38 @@ def al_neoterra(rel, L):
         ladder(d, X2 + 1, z2 - 2, 2, 7, "east")
         d.set(X2, 8, z2 - 2, AIR)
         d.set(X2, 9, z2 - 2, AIR)
+    # ---- growth: a pharmaceutical research campus
+    if L >= 2:                                                    # glasshouse for medicinal plants
+        gx1, gz1, gx2, gz2 = 20, 3, 28, 11
+        for x in range(gx1, gx2 + 1):
+            for z in range(gz1, gz2 + 1):
+                edge = x in (gx1, gx2) or z in (gz1, gz2)
+                d.set(x, 1, z, "polished_andesite" if edge else ("smooth_stone" if z == 7 or x == 24 else "moss_block"))
+                if edge:
+                    for y in range(2, 6):
+                        d.set(x, y, z, "white_concrete" if (x in (gx1, gx2) and z in (gz1, gz2)) else "glass_pane")
+                elif z != 7 and x != 24:
+                    d.set(x, 2, z, ["lily_of_the_valley", "allium", "fern", "azure_bluet", "blue_orchid"][(x + z) % 5])
+                for y in (6,):
+                    d.set(x, y, z, "glass" if not edge else "white_concrete")
+        d.door(24, 2, gz1, "south", "birch")
+        for x in range(gx1 + 2, gx2 - 1, 3):
+            d.set(x, 5, 5, "end_rod[facing=down]")
+            d.set(x, 5, 9, "end_rod[facing=down]")
+        lamp_post(d, 18, 1)
+    if L >= 3:                                                    # research labs
+        building(d, 20, 15, 34, 25, nf=2, roof="flat", doors=(("north", 26), ("west", 20)), kinds=["lab", "lab"])
+        d.sign(31, 5, 14, "north", ["", "R&D LABS"], "birch", glow=True, color="lime")
+        bench(d, 22, 13, "north", 2)
+    if L >= 4:                                                    # compounding plant
+        building(d, 2, 17, 16, 27, nf=2, roof="flat", doors=(("north", 9), ("east", 22)), kinds=["store", "workshop"])
+        for x in range(3, 16, 4):
+            d.set(x, 1, 15, "moss_block")
+            d.set(x, 2, 15, "azalea")
+    if L >= 5:                                                    # teaching pharmacy and staff residence
+        building(d, 2, 29, 20, 37, nf=3, roof="flat", doors=(("north", 11), ("east", 33)),
+                 kinds=["lounge", "office", "bunks"])
+        building(d, 24, 28, 38, 37, nf=2, roof="flat", doors=(("north", 31),), kinds=["lab", "library"])
     return d
 
 
