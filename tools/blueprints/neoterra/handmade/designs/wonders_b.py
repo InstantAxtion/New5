@@ -1156,11 +1156,11 @@ def rg_hearthwood(rel, L):
             d.set(x, 2, 0, stone)
             d.set(x, 3, 0, "stone_brick_slab[type=bottom,waterlogged=false]")
     if L >= 4:                                             # louvred ventilators on the ridge, finials, well
-        for x in (BX1 + 4, BX2 - 4):
-            d.set(x, ridge + 1, 18, "dark_oak_fence")
-            d.set(x, ridge + 2, 18, stair("deepslate_tile_stairs", "south"))
-            d.set(x, ridge + 1, 18, "dark_oak_slab[type=top,waterlogged=false]")
-            d.set(x, ridge + 2, 18, "deepslate_tile_slab[type=bottom,waterlogged=false]")
+        for x0 in (BX1 + 5, BX2 - 6):
+            for x in (x0, x0 + 1):
+                d.set(x, ridge, 18, "deepslate_tiles")
+                d.set(x, ridge + 1, 18, "dark_oak_fence")
+                d.set(x, ridge + 2, 18, "deepslate_tile_slab[type=bottom,waterlogged=false]")
         for x in (BX1, BX2):
             d.set(x, ridge + 1, 18, "stone_brick_wall")
         d.set(16, pr + 1, PZ - 1, "stone_brick_wall") if False else None
@@ -1250,7 +1250,7 @@ def rgw_hearthwood(rel, L):
         d.set(x, H - 1, z, "dark_oak_trapdoor[facing=north,half=bottom,open=true,powered=false,waterlogged=false]") if False else None
         d.set(x, H - 1, z, AIR)
     # eaves ring + conical roof
-    top = cone(d, cx, cz, 4.5, H + 1, "deepslate_tile_stairs", "deepslate_tiles", step=0.8 if L < 3 else 0.6,
+    top = cone(d, cx, cz, 4.0, H + 1, "deepslate_tile_stairs", "deepslate_tiles", step=0.6 if L < 3 else 0.5,
                solid="deepslate_tiles")
     if L >= 4:                                             # glover (pigeon lantern) on the apex
         for x, z in ((cx - 1, cz - 1), (cx + 1, cz - 1), (cx - 1, cz + 1), (cx + 1, cz + 1)):
@@ -1319,7 +1319,7 @@ def rg_cascadia(rel, L):
             d.set(X1, y, z, "glass_pane")
             d.set(X2, y, z, "glass_pane")
     # roof (ridge north-south) and the headhouse on top
-    ridge = d.gable(X1, Z1, X2, Z2, T + 1, "z", "dark_oak_stairs", "dark_oak_slab", pl, overhang=1)
+    ridge = d.gable(X1, Z1, X2, Z2, T + 1, "z", "deepslate_tile_stairs", "deepslate_tile_slab", pl, overhang=1)
     if L >= 2:
         hx1, hx2, hz1, hz2 = 13, 17, 14, 18
         hy = ridge - 2
@@ -1333,7 +1333,7 @@ def rg_cascadia(rel, L):
                         d.set(x, y, z, AIR)
         d.set(15, hy + 2, hz1, "glass_pane")
         d.set(15, hy + 2, hz2, "glass_pane")
-        d.gable(hx1, hz1, hx2, hz2, hy + 4, "x", "dark_oak_stairs", "dark_oak_slab", pl, overhang=1)
+        d.gable(hx1, hz1, hx2, hz2, hy + 4, "x", "deepslate_tile_stairs", "deepslate_tile_slab", pl, overhang=1)
     # company sign on the street face
     sy = T - 2
     for x in range(X1 + 1, X2):
@@ -1468,7 +1468,7 @@ def rgw_cascadia(rel, L):
     d.set(cx, 4, cz, lantern(True)) if False else None
     d.set(cx, H, cz, "spruce_planks")
     d.set(cx, H - 1, cz, lantern(True))
-    top = cone(d, cx, cz, 4.0, H + 1, "dark_oak_stairs", "dark_oak_planks", step=1.0, solid="dark_oak_planks")
+    top = cone(d, cx, cz, 3.6, H + 1, "deepslate_tile_stairs", "deepslate_tiles", step=0.9, solid="deepslate_tiles")
     d.set(cx, top + 1, cz, "spruce_fence")
     d.set(cx, top + 2, cz, lantern() if L >= 3 else "spruce_fence")
     if L >= 4:                                             # conveyor stubs both sides (one meets the elevator gallery)
@@ -1569,6 +1569,10 @@ def rg_neoterra(rel, L):
                     continue
                 d.set(x, y, z, "light_gray_concrete" if x in (PX1, PX2) or z == PZ1 or y == ytop else SOLIDB)
             d.set(x, ytop + 1, z, "smooth_stone_slab[type=bottom,waterlogged=false]") if False else None
+    for z in range(PZ1, PZ2 + 1):                         # smooth sloping top
+        ytop = 12 - (z - PZ1)
+        for x in range(PX1, PX2 + 1):
+            d.set(x, ytop + 1, z, stair("polished_andesite_stairs", "north"))
     # the glowing art on the front face and roof (diagonal light strips)
     for z in range(PZ1, PZ2 + 1):
         ytop = 12 - (z - PZ1)
@@ -1677,7 +1681,7 @@ def rgw_neoterra(rel, L):
         d.set(x, 0, z, "smooth_stone")
         for y in range(1, H + 1):
             if (x, z) in edge:
-                st = "cyan_terracotta" if y % 4 == 0 else "white_concrete"
+                st = "cyan_concrete" if y % 4 == 0 else "white_concrete"
                 if y == 1:
                     st = "light_gray_concrete"
                 d.set(x, y, z, st)
