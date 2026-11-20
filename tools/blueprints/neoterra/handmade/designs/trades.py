@@ -258,15 +258,18 @@ def builder_neo(rel, L):
     d.item(7, y0, z2 - 1, "barrel", "up")
     d.item(8, y0, z2 - 1, "barrel", "up")
     if two:
-        for (x, z), b in zip(((x2 - 1, 8), (x2 - 1, 9), (x2 - 1, 10), (10, 10)),
+        # workshop: smithing & anvil on the east wall, grindstone at the back, cutting bench at the window
+        for (x, z), b in zip(((x2 - 1, 8), (x2 - 1, 9), (9, 10), (9, 4)),
                              ("smithing_table", "anvil", "grindstone", "stonecutter")):
             d.item(x, y0, z, b, "west" if b != "anvil" else "north")
         if L <= 3:
-            d.item(9, y0, 10, "hopper")
+            d.item(10, y0, 4, "hopper")
         else:
-            d.item(9, y0, 10, "domum_ornamentum:architectscutter", "north")
+            d.item(10, y0, 4, "domum_ornamentum:architectscutter", "south")
         if L >= 5:
-            d.item(10, y0, 8, "ender_chest", "west")
+            d.item(x2 - 1, y0, 10, "ender_chest", "west")
+        else:
+            d.set(x2 - 1, y0, 10, "potted_bamboo")
         d.rug(7, 6, 9, 8, y0, ("gray_carpet",), "plain")
     for x in (4, 8):
         d.set(x, 5 if not two else 5, 7, "sea_lantern")
@@ -1545,7 +1548,7 @@ def wh_hw(rel, L):
     cells = [(x1 + 2, y0, z1 + 1, "north"), (x1 + 3, y0, z1 + 1, "north"), (x1 + 4, y0, z1 + 1, "north"),
              (x2 - 1, y0, z1 + 2, "west"), (x2 - 1, y0, z1 + 3, "west"), (x2 - 2, y0, z1 + 1, "north"),
              (x2 - 3, y0, z1 + 1, "north"), (x2 - 4, y0, z1 + 1, "north"), (x1 + 1, y0, z1 + 3, "east")]
-    wh_office(d, L, cells, (x1 + 3, y0, z1 + 2, "south", "east"))
+    wh_office(d, L, cells, (x1 + 3, y0, z1 + 3, "west", "east"))
     # rack bays: double rows across the barn either side of the 3-wide nave, cross aisles between
     n = 0
     for u in range(U):
@@ -1780,7 +1783,7 @@ def dl_hw(rel, L):
     cells = [(x, z2 - 1) for x in range(x1 + 4, x2)]
     n = barrel_wall(d, cells, y0, min(DLV[L], 27), "north")
     d.item(x2 - 1, y0, z1 + 4, "crafting_table")
-    d.item(x2 - 1, y0, z1 + 5, "cartography_table")
+    d.item(x1 + 3, y0, z2 - 2, "cartography_table")
     if L >= 2:
         d.item(x2 - 1, y0, z1 + 3, "lectern", "north")
     if L >= 5:
