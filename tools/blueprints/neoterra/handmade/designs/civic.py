@@ -5504,7 +5504,7 @@ def art_room(d, r, y):
             if d.air(x, y, cz + 1) and (x, y, cz + 1) not in d.res:
                 d.chair(x, y, cz + 1, "south", wood, sit=False)
     for x in range(x1, x2 + 1):
-        put(d, x, y + 3, (z1 + cz) // 2, ("white_banner[rotation=0]" if False else "string[attached=false,disarmed=false,east=true,north=false,powered=false,south=false,west=true]"))
+        put(d, x, y + 3, (z1 + cz) // 2, ("white_banner[rotation=0]" if False else "tripwire[attached=false,disarmed=false,east=true,north=false,powered=false,south=false,west=true]"))
     wall_art(d, r, y, colors=("yellow", "lime", "light_blue", "pink"))
     lights(d, r, y)
 

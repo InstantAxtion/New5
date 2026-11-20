@@ -2826,9 +2826,20 @@ def wt_complex(d, L, cx, tz, yw, mirror=False):
         cart(d, cx + s_ * 7, 20, "x")
         hedge(d, [(x, 20) for x in range(min(bx1, bx2) + 6, max(bx1, bx2) + 1)])
         tree(d, cx + s_ * 13, 22 if L < 5 else 9 + 0, 4) if L < 5 else None
+    if L >= 2 and pk == "Cascadia":                          # hay and barrels by the shed
+        for z in (11, 12):
+            put(d, cx + 11, 2, z, "hay_block[axis=y]")
+            put(d, cx + 12, 2, z, "barrel[facing=up,open=false]")
+        put(d, cx + 11, 3, 11, "hay_block[axis=y]")
+        put(d, cx + 12, 3, 11, "barrel[facing=north,open=false]")
     if L >= 3:
         flowerbed(d, cx + 3, 19, cx + 4, 20) if L < 4 else None
         lamp_post(d, cx - 3, 10 + 9)
+        stall(d, cx - 2 - 3 * s_ if False else cx + 3, 23, {"Hearthwood": "red", "Cascadia": "green",
+                                                           "Neoterra": "cyan"}[pk],
+              ("pumpkin", "barrel[facing=up,open=false]", "melon")) if L < 5 else None
+        cart(d, cx - 4, 22, "x") if L < 5 else None
+        lamp_post(d, cx + 7, 22) if L < 5 else None
     if L >= 4:                                               # well / fountain in the yard
         wx = cx + 4
         for x in range(wx, wx + 3):
