@@ -3290,7 +3290,7 @@ GROW = {
         (4, B(26, 14, 34, 36, ["store", "office"], ("west", 8), "z", sign=["Stores"], **SP["cookery4"])),
         (5, B(37, 2, 45, 10, ["kitchen", "dining", "dorm", "bedroom"], ("west", 4), "x", roofkind="hip",
               sign=["Servants'", "Hall"], **SP["cookery5"])),
-        (5, B(38, 14, 46, 25, ["store", "dorm"], ("west", 4), "z", sign=["Bake", "House"])),
+        (5, B(38, 14, 46, 25, ["store", "dorm", "bedroom"], ("west", 4), "z", sign=["Bake", "House"])),
     ],
     ("cookery", "Cascadia"): [
         (2, B(24, 4, 32, 10, ["store"], ("west", 3), "z", sign=["Larder"], **SP["cookery2"])),

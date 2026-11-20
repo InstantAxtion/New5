@@ -816,6 +816,7 @@ class Room:
                 DECOR[kinds[(i // every) % len(kinds)]](self.d, x, self.y, z, f)
                 self.used.add((x, z))
             i += 1
+        self.rug(RUG[self.d.pack], "border")
 
     def rug(self, colors, pattern="border"):
         x1, z1, x2, z2 = self.x1 + 2, self.z1 + 2, self.x2 - 2, self.z2 - 2
@@ -1223,6 +1224,8 @@ def builder_hw(rel, L):
         hedge(d, [(0, z) for z in range(3, 29)] + [(x, 29) for x in range(0, 16)], y0, "oak")
         for z in (6, 14, 20, 26):
             lamp_post(d, 1, z, y0, P)
+        for x in (4, 12):
+            tree(d, x, 27, y0, "oak", 4, 1)
     if L < 5:
         tree(d, 31, 26, y0, "oak", 4, 2)
         tree(d, 31, 22, y0, "oak", 4, 2) if L >= 2 else None
@@ -2448,6 +2451,8 @@ def fl_hw(rel, L):
         for x in (31, 33):
             for z in (6, 12, 18):
                 lamp_post(d, x, z, y0, P) if x == 31 else tree(d, x, z, y0, "oak", 4, 1)
+        for z in (24, 30):
+            lamp_post(d, 33, z, y0, P)
     return d
 
 
@@ -2613,12 +2618,12 @@ def wh_neo(rel, L):
     d.hut(4, y0, 5)
     d.sign(10, a.yr, 3, "north", ["NEOTERRA", "LOGISTICS"], "birch", glow=True, color="yellow")
     r0 = a.room(0)
-    racks = wh_racks(d, r0, 4, 10, 13, z2 - 1, WH[L])
+    racks = wh_racks(d, r0, 4, 10, 13, z2 - 1, WH[L] if L == 1 else max(WH[L], 144))
     r0.item("crafting_table", sides=("west", "north", "east"))
     ups = []
     for s_ in range(1, sto):
         rs = a.room(s_)
-        racks += wh_racks(d, rs, 4, 10, 13, z2 - 1, WH[L] - racks)
+        racks += wh_racks(d, rs, 4, 10, 13, z2 - 1, max(108, WH[L] - racks))
         ups.append(rs)
     if L >= 3:
         wh_items(ups + [r0], L, ("north", "west", "east"), first=False)
@@ -2650,7 +2655,7 @@ def wh_neo(rel, L):
         for x in range(23, 29):
             d.set(x, rb.y, 7, sl("smooth_quartz", "top"))
             rb.used.add((x, 7))
-        racks += wh_racks(d, rb, 22, 9, 28, 13, WH[L] - racks)
+        racks += wh_racks(d, rb, 22, 9, 28, 13, max(36, WH[L] - racks))
         rb.fill(["crate", "bamboo"])
         for s_ in range(1, bs):
             rr = b.room(s_)
@@ -2661,7 +2666,7 @@ def wh_neo(rel, L):
                     if t:
                         d.set(t[0][0], rr.y, t[0][1], blk)
             else:
-                racks += wh_racks(d, rr, 22, 9, 28, 13, WH[L] - racks)
+                racks += wh_racks(d, rr, 22, 9, 28, 13, max(36, WH[L] - racks))
                 rr.chairs_desk(2, "birch", top=sl("smooth_quartz", "top"), sit=False)
             rr.fill(["crate", "shelf_quartz", "bamboo"])
         neo_roof(d, b, "garden")
@@ -2841,6 +2846,7 @@ def wh_hw(rel, L):
             lamp_post(d, 32, z, y0, P)
         for x in (19, 33):
             tree(d, x, 1, y0, "oak", 4, 1)
+        lamp_post(d, 20, 0, y0, P)
         flower_bed(d, 22, 26, 23, 30, y0, seed=7) if False else None
         d.set(30, 7, 33, LANT) if False else None
     return d
@@ -2889,7 +2895,7 @@ def wh_cas(rel, L):
     r0.lights()
     if sto > 1:
         r1 = a.room(1)
-        racks += wh_racks(d, r1, 8, 8, x2 - 1, zb - 1, WH[L] - racks)
+        racks += wh_racks(d, r1, 8, 8, x2 - 1, zb - 1, max(66, WH[L] - racks))
         r1.fill(["crate", "sack"], sides=("west",))
         r1.lights()
     crate_stack(d, x2 - 1, 3, y0, 2)
@@ -2925,7 +2931,7 @@ def wh_cas(rel, L):
         e = build(d, 3, 22, 21, 30, 2 if L >= 5 else 1, roof="gable", axis="x", core=(19, 24) if L >= 5 else None)
         e.opening(7, 22, 9, 22, 3, "yellow_terracotta")
         re = e.room(0)
-        racks += wh_racks(d, re, 4, 25, 16, 29, WH[L] - racks, "x")
+        racks += wh_racks(d, re, 4, 25, 16, 29, max(45, WH[L] - racks), "x")
         re.lights()
         re.fill(["sack", "crate"], sides=("north",))
         if L >= 5:
@@ -2968,6 +2974,8 @@ def wh_cas(rel, L):
         for x in (24, 30, 36, 39):
             lamp_post(d, x, 30, 2, P)
         bench(d, 24, 32, 2, "south", 3, "spruce", sit=False)
+        for x, z in ((25, 38), (30, 38), (35, 38), (37, 33)):
+            tree(d, x, z, 2, "spruce", 5, 1)
     return d
 
 
@@ -3452,7 +3460,7 @@ def cp_neo(rel, L):
             for z in (3, 17):
                 d.set(x, y0, z, "moss_block")
                 tree(d, x, z, y0 + 1, "birch", 3, 1)
-        for x in (19, 21):
+        for x in (19, 21, 26):
             lamp_post(d, x, 0, y0, P)
     return d
 
@@ -3545,6 +3553,7 @@ def cp_hw(rel, L):
         for x in (18, 22, 24):
             d.set(x, y0, 31, "beehive[facing=north,honey_level=0]")
         lamp_post(d, 25, 21, y0, P)
+        lamp_post(d, 14, 21, y0, P)
         for x in (16, 20, 24) if False else (16, 20):
             for z in (22, 26, 30):
                 tree(d, x, z, y0, "oak", 3, 1)

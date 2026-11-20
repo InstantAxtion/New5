@@ -3665,6 +3665,7 @@ def cottage_hamlet_hw(rel, L):
         lamp_post(d, 30, 14, 1)
         garden(d, 11, 24, 18, 30, 2, "spruce", ((14, 24, "north"),))
         bench(d, 33, 13, 2, "east", "north", "dark_oak")
+        tree(d, 52, 13, 2, "oak", 4, 2)
     if L >= 4:
         dovecote(d, 34, 19, "Hearthwood")
         orchard(d, 47, 20, 55, 28, "oak", 4)
