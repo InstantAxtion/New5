@@ -50,8 +50,9 @@ python3 $T/neoterra/twinbuilder.py "$PACK" Neoterra
 # Grand Projects (wonders) with wing child huts
 python3 $T/neoterra/wonders.py "$PACK" Neoterra
 # Domum Ornamentum: Neoterra's own set (framed lights, quartz pillars), more at higher levels
-python3 $T/neoterra/furnish.py "$PACK" Neoterra
-python3 $T/neoterra/domumize.py "$PACK" Neoterra
+# hand-made huts (designs/*.py) replace the generated ones; vanilla blocks only
+python3 $T/neoterra/handmade/handmade.py "$PACK" Neoterra
+python3 $T/neoterra/vanillaize.py "$PACK"
 # level 1 already reserves the plot of level 5
 python3 $T/neoterra/plotmax.py "$PACK"
 
@@ -126,8 +127,8 @@ for STY in Hearthwood Cascadia; do
   python3 $T/neoterra/wonders.py "$OUT" $STY
   # Domum Ornamentum: the pack's own set (shutters / timber frames / shingles / pillars), more at higher levels
   # furniture in the pack's own style, then its Domum set
-  python3 $T/neoterra/furnish.py "$OUT" $STY
-  python3 $T/neoterra/domumize.py "$OUT" $STY
+  python3 $T/neoterra/handmade/handmade.py "$OUT" $STY
+  python3 $T/neoterra/vanillaize.py "$OUT"
   python3 $T/neoterra/fields_styles.py "$OUT" $STY
   python3 $T/neoterra/plotmax.py "$OUT"
   mkdir -p "$SP"
