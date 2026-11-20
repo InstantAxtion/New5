@@ -1317,6 +1317,10 @@ def apartment_nt(rel, L, F=None):
         # flat (north), corridor wall z=12, corridor z=13, stair core z=14..15
         W = flat(d, x1 + 1, z1 + 1, Y, "north", wood="birch", top="smooth_quartz", bedc="cyan", ceil=Y + 3)
         partition(d, x1 + 1, 12, x2 - 1, 12, Y, Y + 3, "white_concrete", ((9, 12, "north"),), "birch")
+        for bx, col in ((5, "cyan"), (7, "light_gray")):                 # corridor art and a shelf
+            d.set(bx, Y + 2, 13, f"{col}_wall_banner[facing=south]")
+        d.set(6, Y + 2, 13, slab("smooth_quartz", "top"))
+        d.set(6, Y + 3, 13, "potted_bamboo")
         # street glazing, side strip windows
         for x in range(x1 + 1, x2):
             d.window(x, Y, z1, x, Y + 3, z1)
@@ -1429,6 +1433,10 @@ def apartment_hw(rel, L, F=None, garden_on=None):
             if f:
                 d.window(x, Y + 1, z1, x, Y + 2, z1)
         d.set(13, Y + 2, 9, lantern(True))
+        d.set(12, Y + 2, 6, "red_wall_banner[facing=south]")
+        d.set(14, Y + 2, 6, "red_wall_banner[facing=south]")
+        if f:
+            d.set(13, Y, 6, "potted_fern")
         if f and L >= 3:                                              # wrought-iron balconettes
             for x in (8, 18):
                 d.set(x, Y, z1 - 1, "iron_bars")
@@ -1865,6 +1873,7 @@ def playerhouse_hw(rel, L):
     d.set(13, y0 + 2, z1 - 2, stair("stone_brick", "east", "top"))
     d.set(12, y0 + 3, z1 - 2, "stone_bricks")
     d.set(12, y0 + 2, z1 - 1, lantern(True))
+    sofa(d, 11, z1 - 1, yu, 3, "east", "north", W, arms=False, sit=False)      # window seat in the bay
     # windows
     for x in (5, 6, 8, 16, 17):
         hw_window(d, x, 3, z1, 2)
@@ -2294,6 +2303,9 @@ def playerhouse_nt(rel, L):
         nightstand(d, 3, 7, 7, W, "end_rod[facing=up]")
     wardrobe(d, 11, 7, 9, "west", W)
     wardrobe(d, 11, 7, 8, "west", W)
+    d.set(11, 7, 5, slab("smooth_quartz", "top"))                              # dressing table
+    d.set(11, 8, 5, "potted_azure_bluet")
+    d.chair(10, 7, 5, "west", W, sit=False)
     rugc(d, 5, 5, 8, 8, 7, "cyan")
     d.set(7, 10, 7, "sea_lantern")
     if L >= 3:
@@ -2313,6 +2325,11 @@ def playerhouse_nt(rel, L):
         d.set(7, 7, 19, slab("smooth_quartz", "top"))
         d.chair(7, 7, 18, "south", W, sit=False)
         d.set(5, 7, 19, "bookshelf")
+        d.set(6, 7, 19, "bookshelf")
+        sofa(d, 11, 13, 7, 3, "south", "east", W, arms=False, sit=False)
+        d.set(9, 7, 14, slab("smooth_quartz", "top"))
+        d.set(9, 8, 14, "potted_flowering_azalea_bush")
+        d.set(11, 7, 17, "potted_bamboo")
     # ---- L2 workshop studio (NE) and storage hall (SE)
     if L >= 2:
         sx1, sx2, sz1, sz2 = 15, 27, 3, 10

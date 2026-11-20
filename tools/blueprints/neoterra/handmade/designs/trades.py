@@ -2453,6 +2453,7 @@ def fl_hw(rel, L):
                 lamp_post(d, x, z, y0, P) if x == 31 else tree(d, x, z, y0, "oak", 4, 1)
         for z in (24, 30):
             lamp_post(d, 33, z, y0, P)
+        tree(d, 1, 30, y0, "oak", 4, 1)
     return d
 
 
