@@ -501,6 +501,8 @@ def process(path_str):
     if not L and themes.STYLE != "Neoterra" and m and 1 <= int(m.group(1)) <= 5 \
             and re.match(r"(skytower|barracks|miner|fisherman|plantation|tavern|gatehouse|wallguardtower)\d", path.name):
         L, roof_only = int(m.group(1)), True          # fixed-frame huts: their own roofs, nothing else
+    if re.match(r"(twinbuilder|cathedral|colossus|grandbridge|royalgranary)", path.name):
+        L = None                                       # regenerated from scratch later in the build
     if not L:
         return f"{path.name}: kept"
     bp = load(path)
