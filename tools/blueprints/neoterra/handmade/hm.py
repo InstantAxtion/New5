@@ -652,6 +652,8 @@ class Design:
         self.check()
         bp = self.bp
         connect_panes(bp)
+        if self.pack == "Cascadia":
+            cascadia_roofs(bp, self.gy)
         # trim empty layers on top
         top = max((y for y in range(bp.sy) if any(c != AIR for row in bp.grid[y] for c in row)), default=0)
         if bp.sy > top + 2:
@@ -689,6 +691,54 @@ class Design:
         bp.architects = [self.pack]
         bp.name = f"{name}.blueprint"
         return bp
+
+
+ROOF_WOOD = ("minecraft:dark_oak_stairs", "minecraft:spruce_stairs")
+ROOF_SLAB = ("minecraft:dark_oak_slab", "minecraft:spruce_slab")
+
+
+def cascadia_roofs(bp, gy):
+    """Cascadia: wooden roof slopes become cobbled-deepslate shingles (dark, rough) so roofs stand out from the warm
+    log and plank walls. Only sky-exposed stair rows of 5+ with the same facing (real roof courses, not outdoor
+    stairs or seats) and the ridge slabs between them change."""
+    def exposed(x, y, z):
+        return all(bp.get(x, yy, z) == AIR for yy in range(y + 1, bp.sy))
+    roof = set()
+    for y in range(gy + 3, bp.sy):
+        for z in range(bp.sz):
+            for x in range(bp.sx):
+                st = bp.grid[y][z][x]
+                if not st.startswith(ROOF_WOOD) or not exposed(x, y, z):
+                    continue
+                props = parse_state(st)[1]
+                if props.get("half") != "bottom":
+                    continue
+                f = props.get("facing")
+                ax = (1, 0) if f in ("north", "south") else (0, 1)
+                run = 1
+                for sgn in (1, -1):
+                    k = 1
+                    while True:
+                        n = bp.get(x + sgn * k * ax[0], y, z + sgn * k * ax[1])
+                        if n.startswith(ROOF_WOOD) and parse_state(n)[1].get("facing") == f:
+                            run += 1
+                            k += 1
+                        else:
+                            break
+                if run >= 5:
+                    roof.add((x, y, z))
+    for (x, y, z) in roof:
+        name, props = parse_state(bp.grid[y][z][x])
+        bp.grid[y][z][x] = format_state("minecraft:cobbled_deepslate_stairs", props)
+    for y in range(gy + 3, bp.sy):
+        for z in range(bp.sz):
+            for x in range(bp.sx):
+                st = bp.grid[y][z][x]
+                if st.startswith(ROOF_SLAB) and exposed(x, y, z) and any(
+                        (x + dx, y + dy, z + dz) in roof for dx, dz in D4.values() for dy in (-1, 0)):
+                    props = parse_state(st)[1]
+                    bp.grid[y][z][x] = format_state("minecraft:cobbled_deepslate_slab", props)
+    return len(roof)
 
 
 def _default_state(name, facing):
