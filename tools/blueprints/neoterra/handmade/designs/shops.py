@@ -313,7 +313,7 @@ def porch(d, x1, x2, z1, z2, y0, ytop, posts, wood="spruce", rail=True, gap=(), 
 
 
 def baker_cas(rel, L):
-    d = Design("Cascadia", rel, (50, 42, 46), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (51, 42, 46), paving="coarse_dirt")
     x1, z1, x2, z2, y0, y1 = 6, 7, 16, 19, 2, 6
     cas_body(d, x1, z1, x2, z2, y0, y1)
     ridge = roof(d, x1, z1, x2, z2, 7, "z", "dark_oak", "dark_oak_slab", "spruce_planks", ends=(2, 1),
@@ -2432,7 +2432,7 @@ def concretemixer_cas(rel, L):
 
 
 def concretemixer_neo(rel, L):
-    d = Design("Neoterra", rel, (45, 42, 41), paving="smooth_stone")
+    d = Design("Neoterra", rel, (48, 42, 41), paving="smooth_stone")
     y0 = 2
     d.cluster(2, 18)                                             # basin x2..20, z18..21
     # glass control office (two storeys at L3+)
@@ -2551,6 +2551,7 @@ def furnish(d, kind, ix1, iz1, ix2, iz2, y, keep, extra=()):
                 d.set(x, y, z, flower(d, x * 7 + z) if (x + z) % 4 else "carrots[age=7]")
         return
     slots = _wall_slots(ix1, iz1, ix2, iz2)
+    pieces_at = []
     # skip corners next to doors etc. by spacing: take every second free slot
     used = set()
     k = 0
@@ -2558,6 +2559,9 @@ def furnish(d, kind, ix1, iz1, ix2, iz2, y, keep, extra=()):
         if k >= len(pieces):
             break
         if not _ok(d, x, y, z, keep) or any(abs(x - a) + abs(z - b) <= 1 for a, b in used):
+            continue
+        if not any(ix1 <= x + a <= ix2 and iz1 <= z + b <= iz2 and _ok(d, x + a, y, z + b, keep)
+                   and (x + a, z + b) not in used for a, b in D4.values()):
             continue
         f = INTO[side]
         p = pieces[k]
@@ -2628,7 +2632,29 @@ def furnish(d, kind, ix1, iz1, ix2, iz2, y, keep, extra=()):
         elif isinstance(p, str) and p.startswith("block:"):
             d.set(x, y, z, p[6:])
         used.add((x, z))
+        pieces_at.append((x, z))
         k += 1
+    # drop any wall piece the rest of the furniture has boxed in (no free floor cell next to it reachable from
+    # the room's entrances)
+    free_c = {(a, b) for a in range(ix1, ix2 + 1) for b in range(iz1, iz2 + 1)
+              if d.air(a, y, b) and d.air(a, y + 1, b) and not d.air(a, y - 1, b)}
+    start = [c for c in keep if c in free_c] or list(free_c)[:1]
+    reach, stack = set(start), list(start)
+    while stack:
+        a, b = stack.pop()
+        for dx, dz in D4.values():
+            c = (a + dx, b + dz)
+            if c in free_c and c not in reach:
+                reach.add(c)
+                stack.append(c)
+    for (x, z) in pieces_at:
+        if not any((x + a, z + b) in reach for a, b in D4.values()):
+            for yy in (y, y + 1, y + 2):
+                if "bed" not in d.get(x, yy, z) or yy == y:
+                    d.set(x, yy, z, AIR)
+            for a, b in D4.values():
+                if "_bed" in d.get(x + a, y, z + b):
+                    d.set(x + a, y, z + b, AIR)
     # centre: rug + table group
     cx, cz = (ix1 + ix2) // 2, (iz1 + iz2) // 2
     if kind in ("living", "dining", "office", "bedroom", "shop") and ix2 - ix1 >= 4 and iz2 - iz1 >= 4:
@@ -2862,8 +2888,11 @@ def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, 
             keep_by[k + 1].add((c[0], rowz + inner))
     for k, kind in enumerate(rooms):
         furnish(d, kind, ix1, iz1, ix2, iz2, tops[k], keep_by[k], extra)
+    if not hasattr(d, "_doors"):
+        d._doors, d._later = [], []
+    d._doors.append((dx + ox, dz + oz))
     if feature:
-        feature(d, x1, z1, x2, z2, (dx, dz), side, ytop)
+        d._later.append(lambda: feature(d, x1, z1, x2, z2, (dx, dz), side, ytop))
     # roof
     if roofkind == "glass":
         if P == "Neoterra":
@@ -2913,6 +2942,8 @@ def grow(d, L, base):
     for lv, fn in GROW.get((base, d.pack), []):
         if L >= lv:
             fn(d)
+    for f in getattr(d, "_later", []):
+        f()
     yard(d, {1: 1, 2: 2, 3: 4, 4: 6, 5: 10}[L])
     decorate(d)
     reskin(d)
@@ -3001,7 +3032,8 @@ def _behind(x1, z1, x2, z2, side, depth):
 
 def _yard_ok(d, r):
     a1, b1, a2, b2 = r
-    return a2 - a1 >= 2 and b2 - b1 >= 1 and _open(d, a1, b1, a2, b2, 2, 5)
+    far = all(not (a1 - 3 <= x <= a2 + 3 and b1 - 3 <= z <= b2 + 3) for x, z in getattr(d, "_doors", []))
+    return far and a2 - a1 >= 2 and b2 - b1 >= 1 and _open(d, a1 - 1, b1 - 1, a2 + 1, b2 + 1, 2, 5)
 
 
 def F(*fs):
@@ -3103,7 +3135,7 @@ def cart_f(load):
         a1, b1, a2, b2 = r
         cx = (a1 + a2) // 2
         cz = (b1 + b2) // 2
-        if not _open(d, cx - 2, cz - 1, cx + 2, cz + 1, 2, 4):
+        if not _yard_ok(d, (cx - 2, cz - 1, cx + 2, cz + 1)):
             return
         w = STY[d.pack]["wood"]
         for x in (cx - 1, cx, cx + 1):
@@ -3187,9 +3219,10 @@ GROW = {
     ("cook", "Hearthwood"): [
         (2, B(3, 30, 11, 36, ["store"], ("north", 3), "x", sign=["Pantry"], **SP["cook2"])),
         (3, B(27, 2, 47, 8, ["living", "dorm"], ("north", 5), "x", sign=["Staff", "House"], **SP["cook3"])),
-        (4, B(41, 11, 49, 29, ["dining", "dining"], ("west", 6), "z", sign=["Banquet", "Hall"], **SP["cook4"])),
+        (4, B(41, 11, 49, 29, ["dining", "dining", "bedroom"], ("west", 6), "z", sign=["Banquet", "Hall"], **SP["cook4"])),
         (5, B(27, 33, 35, 41, ["dining", "bedroom", "bedroom", "bedroom", "living"], ("north", 4), "x",
               roofkind="hip", sign=["Guest", "Rooms"], **SP["cook5"])),
+        (5, B(3, 40, 21, 46, ["dining", "bedroom"], ("north", 9), "x", sign=["Garden", "Room"])),
     ],
     ("cook", "Cascadia"): [
         (2, B(30, 4, 38, 10, ["store"], ("west", 3), "z", sign=["Root", "Cellar"], **SP["cook2"])),
@@ -3197,11 +3230,12 @@ GROW = {
         (4, B(30, 14, 38, 34, ["dining", "dining"], ("west", 8), "z", sign=["Mess", "Hall"], **SP["cook4"])),
         (5, B(42, 30, 50, 38, ["dining", "bedroom", "bedroom", "bedroom", "living"], ("west", 4), "x",
               roofkind="hip", sign=["Lodge"], **SP["cook5"])),
+        (5, B(3, 32, 23, 38, ["dining", "bedroom"], ("north", 10), "x", sign=["Annex"])),
     ],
     ("cook", "Neoterra"): [
-        (2, B(23, 3, 31, 9, ["store"], ("west", 3), sign=["COLD", "STORE"], **SP["cook2"])),
-        (3, B(3, 20, 21, 26, ["office", "living", "dorm"], ("north", 5), sign=["STAFF"], **SP["cook3"])),
-        (4, B(25, 13, 33, 21, ["dining", "dining", "bedroom", "bedroom"], ("west", 4), sign=["SKY", "DINING"],
+        (2, B(23, 3, 32, 10, ["store"], ("west", 3), sign=["COLD", "STORE"], **SP["cook2"])),
+        (3, B(3, 20, 21, 26, ["office", "living"], ("north", 5), sign=["STAFF"], **SP["cook3"])),
+        (4, B(25, 13, 33, 21, ["dining", "dining", "bedroom", "bedroom", "living"], ("west", 4), sign=["SKY", "DINING"],
               **SP["cook4"])),
         (5, B(36, 4, 45, 13, ["dining", "dining", "bedroom", "bedroom", "bedroom", "living"], ("west", 4),
               sign=["ORBIT", "HOTEL"], **SP["cook5"])),
@@ -3210,9 +3244,10 @@ GROW = {
     ("cookery", "Hearthwood"): [
         (2, B(25, 3, 33, 9, ["store"], ("west", 3), "x", sign=["Larder"], **SP["cookery2"])),
         (3, B(2, 30, 22, 36, ["kitchen", "dorm"], ("north", 5), "x", sign=["Scullery"], **SP["cookery3"])),
-        (4, B(26, 14, 34, 36, ["store", "office", "bedroom"], ("west", 8), "z", sign=["Stores"], **SP["cookery4"])),
+        (4, B(26, 14, 34, 36, ["store", "office"], ("west", 8), "z", sign=["Stores"], **SP["cookery4"])),
         (5, B(37, 2, 45, 10, ["kitchen", "dining", "dorm", "bedroom"], ("west", 4), "x", roofkind="hip",
               sign=["Servants'", "Hall"], **SP["cookery5"])),
+        (5, B(37, 14, 45, 24, ["store", "dorm"], ("west", 4), "z", sign=["Bake", "House"])),
     ],
     ("cookery", "Cascadia"): [
         (2, B(24, 4, 32, 10, ["store"], ("west", 3), "z", sign=["Larder"], **SP["cookery2"])),
@@ -3224,7 +3259,7 @@ GROW = {
     ("cookery", "Neoterra"): [
         (2, B(28, 3, 36, 9, ["store"], ("west", 3), sign=["DRY", "STORE"], **SP["cookery2"])),
         (3, B(3, 18, 21, 24, ["kitchen", "office", "dorm"], ("north", 5), sign=["PREP"], **SP["cookery3"])),
-        (4, B(25, 13, 33, 21, ["store", "kitchen", "office", "bedroom"], ("west", 4), sign=["LABS"],
+        (4, B(25, 13, 33, 21, ["store", "kitchen", "office", "bedroom", "living"], ("west", 4), sign=["LABS"],
               **SP["cookery4"])),
         (5, B(37, 13, 45, 33, ["kitchen", "dining", "dorm", "living"], ("west", 5), sign=["STAFF"], **SP["cookery5"])),
     ],
@@ -3237,8 +3272,8 @@ GROW = {
         (5, B(3, 26, 13, 36, ["kitchen", "dining", "bedroom"], ("north", 5), "x", sign=["Pastry", "School"])),
     ],
     ("baker", "Cascadia"): [
-        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "z", sign=["Flour", "Shed"], **SP["baker2"])),
-        (3, B(37, 3, 47, 11, ["living", "bedroom"], ("west", 4), "z", sign=["Baker's", "Cabin"], **SP["baker3"])),
+        (2, B(26, 3, 35, 11, ["store", "store"], ("west", 3), "z", sign=["Flour", "Shed"], **SP["baker2"])),
+        (3, B(38, 3, 48, 11, ["living", "bedroom"], ("west", 4), "z", sign=["Baker's", "Cabin"], **SP["baker3"])),
         (4, B(26, 14, 34, 30, ["kitchen", "store", "bedroom"], ("west", 5), "z", sign=["Bake", "House"],
               **SP["baker4"])),
         (5, B(3, 30, 23, 37, ["shop", "dining"], ("north", 9), "x", sign=["Cafe"], **SP["baker5"])),
@@ -3256,7 +3291,7 @@ GROW = {
     ("florist", "Hearthwood"): [
         (2, B(25, 3, 33, 9, ["store"], ("west", 3), "x", sign=["Potting", "Shed"], **SP["florist2"])),
         (3, B(25, 13, 45, 21, ["greenhouse"], ("west", 4), "x", **GW)),
-        (4, B(37, 2, 47, 9, ["shop", "workshop"], ("west", 3), "x", sign=["Seed", "Shop"], **SP["florist4"])),
+        (4, B(37, 2, 47, 9, ["shop", "workshop", "bedroom"], ("west", 3), "x", sign=["Seed", "Shop"], **SP["florist4"])),
         (5, B(3, 24, 13, 34, ["shop", "living", "bedroom"], ("north", 5), "x", sign=["Florist's", "House"],
               **SP["florist5"])),
         (5, B(17, 25, 37, 33, ["greenhouse"], ("north", 10), "x", **GW)),
@@ -3264,14 +3299,14 @@ GROW = {
     ("florist", "Cascadia"): [
         (2, B(26, 3, 34, 9, ["store"], ("west", 3), "z", sign=["Tool", "Shed"], **SP["florist2"])),
         (3, B(26, 13, 34, 33, ["greenhouse"], ("west", 10), "z", **GW)),
-        (4, B(38, 3, 46, 13, ["shop", "workshop"], ("west", 4), "z", sign=["Seed", "Store"], **SP["florist4"])),
+        (4, B(38, 3, 46, 13, ["shop", "workshop", "bedroom"], ("west", 4), "z", sign=["Seed", "Store"], **SP["florist4"])),
         (5, B(3, 25, 13, 35, ["shop", "living", "bedroom"], ("north", 5), "z", sign=["Cabin"], **SP["florist5"])),
         (5, B(38, 17, 46, 37, ["greenhouse"], ("west", 10), "z", **GW)),
     ],
     ("florist", "Neoterra"): [
         (2, B(24, 4, 32, 10, ["store"], ("west", 3), sign=["SEEDS"], **SP["florist2"])),
         (3, B(24, 14, 42, 22, ["greenhouse"], ("west", 4), **GW)),
-        (4, B(36, 3, 44, 10, ["shop", "workshop", "office"], ("west", 3), sign=["BLOOM", "SHOP"], **SP["florist4"])),
+        (4, B(36, 3, 44, 10, ["shop", "workshop", "office", "bedroom"], ("west", 3), sign=["BLOOM", "SHOP"], **SP["florist4"])),
         (5, B(3, 23, 12, 32, ["shop", "office", "living", "bedroom", "bedroom"], ("north", 4), sign=["BLOOM", "TOWER"],
               **SP["florist5"])),
         (5, B(16, 26, 34, 34, ["greenhouse"], ("north", 9), **GW)),
@@ -3295,7 +3330,7 @@ GROW = {
     ("dyer", "Neoterra"): [
         (2, B(26, 4, 34, 10, ["store"], ("west", 3), sign=["YARN"], **SP["dyer2"])),
         (3, B(3, 17, 23, 23, ["workshop", "store", "office"], ("north", 10), sign=["STUDIO"], **SP["dyer3"])),
-        (4, B(27, 14, 35, 22, ["workshop", "office", "dorm", "living"], ("west", 4), sign=["LAB"], **SP["dyer4"])),
+        (4, B(27, 14, 35, 22, ["workshop", "office", "dorm", "living", "bedroom"], ("west", 4), sign=["LAB"], **SP["dyer4"])),
         (5, B(38, 4, 46, 30, ["workshop", "store", "office", "living"], ("west", 12), sign=["CHROMA"],
               **SP["dyer5"])),
     ],
@@ -3303,16 +3338,16 @@ GROW = {
     ("glassblower", "Hearthwood"): [
         (2, B(3, 22, 11, 28, ["store"], ("north", 3), "x", sign=["Sand &", "Cullet"], **SP["glassblower2"])),
         (3, B(24, 3, 44, 9, ["shop", "workshop"], ("north", 10), "x", sign=["Glass", "Shop"], **SP["glassblower3"])),
-        (4, B(36, 12, 44, 28, ["workshop", "store"], ("west", 8), "z", sign=["Cutting", "Room"],
+        (4, B(36, 12, 44, 28, ["workshop", "store", "bedroom"], ("west", 8), "z", sign=["Cutting", "Room"],
               **SP["glassblower4"])),
-        (5, B(15, 30, 25, 40, ["shop", "office", "living", "bedroom"], ("north", 5), "x", roofkind="hip",
+        (5, B(15, 30, 25, 40, ["shop", "office", "living", "bedroom", "bedroom"], ("north", 5), "x", roofkind="hip",
               sign=["Master's", "House"], **SP["glassblower5"])),
     ],
     ("glassblower", "Cascadia"): [
         (2, B(26, 3, 34, 9, ["store"], ("west", 3), "z", sign=["Sand", "Shed"], **SP["glassblower2"])),
         (3, B(3, 19, 23, 25, ["shop", "workshop"], ("north", 10), "x", sign=["Gallery"], **SP["glassblower3"])),
         (4, B(27, 13, 35, 29, ["workshop", "store"], ("west", 8), "z", sign=["Kiln", "Shed"], **SP["glassblower4"])),
-        (5, B(38, 3, 46, 21, ["shop", "office", "living"], ("west", 8), "z", sign=["Lodge"], **SP["glassblower5"])),
+        (5, B(38, 3, 46, 21, ["shop", "office", "living", "bedroom"], ("west", 8), "z", sign=["Lodge"], **SP["glassblower5"])),
     ],
     ("glassblower", "Neoterra"): [
         (2, B(22, 3, 30, 9, ["store"], ("west", 3), sign=["SILICA"], **SP["glassblower2"])),
@@ -3348,6 +3383,7 @@ GROW = {
         (4, B(3, 25, 23, 31, ["workshop", "store", "office"], ("north", 10), sign=["LAB"], **SP["concretemixer4"])),
         (5, B(26, 14, 34, 22, ["store", "office", "office", "dorm", "living", "living"], ("west", 4),
               sign=["TOWER"], **SP["concretemixer5"])),
+        (5, B(37, 15, 45, 23, ["store", "office"], ("west", 4), sign=["LOGISTICS"])),
     ],
     # TAVERN - coaching inn: coach-house range and a stable wing round a yard
     ("tavern", "Hearthwood"): [

@@ -3011,19 +3011,21 @@ RECOLOR = {
     ("Cascadia", "bees"): {"dark_oak_stairs": "cherry_stairs", "dark_oak_slab": "cherry_slab",
                            "spruce_planks": "birch_planks", "cobblestone": "andesite"},
     ("Cascadia", "horse"): {"cobblestone": "mossy_cobblestone", "spruce_planks": "dark_oak_planks"},
-    ("Neoterra", "poultry"): {"cyan_terracotta": "orange_terracotta", "cyan_concrete": "orange_concrete",
-                              "light_gray_concrete": "stripped_birch_log", "cyan_carpet": "orange_carpet"},
+    ("Neoterra", "poultry"): {"white_concrete": "birch_planks", "cyan_terracotta": "orange_terracotta",
+                              "cyan_concrete": "orange_concrete", "cyan_carpet": "orange_carpet"},
     ("Neoterra", "cattle"): {"white_concrete": "light_gray_concrete", "light_gray_concrete": "gray_concrete",
                              "cyan_terracotta": "lime_terracotta", "cyan_concrete": "lime_concrete",
                              "smooth_quartz": "white_concrete"},
-    ("Neoterra", "sheep"): {"light_gray_concrete": "polished_deepslate", "cyan_terracotta": "magenta_terracotta",
+    ("Neoterra", "sheep"): {"white_concrete": "light_gray_terracotta", "light_gray_concrete": "polished_deepslate",
+                            "cyan_terracotta": "magenta_terracotta",
                             "cyan_concrete": "magenta_concrete"},
     ("Neoterra", "pig"): {"white_concrete": "white_terracotta", "light_gray_concrete": "stripped_mangrove_log"},
-    ("Neoterra", "rabbit"): {"light_gray_concrete": "stripped_cherry_log", "cyan_terracotta": "pink_terracotta",
+    ("Neoterra", "rabbit"): {"white_concrete": "brown_terracotta", "light_gray_concrete": "stripped_cherry_log", "cyan_terracotta": "pink_terracotta",
                              "cyan_concrete": "pink_concrete", "cyan_carpet": "pink_carpet"},
-    ("Neoterra", "bees"): {"cyan_terracotta": "yellow_terracotta", "cyan_concrete": "yellow_concrete",
+    ("Neoterra", "bees"): {"white_concrete": "orange_terracotta", "cyan_terracotta": "yellow_terracotta", "cyan_concrete": "yellow_concrete",
                            "cyan_wool": "yellow_wool"},
-    ("Neoterra", "horse"): {"light_gray_concrete": "polished_blackstone", "smooth_quartz": "deepslate_tiles"},
+    ("Neoterra", "horse"): {"white_concrete": "gray_concrete", "light_gray_concrete": "polished_blackstone",
+                            "smooth_quartz": "deepslate_tiles"},
 }
 
 
@@ -3073,6 +3075,132 @@ def street_front(d, pack, paving):
 
 
 # ------------------------------------------------------------------------------------------- assembly
+# ------------------------------------------------------------------------------------------- core fit-out
+FIT = {
+    "poultry": (("hay_block[axis=y]", "barrel[facing=up,open=false]", "composter[level=5]", "white_wool"),
+                ("turtle_egg[eggs=4,hatch=0]", "candle[candles=2,lit=false,waterlogged=false]", "potted_dandelion")),
+    "cattle": (("barrel[facing=up,open=false]", "cauldron", "hay_block[axis=y]", "white_wool"),
+               ("cake[bites=0]", "candle[candles=3,lit=false,waterlogged=false]", "potted_red_tulip")),
+    "sheep": (("white_wool", "light_gray_wool", "barrel[facing=up,open=false]", "brown_wool"),
+              ("decorated_pot[cracked=false,facing=north,waterlogged=false]", "white_carpet", "potted_azure_bluet")),
+    "pig": (("barrel[facing=up,open=false]", "composter[level=7]", "pumpkin", "hay_block[axis=y]"),
+            ("potted_brown_mushroom", "candle[candles=2,lit=false,waterlogged=false]", "decorated_pot[cracked=false,"
+                                                                                       "facing=north,waterlogged=false]")),
+    "rabbit": (("barrel[facing=up,open=false]", "hay_block[axis=y]", "pumpkin", "composter[level=4]"),
+               ("potted_dandelion", "candle[candles=1,lit=false,waterlogged=false]", "potted_fern")),
+    "bees": (("barrel[facing=up,open=false]", "honeycomb_block", "beehive[facing=north,honey_level=0]",
+              "honey_block"), ("candle[candles=4,lit=false,waterlogged=false]", "honey_block", "potted_allium")),
+    "horse": (("hay_block[axis=y]", "barrel[facing=up,open=false]", "SADDLE", "brown_wool"),
+              ("lantern[hanging=false,waterlogged=false]", "candle[candles=2,lit=false,waterlogged=false]",
+               "potted_oxeye_daisy")),
+}
+_TARGETS = ("bed", "blockhut", "rack", "crafting_table", "furnace", "smoker", "barrel", "anvil", "loom",
+            "grindstone", "lectern", "ladder", "stairs", "door", "gate", "composter", "cauldron", "chest")
+
+
+def fit_core(d, pack, kind):
+    """Furnish the hut's room by hand-picked trade clutter along its walls (feed bins, sacks, churns, tack),
+    wall shelves with goods above, a rug and a lantern on a chain. Every placement keeps the room connected
+    and every work block, door, ladder and stair reachable."""
+    if d.hut_pos is None:
+        return
+    hx, hy, hz = d.hut_pos
+    y = hy
+    bp = d.bp
+
+    def free(x, z):
+        return bp.inside(x, y, z) and d.air(x, y, z) and d.air(x, y + 1, z) and not d.air(x, y - 1, z)
+    start = [(hx + dx, hz + dz) for dx, dz in D4.values() if free(hx + dx, hz + dz)]
+    room, todo = set(start), list(start)
+    while todo:
+        x, z = todo.pop()
+        for dx, dz in D4.values():
+            n = (x + dx, z + dz)
+            if n not in room and free(*n):
+                room.add(n)
+                todo.append(n)
+        if len(room) > 260:
+            return
+    if len(room) < 6:
+        return
+
+    def nm(x, yy, z):
+        return d.get(x, yy, z).split("[")[0].split(":")[-1]
+    targets = set()
+    for x, z in room:
+        for dx, dz in D4.values():
+            for yy in (y, y + 1, y - 1):
+                n = nm(x + dx, yy, z + dz)
+                if n != "air" and any(k in n for k in _TARGETS):
+                    targets.add((x + dx, yy, z + dz))
+    targets.add(d.hut_pos)
+
+    def ok(blocked):
+        cells = room - blocked
+        if not cells:
+            return False
+        seed = next(iter(cells))
+        seen, st_ = {seed}, [seed]
+        while st_:
+            x, z = st_.pop()
+            for dx, dz in D4.values():
+                n = (x + dx, z + dz)
+                if n in cells and n not in seen:
+                    seen.add(n)
+                    st_.append(n)
+        if len(seen) != len(cells):
+            return False
+        return all(any((tx + dx, tz + dz) in cells for dx, dz in D4.values()) for tx, _ty, tz in targets)
+
+    def wallish(x, z):
+        return any(not d.air(x + dx, y, z + dz) and not d.air(x + dx, y + 1, z + dz) and
+                   (x + dx, z + dz) not in room for dx, dz in D4.values())
+
+    def near(x, z, keys):
+        return any(any(k in nm(x + dx, yy, z + dz) for k in keys) for dx in (-1, 0, 1) for dz in (-1, 0, 1)
+                   for yy in (y, y + 1, y + 2))
+    floor_items, shelf_items = FIT[kind]
+    wood = MAT[pack]["wood"]
+    cands = sorted(c for c in room if wallish(*c) and not near(*c, ("door", "gate", "ladder", "stairs")))
+    blocked, i = set(), 0
+    for c in cands:
+        if len(blocked) >= max(2, len(room) // 5):
+            break
+        if ok(blocked | {c}):
+            blocked.add(c)
+            it = floor_items[i % len(floor_items)]
+            i += 1
+            x, z = c
+            if it == "SADDLE":
+                d.set(x, y, z, f"{wood}_fence")
+                d.set(x, y + 1, z, "brown_carpet")
+            else:
+                d.set(x, y, z, it)
+    # wall shelves above head height on the other wall cells
+    k = 0
+    for x, z in cands:
+        if (x, z) in blocked or not d.air(x, y + 2, z) or near(x, z, ("ladder", "stairs", "door")):
+            continue
+        if k % 2 == 0:
+            d.set(x, y + 2, z, slab(f"{wood}_slab", "top"))
+            if d.air(x, y + 3, z):
+                d.set(x, y + 3, z, shelf_items[(k // 2) % len(shelf_items)])
+        k += 1
+    # rug and a lantern on a chain in the middle of the room
+    free_cells = sorted(room - blocked)
+    cx = sum(x for x, _ in free_cells) // len(free_cells)
+    cz = sum(z for _, z in free_cells) // len(free_cells)
+    rug = {"Hearthwood": "red_carpet", "Cascadia": "brown_carpet", "Neoterra": "light_gray_carpet"}[pack]
+    for x in range(cx - 1, cx + 2):
+        for z in range(cz - 1, cz + 1):
+            if (x, z) in room and (x, z) not in blocked and d.air(x, y, z):
+                d.set(x, y, z, rug)
+    top = next((yy for yy in range(y + 2, min(d.sy, y + 12)) if not d.air(cx, yy, cz)), None)
+    if top and top - 1 >= y + 3 and all(d.air(cx, yy, cz) for yy in range(y + 2, top)):
+        hang(d, cx, top - 1, cz, max(y + 2, top - 2) if top - 1 > y + 2 else y + 2,
+             "soul_lantern" if pack == "Neoterra" else "lantern")
+
+
 _COUNTS = {}
 _SIZES = {}
 
@@ -3106,6 +3234,7 @@ def _grow(d, target, sizes, build):
 
 def farmstead(core, pack, rel, L, kind):
     d = core(rel, L)
+    fit_core(d, pack, kind)
     ex, ez = d.ex, d.ez
     wood = {"Hearthwood": "dark_oak", "Cascadia": "spruce", "Neoterra": "birch"}[pack]
     lane = {"Hearthwood": "gravel", "Cascadia": "dirt_path", "Neoterra": "polished_andesite"}[pack]

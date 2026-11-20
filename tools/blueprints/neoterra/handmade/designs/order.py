@@ -547,6 +547,105 @@ def dress(d, x1, z1, x2, z2, y1=2, y2=12, wood=None, lamps=True):
                         d.set(px, y + 2, pz, LANT if d.pack != "Neoterra" else SLANT)
 
 
+def _blocky(n):
+    return any(k in n for k in ("stairs", "ladder", "door", "_bed", "blockhut", "rack", "enchanting", "lectern",
+                                "brewing", "cauldron", "furnace", "barrel", "anvil", "grindstone", "smithing",
+                                "fletching", "crafting", "cartography", "chest", "trapdoor", "fence_gate"))
+
+
+def deco_ring(d, x1, z1, x2, z2, y, items, lights=True, rug=None, every=1):
+    """Hand-picked decor for an existing room (inner cells x1..x2/z1..z2, walk layer y): `items` (a block, a
+    (lower, upper) pair or a callable f(d,x,y,z,facing)) go into free wall-side cells that keep an aisle in
+    front of them and stay clear of doors, stairs, ladders and work blocks; lanterns under the ceiling; an
+    optional rug on free floor in the middle."""
+    def solid_floor(x, z):
+        return d.get(x, y - 1, z) != AIR and "carpet" not in d.get(x, y - 1, z)
+
+    def clear(x, z):
+        return d.air(x, y, z) and d.air(x, y + 1, z) and solid_floor(x, z)
+
+    n = k = 0
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            if not (x in (x1, x2) or z in (z1, z2)) or not clear(x, z):
+                continue
+            side = "north" if z == z1 else "south" if z == z2 else "west" if x == x1 else "east"
+            face = OPP[side]
+            fx, fz = D4[face]
+            if not clear(x + fx, z + fz):
+                continue
+            bad = False
+            for dx in (-1, 0, 1):
+                for dz in (-1, 0, 1):
+                    for yy in (y - 1, y, y + 1):
+                        if _blocky(d.get(x + dx, yy, z + dz)) and (dx == 0 or dz == 0):
+                            bad = True
+                wx, wz = x + D4[side][0], z + D4[side][1]
+            if "door" in d.get(x + D4[side][0], y, z + D4[side][1]):
+                bad = True
+            for sx, sz in ((x + 1, z), (x - 1, z), (x, z + 1), (x, z - 1)):
+                if "door" in d.get(sx, y, sz) or "door" in d.get(sx + D4[side][0], y, sz + D4[side][1]):
+                    bad = True
+            if bad:
+                continue
+            k += 1
+            if (k - 1) % every:
+                continue
+            it = items[n % len(items)]
+            n += 1
+            if it is None:
+                continue
+            if callable(it):
+                it(d, x, y, z, face)
+            elif isinstance(it, tuple):
+                d.set(x, y, z, it[0].replace("FACE", face))
+                if d.air(x, y + 1, z):
+                    d.set(x, y + 1, z, it[1].replace("FACE", face))
+            else:
+                d.set(x, y, z, it.replace("FACE", face))
+    if lights:
+        lamp = LANT if d.pack != "Neoterra" else "end_rod[facing=down]"
+        for x in range(x1 + 1, x2, 3):
+            for z in range(z1 + 1, z2, 3):
+                for h in (3, 4, 5):
+                    if d.air(x, y + h - 1, z) and d.get(x, y + h, z) != AIR and d.air(x, y, z) is not None:
+                        near = any("lantern" in d.get(x + a, y + h - 1, z + b) or "end_rod" in d.get(x + a, y + h - 1, z + b)
+                                   or "sea_lantern" in d.get(x + a, y + h, z + b)
+                                   for a in range(-2, 3) for b in range(-2, 3))
+                        if not near and h - 1 >= 2:
+                            d.set(x, y + h - 1, z, lamp)
+                        break
+    if rug:
+        for x in range(x1 + 1, x2):
+            for z in range(z1 + 1, z2):
+                if clear(x, z) and not any(_blocky(d.get(x + a, y, z + b)) and "door" in d.get(x + a, y, z + b)
+                                           for a in (-1, 0, 1) for b in (-1, 0, 1)):
+                    edge = x in (x1 + 1, x2 - 1) or z in (z1 + 1, z2 - 1)
+                    d.set(x, y, z, rug[0] if edge or len(rug) == 1 else rug[1])
+
+
+SLABTOP = lambda w: f"{w}_slab[type=top,waterlogged=false]"
+POT = "decorated_pot[cracked=false,facing=FACE,waterlogged=false]"
+CHISEL = ("chiseled_bookshelf[facing=FACE,slot_0_occupied=true,slot_1_occupied=true,slot_2_occupied=false,"
+          "slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
+KEG = "barrel[facing=FACE,open=false]"
+
+
+def nt_sofa(d, x, y, z, face):
+    """Modern lounge seat: a birch stair with its back to the wall and quartz-slab arms when there is room."""
+    d.chair(x, y, z, OPP[face], "birch", sit=False)
+
+
+def nt_screen(d, x, y, z, face):
+    """Low quartz console with a glowing info sign on the wall above."""
+    d.set(x, y, z, SLABTOP("smooth_quartz"))
+    bx, bz = x - D4[face][0], z - D4[face][1]
+    if d.get(bx, y + 1, bz) != AIR and "glass" not in d.get(bx, y + 1, bz) and d.air(x, y + 1, z):
+        d.sign(x, y + 1, z, face, ["", "INFO"], "birch", glow=True, color="cyan")
+    else:
+        d.set(x, y + 1, z, "potted_bamboo")
+
+
 def roof_deco(d, x1, z1, x2, z2, y):
     """Neoterra roof: solar panel rows, an AC unit and planters along the parapet."""
     w = x2 - x1 + 1
@@ -943,6 +1042,10 @@ def gt_hearthwood(rel, L):
         d.set(6, 14, 7, "bell[attachment=ceiling,facing=north,powered=false]")
         d.chair(x1 + 1, 12, z1 + 1, "west", "dark_oak", sit=False)
     dress(d, x1, z1, x2, z2, 2, 14)
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, ["cartography_table", (SLABTOP("dark_oak"), POT), KEG,
+              (SLABTOP("dark_oak"), "candle[candles=3,lit=false,waterlogged=false]")])
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 7, [CHISEL, (SLABTOP("dark_oak"), "potted_red_tulip"), "white_wool",
+              (KEG, "lantern[hanging=false,waterlogged=false]")])
     # ---- L2+: guardroom with a mess (L3+ barracks storey above) east of the tower
     if L >= 2:
         d.set(x2, 2, 7, AIR)
@@ -1147,6 +1250,8 @@ def gt_cascadia(rel, L):
         d.set(mx, yc + 8, tz1 + 1, "red_wall_banner[facing=north]")
         d.set(tx2 + 1, yc + 1, tz1 + 2, "bell[attachment=floor,facing=east,powered=false]")
     dress(d, x1, z1, x2, z2, 2, 6)
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, [(SLABTOP("spruce"), "potted_fern"), KEG, CHISEL,
+              (SLABTOP("spruce"), POT), "chest[facing=FACE,type=single,waterlogged=false]"])
     # ---- growth: a ranger station complex
     if L >= 2:                                                    # equipment shed with a work porch
         building(d, 23, 4, 31, 10, nf=1, axis="z", doors=(("north", 27), ("west", 7)), kinds=["workshop"])
@@ -1305,6 +1410,9 @@ def gt_neoterra(rel, L):
                 if (x in (6, 10) and 9 <= z <= 13) or (z == 11 and 6 <= x <= 10):
                     d.set(x, yp + 4, z, "yellow_concrete")
         d.set(8, yp + 4, 11, "white_concrete")
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, [nt_sofa, "potted_bamboo", (SLABTOP("smooth_quartz"), "potted_azure_bluet"),
+              nt_screen], rug=None)
+    deco_ring(d, 5, 8, 11, 14, yp + 1, ["potted_bamboo", nt_screen, (SLABTOP("smooth_quartz"), "potted_fern")])
     # ---- growth: a security campus
     if L >= 2:                                                    # vehicle bay / checkpoint
         building(d, 23, 3, 33, 10, nf=1, roof="flat", doors=(("north", 26), ("west", 7)), kinds=["workshop"])
@@ -1480,6 +1588,10 @@ def ar_hearthwood(rel, L):
             d.chair(23, 2, z, "east", "dark_oak", sit=False)
             d.chair(23, 2, z + 1, "east", "dark_oak", sit=False)
     dress(d, x1, z1, X2, z2, 2, 10)
+    deco_ring(d, x1 + 1, z1 + 1, X2 - 1, z2 - 1, 2, [(SLABTOP("dark_oak"), POT), KEG, CHISEL, ("hay_block[axis=y]", "target[power=0]"),
+              (SLABTOP("dark_oak"), "potted_red_tulip")])
+    deco_ring(d, x1 + 1, z1 + 1, X2 - 1, z2 - 1, 7, [(SLABTOP("dark_oak"), "candle[candles=2,lit=false,waterlogged=false]"),
+              "white_wool", CHISEL])
     # ---- growth: the bowyers' guild yard east of the range
     if L >= 2:                                                    # bowyer's workshop (L3: loft store above)
         building(d, 27, 3, 35, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 31), ("west", 6)),
@@ -1648,6 +1760,8 @@ def ar_cascadia(rel, L):
         for x, z in ((6, 21), (8, 21), (7, 22)):
             d.set(x, 2, z, LOG("stripped_spruce_log"))
     dress(d, x1, z1, x2, Z2, 2, 10)
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, Z2 - 1, 2, [(SLABTOP("spruce"), "potted_fern"), KEG, ("hay_block[axis=y]", "target[power=0]"),
+              CHISEL, (SLABTOP("spruce"), POT), "brown_wool"])
     # ---- growth: a hunting camp round the range
     if L >= 2:                                                    # outfitter's cabin (L3: loft with bunks)
         building(d, 33, 3, 42, 10, nf=1 if L == 2 else 2, axis="x", doors=(("north", 37), ("west", 7)),
@@ -1805,6 +1919,9 @@ def ar_neoterra(rel, L):
         for x in range(x1 + 3, x1 + 9, 2):
             d.chair(x, 13, z1 + 4, "south", "birch", sit=False)
         d.set(x1 + 10, 13, z1 + 4, "smooth_quartz_slab[type=top,waterlogged=false]")
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, [nt_sofa, "potted_bamboo", nt_screen, ("white_concrete", "target[power=0]"),
+              (SLABTOP("smooth_quartz"), "potted_allium")])
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 8, ["potted_bamboo", (SLABTOP("smooth_quartz"), "end_rod[facing=up]"), CHISEL])
     # ---- growth: an archery club campus east of the range
     if L >= 2:                                                    # pro shop / bowyer's workshop (L3: offices above)
         building(d, 25, 2, 37, 10, nf=2, roof="flat", doors=(("north", 28), ("west", 6)),
@@ -2003,6 +2120,10 @@ def ca_hearthwood(rel, L):
                 d.set(x, y, rz1, LOG("stripped_dark_oak_log"))
             d.banner(x, 6, rz1 - 1, "north", "red")
     dress(d, x1, z1, x2, Z2, 2, 12)
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, Z2 - 1, 2, [(SLABTOP("dark_oak"), POT), KEG, ("hay_block[axis=y]", "target[power=0]"),
+              (SLABTOP("dark_oak"), "potted_red_tulip")])
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, Z2 - 1, 7, [CHISEL, (SLABTOP("dark_oak"), "candle[candles=2,lit=false,waterlogged=false]"),
+              "white_wool"])
     # ---- growth: a school of arms round the tiltyard
     if L >= 2:                                                    # stable for the tilting horses
         building(d, 31, 3, 40, 9, nf=1, axis="x", doors=(("north", 33), ("north", 38)), kinds=["store"])
@@ -2185,6 +2306,10 @@ def ca_cascadia(rel, L):
             d.banner(x1 + 1, 6, z, "east", "green")
             d.banner(x2 - 1, 6, z, "west", "green")
     dress(d, x1, z1, x2, Z2, 2, 12)
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z1 + 6, 2, [(SLABTOP("spruce"), POT), KEG, ("hay_block[axis=y]", "target[power=0]"),
+              CHISEL, "brown_wool"])
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z1 + 5, 7, [(SLABTOP("spruce"), "candle[candles=2,lit=false,waterlogged=false]"),
+              "chest[facing=FACE,type=single,waterlogged=false]"])
     # ---- growth: a logging-camp athletic club round the fight barn
     if L >= 2:                                                    # fighters' bunkhouse
         building(d, 23, 4, 32, 11, nf=1, axis="x", doors=(("north", 27), ("west", 8)), chimney=(33, 8),
@@ -2343,6 +2468,9 @@ def ca_neoterra(rel, L):
     if L >= 4:                                                    # planters round the court edge
         for z in range(z1 + 5, z2, 3):
             d.set(x2 - 1, 8, z, "azalea")
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z1 + 4, 2, [nt_sofa, "potted_bamboo", nt_screen])
+    deco_ring(d, x1 + 1, z1 + 6, 10, z2 - 1, 2, [("iron_block", "target[power=0]"), "potted_bamboo", ("white_concrete", "end_rod[facing=up]")])
+    deco_ring(d, 12, z1 + 6, x2 - 1, z2 - 1, 2, [(SLABTOP("smooth_quartz"), "potted_fern"), CHISEL])
     # ---- growth: a sports campus round the rooftop arena
     if L >= 2:                                                    # locker rooms and physio
         building(d, 24, 3, 35, 11, nf=1, roof="flat", doors=(("north", 29), ("west", 7)), kinds=["store"])
@@ -2534,6 +2662,8 @@ def en_hearthwood(rel, L):
         d.set(9, 2, gz2 - 1, "stone_brick_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
         d.set(gx1 + 1, 2, gz2 - 1, "oak_sapling[stage=0]") if False else None
     dress(d, x1, z1, x2, z2, 2, 10)
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, [(SLABTOP("dark_oak"), "candle[candles=3,lit=false,waterlogged=false]"),
+              (SLABTOP("dark_oak"), POT), "potted_allium"])
     # ---- growth: a small college of lore along the lane
     if L >= 3:                                                    # scriptorium with copyists' desks, archive above
         building(d, 26, 3, 34, 10, nf=2, axis="z", doors=(("north", 30), ("west", 7)), chimney=(35, 7),
@@ -2628,6 +2758,7 @@ def en_cascadia(rel, L):
             for x in range(x1, x2 + 1, 2):
                 d.set(x, 2, z, "spruce_fence")
     dress(d, x1, z1 + 1, x2, Z2, 2, 6)
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z1 + 3, 2, [(SLABTOP("spruce"), "potted_fern"), CHISEL, KEG])
     # ---- growth: a mountain retreat of scholars
     if L >= 2:                                                    # scribe's cabin (L3: loft)
         building(d, 20, 3, 28, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 24), ("west", 6)),
@@ -2738,6 +2869,8 @@ def en_neoterra(rel, L):
                     d.set(x, 1, z, "moss_block")
                     if x % 3 == 0:
                         d.set(x, 2, z, "azalea")
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, ["potted_bamboo", (SLABTOP("smooth_quartz"), "amethyst_cluster[facing=up,waterlogged=false]"),
+              nt_sofa])
     # ---- growth: an arcane institute round the tower
     if L >= 3:                                                    # library annex linked to the tower
         building(d, 17, 4, 29, 14, nf=2, roof="flat", doors=(("north", 23), ("west", 9)),
@@ -2930,6 +3063,8 @@ def al_hearthwood(rel, L):
         d.wall_torch(7, 4, z1 - 1, "north")
         d.wall_torch(9, 4, z1 - 1, "north")
     dress(d, x1, z1, x2, z2, 2, 10)
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, [(SLABTOP("dark_oak"), POT), (SLABTOP("dark_oak"), "potted_blue_orchid"),
+              KEG, (SLABTOP("dark_oak"), "potted_brown_mushroom")])
     # ---- growth: an apothecaries' row with a physic garden
     if L >= 2:                                                    # still-house for distilling cordials
         building(d, 17, 4, 24, 11, nf=1, axis="z", doors=(("north", 20),), chimney=(25, 8), kinds=["lab"])
@@ -3051,6 +3186,8 @@ def al_cascadia(rel, L):
         d.set(X2, 2, 9, AIR)
         d.set(X2, 3, 9, AIR)
     dress(d, x1, z1, X2, z2, 2, 6)
+    deco_ring(d, x1 + 1, z1 + 1, X2 - 1, z2 - 1, 2, [(SLABTOP("spruce"), "potted_fern"), KEG, (SLABTOP("spruce"), POT),
+              "brown_wool"])
     # ---- growth: a forest herb farm
     if L >= 2:                                                    # root cellar & seed store
         building(d, 3, 15, 10, 20, nf=1, axis="x", doors=(("north", 6),), kinds=["store"])
@@ -3157,6 +3294,7 @@ def al_neoterra(rel, L):
         ladder(d, X2 + 1, z2 - 2, 2, 7, "east")
         d.set(X2, 8, z2 - 2, AIR)
         d.set(X2, 9, z2 - 2, AIR)
+    deco_ring(d, x1 + 1, z1 + 1, X2 - 1, z2 - 1, 2, ["potted_bamboo", nt_screen, (SLABTOP("smooth_quartz"), "potted_allium")])
     # ---- growth: a pharmaceutical research campus
     if L >= 2:                                                    # glasshouse for medicinal plants
         gx1, gz1, gx2, gz2 = 20, 3, 28, 11
@@ -3334,6 +3472,8 @@ def gy_hearthwood(rel, L):
         d.chair(3, 2, 17, "east", "oak", sit=False)
         d.chair(21, 2, 17, "west", "oak", sit=False)
     dress(d, 8, 18, 16, 25, 2, 9)
+    deco_ring(d, cx1 + 1, cz1 + 1, cx2 - 1, cz2 - 1, 2, [(SLABTOP("oak"), "candle[candles=3,lit=false,waterlogged=false]"),
+              "potted_white_tulip", None])
     # ---- growth: the parish beside the churchyard
     if L >= 2:                                                    # sexton's cottage (L3: second storey)
         building(d, 27, 3, 35, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 31),), chimney=(36, 6),
@@ -3449,6 +3589,8 @@ def gy_cascadia(rel, L):
         d.set(gx - 1, 2, z, "spruce_fence")
         d.set(gx - 1, 3, z, LANT_S)
     dress(d, x1, z1, x2, z2, 2, 6)
+    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, [(SLABTOP("spruce"), "candle[candles=2,lit=false,waterlogged=false]"),
+              "potted_fern", None])
     # ---- growth: a mountain parish
     if L >= 2:                                                    # caretaker's cabin (L3: loft)
         building(d, 30, 3, 38, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 34),), chimney=(39, 6),
@@ -3564,6 +3706,7 @@ def gy_neoterra(rel, L):
         d.set(9, 2, z, "white_concrete_powder") if False else None
         d.set(9, 2, z, "end_rod[facing=up]")
         d.set(13, 2, z, "end_rod[facing=up]")
+    deco_ring(d, px1 + 1, pz1 + 1, px2 - 1, pz2 - 1, 2, ["potted_lily_of_the_valley", None, "potted_white_tulip"])
     # ---- growth: a memorial campus
     if L >= 2:                                                    # visitor centre and florist
         building(d, 26, 3, 35, 10, nf=1, roof="flat", doors=(("north", 30), ("west", 7)), kinds=["greenhouse"])

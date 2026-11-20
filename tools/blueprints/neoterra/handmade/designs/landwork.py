@@ -1152,6 +1152,8 @@ def netherworker_design(pack, rel, L):
         sh = bld(d, X + 2, Z + 6, X + 13, Z + 13, floors=1, fh=9, roof=roof, axis=axis, doors=[(X + 7, Z + 6, "n")],
                  win=3)
         d.hut(X + 3, 2, Z + 7)
+        if L >= 2:
+            door_cells(d).add((X + 13, 2, Z + 10))                    # keep the way to the vestry clear
         run(d, sh, "w", 2, [P.item("furnace"), P.rack()], skip=2)
         run(d, sh, "e", 2, [P.item("crafting_table"), P.b("brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]"),
                             P.books(), P.b("lectern[facing={f},has_book=true,powered=false]")], skip=1)
@@ -1179,6 +1181,7 @@ def netherworker_design(pack, rel, L):
             run(d, vs, "e", 2, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]"),
                                 P.b("chest[facing={f},type=single,waterlogged=false]"), P.b("crying_obsidian")], skip=0)
             run(d, vs, "s", 2, [P.shelf("polished_blackstone_brick", "potted_crimson_fungus"), P.b("smithing_table")], skip=1)
+            rest_racks(d, vs, "n", 2, skip=1)
             flowerbed(d, X + 2, Z + 15, X + 13, Z + 16, ("crimson_roots", "warped_roots", "poppy", "wither_rose"))
     else:
         # ---- the great hall that takes the cluster's glazed gallery as its front ----
@@ -1294,6 +1297,8 @@ def netherworker_design(pack, rel, L):
             room_rug(d, ww, 6, ("red_carpet", "black_carpet"), inset=3)
             for x in range(wx1, X - 2, 3):
                 lamp_post(d, x, Z + 15)
+            for x in range(wx1 + 1, X - 3, 3):
+                tree(d, x, Z + 18, 4, None, None, 1)
             tx = x2 + 2
             tw = bld(d, tx, Z + 15, tx + 5, Z + 20, floors=6, roof="hip" if pack != "Neoterra" else "flat", axis="x",
                      doors=[(tx, Z + 17, "w")], win=2,
@@ -2194,6 +2199,8 @@ def veg_rows(d, x1, z1, x2, z2, crops=("wheat[age=7]", "carrots[age=7]", "potato
 def farmer_hearthwood(rel, L):
     d = Design("Hearthwood", rel, (40, 26, 36), gy=1)
     P.d = d
+    d.palette = dict(wall="smooth_sandstone", end="smooth_sandstone", framing=False, frame="stripped_oak_log",
+                     roof="brick", shutter="warped", doorwood="oak", plinth="stone_bricks", chimney="bricks")
     W = "dark_oak"
     # ---- farmhouse (L1 one storey, L2+ two) ----
     fl = 1 if L == 1 else 2
@@ -2231,7 +2238,9 @@ def farmer_hearthwood(rel, L):
     tree(d, 1, 2, 4)
     # ---- L2: tool shed ----
     if L >= 2:
-        ts = bld(d, 14, 4, 18, 8, floors=1, axis="z", doors=[(16, 4, "n")])
+        ts = bld(d, 14, 4, 18, 8, floors=1, axis="z", doors=[(16, 4, "n")],
+                 pal=dict(wall="dark_oak_planks", end="dark_oak_planks", roof="deepslate_tile", frame="dark_oak_log",
+                          shutter="dark_oak"))
         run(d, ts, "s", 2, [P.b("grindstone[face=floor,facing={f}]")] + [P.rack()] * min(3, need_racks(d)))
         run(d, ts, "e", 2, [P.b("anvil[facing=north]"), P.shelf("dark_oak", "lantern[hanging=false,waterlogged=false]")])
         run(d, ts, "w", 2, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]"), P.b("chest[facing={f},type=single,waterlogged=false]")])
@@ -2239,7 +2248,9 @@ def farmer_hearthwood(rel, L):
         cart(d, 21, 5, "z")
     # ---- L3: threshing barn ----
     if L >= 3:
-        bn = bld(d, 14, 14, 24, 26, floors=1, fh=6, axis="z", doors=[(19, 14, "n")], win=4)
+        bn = bld(d, 14, 14, 24, 26, floors=1, fh=6, axis="z", doors=[(19, 14, "n")], win=4,
+                 pal=dict(wall="dark_oak_planks", end="dark_oak_planks", framing=True, frame="stripped_dark_oak_log",
+                          roof="deepslate_tile", plinth="cobblestone", shutter="dark_oak"))
         for x in (18, 20):
             for y in (2, 3, 4):
                 d.set(x, y, 14, AIR)
@@ -2255,7 +2266,8 @@ def farmer_hearthwood(rel, L):
         hay_rick(d, 26, 15)
     # ---- L4: stable & cart shed range, paddock ----
     if L >= 4:
-        st_ = bld(d, 26, 19, 34, 27, floors=2, axis="x", doors=[(30, 19, "n")], chimney=None)
+        st_ = bld(d, 26, 19, 34, 27, floors=2, axis="x", doors=[(30, 19, "n")], chimney=None,
+                  pal=dict(wall="bricks", end="bricks", roof="mud_brick", frame="stripped_spruce_log", shutter="spruce"))
         for x in range(27, 34):                                       # hay loft over the stalls
             for z in range(20, 27):
                 if (x + z) % 3 == 0 and z > 21:
@@ -2279,7 +2291,8 @@ def farmer_hearthwood(rel, L):
         bench(d, 6, 23, "south", 3)
     # ---- L5: dovecote, granary on staddles, orchard, well ----
     if L >= 5:
-        dc = bld(d, 28, 4, 32, 8, floors=3, axis="x", roof="hip", doors=[(30, 8, "s")], win=2)
+        dc = bld(d, 28, 4, 32, 8, floors=3, axis="x", roof="hip", doors=[(30, 8, "s")], win=2,
+                 pal=dict(roof="deepslate_tile", wall="smooth_sandstone"))
         for x in range(29, 32):
             d.set(x, 11, 4, "dark_oak_trapdoor[facing=north,half=bottom,open=true,powered=false,waterlogged=false]")
         d.set(30, 2, 5, "hay_block[axis=y]")
@@ -2287,10 +2300,13 @@ def farmer_hearthwood(rel, L):
         for x in (gr, gr + 4):
             for z in (4, 8):
                 d.set(x, 2, z, "mossy_cobblestone")
-        g2 = bld(d, gr, 4, gr + 4, 8, floors=1, axis="x", doors=[(gr + 2, 8, "s")], win=9)
+        g2 = bld(d, gr, 4, gr + 4, 8, floors=1, axis="x", doors=[(gr + 2, 8, "s")], win=9,
+                 pal=dict(wall="oak_planks", end="oak_planks", framing=True, frame="stripped_dark_oak_log", roof="spruce"))
         well(d, 34, 11)
         # farmworkers' cottage with kitchen and bunk room
-        ck = bld(d, 2, 25, 10, 32, floors=2, axis="z", doors=[(6, 25, "n")], chimney=(2, 29))
+        ck = bld(d, 2, 25, 10, 32, floors=2, axis="z", doors=[(6, 25, "n")], chimney=(2, 29),
+                 pal=dict(wall="yellow_terracotta", end="yellow_terracotta", framing=True, frame="stripped_dark_oak_log",
+                          roof="deepslate_tile", shutter="crimson"))
         d.hearth(3, 2, 29, "east", 5, "bricks", "campfire")
         run(d, ck, "n", 2, [P.b("smoker[facing={f},lit=false]"), P.shelf("dark_oak", "decorated_pot[cracked=false,facing=south,waterlogged=false]"),
                             P.b("water_cauldron[level=3]")], skip=0)
@@ -2313,6 +2329,7 @@ def farmer_hearthwood(rel, L):
 def farmer_cascadia(rel, L):
     d = Design("Cascadia", rel, (46, 28, 40), gy=1, paving="coarse_dirt")
     P.d = d
+    d.palette = dict(shutter="mangrove", doorwood="spruce", plinth="mossy_cobblestone", trim="stripped_spruce_log")
     W = "spruce"
     # ---- log cabin with porch (L2+ sleeping loft storey) ----
     fl = 1 if L == 1 else 2
@@ -2347,7 +2364,8 @@ def farmer_cascadia(rel, L):
     tree(d, 1, 3, 6, "spruce_leaves", "spruce_log", 2)
     # ---- L2: tool lean-to & woodshed ----
     if L >= 2:
-        ts = bld(d, 15, 4, 20, 9, floors=1, axis="x", doors=[(17, 4, "n")])
+        ts = bld(d, 15, 4, 20, 9, floors=1, axis="x", doors=[(17, 4, "n")],
+                 pal=dict(wall="birch_planks", siding="birch_planks", end="birch_planks", roof="mangrove", shutter="spruce"))
         run(d, ts, "s", 2, [P.b("grindstone[face=floor,facing={f}]")] + [P.rack()] * min(3, need_racks(d)) +
             [P.b("anvil[facing=east]")])
         run(d, ts, "e", 2, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]"),
@@ -2356,7 +2374,10 @@ def farmer_cascadia(rel, L):
         cart(d, 22, 6, "z", "pumpkin")
     # ---- L3: gambrel barn ----
     if L >= 3:
-        bn = bld(d, 16, 13, 26, 27, floors=1, fh=6, roof="gambrel", axis="z", doors=[(21, 13, "n")], win=4)
+        bn = bld(d, 16, 13, 26, 27, floors=1, fh=6, roof="gambrel", axis="z", doors=[(21, 13, "n")], win=4,
+                 pal=dict(wall="mangrove_planks", siding="mangrove_planks", batten="stripped_birch_log",
+                          end="mangrove_planks", trim="white_terracotta", roof="deepslate_tile", shutter="birch",
+                          plinth="cobblestone"))
         for x in (20, 22):
             for y in (2, 3, 4):
                 d.set(x, y, 13, AIR)
@@ -2382,7 +2403,9 @@ def farmer_cascadia(rel, L):
         d.set(40, 2, 31, "water_cauldron[level=3]")
         d.set(41, 2, 31, "hay_block[axis=y]")
         hay_rick(d, 38, 35)
-        co = bld(d, 30, 4, 36, 9, floors=1, axis="x", doors=[(33, 9, "s")], win=3)
+        co = bld(d, 30, 4, 36, 9, floors=1, axis="x", doors=[(33, 9, "s")], win=3,
+                 pal=dict(wall="birch_planks", siding="birch_planks", end="birch_planks", roof="mangrove",
+                          trim="yellow_terracotta", shutter="bamboo"))
         for x in range(31, 36):
             d.set(x, 2, 5, "hay_block[axis=y]" if x % 2 else "spruce_slab[type=top,waterlogged=false]")
             d.set(x, 3, 5, "spruce_trapdoor[facing=south,half=bottom,open=false,powered=false,waterlogged=false]")
@@ -2449,14 +2472,17 @@ def farmer_cascadia(rel, L):
         d.set(wx + 1, 16, wz + 2, "spruce_fence")
         d.set(wx + 1, 16, wz + 3, "spruce_planks")
         d.set(wx + 1, 2, wz + 1, "water_cauldron[level=3]")
-        bk = bld(d, 36, 22, 44, 27, floors=2, axis="x", doors=[(40, 22, "n")], chimney=(44, 24))
+        bk = bld(d, 36, 22, 44, 27, floors=2, axis="x", doors=[(40, 22, "n")], chimney=(44, 24),
+                 pal=dict(roof="dark_prismarine", shutter="spruce"))
         stairs_up(d, 42, 26, "west", 2, rail=False)
         for x in (37, 39, 41, 43):
             d.bed(x, 6, 23, "north")
         run(d, bk, "s", 6, [P.b("chest[facing={f},type=single,waterlogged=false]"), P.b("barrel[facing=up,open=false]")])
         room_rug(d, bk, 6, inset=2)
         # smokehouse & creamery
-        cr = bld(d, 2, 27, 12, 34, floors=2, axis="x", doors=[(7, 27, "n")], chimney=(2, 30))
+        cr = bld(d, 2, 27, 12, 34, floors=2, axis="x", doors=[(7, 27, "n")], chimney=(2, 30),
+                 pal=dict(wall="birch_planks", siding="birch_planks", end="birch_planks", roof="deepslate_tile",
+                          trim="green_terracotta", shutter="warped"))
         d.hearth(3, 2, 30, "east", 5, "cobblestone", "campfire")
         run(d, cr, "s", 2, [P.b("water_cauldron[level=3]"), P.b("barrel[facing=up,open=false]", "white_wool"),
                             P.b("smoker[facing={f},lit=true]"), P.shelf("spruce", "decorated_pot[cracked=false,facing=north,waterlogged=false]"),
@@ -2482,6 +2508,8 @@ def farmer_cascadia(rel, L):
 def farmer_neoterra(rel, L):
     d = Design("Neoterra", rel, (44, 24, 40), gy=1, paving="smooth_stone")
     P.d = d
+    d.palette = dict(wall="white_concrete", post="birch_planks", band="lime_terracotta", accent="lime_concrete",
+                     deck="moss_block", doorwood="birch", plinth="polished_andesite")
     # ---- office / farm kitchen (L2+ two storeys with an upstairs lab) ----
     fl = 1 if L == 1 else 2
     of = bld(d, 2, 3, 10, 10, floors=fl, roof="flat", doors=[(6, 3, "n"), (10, 7, "e")], ribbon=True)
@@ -2527,7 +2555,9 @@ def farmer_neoterra(rel, L):
             d.set(x, 2, 0, "smooth_quartz_slab[type=bottom,waterlogged=false]")
     # ---- L2: tool garage ----
     if L >= 2:
-        ga = bld(d, 12, 3, 18, 9, floors=1, roof="flat", doors=[(15, 9, "s")], win=9)
+        ga = bld(d, 12, 3, 18, 9, floors=1, roof="flat", doors=[(15, 9, "s")], win=9,
+                 pal=dict(wall="light_gray_concrete", post="gray_concrete", band="lime_concrete", accent="lime_concrete",
+                          deck="smooth_quartz"))
         for x in range(13, 18):
             for y in (2, 3):
                 d.set(x, y, 3, AIR)
@@ -2574,7 +2604,9 @@ def farmer_neoterra(rel, L):
         cart(d, 38, 8, "x", "pumpkin")
     # ---- L5: seed bank & packing hall, green roof, drone pad, trees ----
     if L >= 5:
-        sb = bld(d, 27, 13, 41, 25, floors=2, roof="flat", doors=[(34, 13, "n")], ribbon=True)
+        sb = bld(d, 27, 13, 41, 25, floors=2, roof="flat", doors=[(34, 13, "n")], ribbon=True,
+                 pal=dict(wall="brown_terracotta", post="birch_planks", band="lime_concrete", accent="lime_concrete",
+                          deck="moss_block"))
         run(d, sb, "s", 2, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]")] * 6)
         run(d, sb, "e", 2, [P.books()] * 4, skip=1)
         for x in range(30, 39, 3):

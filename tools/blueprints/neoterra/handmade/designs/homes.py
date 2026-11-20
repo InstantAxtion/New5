@@ -3547,6 +3547,9 @@ def house_estate_ca(rel, L):
             d.set(57, 2, z, "hay_block[axis=y]")
         for z in range(42, 56):
             d.set(36, 2, z, fence("spruce"))
+        for x in range(48, 56):                           # cordwood stacked by the stable
+            d.set(x, 2, 42, log("spruce_log", "x"))
+            d.set(x, 3, 42, log("spruce_log", "x"))
     return d
 
 

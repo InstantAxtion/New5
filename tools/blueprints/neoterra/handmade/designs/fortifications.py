@@ -925,7 +925,55 @@ def bt_neoterra(rel, L):
 
 @design("barrackstower")
 def barrackstower(pack, rel, L):
-    return {"Hearthwood": bt_hearthwood, "Cascadia": bt_cascadia, "Neoterra": bt_neoterra}[pack](rel, L)
+    d = {"Hearthwood": bt_hearthwood, "Cascadia": bt_cascadia, "Neoterra": bt_neoterra}[pack](rel, L)
+    dress_tower(d, L)
+    return d
+
+
+def dress_tower(d, L):
+    """Wall trims of the child towers, kept inside their own walls: window lintels / sills, merlon caps, stripes,
+    finials."""
+    pk = d.pack
+    W, H = d.sx, d.sy
+    for x in range(W):
+        for z in range(d.sz):
+            for y in range(1, H - 1):
+                if "glass_pane" not in d.get(x, y, z):
+                    continue
+                if "glass" in d.get(x, y - 1, z) or "glass" in d.get(x, y + 1, z):
+                    continue
+                up, dn = d.get(x, y + 1, z), d.get(x, y - 1, z)
+                if pk == "Hearthwood":
+                    if "stone_bricks" in up or "andesite" in up:
+                        d.set(x, y + 1, z, "chiseled_stone_bricks")
+                    if "stone_bricks" in dn or "andesite" in dn:
+                        d.set(x, y - 1, z, "polished_andesite")
+                elif pk == "Cascadia":
+                    if up.startswith("minecraft:stripped_spruce_log"):
+                        d.set(x, y + 1, z, up.replace("stripped_spruce_log", "dark_oak_log"))
+                    if dn.startswith("minecraft:stripped_spruce_log"):
+                        d.set(x, y - 1, z, dn.replace("stripped_spruce_log", "spruce_log"))
+    if pk == "Hearthwood":
+        top = 4 * HW_TST[L]
+        for (x, z) in HW_WALL:
+            if (x + z) % 2 == 0:
+                d.set(x, top + 3, z, "stone_brick_slab[type=bottom,waterlogged=false]")
+    elif pk == "Cascadia":
+        for y in range(H - 1, 0, -1):
+            if "dark_oak_slab" in d.get(4, y, 4):
+                if d.air(4, y + 1, 4):
+                    d.set(4, y + 1, 4, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+                break
+    else:
+        top = 4 * (L + 1)
+        for y in range(1, top):
+            if d.get(1, y, 0) == "minecraft:white_concrete":
+                d.set(1, y, 0, "cyan_concrete")
+            if d.get(5, y, 6) == "minecraft:white_concrete":
+                d.set(5, y, 6, "cyan_concrete")
+        for x, z in ((0, 0), (6, 0), (0, 6), (6, 6)):
+            if d.air(x, top + 2, z):
+                d.set(x, top + 2, z, "smooth_quartz_slab[type=bottom,waterlogged=false]")
 
 
 TOWER = "military/barrackstower0.blueprint"
@@ -2070,8 +2118,9 @@ def roof_units(d, cells, y):
 def fins(d, cells, y1, y2, mat):
     """Vertical facade fins standing proud of the wall (only where nobody walks)."""
     for x, z in cells:
-        for y in range(y1, y2 + 1):
-            sput(d, x, y, z, mat) if y > 3 else put(d, x, y, z, mat)
+        if all(d.bp.inside(x, y, z) and d.air(x, y, z) for y in range(y1, y2 + 1)):
+            for y in range(y1, y2 + 1):
+                d.set(x, y, z, mat)
 
 
 def dress_barracks(d, L):
@@ -2177,7 +2226,6 @@ def dress_gatehouse(d, L):
             eave_trim(d, X0, 2, X0 + 5, 7, "spruce", ylo=8)
             log_notches(d, X0, 2, X0 + 5, 7, 5, 9)
             frames(d, X0, 2, X0 + 5, 7, "spruce", LOG("stripped_spruce_log", "x"), y1=6)
-            put(d, X0 + 3, 16, 4, "lightning_rod[facing=up,powered=false,waterlogged=false]")
         for z in (4, 6):
             d.set(8, 6, z, LANT) if d.air(8, 6, z) else None
         d.banner(7, 4, 6, "east", "green") if d.air(7, 4, 6) else None
@@ -2845,6 +2893,18 @@ def wt_complex(d, L, cx, tz, yw, mirror=False):
         for x in range(wx, wx + 3):
             for z in range(21 if L < 5 else 9, 24 if L < 5 else 9):
                 pass
+    if L >= 4:
+        bench(d, cx - 2, 9 + 0, "north") if False else None
+        lamp_post(d, cx + 4, 12)
+        lamp_post(d, cx - 4, 12) if pk != "Cascadia" else None
+        if pk == "Neoterra":
+            bx1 = min(cx + s_ * 5, cx + s_ * 15)
+            roof_units(d, [(bx1 + 3, 14), (bx1 + 4, 14), (bx1 + 7, 15)], 11)
+    if L >= 5:
+        flowerbed(d, cx - 8, 20, cx - 5, 20)
+        flowerbed(d, cx + 5, 20, cx + 8, 20)
+        if pk == "Neoterra":
+            roof_units(d, [(cx - 6, 24), (cx - 5, 24), (cx + 4, 24)], 16)
     # ---- L5: flanking turrets at both wall ends
     if L >= 5:
         for ex in (cx - 15, cx + 11):

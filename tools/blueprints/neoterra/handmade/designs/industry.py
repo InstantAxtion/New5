@@ -3196,6 +3196,13 @@ def sn_showroom(d, sl):
                     d.set(x, y + 1, z, ["decorated_pot[cracked=false,facing=north,waterlogged=false]",
                                         WALLST("stone_brick_wall"), "chiseled_stone_bricks"][(x + z) % 3])
     room(d, g, ["pot", "stock", "plant", "cutter"], monuments, "stonemason", rug=False)
+    for ox in (-3, 4):
+        x = info["mx"] + ox
+        if d.bp.inside(x, 2, z1 - 2) and all(d.air(x, y, z1 - 2) for y in range(2, 8)):
+            d.set(x, 2, z1 - 2, "stone_bricks")
+            col(d, x, z1 - 2, 3, 5, "polished_andesite")
+            d.set(x, 6, z1 - 2, "chiseled_stone_bricks")
+            d.set(x, 7, z1 - 2, slab("stone_brick_slab"))
     room(d, u, ["book", "lectern", "carto", "pot"], "desks", "stonemason", rug=True)
 
 
@@ -3341,9 +3348,22 @@ def cr_plant(d, sl):
     room(d, g, ["grind", "pot", "cutter", "rack"], crushers, "crusher")
     room(d, m, ["craft", "pot", "keg", "rack"], "island", "crusher")
     room(d, u, ["wool", "rack2", "wool", "keg"], "aisles", "crusher")
+    M = MAT[d.pack]
+    for (a, c, b, e) in ((x2 + 1, z1, x2 + 3, z1 + 4), (x1 - 4, z1, x1 - 2, z1 + 4), (x1, z1 - 4, x1 + 4, z1 - 2)):
+        if area_free(d, a, c, b, e, 2, info["top"]) and d.bp.inside(b + 1, 1, e + 1) and a >= 1 and c >= 1:
+            h = info["top"] + 3
+            for x, z in perim(a, c, b, e):
+                for y in range(2, h + 1):
+                    d.set(x, y, z, M["board"] if (y % 4 or (x, z) in ((a, c), (b, c), (a, e), (b, e)))
+                          else "glass_pane")
+            for x, z in ((a, c), (b, c), (a, e), (b, e)):
+                col(d, x, z, 2, h, M["post"])
+            d.fill(a - 1, h + 1, c - 1, b + 1, h + 1, e + 1, slab(roofset(d)[1]) if d.pack != "Neoterra"
+                   else "smooth_quartz")
+            break
 
 
-# ------------------------------------------------------------------------------------------------ sifter
+# -------------------------------------------------------------------------------------------- sifter
 def sf_wash(d, sl):
     """Wash plant: a raised flume on trestles feeding a rotating trommel drum (iron bars) inside an open shed."""
     x1, z1, x2, z2, s, ax = sl
