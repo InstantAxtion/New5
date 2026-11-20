@@ -155,7 +155,7 @@ def wall_block(pack, x, y, z, floor_y):
     if pack == "Hearthwood":
         if y == floor_y:
             return "polished_andesite"
-        return "mossy_stone_bricks" if h < 14 else "cracked_stone_bricks" if h < 24 else "stone_bricks"
+        return "mossy_stone_bricks" if h < 16 else "stone_bricks"
     return ("tuff" if h < 22 else "andesite" if h < 44 else "cobblestone" if h < 58
             else "mossy_cobblestone" if h < 64 else "stone")
 
@@ -258,9 +258,13 @@ def free(d, R, x, z, h=1):
 
 def flush_ok(d, x, y, z):
     """A flush ceiling light only where the ceiling is ours and nothing walks on top of it."""
+    if not d.bp.inside(x, y, z):
+        return False
     here = d.get(x, y, z)
-    return "substitution" not in here and here != AIR and d.bp.inside(x, y + 1, z) and not d.air(x, y + 1, z) \
-        and "substitution" not in d.get(x, y + 1, z) or (d.bp.inside(x, y + 1, z) and is_earth(d, x, y + 1, z))
+    if here == AIR or "substitution" in here or not d.bp.inside(x, y + 1, z):
+        return False
+    above = d.get(x, y + 1, z)
+    return above != AIR and "blocksubstitution" not in above
 
 
 def lights(d, R, M, ceil_y, step=4, skip=()):
@@ -632,12 +636,12 @@ def f_archive(d, R, M, L, n_shelf, n_chis, pack):
         d.item(cx, R.y, cz + 2, "lectern", "north")
 
 
-def f_workshop(d, R, M, L, pack, outdoor=False):
+def f_workshop(d, R, M, L, pack, outdoor=False, order=None):
     items = [("anvil", "a"), ("grindstone", "a"), ("smithing_table", None), ("crafting_table", None),
              ("stonecutter", None), ("fletching_table", None), ("loom", None), ("crafting_table", None),
              ("smithing_table", None), ("grindstone", "a"), ("anvil", "a"), ("crafting_table", None)]
     sides = door_sides(R)
-    order = [s for s in ("north", "east", "west", "south") if s not in sides]
+    order = order or [s for s in ("north", "east", "west", "south") if s not in sides]
     cells = []
     for s in order:
         for (x, z) in wallcells(R, s):
@@ -1034,7 +1038,7 @@ def c_farm(d, R, M, L, pack):
     for u in range(1, F.U, 4):
         x, z = F.xz(u, 1)
         if M["light"] == "flush":
-            d.set(x, R.top + 1, z, "sea_lantern")
+            d.set(x, R.top, z, "end_rod[facing=down]")
         else:
             d.lamp(x, R.top, z, "lantern")
 
@@ -1057,15 +1061,20 @@ def child_geom(pack, kind):
     return deck, (x1, z1, x2, z2), fy, top, keep, P["child_huts"][kind]
 
 
+def child_box_top(deck):
+    """Deck-A rooms own their ceiling; deck-B rooms stop under the shared slab (deck A's floor / another child)."""
+    return LV[deck][1] + 1 if deck == "A" else LV[deck][1]
+
+
 def child_design(kind, pack, rel, L):
     deck, (x1, z1, x2, z2), fy, top, keep, (hx, hz) = child_geom(pack, kind)
     M = MATS[pack]
     W, D = x2 - x1 + 1, z2 - z1 + 1
-    Hh = top + 1 - fy + 1
+    Hh = child_box_top(deck) - fy + 1
     d = Design(pack, rel, (W, Hh, D), gy=0, paving=M["child_floor"][kind])
     # ceiling layer (the room's own ceiling, so the blueprint covers the reserved box exactly)
-    cy = Hh - 1
-    for x in range(W):
+    cy = Hh - 1 if deck == "A" else Hh
+    for x in range(W if deck == "A" else 0):
         for z in range(D):
             if pack == "Hearthwood":
                 c = "dark_oak_planks" if (x % 3 == 1) else "stone_bricks"
@@ -1075,7 +1084,7 @@ def child_design(kind, pack, rel, L):
                 c = "white_concrete"
             d.set(x, cy, z, c)
     lk = {(x - x1, z - z1) for x, z in keep}
-    R = room(0, 0, W - 1, D - 1, 1, Hh - 2, lk | {(hx - x1, hz - z1)})
+    R = room(0, 0, W - 1, D - 1, 1, cy - 1, lk | {(hx - x1, hz - z1)})
     d.hut(hx - x1, 1, hz - z1, "north")
     CHILD_FN[kind](d, R, M, L, pack)
     if kind != "farm":
@@ -1228,6 +1237,17 @@ def make_ramp(d, pack, L):
                 d.set(x0, stand + 2, z, "wall_torch[facing=east]") if False else None
 
 
+def reclear_ramp(d, pack):
+    """After the surface work: the ramp's head (cells at or above ground level) must stay open."""
+    x0, w, zf = PLANS[pack]["ramp"]
+    for i in range(1, 7):
+        z = zf + i - 1
+        stand = SW - i
+        for x in range(x0, x0 + w):
+            for y in range(max(stand, GY), stand + 4):
+                d.set(x, y, z, AIR)
+
+
 def make_well(d, pack, L):
     """Compact U-shaped stair core from deck A (walk 19) down to deck B (walk 14)."""
     P = PLANS[pack]
@@ -1326,7 +1346,7 @@ def bunker_common(d, pack, L):
         if sp[6] > L:
             continue
         deck, (x1, z1, x2, z2), fy, top, keep, (hx, hz) = child_geom(pack, kind)
-        d.reserve(x1, fy, z1, x2, top + 1, z2)
+        d.reserve(x1, fy, z1, x2, child_box_top(deck), z2)
         d.child_hut(hx, fy + 1, hz, CHILD_PATH[kind])
     # parent rooms
     req = d.req
@@ -1499,6 +1519,32 @@ def neoterra(rel, L):
     for z in (6, 9):
         d.set(9, SW, z, "potted_bamboo")
         d.set(23, SW, z, "potted_bamboo")
+    # emergency escape hatch (concrete collar, steel lid) and a park edge of birches and planters
+    hx0, hz0 = 6, 27
+    for dx in (-1, 0, 1):
+        for dz in (-1, 0, 1):
+            d.set(hx0 + dx, GY, hz0 + dz, "light_gray_concrete")
+            if (dx, dz) != (0, 0):
+                d.set(hx0 + dx, SW, hz0 + dz, "smooth_stone_slab[type=bottom,waterlogged=false]")
+    d.set(hx0, SW, hz0, "iron_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]")
+    d.sign(hx0, SW, hz0 - 2, "north", ["EMERGENCY", "EXIT", "KEEP CLEAR"], "birch") if False else None
+    for (tx, tz) in ((3, 10), (28, 4), (4, 19), (11, 30), (26, 17)):
+        if L >= 3 and 17 <= tx <= 30 and 17 <= tz <= 30:
+            continue
+        for y in range(SW, SW + 4):
+            d.set(tx, y, tz, "birch_log[axis=y]")
+        for dy in (3, 4, 5):
+            r = 1 if dy == 5 else 2
+            for dx in range(-r, r + 1):
+                for dz in range(-r, r + 1):
+                    if abs(dx) + abs(dz) <= r + (0 if r == 1 else 1) and d.air(tx + dx, SW + dy, tz + dz) \
+                            and d.bp.inside(tx + dx, SW + dy, tz + dz):
+                        d.set(tx + dx, SW + dy, tz + dz, "birch_leaves[distance=7,persistent=true,waterlogged=false]")
+    for x in range(9, 24):                               # lamp line along the approach plaza
+        if x in (9, 23):
+            d.set(x, SW, 0, "andesite_wall")
+            d.set(x, SW + 1, 0, "andesite_wall")
+            d.set(x, SW + 2, 0, "sea_lantern")
     if L >= 2:              # periscope / air intake mushroom heads on the lawn
         for (px, pz) in ((5, 20), (27, 26)):
             d.set(px, SW, pz, "andesite_wall")
@@ -1844,7 +1890,7 @@ def cascadia(rel, L):
     for dx, dz in D4.values():
         d.set(vx + dx, vtop, vz + dz, "cobblestone_slab[type=bottom,waterlogged=false]")
     # ---- blacksmith's lean-to at the foot of the rock face (the workshop)
-    bx1, bx2, bz1, bz2 = 20, 30, 0, 4
+    bx1, bx2, bz1, bz2 = 20, 30, 1, 5
     d.fill(bx1, GY, bz1, bx2, GY, bz2, "spruce_planks")
     for x in range(bx1, bx2 + 1):
         for y in range(SW, SW + 4):
@@ -1864,7 +1910,7 @@ def cascadia(rel, L):
     R = room(bx1 + 1, bz1 + 1, bx2 - 1, bz2, SW, SW + 2, keep=set())
     # front is open: keep its row free so the work blocks stand along the back and the east end
     R.keep = {(x, bz1 + 1) for x in range(bx1 + 1, bx2)}
-    f_workshop(d, R, M, L, "Cascadia", outdoor=True)
+    f_workshop(d, R, M, L, "Cascadia", outdoor=True, order=["south", "east", "west"])
     d.set((bx1 + bx2) // 2 - 2, SW + 2, bz1 + 1, "lantern[hanging=true,waterlogged=false]")
     d.set((bx1 + bx2) // 2 + 2, SW + 2, bz1 + 1, "lantern[hanging=true,waterlogged=false]")
     d.set(bx1 - 1, SW, 1, "water_cauldron[level=3]")   # quench tub
@@ -1908,4 +1954,6 @@ def cascadia(rel, L):
 
 @design("bunker")
 def bunker(pack, rel, L):
-    return {"Neoterra": neoterra, "Hearthwood": hearthwood, "Cascadia": cascadia}[pack](rel, L)
+    d = {"Neoterra": neoterra, "Hearthwood": hearthwood, "Cascadia": cascadia}[pack](rel, L)
+    reclear_ramp(d, pack)
+    return d
