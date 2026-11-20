@@ -551,7 +551,24 @@ class Design:
 
     # ------------------------------------------------------------------------------------------- finishing
     def check(self):
-        r, p = self.req, self.placed
+        r = self.req
+        p = dict(self.placed)
+        # count what is really in the finished grid (catches required blocks overwritten later)
+        real = {"beds": 0, "racks": 0, "bookshelves": 0, "items": {}}
+        for *_, st in self.bp.blocks():
+            n = st.split("[")[0]
+            short = n.split(":")[1]
+            if short.endswith("_bed") and "part=head" in st:
+                real["beds"] += 1
+            elif short == "blockminecoloniesrack":
+                real["racks"] += 1
+            elif short == "bookshelf":
+                real["bookshelves"] += 1
+            real["items"][n] = real["items"].get(n, 0) + 1
+        p["beds"] = min(p["beds"], real["beds"])
+        p["racks"] = min(p["racks"], real["racks"])
+        p["bookshelves"] = min(p["bookshelves"], real["bookshelves"])
+        p["items"] = {k: min(v, real["items"].get(k, 0)) for k, v in p["items"].items()}
         miss = []
         if self.hut_pos is None:
             miss.append("hut block")
@@ -567,6 +584,9 @@ class Design:
                 miss.append(f"yard {k} {p['yard'].get(k, 0)}/{n}")
         if p["floor_items"] < r["floor_items"]:
             miss.append(f"composted dirt {p['floor_items']}/{r['floor_items']}")
+        outs = sum(ns.count("sit_out") for ns in self.tags.values())
+        if outs < r.get("yard_seats", 0):
+            miss.append(f"outdoor seats (sit_out tags) {outs}/{r['yard_seats']}")
         if p["seats"] < r["seats"]:
             miss.append(f"seats {p['seats']}/{r['seats']}")
         for k, n in r["spots"].items():

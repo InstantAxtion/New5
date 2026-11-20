@@ -415,7 +415,7 @@ def builder_hw(rel, L):
     d.item(12, y0, 4, "crafting_table")
     d.table(12, y0, 6, "dark_oak")
     d.chair(12, y0, 7, "south", "dark_oak")
-    d.chair(13, y0, 6, "east", "dark_oak")
+    d.chair(11, y0, 6, "west", "dark_oak")
     d.item(13, y0, 10, "barrel", "up")
     d.item(13, y0, 9, "barrel", "up")
     if two:
@@ -1283,7 +1283,7 @@ def fl_hw(rel, L):
     for x in range(6, 10):
         d.set(x, y0, z1, sl("dark_oak", "top"))
     for i in range(FLETCH[L]):
-        d.item(x1 + 1 + i if i < 3 else x2 - 1, y0, z2 - 1 if i < 3 else z2 - 1 - (i - 3) - 1, "fletching_table")
+        d.item(x1 + 1 + i if i < 3 else x2 - 1, y0, z2 - 1 if i < 3 else z2 - 1 - (i - 3), "fletching_table")
     d.chair(x1 + 2, y0, z2 - 2, "south", "dark_oak", sit=False)
     rack_line(d, [(x2 - 1, z) for z in range(z1 + 1, z1 + 4)], y0, min(FRACKS[L], 3), 1, "west")
     d.set(8, 5, 7, LANT)
@@ -2094,9 +2094,7 @@ def cp_cas(rel, L):
     rack_line(d, [(x1 + 2, z2 - 1)] + [(x, z2 - 1) for x in range(x1 + 4, x2, 3)] + [(x2 - 1, z1 + 1)], y0, L, 1)
     # log-crib bins along the back with the barrels
     for i in range(CBAR[L]):
-        bx = x1 + 3 + i * 3
-        if bx + 1 >= x2:
-            bx = x1 + 3 + (i - 2) * 3
+        bx = x1 + 2 + i * 3
         d.item(bx, y0, z2 - 2, "minecolonies:barrel_block", "north")
         d.set(bx - 1, y0, z2 - 2, lg("spruce_log", "z")) if d.air(bx - 1, y0, z2 - 2) else None
     d.set(x1 + 3, 4, (z1 + z2) // 2, LANT)

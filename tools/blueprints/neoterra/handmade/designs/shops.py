@@ -980,7 +980,7 @@ def cookery_hw(rel, L):
     d.set(10, 3, 9, "pumpkin")
     d.set(10, 3, 10, "melon")
     # racks (shelving) along the east wall
-    for i, z in enumerate(range(8, 13)):
+    for i, z in enumerate((7, 8, 9, 11, 12)):
         if i < L:
             d.rack(x2 - 1, y0, z, "west")
         d.set(x2 - 1, 4, z, sl("spruce", "top"))
@@ -1127,7 +1127,8 @@ def cookery_cas(rel, L):
         d.set(x2, y0, 13, AIR)
         d.door(x2, y0, 13, "east", "spruce")
         for z in range(sz1 + 1, sz2):
-            d.set(sx2, y0, z, "spruce_fence") if z != 12 else None
+            if z != 12:
+                d.set(sx2, y0, z, "spruce_fence")
     # L3+: firewood stacks along the west wall under a little roof
     if L >= 3:
         for z in range(7, 16):
@@ -1232,7 +1233,8 @@ def cookery_neo(rel, L):
     d.set(x2 + 1, y0, 7, "barrel[facing=up,open=false]")
     d.set(x2 + 2, y0, 7, "barrel[facing=up,open=false]")
     for x in range(16, 21):
-        d.set(x, y0, 6, "hay_block[axis=x]" if x % 2 else "melon") if x < 20 else None
+        if x < 20:
+            d.set(x, y0, 6, "hay_block[axis=x]" if x % 2 else "melon")
     if L >= 3:                                                   # staff break bench + bins outside
         d.set(x1 - 1, y0, 8, "composter[level=4]")
         d.set(x1 - 1, y0, 9, "composter[level=2]")
@@ -1283,12 +1285,15 @@ def glass_gable(d, x1, z1, x2, z2, y, axis, frame="dark_oak", glass="glass", eve
     return y + (n - 1) // 2 - oh
 
 
-FLOWERS = ["poppy", "dandelion", "azure_bluet", "oxeye_daisy", "cornflower", "allium", "red_tulip",
-           "orange_tulip", "pink_tulip", "white_tulip", "lily_of_the_valley", "blue_orchid"]
+FLOWERS = {"Hearthwood": ["poppy", "oxeye_daisy", "red_tulip", "pink_tulip", "lily_of_the_valley", "cornflower"],
+           "Cascadia": ["dandelion", "azure_bluet", "blue_orchid", "allium", "fern"],
+           "Neoterra": ["white_tulip", "orange_tulip", "torchflower"]}
 
 
-def flower(i):
-    return FLOWERS[i % len(FLOWERS)]
+def flower(d, i):
+    """Flower for this pack: English cottage flowers / Pacific-Northwest wildflowers / designer white-orange."""
+    f = FLOWERS[d.pack]
+    return f[i % len(f)]
 
 
 def beds(d, cells, y, n_compost, start=0):
@@ -1299,14 +1304,14 @@ def beds(d, cells, y, n_compost, start=0):
             d.floor_item(x, y, z)
         else:
             d.set(x, y, z, "grass_block[snowy=false]")
-            d.set(x, y + 1, z, flower(i + start))
+            d.set(x, y + 1, z, flower(d, i + start))
 
 
 def flower_stall(d, x1, x2, z, y, wood="spruce"):
     """Market stall of flower buckets: slab shelf with potted flowers, a second tier behind."""
     for i, x in enumerate(range(x1, x2 + 1)):
         d.set(x, y, z, sl(wood, "top"))
-        d.set(x, y + 1, z, "potted_" + flower(i))
+        d.set(x, y + 1, z, "potted_" + flower(d, i))
 
 
 # ============================================================================================ FLORIST
@@ -1330,14 +1335,12 @@ def florist_hw(rel, L):
     for x in (5, 9):
         d.window(x, 3, 10, x, 4, 10)
     d.window(3, 3, 7, 3, 4, 7)
-    for y in range(y0, ridge + 2):                                # small brick chimney at the west end
-        d.set(4, y, 10 + 1, "bricks") if y > 4 else None
-    for y in range(5, ridge + 2):
-        d.set(4, y, 9, "bricks")
+    for y in range(y0, ridge + 2):                                # small brick chimney in the back wall
+        d.set(4, y, 10, "bricks")
     # flower buckets under the windows and a bench of pots
     flower_stall(d, 8, 11, 3, y0, oak)
     for x in (3, 4, 5):
-        d.set(x, y0, 3, "potted_" + flower(x + 5))
+        d.set(x, y0, 3, "potted_" + flower(d, x + 5))
     awning(d, 8, 11, 4, 5, ("green_wool", "white_wool"))
     d.sign(6, 5, 3, "north", ["Rose &", "Thistle", "florist"], oak)
     # shop: counter with wrapping (crafting? no) and vases, racks of pots on the back wall, barrel
@@ -1350,10 +1353,10 @@ def florist_hw(rel, L):
         if i < L:
             d.rack(x, y0, 9, "north")
         else:
-            d.set(x, y0, 9, "potted_" + flower(i))
+            d.set(x, y0, 9, "potted_" + flower(d, i))
     for i, x in enumerate((4, 5, 6, 7, 8)):
         d.set(x, 3, 9, sl("spruce", "top"))
-        d.set(x, 4, 9, "potted_" + flower(i + 3))
+        d.set(x, 4, 9, "potted_" + flower(d, i + 3))
     d.item(10, y0, 9, "barrel")
     d.set(11, y0, 9, "composter[level=6]")
     d.lamp(7, 5, 7)
@@ -1383,7 +1386,7 @@ def florist_hw(rel, L):
     beds(d, cells, 1, 4 * L)
     for z in range(gz1 + 2, gz2 - 1, 2):                       # potting bench down the middle
         d.set(16, y0, z, sl("spruce", "top"))
-        d.set(16, 3, z, "potted_" + flower(z))
+        d.set(16, 3, z, "potted_" + flower(d, z))
     d.set(17, y0, gz2 - 1, "water_cauldron[level=3]")
     d.set(16, y0, gz2 - 1, "potted_fern")
     if L >= 2:
@@ -1399,7 +1402,7 @@ def florist_hw(rel, L):
             for z in range(12, 19):
                 d.set(x, 1, z, "grass_block[snowy=false]")
                 if x != 6 and (x + z) % 2 == 0:
-                    d.set(x, y0, z, flower(x * 3 + z))
+                    d.set(x, y0, z, flower(d, x * 3 + z))
             d.set(6, 1, 11 + 1, "gravel")
         for z in range(12, 19):
             d.set(6, 1, z, "gravel")
@@ -1441,11 +1444,11 @@ def florist_cas(rel, L):
         if i < L:
             d.rack(x1 + 1, y0, z, "east")
         else:
-            d.set(x1 + 1, y0, z, "potted_" + flower(i))
+            d.set(x1 + 1, y0, z, "potted_" + flower(d, i))
     d.item(x2 - 1, y0, z2 - 1, "barrel")
     for z in (9, 10, 11):
         d.set(x2 - 1, y0, z, sl("spruce", "top"))
-        d.set(x2 - 1, 3, z, "potted_" + flower(z))
+        d.set(x2 - 1, 3, z, "potted_" + flower(d, z))
     d.set(7, 4, 11, lant())
     for z in (10, 13):
         d.window(x2, 3, z, x2, 3, z)
@@ -1475,9 +1478,9 @@ def florist_cas(rel, L):
         for x in range(13, 20, 3):
             for z in (1, 2):
                 d.set(x, y0, z, "grass_block[snowy=false]")
-                d.set(x, 3, z, flower(x + z))
+                d.set(x, 3, z, flower(d, x + z))
                 d.set(x + 1, y0, z, "grass_block[snowy=false]")
-                d.set(x + 1, 3, z, flower(x + z + 4))
+                d.set(x + 1, 3, z, flower(d, x + z + 4))
     # L4+: potting shed (lean-to) on the back of the shop
     if L >= 4:
         for x, z in perim(x1, z2, x2, z2 + 4):
@@ -1530,13 +1533,13 @@ def florist_neo(rel, L):
     d.hut(x2 - 1, y0, z1 + 1)
     for x in range(13, 17):
         d.set(x, y0, 7, "smooth_quartz")
-        d.set(x, 3, 7, "potted_" + flower(x))
+        d.set(x, 3, 7, "potted_" + flower(d, x))
     d.item(x2 - 1, y0, 7, "barrel")
     for i, z in enumerate(range(z1 + 1, z1 + 6)):
         if i < L:
             d.rack(x1 + 1, y0, z, "east")
         else:
-            d.set(x1 + 1, y0, z, "potted_" + flower(i))
+            d.set(x1 + 1, y0, z, "potted_" + flower(d, i))
     # planters: quartz-edged beds in a grid (composted dirt work beds first)
     cells = []
     for z in range(z1 + 3, z2 - 2, 2):
@@ -1567,8 +1570,14 @@ def florist(pack, rel, L):
     return {"Hearthwood": florist_hw, "Cascadia": florist_cas, "Neoterra": florist_neo}[pack](rel, L)
 
 
-DYES = ["red", "yellow", "blue", "orange", "purple", "lime", "magenta", "cyan", "pink", "green", "light_blue",
-        "brown"]
+DYES = {"Hearthwood": ["red", "yellow", "blue", "brown", "orange", "green"],          # madder, weld, woad...
+        "Cascadia": ["brown", "green", "red", "black", "light_gray", "gray"],        # bark, moss, alder
+        "Neoterra": ["magenta", "cyan", "lime", "pink", "light_blue", "purple"]}     # synthetic brights
+
+
+def dy(d, i):
+    c = DYES[d.pack]
+    return c[i % len(c)]
 
 
 def drying_line(d, x1, x2, z, y, beam="stripped_spruce_log", post="spruce_log", k=0, kind="banner"):
@@ -1579,10 +1588,10 @@ def drying_line(d, x1, x2, z, y, beam="stripped_spruce_log", post="spruce_log", 
             d.set(x, yy, z, lg(post))
     for x in range(x1 + 1, x2):
         d.set(x, y, z, lg(beam, "x"))
-        c = DYES[(x + k) % len(DYES)]
+        c = dy(d, x + k)
         if kind == "banner":
             d.set(x, y, z - 1, f"{c}_wall_banner[facing=north]")
-            d.set(x, y, z + 1, f"{DYES[(x + k + 5) % len(DYES)]}_wall_banner[facing=south]")
+            d.set(x, y, z + 1, f"{dy(d, x + k + 5)}_wall_banner[facing=south]")
         elif (x - x1) % 2 == 1:
             d.set(x, y - 1, z, f"{c}_wool")
 
@@ -1612,7 +1621,8 @@ def dyer_hw(rel, L):
     nv = {1: 2, 2: 3, 3: 4}.get(L, 5)
     hw_body(d, 3, 4, 12, 10, y0, y1, wall="calcite")
     for x, z in perim(3, 4, 12, 10):
-        d.set(x, 3, z, "bricks") if "calcite" in d.get(x, 3, z) else None
+        if "calcite" in d.get(x, 3, z):
+            d.set(x, 3, z, "bricks")
     ridge = roof(d, 3, 4, 12, 10, 6, "x", "deepslate_tile", "deepslate_tile_slab", "calcite")
     d.door(6, y0, 4, "south", oak)
     for x in (4, 8, 10):
@@ -1636,14 +1646,14 @@ def dyer_hw(rel, L):
     d.item(8, y0, 9, "crafting_table")
     for z, c in ((5, "red"), (6, "blue"), (7, "yellow")):
         d.set(11, y0, z, f"{c}_wool")
-        d.set(11, 3, z, f"{DYES[z]}_wool")
+        d.set(11, 3, z, f"{dy(d, z)}_wool")
     for i, (x, z, f) in enumerate(((9, 9, "north"), (10, 9, "north"), (11, 9, "north"), (11, 5, "west"),
                                    (11, 6, "west"))):
         if i < L:
             d.rack(x, y0, z, f)
             d.set(x, 3, z, AIR)
         elif z == 9:
-            d.set(x, y0, z, f"{DYES[i]}_wool")
+            d.set(x, y0, z, f"{dy(d, i)}_wool")
     d.set(5, y0, 9, "white_wool")
     d.set(5, 3, 9, "white_wool")
     d.hut(5, y0, 5)
@@ -1668,7 +1678,8 @@ def dyer_hw(rel, L):
     cells = [(x, 8) for x in range(14, sx2)][:5] + [(x, 6) for x in range(14, sx2)]
     vats(d, cells[:max(nv, 3 if L < 3 else 5)], y0, nv)
     for x in range(14, sx2):
-        d.set(x, 4, 7, "chain[axis=y,waterlogged=false]") if x % 3 == 0 else None
+        if x % 3 == 0:
+            d.set(x, 4, 7, "chain[axis=y,waterlogged=false]")
     d.set(sx2 - 1, y0, 5, "barrel[facing=up,open=false]")
     d.set(sx2 - 1, 3, 5, "blue_wool")
     # L3+: drying lines in the yard behind
@@ -1683,7 +1694,7 @@ def dyer_hw(rel, L):
     if L >= 4:                                                   # wool bales by the shed
         for x in (22, 23):
             for z in (5, 6, 7):
-                d.set(x, y0, z, f"{DYES[(x + z) % 12]}_wool")
+                d.set(x, y0, z, f"{dy(d, x + z)}_wool")
             d.set(x, 3, 6, "white_wool")
     if L >= 5:
         d.sign(6, 5, 3, "north", ["Madder &", "Woad", "dyeworks"], oak)
@@ -1757,8 +1768,9 @@ def dyer_cas(rel, L):
     for i, z in enumerate(range(rz1 + 1, z2 - 1)):
         if i < L:
             d.rack(x1 + 1, y0, z, "east")
-    for i in range(L - max(0, z2 - 1 - rz1 - 1)):
-        d.rack(x2 - 1, y0, rz1 + 1 + i, "west")
+    spare = [(x2 - 1, rz1 + 1, "west"), (x2 - 1, rz1 + 2, "west"), (x2 - 2, z2 - 1, "north")]
+    for x, z, f in spare[:max(0, L - (z2 - 2 - rz1))]:
+        d.rack(x, y0, z, f)
     d.hut(x2 - 1, y0, z1 + 1)
     d.set(9, 5, z2 - 2, lant())
     d.set(9, 5, z1 + 3, lant())
@@ -1795,7 +1807,7 @@ def dyer_neo(rel, L):
     glass_front(d, x1 + 1, x2 - 1, z1, y0, y1, every=0)
     for i, x in enumerate(range(x1, x2 + 1, 2)):                # rainbow fins
         for y in range(y0, y1 + 2):
-            d.set(x, y, z1 - 1, f"{DYES[i % 8]}_concrete")
+            d.set(x, y, z1 - 1, f"{dy(d, i)}_concrete")
     d.double_door(6, y0, z1, "x", "south", "birch")
     d.set(7, y0, z1 - 1, AIR)
     d.set(7, 3, z1 - 1, AIR)
@@ -1815,12 +1827,12 @@ def dyer_neo(rel, L):
     for i in range(L):
         d.rack(x1 + 4 + i, y0, z2 - 1, "north")
     for i, x in enumerate(range(x1 + 4 + L, x2)):
-        d.set(x, y0, z2 - 1, f"{DYES[i]}_wool")
+        d.set(x, y0, z2 - 1, f"{dy(d, i)}_wool")
     d.hut(x1 + 1, y0, z1 + 1)
     for x in range(x1 + 2, x2 - 1, 3):
         d.set(x, y1 + 1, 9, "sea_lantern")
     for x in range(x1 + 2, x2 - 1, 2):                          # swatch wall: banners over the work line
-        d.set(x, 5, z2 - 1, f"{DYES[x % 12]}_wall_banner[facing=north]")
+        d.set(x, 5, z2 - 1, f"{dy(d, x)}_wall_banner[facing=north]")
     # L3+: roof drying deck with banners on steel rails; L5 pergola of stained glass
     if L >= 3:
         for z in (8, 11):
@@ -1831,14 +1843,14 @@ def dyer_neo(rel, L):
                 for y in (y1 + 2, y1 + 3):
                     d.set(x, y, z, "light_gray_concrete")
             for x in range(x1 + 3, x2 - 2):
-                d.set(x, y1 + 3, z - 1, f"{DYES[(x + z) % 12]}_wall_banner[facing=north]")
-                d.set(x, y1 + 3, z + 1, f"{DYES[(x + z + 3) % 12]}_wall_banner[facing=south]")
+                d.set(x, y1 + 3, z - 1, f"{dy(d, x + z)}_wall_banner[facing=north]")
+                d.set(x, y1 + 3, z + 1, f"{dy(d, x + z + 3)}_wall_banner[facing=south]")
     if L >= 4:
         for x in range(x1 + 1, x2, 2):
             d.set(x, y1 + 2, z2 - 1, "azalea")
     if L >= 5:
         for x in range(x1 + 1, x2):
-            d.set(x, y1 + 1, z1, f"{DYES[x % 8]}_stained_glass")
+            d.set(x, y1 + 1, z1, f"{dy(d, x)}_stained_glass")
     return d
 
 
@@ -1847,11 +1859,14 @@ def dyer(pack, rel, L):
     return {"Hearthwood": dyer_hw, "Cascadia": dyer_cas, "Neoterra": dyer_neo}[pack](rel, L)
 
 
-GLASS = ["red", "orange", "yellow", "lime", "light_blue", "blue", "purple", "magenta", "cyan", "pink"]
+GLASS = {"Hearthwood": ["red", "blue", "yellow", "green"],                     # leaded church-window colours
+         "Cascadia": ["orange", "brown", "lime", "light_gray"],                # amber / bottle tones
+         "Neoterra": ["cyan", "light_blue", "magenta", "purple", "pink", "white"]}
 
 
-def glass_c(i, pane=False):
-    return f"{GLASS[i % len(GLASS)]}_stained_glass{'_pane' if pane else ''}"
+def glass_c(d, i, pane=False):
+    g = GLASS[d.pack]
+    return f"{g[i % len(g)]}_stained_glass{'_pane' if pane else ''}"
 
 
 # ============================================================================================ GLASSBLOWER
@@ -1883,7 +1898,8 @@ def glassblower_hw(rel, L):
     for y in (2, 3, 4):
         for x in (cx - 1, cx, cx + 1):
             d.set(x, y, cz - 5, AIR)
-            d.set(x, y, cz - 4, AIR) if y < 4 else None
+            if y < 4:
+                d.set(x, y, cz - 4, AIR)
     d.set(cx - 1, 4, cz - 5, st("brick", "west", "top"))
     d.set(cx + 1, 4, cz - 5, st("brick", "east", "top"))
     # central furnace with glory holes, flue up the middle to the open top
@@ -1900,13 +1916,14 @@ def glassblower_hw(rel, L):
         if i < L:
             furn(d, x, y, z, f, lit=True)
         else:
-            d.set(x, y, z, "magma_block") if y == 2 else None
+            if y == 2:
+                d.set(x, y, z, "magma_block")
     for x, z in ((cx - 1, cz - 1), (cx + 1, cz - 1), (cx - 1, cz + 1), (cx + 1, cz + 1)):
         d.set(x, 4, z, sl("brick"))
     # workplaces round the wall: marver bench (crafting), racks of cullet, annealing shelf
     d.item(cx - 3, y0, cz + 3, "crafting_table")
     d.set(cx - 4, y0, cz + 1, sl("smooth_stone", "top"))
-    d.set(cx - 4, 3, cz + 1, glass_c(0))
+    d.set(cx - 4, 3, cz + 1, glass_c(d, 0))
     rk = [(cx + 3, cz + 3, "west"), (cx + 4, cz + 1, "west"), (cx + 4, cz - 1, "west"), (cx - 2, cz + 4, "north"),
           (cx + 2, cz + 4, "north")]
     for i, (x, z, f) in enumerate(rk):
@@ -1924,13 +1941,13 @@ def glassblower_hw(rel, L):
              ends=(1, 0))
         d.door(6, y0, sz1, "south", "dark_oak")
         for i, x in enumerate((3, 4, 8, 9)):
-            d.window(x, 3, sz1, x, 4, sz1, glass_c(i, True))
+            d.window(x, 3, sz1, x, 4, sz1, glass_c(d, i, True))
         for x in (3, 4, 8, 9):                                  # display shelves behind the windows
             d.set(x, y0, sz1 + 1, sl("dark_oak", "top"))
-            d.set(x, 3, sz1 + 1, glass_c(x))
+            d.set(x, 3, sz1 + 1, glass_c(d, x))
         for x in range(3, 8):
             d.set(x, y0, sz2 - 1, sl("dark_oak", "top"))
-            d.set(x, 3, sz2 - 1, glass_c(x + 3, True) if x % 2 else glass_c(x + 3))
+            d.set(x, 3, sz2 - 1, glass_c(d, x + 3, True) if x % 2 else glass_c(d, x + 3))
         d.set(sx2, y0, 8, AIR)
         d.set(sx2, 3, 8, AIR)
         for y in (2, 3):
@@ -1942,8 +1959,8 @@ def glassblower_hw(rel, L):
         for i, x in enumerate(range(3, 10, 2)):
             for z in (14, 15):
                 d.set(x, 1, z, "cobblestone")
-            d.set(x, y0, 14, glass_c(i))
-            d.set(x, y0, 15, glass_c(i + 4))
+            d.set(x, y0, 14, glass_c(d, i))
+            d.set(x, y0, 15, glass_c(d, i + 4))
             d.set(x + 1, y0, 14, "cobblestone_wall")
             d.set(x + 1, y0, 15, "cobblestone_wall")
         d.set(3, y0, 17, "sand")
@@ -1967,7 +1984,7 @@ def glassblower_cas(rel, L):
     porch(d, x1, x2, 3, 6, y0, 6, tuple(range(x1, x2 + 1, 5)) + (x2,), gap=(6, 7, 8), rail=False)
     d.door(7, y0, z1, "south", "spruce")
     for x in (5, 9, 10, 11) + ((15, 16, 17) if L >= 3 else ()):
-        d.window(x, 3, z1, x, 4, z1, glass_c(x, True))
+        d.window(x, 3, z1, x, 4, z1, glass_c(d, x, True))
     # porch display shelves of coloured glass
     for x in range(x1 + 1, x2):
         if x in (6, 7, 8):
@@ -1975,7 +1992,7 @@ def glassblower_cas(rel, L):
         if (x - x1) % 5 == 0:
             continue
         d.set(x, y0, 5, sl("spruce", "top"))
-        d.set(x, 3, 5, glass_c(x))
+        d.set(x, 3, 5, glass_c(d, x))
     d.sign(7, 5, z1 - 1, "north", ["EMBER", "GLASSWORKS"], "spruce")
     # river-rock furnace stack at the back, rising through the roof
     fx = 8
@@ -2004,14 +2021,14 @@ def glassblower_cas(rel, L):
     # workbench with blowpipes (lightning rods) on the wall
     for x in (10, 11):
         d.set(x, y0, 10, "stripped_spruce_wood[axis=y]")
-    d.set(10, 3, 10, glass_c(2))
+    d.set(10, 3, 10, glass_c(d, 2))
     d.set(11, 3, 10, "lightning_rod[facing=up,powered=false,waterlogged=false]")
     if L >= 3:                                                  # showroom in the extension
-        for x in range(15, 20, 2):
+        for x in (15, 17):
             d.set(x, y0, 10, "stripped_spruce_wood[axis=y]")
-            d.set(x, 3, 10, glass_c(x))
+            d.set(x, 3, 10, glass_c(d, x))
             d.set(x, y0, 12, "stripped_spruce_wood[axis=y]")
-            d.set(x, 3, 12, glass_c(x + 3, True))
+            d.set(x, 3, 12, glass_c(d, x + 3, True))
         d.set(17, 5, 11, lant())
     if L >= 4:                                                  # sand & firewood lean-to on the west end
         for z in range(z1 + 1, z2):
@@ -2036,7 +2053,7 @@ def glassblower_neo(rel, L):
     neo_body(d, x1, z1, x2, z2, y0, y1)
     for x in range(x1 + 1, x2):                                 # stained-glass mosaic street wall
         for y in range(y0, y1 + 1):
-            d.set(x, y, z1, glass_c(x * 3 + y * 7))
+            d.set(x, y, z1, glass_c(d, x * 3 + y * 7))
     for x in (x1 + 4, x2 - 4):
         for y in range(y0, y1 + 1):
             d.set(x, y, z1, "light_gray_concrete")
@@ -2068,10 +2085,10 @@ def glassblower_neo(rel, L):
         d.rack(x2 - 1, y0, z2 - 1 - i, "west")
     for x in range(x1 + 2, x1 + 6):                             # gallery plinths
         d.set(x, y0, z2 - 1, "smooth_quartz")
-        d.set(x, 3, z2 - 1, glass_c(x))
+        d.set(x, 3, z2 - 1, glass_c(d, x))
     for z in (z1 + 2, z1 + 4):
         d.set(x1 + 1, y0, z, "smooth_quartz")
-        d.set(x1 + 1, 3, z, glass_c(z, True))
+        d.set(x1 + 1, 3, z, glass_c(d, z, True))
     d.hut(x2 - 1, y0, z1 + 1)
     for x in range(x1 + 2, x2 - 1, 3):
         d.set(x, y1 + 1, 8, "sea_lantern")
@@ -2081,11 +2098,11 @@ def glassblower_neo(rel, L):
             d.set(x, 4, z1 - 1, "smooth_quartz")
             d.set(x, 4, z1 - 2, "smooth_quartz")
             for y in (5, 6):
-                d.set(x, y, z1 - 2, glass_c(x + y, True) if x in (7, 14) else "glass_pane")
+                d.set(x, y, z1 - 2, glass_c(d, x + y, True) if x in (7, 14) else "glass_pane")
             d.set(x, 7, z1 - 2, "smooth_quartz")
             d.set(x, 7, z1 - 1, "smooth_quartz")
         for x in range(8, 14):
-            d.set(x, 5, z1 - 1, glass_c(x))
+            d.set(x, 5, z1 - 1, glass_c(d, x))
     if L >= 4:
         for x in range(x1 + 1, x2, 2):
             d.set(x, y1 + 2, z2 - 1, "azalea")
@@ -2130,7 +2147,6 @@ def silo(d, cx, cz, y0, h, wall="white_concrete", band="cyan_concrete", r=2.3, c
 def concretemixer_hw(rel, L):
     d = Design("Hearthwood", rel, (25, 20, 23))
     y0 = 2
-    cw, ch, cd = d.cluster_size()
     d.cluster(3, 17)                                             # basin x3..21, z17..20
     # workshop
     x1, z1, x2, z2 = 3, 4, 12, 11
@@ -2278,7 +2294,8 @@ def concretemixer_cas(rel, L):
             d.set(x, 1, 20, "gravel")
     if L >= 5:
         for i in range(5):
-            d.set(19, 6 - i, 16 + i, st("spruce", "north")) if 16 + i < 21 else None
+            if 16 + i < 21:
+                d.set(19, 6 - i, 16 + i, st("spruce", "north"))
         for x in (2, 12):
             d.set(x, y0, 3, lg("spruce_log"))
             d.set(x, 3, 3, lant(False))

@@ -1461,9 +1461,13 @@ def library_neoterra(rel, L):
     d.plant(X1 + 1, Y0, Z1 + 5, "potted_bamboo")
     # stacks: rows along x behind the atrium (3 high), aisles 2 wide
     if big:
-        runs = [(X1 + 2, z, X2 - 3, z, Y0, 3) for z in (11, 12, 15, 16)] + [(X1 + 1, Z2 - 1, X2 - 3, Z2 - 1, Y0, 3)]
+        g = [(X1 + 2, z, X2 - 3, z, Y0, 3) for z in (11, 12, 15, 16)]
         if L >= 4:
-            runs += [(X1 + 1, z, X2 - 3, z, 7, 3) for z in (13, 14, 17, 18)]
+            m = [(X1 + 1, z, X2 - 4, z, 7, 2) for z in (13, 14, 17, 18)]
+            runs = [g[0], m[0], m[1], g[1], m[2], m[3], g[2], g[3]]
+        else:
+            runs = g
+        runs.append((X1 + 1, Z2 - 1, X2 - 3, Z2 - 1, Y0, 3))
         # more reading tables along the glass on the east side
         for tz in (Z1 + 2, Z1 + 5):
             if seats >= need_s:
