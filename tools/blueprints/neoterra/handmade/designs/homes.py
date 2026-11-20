@@ -2737,7 +2737,8 @@ def pond(d, x1, z1, x2, z2, edge="grass_block[snowy=false]"):
 
 @design("house")
 def house(pack, rel, L):
-    return {"Hearthwood": house_estate_hw, "Cascadia": house_estate_ca, "Neoterra": house_estate_nt}[pack](rel, L)
+    return finish_decor({"Hearthwood": house_estate_hw, "Cascadia": house_estate_ca,
+                         "Neoterra": house_estate_nt}[pack](rel, L), "house")
 
 
 # ============================================================================================ compositions: COTTAGE
@@ -2746,8 +2747,8 @@ def house(pack, rel, L):
 
 @design("cottage")
 def cottage(pack, rel, L):
-    return {"Hearthwood": cottage_hamlet_hw, "Cascadia": cottage_retreat_ca, "Neoterra": cottage_pavilions_nt}[pack](
-        rel, L)
+    return finish_decor({"Hearthwood": cottage_hamlet_hw, "Cascadia": cottage_retreat_ca,
+                         "Neoterra": cottage_pavilions_nt}[pack](rel, L), "cottage")
 
 
 # ============================================================================================ compositions: APARTMENT
@@ -2758,9 +2759,15 @@ def apartment_towers_nt(rel, L):
     A = {1: 2, 2: 4, 3: 5, 4: 8, 5: 11}[L]
     stamp(d, apartment_nt(rel, L, A), 0, 0, primary=True)
     if L >= 3:
-        stamp(d, apartment_nt(rel, 3, {3: 3, 4: 5, 5: 8}[L]), 22, 0)
+        t = apartment_nt(rel, 3, {3: 3, 4: 5, 5: 8}[L])
+        recolor(t, [("white_concrete", "light_gray_concrete"), ("cyan_terracotta", "yellow_terracotta"),
+                    ("light_gray_stained_glass_pane", "gray_stained_glass_pane")])
+        stamp(d, t, 22, 0)
     if L >= 5:
-        stamp(d, apartment_nt(rel, 3, 5), 44, 0)
+        t = apartment_nt(rel, 3, 5)
+        recolor(t, [("white_concrete", "white_terracotta"), ("cyan_terracotta", "orange_terracotta"),
+                    ("light_gray_concrete", "polished_blackstone")])
+        stamp(d, t, 44, 0)
     if L >= 3:
         # podium walk between the towers: canopy on slim columns, planters, benches
         for x in range(14, 25 if L < 5 else 47):
@@ -2792,11 +2799,17 @@ def apartment_square_hw(rel, L):
     A = {1: 1, 2: 2, 3: 3, 4: 3, 5: 4}[L]
     stamp(d, apartment_hw(rel, L, A), 18, 0, primary=True)
     if L >= 3:
-        stamp(d, apartment_hw(rel, 3, {3: 2, 4: 3, 5: 4}[L], False), 45, 12, rot=3)
+        w = apartment_hw(rel, 3, {3: 2, 4: 3, 5: 4}[L], False)
+        recolor(w, [("bricks", "mud_bricks"), ("deepslate_tile", "granite")], parts=("stairs", "slab"))
+        stamp(d, w, 45, 12, rot=3)
     if L >= 4:
-        stamp(d, apartment_hw(rel, 3, 3 if L == 4 else 4, False), 0, 12, rot=1)
+        w = apartment_hw(rel, 3, 3 if L == 4 else 4, False)
+        recolor(w, [("bricks", "white_terracotta"), ("deepslate_tile", "dark_prismarine")], parts=("stairs", "slab"))
+        stamp(d, w, 0, 12, rot=1)
     if L >= 5:
-        stamp(d, apartment_hw(rel, 3, 3, False), 18, 39)
+        w = apartment_hw(rel, 3, 3, False)
+        recolor(w, [("deepslate_tile", "mud_brick"), ("stone_bricks", "smooth_sandstone")], parts=("stairs", "slab"))
+        stamp(d, w, 18, 39)
     if L >= 3:
         # the square: lawn, gravel walks, a fountain, lamp posts and benches
         for x, z in cells(22, 22, 40, 36):
@@ -2818,13 +2831,21 @@ def apartment_rows_ca(rel, L):
     either side of a plank-walk street, with a bunkhouse and wood yard."""
     d = Design("Cascadia", rel, (63, 30, 44), paving="grass_block[snowy=false]")
     a = {1: (2, 1), 2: (2, 2), 3: (3, 2), 4: (3, 2), 5: (3, 2)}[L]
-    stamp(d, apartment_ca(rel, L, *a), 0, 0, primary=True)
+    m = apartment_ca(rel, L, *a)
+    recolor(m, [("dark_oak", "dark_prismarine")])
+    stamp(d, m, 0, 0, primary=True)
     if L >= 3:
-        stamp(d, apartment_ca(rel, 3, 2, 1 if L == 3 else 2), 32, 0)
+        m = apartment_ca(rel, 3, 2, 1 if L == 3 else 2)
+        recolor(m, [("dark_oak", "mangrove"), ("stripped_spruce_log", "stripped_mangrove_log")])
+        stamp(d, m, 32, 0)
     if L >= 4:
-        stamp(d, apartment_ca(rel, 3, 2 if L == 4 else 3, 2 if L == 5 else 1), 0, 22)
+        m = apartment_ca(rel, 3, 2 if L == 4 else 3, 2 if L == 5 else 1)
+        recolor(m, [("dark_oak", "deepslate_tile"), ("stripped_spruce_log", "stripped_birch_log")])
+        stamp(d, m, 0, 22)
     if L >= 5:
-        stamp(d, apartment_ca(rel, 3, 3, 2), 32, 22)
+        m = apartment_ca(rel, 3, 3, 2)
+        recolor(m, [("dark_oak", "cobbled_deepslate"), ("stripped_spruce_log", "stripped_dark_oak_log")])
+        stamp(d, m, 32, 22)
     if L >= 3:
         for x in range(0, 63):
             for z in (19, 20, 21):
@@ -2847,8 +2868,8 @@ def apartment_rows_ca(rel, L):
 
 @design("apartment")
 def apartment(pack, rel, L):
-    return {"Neoterra": apartment_towers_nt, "Hearthwood": apartment_square_hw, "Cascadia": apartment_rows_ca}[pack](
-        rel, L)
+    return finish_decor({"Neoterra": apartment_towers_nt, "Hearthwood": apartment_square_hw,
+                         "Cascadia": apartment_rows_ca}[pack](rel, L), "apartment")
 
 
 # ============================================================================================ compositions: QUADPLEX
@@ -2856,11 +2877,18 @@ def quadplex_streets_hw(rel, L):
     """Tudor terraces: the first town cottage, a pair, the full terrace of four, then a second terrace across a
     shared green and finally a third terrace closing a little close."""
     d = Design("Hearthwood", rel, (60, 22, 48), paving="grass_block[snowy=false]")
-    stamp(d, quadplex_hw(rel, L, {1: 1, 2: 2, 3: 4, 4: 4, 5: 4}[L]), 0, 0, primary=True)
+    m = quadplex_hw(rel, L, {1: 1, 2: 2, 3: 4, 4: 4, 5: 4}[L])
+    recolor(m, [("deepslate_tile", "brick")], parts=("full", "stairs", "slab"))
+    stamp(d, m, 0, 0, primary=True)
     if L >= 4:
-        stamp(d, quadplex_hw(rel, 3, 3 if L == 4 else 4), 30, 0)
+        m = quadplex_hw(rel, 3, 3 if L == 4 else 4)
+        recolor(m, [("deepslate_tile", "granite"), ("calcite", "light_blue_terracotta"),
+                    ("white_terracotta", "yellow_terracotta")])
+        stamp(d, m, 30, 0)
     if L >= 5:
-        stamp(d, quadplex_hw(rel, 3, 4), 0, 26)
+        m = quadplex_hw(rel, 3, 4)
+        recolor(m, [("deepslate_tile", "mud_brick"), ("bricks", "stone_bricks"), ("calcite", "pink_terracotta")])
+        stamp(d, m, 0, 26)
     if L >= 4:
         for x in range(0, 60):
             d.set(x, 1, 22, "gravel")
@@ -2874,12 +2902,23 @@ def quadplex_mews_nt(rel, L):
     """Modern townhouse mews: duplexes added in pairs, then a second staggered row and a back row across a
     planted mews court."""
     d = Design("Neoterra", rel, (63, 22, 42), paving="smooth_stone")
-    stamp(d, quadplex_nt(rel, L, {1: 1, 2: 2, 3: 4, 4: 4, 5: 4}[L]), 0, 0, primary=True)
+    m = quadplex_nt(rel, L, {1: 1, 2: 2, 3: 4, 4: 4, 5: 4}[L])
+    recolor(m, [("cyan_terracotta", "lime_terracotta")])
+    stamp(d, m, 0, 0, primary=True)
     if L >= 4:
-        stamp(d, quadplex_nt(rel, 3, 3 if L == 4 else 4), 32, 0)
+        m = quadplex_nt(rel, 3, 3 if L == 4 else 4)
+        recolor(m, [("white_concrete", "white_terracotta"), ("cyan_terracotta", "orange_terracotta"),
+                    ("light_gray_concrete", "brown_terracotta")])
+        stamp(d, m, 32, 0)
     if L >= 5:
-        stamp(d, quadplex_nt(rel, 3, 4), 0, 22)
-        stamp(d, quadplex_nt(rel, 3, 4), 32, 22)
+        m = quadplex_nt(rel, 3, 4)
+        recolor(m, [("white_concrete", "light_gray_concrete"), ("cyan_terracotta", "magenta_terracotta"),
+                    ("light_gray_concrete", "gray_concrete")])
+        stamp(d, m, 0, 22)
+        m = quadplex_nt(rel, 3, 4)
+        recolor(m, [("white_concrete", "smooth_quartz"), ("cyan_terracotta", "yellow_terracotta"),
+                    ("light_gray_concrete", "polished_deepslate")])
+        stamp(d, m, 32, 22)
     if L >= 4:
         for x in range(0, 63, 4):
             planter(d, x, 19, x + 1, 19, 1)
@@ -2890,7 +2929,8 @@ def quadplex_mews_nt(rel, L):
 
 @design("quadplex")
 def quadplex(pack, rel, L):
-    return {"Hearthwood": quadplex_streets_hw, "Cascadia": quadplex_ca, "Neoterra": quadplex_mews_nt}[pack](rel, L)
+    return finish_decor({"Hearthwood": quadplex_streets_hw, "Cascadia": quadplex_ca,
+                         "Neoterra": quadplex_mews_nt}[pack](rel, L), "quadplex")
 
 
 # ============================================================================================ player-house add-ons
@@ -3108,7 +3148,18 @@ def player_estate(rel, L):
     pack = REQ_PACK[0]
     d = Design(pack, rel, (64, 50, 64), paving="grass_block[snowy=false]" if pack != "Neoterra" else "smooth_stone")
     fn = {"Hearthwood": playerhouse_hw, "Cascadia": playerhouse_ca, "Neoterra": playerhouse_nt}[pack]
-    stamp(d, fn(rel, L), 0, 0, primary=True)
+    main = fn(rel, L)
+    recolor(main, {"Hearthwood": [("deepslate_tile", "dark_prismarine")],
+                   "Cascadia": [("dark_oak", "deepslate_tile")],
+                   "Neoterra": [("cyan_terracotta", "magenta_terracotta"),
+                                ("light_gray_concrete", "polished_blackstone")]}[pack])
+    stamp(d, main, 0, 0, primary=True)
+    pal_tower = {"Hearthwood": [], "Cascadia": [("dark_oak", "mangrove")],
+                 "Neoterra": [("white_concrete", "white_terracotta")]}[pack]
+    pal_hall = {"Hearthwood": [("deepslate_tile", "brick")], "Cascadia": [("dark_oak", "dark_prismarine")],
+                "Neoterra": [("white_concrete", "light_gray_concrete"), ("polished_blackstone", "polished_deepslate")]}[pack]
+    pal_vault = {"Hearthwood": [("deepslate_tile", "mud_brick")], "Cascadia": [("dark_oak", "cobbled_deepslate")],
+                 "Neoterra": [("white_concrete", "gray_concrete")]}[pack]
     lamp = {"Hearthwood": "hw", "Cascadia": "ca", "Neoterra": "nt"}[pack]
     W = SHELL[pack]["wood"]
     path_b = {"Hearthwood": "gravel", "Cascadia": "coarse_dirt", "Neoterra": "polished_diorite"}[pack]
@@ -3120,6 +3171,7 @@ def player_estate(rel, L):
         T1, G, HALL, VAULT, T2 = (32, 34), (40, 34, 62, 50), (32, 2, 62, 12), (2, 34, 26, 46), (32, 52)
     if L >= 3:
         ph_tower(d, T1[0], T1[1], 4, ("library", "alchemy", "study", "observatory"))
+        recolor(d, pal_tower, (T1[0] - 1, T1[1] - 1, T1[0] + 7, T1[1] + 7, 2))
         gx1, gz1, gx2, gz2 = G
         hedge(d, gx1, gz1, gx2, gz2, "oak" if pack != "Cascadia" else "spruce",
               gaps=((gx1, (gz1 + gz2) // 2), ((gx1 + gx2) // 2, gz1)))
@@ -3140,18 +3192,22 @@ def player_estate(rel, L):
                 d.set(x, 3, z, ("rose_bush[half=upper]", "peony[half=upper]", "lilac[half=upper]")[x % 3])
     if L >= 4:
         ph_hall(d, *HALL, h=7)
+        recolor(d, pal_hall, (HALL[0] - 2, HALL[1] - 1, HALL[2] + 2, HALL[3] + 1, 2))
         hx = (HALL[0] + HALL[2]) // 2
         for x in (HALL[0], HALL[2]):
             lamp_post(d, x, HALL[1] - 2 if HALL[1] > 3 else HALL[3] + 2, 1, lamp)
         ph_vault(d, *VAULT, h=4)
+        recolor(d, pal_vault, (VAULT[0] - 1, VAULT[1] - 1, VAULT[2] + 1, VAULT[3] + 1, 2))
         for x in range(VAULT[0], VAULT[2] + 1, 6):
             lamp_post(d, x, VAULT[1] - 2, 1, lamp)
     if L >= 5:
         ph_tower(d, T2[0], T2[1], 5, ("armory", "library", "study", "alchemy", "observatory"))
+        recolor(d, pal_tower, (T2[0] - 1, T2[1] - 1, T2[0] + 7, T2[1] + 7, 2))
         ph_tower(d, 2, 50, 4, ("study", "library", "alchemy", "observatory"))
         T3 = {"Hearthwood": (42, 50), "Cascadia": (50, 50), "Neoterra": (50, 54)}[pack]
         ph_tower(d, T3[0], T3[1], 3, ("armory", "study", "observatory"))
         ph_hall(d, 12, 50, 30, 61, h=5)
+        recolor(d, pal_vault, (10, 49, 32, 62, 2))
         # estate wall with a gate on the street and piers with lamps
         wall = {"Hearthwood": "stone_brick_wall", "Cascadia": "cobblestone_wall", "Neoterra": "polished_blackstone_wall"}[pack]
         ws = f"{wall}[east=low,north=none,south=none,up=false,waterlogged=false,west=low]"
@@ -3179,7 +3235,7 @@ REQ_PACK = [None]
 @design("playerhouse")
 def playerhouse(pack, rel, L):
     REQ_PACK[0] = pack
-    return player_estate(rel, L)
+    return finish_decor(player_estate(rel, L), "playerhouse")
 
 
 # ============================================================================================ palette variety
@@ -3770,4 +3826,145 @@ def quadplex_ca(rel, L):
         addon(d, 45, 47, 58, 56, "cartshed", h=4)
         addon(d, 2, 48, 26, 57, "cookhouse", h=4)
         lamp_post(d, 31, 47, 1, "ca")
+    return d
+
+
+# ============================================================================================ facade decor pass
+FLOWERS = ("potted_red_tulip", "potted_azure_bluet", "potted_cornflower", "potted_poppy", "potted_oxeye_daisy",
+           "potted_allium", "potted_pink_tulip", "potted_dandelion")
+
+
+def _outside(d):
+    """Per layer: the set of air cells connected to the plot edge (open air around the buildings)."""
+    from collections import deque
+    bp = d.bp
+    out = {}
+    for y in range(d.gy + 1, bp.sy):
+        seen = set()
+        q = deque()
+        layer = bp.grid[y]
+        for x in range(bp.sx):
+            for z in (0, bp.sz - 1):
+                if layer[z][x] == AIR:
+                    seen.add((x, z))
+                    q.append((x, z))
+        for z in range(bp.sz):
+            for x in (0, bp.sx - 1):
+                if layer[z][x] == AIR and (x, z) not in seen:
+                    seen.add((x, z))
+                    q.append((x, z))
+        while q:
+            x, z = q.popleft()
+            for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nx, nz = x + dx, z + dz
+                if 0 <= nx < bp.sx and 0 <= nz < bp.sz and (nx, nz) not in seen and layer[nz][nx] == AIR:
+                    seen.add((nx, nz))
+                    q.append((nx, nz))
+        out[y] = seen
+    return out
+
+
+def facade_decor(d, shutter=None, box="dark_oak", sill=None, light="wall_torch", flowers=FLOWERS):
+    """Dress every exterior window and door of the finished complex: flower boxes (or sills) under upper-floor
+    windows, coloured shutters beside them, and a light beside each outside door."""
+    bp = d.bp
+    O = _outside(d)
+    gy = d.gy
+    n = 0
+    for y in range(gy + 2, bp.sy - 1):
+        if y not in O:
+            continue
+        for z in range(1, bp.sz - 1):
+            for x in range(1, bp.sx - 1):
+                st = bp.grid[y][z][x]
+                if not st.split("[")[0].endswith("glass_pane"):
+                    continue
+                below = bp.grid[y - 1][z][x]
+                if below.split("[")[0].endswith("glass_pane") or below == AIR:
+                    continue
+                for dir_, (dx, dz) in D4.items():
+                    ox, oz = x + dx, z + dz
+                    ix, iz = x - dx, z - dz
+                    if (ox, oz) not in O[y] or (ix, iz) in O[y]:
+                        continue
+                    if bp.grid[y][iz][ix] != AIR and "pane" in bp.grid[y][iz][ix]:
+                        continue
+                    upper = y - 1 >= gy + 3
+                    if upper and (ox, oz) in O.get(y - 1, ()):
+                        if sill:
+                            d.set(ox, y - 1, oz, slab(sill, "top"))
+                        else:
+                            d.set(ox, y - 1, oz, trap(box, dir_, "top"))
+                            n += 1
+                            if n % 3:
+                                d.set(ox, y, oz, flowers[(x * 7 + z * 3 + y) % len(flowers)])
+                                O[y].discard((ox, oz))
+                    if shutter and upper:
+                        px, pz = D4[CW[dir_]]
+                        h = 1
+                        while y + h < bp.sy and bp.grid[y + h][z][x].split("[")[0].endswith("glass_pane"):
+                            h += 1
+                        for side, (sx, sz) in ((OPP[CW[dir_]], (-px, -pz)), (CW[dir_], (px, pz))):
+                            wx, wz = x + sx, z + sz
+                            cx, cz = wx + dx, wz + dz
+                            for k in range(h):
+                                if (cx, cz) in O.get(y + k, ()) and bp.grid[y + k][wz][wx] not in (AIR,) and \
+                                        "pane" not in bp.grid[y + k][wz][wx]:
+                                    d.set(cx, y + k, cz, trap(shutter, side, "bottom", True))
+                                    O[y + k].discard((cx, cz))
+                    break
+    # door lights
+    if light:
+        for y in range(gy + 1, bp.sy - 2):
+            for z in range(1, bp.sz - 1):
+                for x in range(1, bp.sx - 1):
+                    st = bp.grid[y][z][x]
+                    if "_door[" not in st or "half=lower" not in st or "trapdoor" in st:
+                        continue
+                    for dir_, (dx, dz) in D4.items():
+                        ox, oz = x + dx, z + dz
+                        if (ox, oz) not in O.get(y, ()) or (x - dx, z - dz) in O.get(y, ()):
+                            continue
+                        px, pz = D4[CW[dir_]]
+                        for sx, sz in ((px, pz), (-px, -pz)):
+                            wx, wz = x + sx, z + sz
+                            cx, cz = wx + dx, wz + dz
+                            yy = y + 1
+                            wall = bp.grid[yy][wz][wx]
+                            if (cx, cz) in O.get(yy, ()) and wall != AIR and "door" not in wall and \
+                                    "pane" not in wall and "stairs" not in wall and "slab" not in wall and \
+                                    "fence" not in wall and "trapdoor" not in wall:
+                                if light == "wall_torch":
+                                    d.set(cx, yy, cz, f"wall_torch[facing={dir_}]")
+                                else:
+                                    d.set(cx, yy, cz, f"end_rod[facing={dir_}]")
+                                O[yy].discard((cx, cz))
+                                break
+                        break
+    return d
+
+
+DECOR = {
+    # (shutter wood, box wood, sill, door light)
+    ("Hearthwood", "house"): ("mangrove", "dark_oak", None, "wall_torch"),
+    ("Hearthwood", "cottage"): ("warped", "spruce", None, "wall_torch"),
+    ("Hearthwood", "apartment"): (None, None, "stone_brick", "wall_torch"),
+    ("Hearthwood", "quadplex"): ("bamboo", "dark_oak", None, "wall_torch"),
+    ("Hearthwood", "playerhouse"): ("dark_oak", "dark_oak", None, "wall_torch"),
+    ("Cascadia", "house"): ("mangrove", "spruce", None, "wall_torch"),
+    ("Cascadia", "cottage"): ("spruce", "spruce", None, "wall_torch"),
+    ("Cascadia", "apartment"): ("dark_oak", "dark_oak", None, "wall_torch"),
+    ("Cascadia", "quadplex"): ("warped", "spruce", None, "wall_torch"),
+    ("Cascadia", "playerhouse"): ("crimson", "dark_oak", None, "wall_torch"),
+    ("Neoterra", "house"): (None, None, "smooth_quartz", "end_rod"),
+    ("Neoterra", "cottage"): (None, None, "birch", "end_rod"),
+    ("Neoterra", "apartment"): (None, None, "smooth_quartz", "end_rod"),
+    ("Neoterra", "quadplex"): (None, None, "smooth_quartz", "end_rod"),
+    ("Neoterra", "playerhouse"): (None, None, "polished_blackstone", "end_rod"),
+}
+
+
+def finish_decor(d, base):
+    sh, bx, sl, li = DECOR[(d.pack, base)]
+    facade_decor(d, sh, bx or "dark_oak", sl, li)
     return d

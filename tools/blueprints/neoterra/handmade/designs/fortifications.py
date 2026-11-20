@@ -1168,7 +1168,7 @@ def hw_bar(rel, L):
 
 
 def cs_bar(rel, L):
-    d = Shifted("Cascadia", rel, (33, CS_TSY + 2, 29 + 27), gy=1, paving="grass_block[snowy=false]", oz=27)
+    d = Shifted("Cascadia", rel, (45, CS_TSY + 2, 29 + 27), gy=1, paving="grass_block[snowy=false]", ox=12, oz=27)
     boxes = {"SW": (1, 19), "NE": (23, 1), "SE": (23, 19), "NW": (1, 1)}
     order = ["SW", "NE", "SE", "NW"]
     built = order[:min(L, 4)]
@@ -1575,6 +1575,9 @@ PAL_BAR = {
     "cs_store": dict(w0="birch_planks", w1="birch_planks", corner="spruce_log", band="yellow_terracotta",
                      roof="mangrove", ridge="mangrove_slab", gable="birch_planks", shut="dark_oak", door="dark_oak",
                      awning="yellow_wool"),
+    "cs_officer": dict(w0="spruce_planks", w1="spruce_planks", corner="dark_oak_log", band="white_terracotta",
+                       roof="deepslate_tile", ridge="deepslate_tile_slab", gable="spruce_planks", shut="mangrove",
+                       door="mangrove", beam="dark_oak_log"),
     "cs_smithy": dict(w0="cobblestone", corner="dark_oak_log", band="dark_oak_log", roof="dark_prismarine",
                       ridge="dark_prismarine_slab", gable="dark_oak_planks", door="dark_oak", chimney="rock"),
     "nt_garage": dict(w0="polished_blackstone_bricks", corner="polished_blackstone", band="orange_concrete",
@@ -1664,6 +1667,17 @@ def hw_bar_outer(d, L):
                     if edge and (x + z) % 2 == 0:
                         d.set(x, 10, z, stone_mix(x, 10, z))
             d.set(tx + 1, 5, -19, "glass_pane")
+            for x in range(tx, tx + 3):                        # timber hoarding on top
+                for z in range(-19, -15):
+                    if x in (tx, tx + 2) or z in (-19, -16):
+                        d.set(x, 10, z, "dark_oak_planks" if (x + z) % 2 else "stripped_dark_oak_log[axis=y]")
+                        d.set(x, 11, z, "dark_oak_fence")
+                d.set(x, 12, -19, ST("deepslate_tile", "south"))
+                d.set(x, 12, -16, ST("deepslate_tile", "north"))
+                d.set(x, 12, -18, "deepslate_tile_slab[type=top,waterlogged=false]")
+                d.set(x, 13, -17, "deepslate_tile_slab[type=bottom,waterlogged=false]")
+                d.set(x, 13, -18, "deepslate_tile_slab[type=bottom,waterlogged=false]")
+                d.set(x, 12, -17, "deepslate_tile_slab[type=top,waterlogged=false]")
             d.banner(tx + 1, 7, -20 + 0, "north", "red") if d.bp.inside(tx + 1, 7, -20) else None
         for x in range(15, 18):
             for z in range(-19, -15):
@@ -1674,6 +1688,36 @@ def hw_bar_outer(d, L):
         for x in (15, 17):
             d.set(x, 6, -18, ST("stone_brick", "west" if x == 15 else "east", "top"))
         d.set(14, 4, -20 + 1, "wall_torch[facing=north]") if d.air(14, 4, -19) else None
+
+
+def sentry_box(d, x, z, door="south", roof="spruce"):
+    """3x3 log sentry box / outhouse with a slab roof and a lantern (Cascadia)."""
+    for a in range(x, x + 3):
+        for b in range(z, z + 3):
+            edge = a in (x, x + 2) or b in (z, z + 2)
+            for y in range(2, 5):
+                d.set(a, y, b, (LOG("spruce_log") if a in (x, x + 2) and b in (z, z + 2) else
+                                LOG("stripped_spruce_log", "x" if b in (z, z + 2) else "z")) if edge else AIR)
+            d.set(a, 5, b, SL(roof))
+    dx, dz = {"south": (1, 2), "north": (1, 0), "east": (2, 1), "west": (0, 1)}[door]
+    d.door(x + dx, 2, z + dz, OPP[door], "spruce")
+    d.set(x + 1, 4, z + 1, LANT)
+    put(d, x + 1, 6, z + 1, "spruce_fence")
+    put(d, x + 1, 7, z + 1, LANT_S)
+
+
+def stall(d, x, z, color, goods=("hay_block[axis=y]", "barrel[facing=up,open=false]", "pumpkin")):
+    """Market stall: counter of slabs with goods, fence posts, striped wool awning."""
+    w = WOOD[d.pack]
+    for i in range(3):
+        put(d, x + i, 2, z, SL(w, "top"))
+        put(d, x + i, 3, z, goods[i % len(goods)])
+        put(d, x + i, 5, z, f"{color}_wool" if i % 2 == 0 else "white_wool")
+        put(d, x + i, 5, z + 1, f"{color}_wool" if i % 2 == 0 else "white_wool")
+    for a in (x - 1, x + 3):
+        for y in (2, 3, 4):
+            put(d, a, y, z, f"{w}_fence")
+        put(d, a, 5, z, f"{w}_planks")
 
 
 def cs_bar_outer(d, L):
@@ -1709,6 +1753,21 @@ def cs_bar_outer(d, L):
         d.fill(20, 5, -3, 22, 5, -1, SL("spruce"))
         flowerbed(d, 25, -5, 29, -5)
         cart(d, 9, -3, "x")
+        sentry_box(d, 18, -4, "west")                          # sentry box by the gate road
+        for z, c in ((8, "green"), (12, "yellow")):              # sutlers' stalls along the stockade
+            stall(d, -9, z, c, ("pumpkin", "barrel[facing=up,open=false]", "melon"))
+        lamp_post(d, -6, 10)
+        lamp_post(d, -6, 15)
+        stall(d, 25, -10, "red") if L < 5 else None
+        for x in range(25, 31):                                 # fenced vegetable patch
+            for z in (-15, -12):
+                put(d, x, 2, z, "spruce_fence") if L < 4 or True else None
+        for z in (-14, -13):
+            put(d, 25, 2, z, "spruce_fence")
+            put(d, 30, 2, z, "spruce_fence")
+            for x in range(26, 30):
+                d.set(x, 1, z, "farmland[moisture=7]")
+                put(d, x, 2, z, ("carrots[age=7]", "potatoes[age=7]", "wheat[age=7]", "beetroots[age=3]")[x % 4])
     if L >= 4:
         ys, top, ridge = bld(d, 1, -16, 12, -7, 2, "z", doors=[(12, -11)], lad=(2, -15, "east"),
                              pal=PAL_BAR["cs_barn"])
@@ -1721,6 +1780,51 @@ def cs_bar_outer(d, L):
             put(d, x, 2, -6, b)
         lamp_post(d, 14, -8)
         lamp_post(d, 18, -8)
+        ys, top, ridge = bld(d, 1, -4, 7, 0, 1, "x", doors=[(7, -2)], sh=5, pal=PAL_BAR["cs_smithy"],
+                             chimney=(1, -2))
+        furnish(d, "smithy", 2, -3, 6, -1, ys[0], free=[(6, -2)], center=False)
+        # trestle lookout tower west of the barn
+        tx, tz = -10, -25
+        for a, b in ((tx, tz), (tx + 4, tz), (tx, tz + 4), (tx + 4, tz + 4)):
+            for y in range(2, 16):
+                d.set(a, y, b, LOG("spruce_log"))
+        for y in (6, 10):
+            for a in range(tx + 1, tx + 4):
+                for b in (tz, tz + 4):
+                    d.set(a, y, b, "spruce_fence")
+            for b in range(tz + 1, tz + 4):
+                for a in (tx, tx + 4):
+                    d.set(a, y, b, "spruce_fence")
+        for y in range(2, 12):
+            d.set(tx + 2, y, tz + 2, LOG("stripped_spruce_log"))
+        d.fill(tx, 12, tz, tx + 4, 12, tz + 4, "spruce_planks")
+        for a in range(tx, tx + 5):
+            for b in range(tz, tz + 5):
+                if a in (tx, tx + 4) or b in (tz, tz + 4):
+                    if not (a in (tx, tx + 4) and b in (tz, tz + 4)):
+                        d.set(a, 13, b, "stripped_spruce_log[axis=y]" if (a + b) % 2 else "spruce_fence")
+                        d.set(a, 14, b, "glass_pane" if (a + b) % 2 == 0 else AIR)
+        ladder(d, tx + 2, tz + 3, 2, 12, "south")
+        d.fill(tx - 1, 16, tz - 1, tx + 5, 16, tz + 5, SL("cobbled_deepslate"))
+        d.fill(tx, 17, tz, tx + 4, 17, tz + 4, SL("cobbled_deepslate"))
+        d.set(tx + 2, 18, tz + 2, LANT_S)
+        d.set(tx + 2, 15, tz + 2, LANT)
+        d.set(tx + 1, 13, tz + 1, "bell[attachment=floor,facing=north,powered=false]")
+        cart(d, -9, 18, "x")
+        for x in range(-11, -6):                                # log deck for the sawyer
+            put(d, x, 2, 22, LOG("spruce_log", "x"))
+            put(d, x, 3, 22, LOG("spruce_log", "x")) if x % 2 else None
+            put(d, x, 2, 23, LOG("spruce_log", "x"))
+        put(d, -5, 2, 22, "stonecutter[facing=north]")
+        for x in range(-11, -6):
+            put(d, x, 3, 23, LOG("spruce_log", "x"))
+            put(d, x, 2, 24, LOG("spruce_log", "x"))
+            put(d, x, 3, 24, LOG("spruce_log", "x"))
+            put(d, x, 4, 23, LOG("spruce_log", "x")) if x % 2 == 0 else None
+        lamp_post(d, -5, 20)
+        for z in (26, 27):
+            put(d, -10, 2, z, "barrel[facing=up,open=false]")
+            put(d, -9, 2, z, "hay_block[axis=y]")
         # lean-to cart shed on the barn's south gable and a hay wagon
         for z in range(-16, -6):
             d.set(0, 5, z, SL("cobbled_deepslate"))
@@ -1762,9 +1866,20 @@ def cs_bar_outer(d, L):
         bench(d, 21, -7, "south")
         bench(d, 29, -7, "south")
         d.sign(24, 4, -7, "north", ["SUTLER &", "GENERAL", "STORE"], "spruce")
-        ys, top, ridge = bld(d, 1, -4, 7, 0, 1, "x", doors=[(7, -2)], sh=5, pal=PAL_BAR["cs_smithy"],
-                             chimney=(1, -2))
-        furnish(d, "smithy", 2, -3, 6, -1, ys[0], free=[(6, -2)], center=False)
+        ys, top, ridge = bld(d, -11, -12, -2, -4, 2, "z", doors=[(-2, -8)], lad=(-10, -11, "east"),
+                             pal=PAL_BAR["cs_officer"], chimney=(-6, -12))
+        furnish(d, "office", -10, -11, -3, -5, ys[0], free=[(-3, -8), (-10, -11)])
+        furnish(d, "dorm", -10, -11, -3, -5, ys[1], free=[(-10, -11)])
+        for z in range(-12, -3):                                # porch on the road side
+            d.set(-1, 6, z, SL("deepslate_tile"))
+            d.set(0, 6, z, SL("deepslate_tile"))
+        for z in (-12, -8 + 3, -4):
+            for y in range(2, 6):
+                d.set(0, y, z, LOG("spruce_log"))
+        bench(d, -1, -11, "west", along="z")
+        flowerbed(d, -11, -2, -3, -2)
+        tree(d, -8, -16, 5)
+        tree(d, -4, 3, 5)
         # log chapel with a steeple north of the store
         ys, top, ridge = bld(d, 21, -26, 29, -18, 1, "z", doors=[(25, -18)], sh=6,
                              pal=dict(w0="birch_planks", corner="stripped_spruce_log", band="spruce_log",
@@ -1917,9 +2032,9 @@ def dress_gatehouse(d, L):
         furnish(d, "deco", 2, 3, 6, 9, 2, free=[(6, 7), (2, 9), (3, 3), (4, 8), (5, 8)], center=False, lamps=False)
         furnish(d, "deco", 13, 3, 17, 9, 2, free=[(13, 7), (17, 9), (15, 3), (15, 8), (16, 8)], center=False,
                 lamps=False)
-        for X0, dx in ((1, 6), (12, 13)):
-            furnish(d, "deco", X0 + 1, 3, X0 + 5, 9, 8, free=[(dx, 6), (X0 + 1 if X0 == 1 else X0 + 5, 9)],
-                    center=False, lamps=False)
+        for X0 in (1, 12):
+            put(d, X0 + 3, 10, 9, "red_wall_banner[facing=north]")
+            put(d, X0 + 3, 10, 2, "white_wall_banner[facing=south]")
         for z in (5, 8):                                      # chained lanterns in the passage
             d.set(9, 6, z, LANT)
             d.set(10, 6, z, LANT)
@@ -2408,6 +2523,9 @@ def gh_complex(d, L, xa, xb, r1, r2, tz, yw):
             put(d, xa - 7, 3, tz + 2, LANT_S)
             put(d, xa - 4, 2, tz + 3, "water_cauldron[level=3]")
             put(d, xa - 5, 2, tz + 3, "hay_block[axis=x]")
+            if L == 2:                                         # guard hut and a trader's stall (replaced at L3)
+                sentry_box(d, xb + 5, tz + 4, "west")
+                stall(d, xa - 6, tz + 6, "red", ("pumpkin", "barrel[facing=up,open=false]", "melon"))
         bench(d, r1 - 2, tz + 4, "west", along="z")
         bench(d, r2 + 2, tz + 4, "east", along="z")
         if L == 2:
@@ -2488,6 +2606,8 @@ def wt_complex(d, L, cx, tz, yw, mirror=False):
                 if pk != "Neoterra" else "barrel[facing=up,open=false]")
             put(d, cx + 11, 3, 8 + k, LOG("spruce_log", "z") if pk != "Neoterra" else AIR) if k < 2 and pk != "Neoterra" else None
         lamp_post(d, cx - 6, tz + 6)
+        if pk == "Cascadia" and L < 4:                       # outhouse / tool hut (smithy takes the spot at L4)
+            sentry_box(d, cx - 12, 9, "east")
         if pk == "Cascadia":                                 # hitching rail and water trough by the door
             for x in range(cx + 3, cx + 7):
                 put(d, x, 2, tz + 9, "spruce_fence")

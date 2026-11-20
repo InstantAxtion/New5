@@ -203,6 +203,12 @@ def hc_wing(rel, L):
     d.door(n, 1, 2, "west", "dark_oak", "right")
     d.hut(*HC_WHUT)
     d.set(1, 1, 1, "water_cauldron[level=3]")             # holy-water stoup
+    d.rug(2, 2, 4, 3, 1, ("red_carpet", "yellow_carpet"))
+    d.set(5, 1, 1, "chiseled_stone_bricks")                  # votive candle stand
+    d.candle(5, 2, 1, 4)
+    d.chair(5, 1, 4, "east", "dark_oak", sit=False)
+    d.set(1, 3, 3, "red_wall_banner[facing=east]")
+    d.set(5, 3, 3, "red_wall_banner[facing=west]")
     d.lamp(3, 5, 3)
     d.set(3, 6, 3, CHAIN)
     # tall lancets on the street side and both flanks
@@ -520,8 +526,24 @@ def hc_cathedral(rel, L):
         chandelier(d, 15, z, rdg - 1, NH - 3 if L == 1 else 11)
     for z in range(4, ne - 1, 3):                        # wall candles / banners between the windows
         for x, f in ((12, "east"), (18, "west")):
-            if L >= 2 and d.air(x, 5, z):
+            if d.air(x, 5, z):
                 d.set(x, 5, z, f"wall_torch[facing={f}]" if z % 2 else f"red_wall_banner[facing={f}]")
+    # churchyard furniture round the core (all levels): lamp posts by the portal, graves and a bench
+    for x in (12, 18):
+        lamp_post(d, x, 0, "polished_andesite", fence("dark_oak_fence"))
+    if L == 1:
+        for z in range(9, 11):
+            for x in (10, 20):
+                d.set(x, 2, z, ("rose_bush[half=lower]", "peony[half=lower]")[z % 2])
+                d.set(x, 3, z, ("rose_bush[half=upper]", "peony[half=upper]")[z % 2])
+        for x in (13, 17):
+            d.chair(x, 2, 12, "south", "dark_oak", sit=False)
+        for x, z in ((22, 12), (24, 10), (8, 12)):
+            d.set(x, 2, z, "mossy_cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,"
+                  "west=none]")
+            d.set(x, 1, z + 1, "podzol")
+        yew(d, 25, 14, 2)
+        yew(d, 4, 14, 2)
     # ---------------- buttresses (L4: flying) -------------
     if L >= 4:
         for z in (11, 14):
@@ -1072,6 +1094,11 @@ def cc_wing(rel, L):
         d.window(x, 3, z, x, 4, z)
     d.hut(*CC_WHUT)
     d.set(5, 1, 5, stair("spruce_stairs", "south"))
+    d.set(1, 1, 1, "barrel[facing=up,open=false]")
+    d.set(1, 2, 1, "candle[candles=2,lit=false,waterlogged=false]")
+    d.set(5, 1, 1, "spruce_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
+    d.set(5, 2, 1, "potted_fern")
+    d.rug(2, 2, 2, 3, 1, ("green_carpet",), "plain")
     d.lamp(2, 5, 2)
 
     def ring(y, r, c=3):
@@ -1555,6 +1582,16 @@ def cc_cathedral(rel, L):
         d.set(13, WT - 3, zE, "yellow_stained_glass_pane")
     # pews, hut, lighting
     d.hut(10, 2, 12)
+    d.set(16, 2, 12, "water_cauldron[level=3]")                     # font by the door
+    for x in (10, 16):
+        lamp_post(d, x, 3, "mossy_cobblestone", log("stripped_spruce_log"))
+    if L <= 2:
+        for x in (8, 18):
+            for z in range(12, 18, 2):
+                if d.air(x, 2, z):
+                    d.set(x, 2, z, ("fern", "lilac[half=lower]")[z % 4 // 2])
+                    if z % 4 // 2:
+                        d.set(x, 3, z, "lilac[half=upper]")
     d.rug(13, 12, 13, 22 if L >= 3 else zE - 3, 2, ("red_carpet",), "plain")
     pz = [14, 16, 18, 20] if L >= 3 else ([14, 16, 18] if L == 2 else [14, 16])
     pews(d, 10, 12, pz, 2, "spruce")
@@ -1677,6 +1714,13 @@ def cc_cathedral(rel, L):
         cc_log_house(d, 0, 41, 5, 6, "store", H=4)                 # smokehouse / woodshed
         for z in range(32, 36):
             d.set(36, 1, z, "gravel")
+        for x in list(range(31, 36)) + list(range(37, 42)):             # lodge front garden
+            d.set(x, 1, 33, "coarse_dirt")
+            d.set(x, 2, 33, ("poppy", "cornflower", "oxeye_daisy", "dandelion")[x % 4])
+        for x in (30, 42):
+            lamp_post(d, x, 33, "mossy_cobblestone", log("stripped_spruce_log"))
+        for x in (33, 39):
+            d.chair(x, 2, 32, "north", "spruce", sit=False)
         for x, z in ((27, 36), (44, 36), (44, 14), (27, 13)):
             yew(d, x, z, 2, "spruce_leaves", "spruce_log")
         for x in range(0, 30, 4):
@@ -1695,7 +1739,7 @@ NC_SIZE = (51, 44, 42)
 NC_C = (16, 18)                                 # centre of the crown
 NC_TX, NC_TZ, NC_TW = (1, 27), 1, 5            # campanile (wings)
 NC_WHUT = (1, 1, 3)
-NC_H = {1: 9, 2: 13, 3: 18, 4: 23, 5: 31}       # rib height
+NC_H = {1: 9, 2: 13, 3: 19, 4: 23, 5: 31}       # rib height
 NC_TOP = {1: 10, 2: 15, 3: 20, 4: 25, 5: 30}    # campanile height (local)
 NC_RIBS = 12
 
@@ -1712,6 +1756,8 @@ def nc_wing(rel, L):
     d.door(2, 1, 0, "south", "birch")
     d.hut(*NC_WHUT)
     d.set(3, 1, 3, "potted_bamboo")
+    d.set(2, 1, 2, "light_blue_carpet")
+    d.set(3, 1, 1, "smooth_quartz_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]")
     d.fill(0, 4, 0, n, 4, n, "smooth_quartz")
     d.set(2, 3, 2, "sea_lantern")
     d.fill(1, 3, 1, 3, 3, 3, "smooth_quartz_slab[type=top,waterlogged=false]")
@@ -2293,7 +2339,7 @@ def colossus_hall(d, x1, z1, x2, z2, ph, floor, wood, banner, L):
     d.candle(cx, 3, z2 - 1, 3)
     for z in range(z1 + 2, z2 - 1, 3):
         for x, f in ((x1 + 1, "east"), (x2 - 1, "west")):
-            d.set(x, 3 if ph > 4 else 2, z, f"{banner}_wall_banner[facing={f}]") if ph > 4 else None
+            d.set(x, 3, z, f"{banner}_wall_banner[facing={f}]" if ph > 4 else f"wall_torch[facing={f}]")
     for z in range(z1 + 3, z2 - 1, 4):
         if x2 - x1 >= 8:
             d.chair(cx - 2, 2, z, "west", wood, sit=False)
@@ -2338,6 +2384,7 @@ def hk_wing(rel, L):
     d.set(3, 1, 3, HS["carve"])
     d.candle(3, 2, 3, 3)
     d.set(1, 1, 1, "potted_red_tulip")
+    d.set(2, 1, 2, "red_carpet")
     for x in (0, n):
         d.set(x, 2, 2, "glass_pane")
     ring_stairs(d, 0, 0, n, n, 5, HS["sst"])
@@ -2557,6 +2604,8 @@ def cg_wing(rel, L):
     d.door(2, 1, 0, "south", "spruce")
     d.hut(*CG_WHUT)
     d.set(3, 1, 3, "barrel[facing=up,open=false]")
+    d.set(1, 1, 1, "potted_fern")
+    d.set(2, 1, 2, "green_carpet")
     d.lamp(2, 4, 2)
     for i in range(n + 1):
         for x, z, f in ((i, 0, "south"), (i, n, "north"), (0, i, "east"), (n, i, "west")):
@@ -2745,6 +2794,8 @@ def nb_wing(rel, L):
     d.door(2, 1, 0, "south", "birch")
     d.hut(*NB_WHUT)
     d.set(3, 1, 3, "potted_bamboo")
+    d.set(2, 1, 2, "light_blue_carpet")
+    d.set(3, 1, 1, "smooth_quartz_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]")
     d.fill(0, 4, 0, n, 4, n, "polished_blackstone")
     for i in range(n + 1):
         d.set(i, 4, 0, "orange_concrete")

@@ -1905,6 +1905,17 @@ def bunker_common(d, pack, L):
         elif kind == "archive":
             f_archive(d, R, M, L, req["bookshelves"], req["items"].get("minecraft:chiseled_bookshelf", 0), pack)
             lights(d, R, M, top + 1, 4, skip={((x1 + x2) // 2, (z1 + z2) // 2)})
+            # unshelved wall: display cases, reading benches and plants until the shelving grows
+            near = {(kx + ax, kz + az) for kx, kz in R.keep for ax, az in list(D4.values()) + [(0, 0)]}
+            i = 0
+            for side in ("north", "east", "south", "west"):
+                cells = wallcells(R, side)
+                for j, (x, z) in enumerate(cells):
+                    if (x, z) in near or not d.air(x, R.y, z) or j in (0, len(cells) - 1):
+                        continue
+                    w_recipe(["shelf", "bench", "shelf", "counter"][i % 4], d, x, R.y, z, INTO[side], pack, M, i, top)
+                    i += 1
+            dress(d, R, M, pack, kind)
             continue
         elif kind == "pantry":
             f_pantry(d, R, M, L, pack)
@@ -2437,6 +2448,10 @@ def cascadia(rel, L):
                 for y in range(SW, SW + 3):
                     d.set(bx - ax, y, bz, "spruce_planks" if y < SW + 2 else "spruce_slab[type=bottom,waterlogged=false]")
             d.set(bx - 1, SW + 2, bz, "gravel")
+        for (lx, lz) in ((40, 14), (40, 30), (12, 27), (12, 37), (53, 25), (53, 38)):
+            lamp_post(d, lx, lz, "spruce_fence", "lantern[hanging=false,waterlogged=false]", 3)
+        for x in range(2, 10):                             # split-rail fence round the magazine yard
+            d.set(x, SW, 37, "spruce_fence")
     if L >= 4:              # hoist house by the headframe: dark oak, slate roof, mustard trim
         pal = dict(wall="dark_oak_planks", wall2="dark_oak_planks", plinth="andesite", trim="stripped_spruce_log",
                    floor="spruce_planks", roof="deepslate_tile", gable="dark_oak_planks", accent="yellow_terracotta",

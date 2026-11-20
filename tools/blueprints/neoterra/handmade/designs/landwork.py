@@ -313,7 +313,7 @@ def bld(d, x1, z1, x2, z2, floors=1, fh=4, roof="gable", axis="x", doors=(), win
                 for z in range(z1 + 2, z2 - 1, 4):
                     if pack == "Neoterra":
                         if not d.air(x, yl + 1, z) or k == floors - 1:
-                            d.set(x, yl + 1, z, "sea_lantern")
+                            d.set(x, yl + 1, z, "sea_lantern" if k == floors - 1 else "pearlescent_froglight[axis=y]")
                     elif d.air(x, yl, z):
                         d.set(x, yl, z, "lantern[hanging=true,waterlogged=false]")
     # roof
@@ -695,264 +695,192 @@ def well(d, x, z):
 
 
 # ================================================================================================== MINER
-def miner_hearthwood(rel, L):
-    d = Design("Hearthwood", rel, (23, 29, 19), gy=1)
-    stone, brick = "stone_bricks", "bricks"
-    x1, z1, x2, z2 = 2, 5, 12, 11
-    tall = L >= 3
-    top = 10 if tall else 5
-    # rubble-stone walls with a brick quoin course
-    for y in range(2, top + 1):
-        for x in range(x1, x2 + 1):
-            for z in range(z1, z2 + 1):
-                if x in (x1, x2) or z in (z1, z2):
-                    r = (x * 7 + y * 3 + z * 5) % 9
-                    d.set(x, y, z, "mossy_stone_bricks" if r == 0 else ("cobblestone" if r == 4 else stone))
-                else:
-                    d.set(x, y, z, AIR)
-    d.fill(x1, 1, z1, x2, 1, z2, "spruce_planks")
-    for x, z in ((x1, z1), (x2, z1), (x1, z2), (x2, z2)):
-        for y in range(2, top + 1):
-            d.set(x, y, z, brick if y % 2 else stone)
-    if tall:
-        d.fill(x1 + 1, 6, z1 + 1, x2 - 1, 6, z2 - 1, "spruce_planks")
-        for x in range(x1, x2 + 1):
-            d.set(x, 6, z1, brick)
-            d.set(x, 6, z2, brick)
-    ridge = d.gable(x1, z1, x2, z2, top + 1, "x", "deepslate_tile_stairs", "deepslate_tile_slab", stone,
-                    overhang=1)
-    # the east gable is the bob wall against the head-frame: no overhang there
-    for y in range(top + 1, ridge + 1):
-        for z in range(z1 - 1, z2 + 2):
-            d.set(x2 + 1, y, z, AIR)
-    # windows: tall arched slits, brick heads
-    for x in (4, 10):
-        d.window(x, 3, z1, x, 4, z1)
-        d.set(x, 5, z1, brick)
-        d.window(x, 3, z2, x, 4, z2)
-    if tall:
-        for x in (4, 7, 10):
-            for z in (z1, z2):
-                d.window(x, 8, z, x, 9, z)
-                d.set(x, 10, z, brick)
-    d.door(7, 2, z1, "south", "dark_oak")
-    d.set(7, 4, z1, brick)
-    d.sign(6, 4, z1 - 1, "north", ["WHEAL", "HEARTH", "est. mine"], "dark_oak")
-    # stack built into the west gable: forge hearth inside
-    sx1, sz1 = 0, 7
-    stack_top = 18 if tall else 12
-    for y in range(1, stack_top + 1):
-        for x in range(sx1, sx1 + 3):
-            for z in range(sz1, sz1 + 3):
-                if (x, z) == (sx1 + 1, sz1 + 1) and y > 3:
-                    d.set(x, y, z, AIR)                                   # flue
-                else:
-                    d.set(x, y, z, brick if y > stack_top - 4 or y == 1 else
-                          ("cobblestone" if (x + y + z) % 5 == 0 else stone))
-    for x in range(sx1, sx1 + 3):
-        for z in range(sz1, sz1 + 3):
-            if (x, z) != (sx1 + 1, sz1 + 1):
-                d.set(x, stack_top + 1, z, slab("brick"))
-    d.set(x1, 2, 8, "campfire[facing=east,lit=true,signal_fire=false,waterlogged=false]")
-    d.set(x1, 3, 8, brick)
-    d.set(sx1 + 1, 3, sz1 + 1, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
-    d.set(sx1 + 1, 2, sz1 + 1, brick)
-    # ---- ground floor: miners' workshop ----
-    d.hut(3, 2, 6)
-    d.item(3, 2, 10, "furnace", "east")
-    if L >= 2:
-        d.item(3, 3, 10, "hopper")                                       # ore chute feeding the furnace
-    d.item(5, 2, 10, "crafting_table")
-    d.set(4, 2, 10, "grindstone[face=floor,facing=north]")              # pick sharpening
-    racks(d, [(x, 2, 10) for x in range(6, 12)], d.req["racks"])
-    d.set(3, 2, 7, "anvil[facing=north]")
-    d.set(3, 2, 9, "water_cauldron[level=3]")                           # quench
-    d.set(9, 2, 6, "barrel[facing=up,open=false]")
-    d.set(10, 2, 6, "barrel[facing=up,open=false]")
-    d.set(8, 2, 8, "dark_oak_fence")                                    # tally table
-    d.set(8, 3, 8, "dark_oak_pressure_plate[powered=false]")
-    d.chair(8, 2, 7, "north", "dark_oak", sit=False)
-    d.lamp(5, top if not tall else 5, 8)
-    d.lamp(9, top if not tall else 5, 8)
-    if tall:
-        ladder(d, 11, 6, 2, 6, "west")
-        d.set(11, 6, 6, "ladder[facing=west,waterlogged=false]")
-        # engine floor: beam engine cylinder under the rocking beam
-        d.fill(7, 7, 8, 8, 9, 9, "polished_deepslate")
-        d.set(7, 9, 8, "iron_block")
-        for x in range(5, 11):
-            d.set(x, 10, 8, logb("dark_oak_log", "x"))
-        d.set(5, 9, 8, CHAIN)
-        d.set(5, 8, 8, CHAIN)
-        d.set(5, 7, 8, "cauldron")
-        d.set(9, 7, 9, "lever[face=floor,facing=east,powered=false]")
-        d.set(3, 7, 10, "blast_furnace[facing=east,lit=true]")         # boiler fire
-        d.set(3, 7, 9, "water_cauldron[level=3]")
-        d.set(4, 7, 10, "coal_block")
-        d.chair(3, 7, 6, "west", "dark_oak", sit=False)
-        d.lamp(5, 11, 8)
-        d.lamp(9, 11, 9)
-        for x in range(x1 + 1, x2):
-            if x not in (10, 11):
-                d.set(x, 7, z1 + 1, "air")
-        d.set(10, 7, 6, "dark_oak_fence")
-        d.set(10, 7, 7, "dark_oak_fence")
-    # ---- head-frame lattice around the shaft (cluster at 13..16, 7..9) ----
+def mine_items(d, r, side, y=2, skip=1, hopper=True):
+    """Furnace (with the ore hopper on top from L2), crafting table, first racks."""
+    n = run(d, r, side, y, [P.item("furnace"), P.item("crafting_table")], skip=skip)
+    if hopper and "minecraft:hopper" in d.req["items"]:
+        for x, z in run_cells(r, side):
+            if d.get(x, y, z).startswith("minecraft:furnace") and d.air(x, y + 1, z):
+                d.item(x, y + 1, z, "hopper")
+                break
+    return n
+
+
+def headframe(d, cx, cz, L, post, beam, deck, rail_):
+    """Frame around the shaft cluster (4x3 at cx, cz): corner posts to the sheave deck, ring beams, braces."""
     yt = mtop(L)
-    lattice(d, 12, 6, 17, 10, 2, yt, "dark_oak_log[axis=y]", "stripped_dark_oak_log", step=4,
-            skip=[(12, z) for z in range(6, 11)] if not tall else [])
-    for x in (12,):
-        for z in (6, 10):
-            for y in range(top + 1, yt + 1):
-                d.set(x, y, z, "dark_oak_log[axis=y]")
-    for z in range(6, 11):                                              # top deck
-        for x in range(12, 18):
-            if x in (12, 17) or z in (6, 10):
-                d.set(x, yt, z, "dark_oak_planks")
-                d.set(x, yt + 1, z, "dark_oak_fence")
-    d.cluster(13, 7)
-    d.set(18, 2, 6, "lantern[hanging=false,waterlogged=false]")
-    d.set(18, 1, 6, "dark_oak_planks")
-    # ---- L2+: ore track from the shaft to the ore heap ----
+    lattice(d, cx - 1, cz - 1, cx + 4, cz + 3, 2, yt, post, beam, step=3)
+    for y in range(5, yt, 3):
+        for x, z, f in ((cx - 1, cz, "south"), (cx - 1, cz + 2, "north"), (cx + 4, cz, "south"), (cx + 4, cz + 2, "north")):
+            d.set(x, y - 1, z, stair(beam.replace("stripped_", "").replace("_log", "") if "log" in beam else "stone_brick",
+                                     f, "top"))
+    for z in range(cz - 1, cz + 4):
+        for x in range(cx - 1, cx + 5):
+            if x in (cx - 1, cx + 4) or z in (cz - 1, cz + 3):
+                d.set(x, yt, z, deck)
+                d.set(x, yt + 1, z, rail_)
+    return yt
+
+
+def miner_hearthwood(rel, L):
+    d = Design("Hearthwood", rel, (46, 30, 36), gy=1)
+    P.d = d
+    d.palette = dict(wall="cobblestone", end="cobblestone", framing=False, frame="stripped_spruce_log",
+                     roof="deepslate_tile", shutter="mangrove", doorwood="spruce", plinth="stone_bricks", chimney="bricks")
+    cx, cz = 20, 12                                                   # shaft cluster 20..23 x 12..14
+    yt = headframe(d, cx, cz, L, "dark_oak_log[axis=y]", "stripped_dark_oak_log", "dark_oak_planks", "dark_oak_fence")
+    # ---- count house: the mine captain's office (hut) ----
+    ch = bld(d, 8, 3, 15, 9, floors=1, axis="x", doors=[(11, 3, "n"), (15, 6, "e")], chimney=(8, 6))
+    d.hut(9, 2, 4)
+    d.hearth(9, 2, 6, "east", 5, "bricks", "campfire")
+    mine_items(d, ch, "s", skip=1)
+    run(d, ch, "n", 2, [P.rack()] * min(2, need_racks(d)) + [P.books()], skip=2)
+    d.set(12, 2, 6, "spruce_slab[type=top,waterlogged=false]")           # assay / pay table
+    d.set(12, 3, 6, "candle[candles=3,lit=false,waterlogged=false]")
+    d.chair(13, 2, 6, "east", "spruce", sit=False)
+    room_rug(d, ch, 2, inset=3)
+    d.sign(13, 4, 2, "north", ["WHEAL", "HEARTH", "Count House"], "spruce")
+    lamp_post(d, 16, 2)
+    track(d, [(21, z) for z in range(11, 6, -1)] + [(x, 7) for x in range(22, 28)], 2)
+    ore_heap(d, 28, 2, 6)
+    # ---- L2: Cornish engine house with the tall stack ----
     if L >= 2:
-        pts = [(14, z) for z in range(5, 2, -1)] + [(x, 3) for x in range(15, 20)]
-        track(d, pts, 2)
-        ore_heap(d, 20, 2, 2)
-        d.set(20, 2, 4, "barrel[facing=up,open=false]")
-        d.set(21, 2, 4, "chest[facing=west,type=single,waterlogged=false]")
-    # ---- L4: boiler lean-to behind ----
+        eh = bld(d, 10, 11, 18, 17, floors=2, fh=5, axis="x", doors=[(14, 17, "s")], chimney=None, win=3,
+                 pal=dict(wall="stone_bricks", end="stone_bricks", roof="deepslate_tile", plinth="cobblestone",
+                          frame="stripped_dark_oak_log", shutter="dark_oak"))
+        for y in range(1, 22):                                        # stack built into the west gable
+            for x in (8, 9):
+                for z in (13, 14, 15):
+                    if (x, z) != (8, 14) or y < 3:
+                        d.set(x, y, z, "bricks" if y > 17 or y < 3 else ("cobblestone" if (x + y + z) % 4 == 0 else "stone_bricks"))
+        d.set(8, 22, 14, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+        d.fill(11, 7, 14, 12, 9, 15, "polished_deepslate")                # beam engine cylinder
+        d.set(11, 10, 14, "iron_block")
+        for x in range(11, 18):
+            d.set(x, 11, 14, "dark_oak_log[axis=x]")                      # rocking beam ("bob") to the shaft
+        for y in range(7, 11):
+            d.set(17, y, 14, CHAIN)
+        stairs_up(d, 15, 12, "south", 2, fh=5, rail=False)
+        run(d, eh, "n", 2, [P.b("blast_furnace[facing={f},lit=true]"), P.b("water_cauldron[level=3]"), P.b("coal_block", "coal_block")], skip=1)
+        run(d, eh, "s", 7, [P.b("lever[face=floor,facing=north,powered=false]"), P.chair("dark_oak"),
+                            P.shelf("dark_oak", "lantern[hanging=false,waterlogged=false]")], skip=1)
+        rest_racks(d, eh, "w", 2, skip=0)
+    # ---- L3: boiler house and ore dressing floor ----
+    if L >= 3:
+        bh = bld(d, 10, 19, 18, 24, floors=1, axis="x", doors=[(14, 19, "n")], chimney=(18, 22),
+                 pal=dict(wall="bricks", end="bricks", roof="spruce", plinth="stone_bricks", frame="stripped_spruce_log"))
+        for x in (12, 15):
+            d.set(x, 2, 22, "blast_furnace[facing=north,lit=true]")
+            d.set(x + 1, 2, 22, "water_cauldron[level=3]")
+            d.set(x, 3, 22, "polished_deepslate")
+        run(d, bh, "s", 2, [P.b("coal_block")] * 4, skip=0)
+        # dressing floor: open shed with stone tables and buddles
+        for x in range(26, 37, 3):
+            for z in (12, 18):
+                posts(d, [(x, z)], 2, 5, "dark_oak_log[axis=y]")
+        d.gable(26, 12, 36, 18, 6, "x", "deepslate_tile_stairs", "deepslate_tile_slab", "cobblestone", overhang=1)
+        for x in range(27, 36):
+            if x % 3:
+                d.set(x, 2, 14, "smooth_stone_slab[type=top,waterlogged=false]")
+                d.set(x, 2, 16, "cauldron" if x % 2 else "smooth_stone_slab[type=top,waterlogged=false]")
+        for x in range(27, 36, 2):
+            d.set(x, 3, 14, ("raw_iron_block", "raw_copper_block", "gravel", "coal_block", "raw_gold_block")[x % 5])
+        track(d, [(x, 15) for x in range(25, 36)], 2)
+        rest_racks(d, bh, "n", 2, skip=1)
+        # ore bins: timber hoppers on a stone platform beside the shaft
+        for i, x in enumerate((26, 29, 32)):
+            d.fill(x, 2, 21, x + 1, 2, 22, "cobblestone")
+            walls(d, x, 21, x + 1, 22, 3, 4, "dark_oak_planks")
+            d.set(x, 5, 21, ("raw_iron_block", "raw_copper_block", "coal_block")[i])
+            d.set(x + 1, 5, 22, "gravel")
+            d.set(x, 5, 22, "dark_oak_slab[type=bottom,waterlogged=false]")
+        for x in range(25, 35):
+            d.set(x, 2, 24, "dark_oak_fence")
+        lamp_post(d, 25, 20)
+        lamp_post(d, 35, 20)
+        cart(d, 37, 15, "x", "raw_iron_block")
+        bench(d, 16, 9, "east", 2)
+    # ---- L4: miners' dry (changing house) and powder magazine ----
     if L >= 4:
-        lx1, lx2, lz2 = 4, 10, 15
-        walls(d, lx1, z2, lx2, lz2, 2, 4, stone)
-        d.fill(lx1 + 1, 1, z2 + 1, lx2 - 1, 1, lz2 - 1, "spruce_planks")
-        for i, z in enumerate(range(lz2 + 1, z2, -1)):
-            yy = 4 + i
-            for x in range(lx1 - 1, lx2 + 2):
-                d.set(x, yy, z, stair("deepslate_tile", "north"))
-            for x in (lx1, lx2):
-                for y in range(5, yy):
-                    if z <= lz2:
-                        d.set(x, y, z, stone)
-        d.door(lx2, 2, 13, "east", "dark_oak")
-        d.set(5, 2, 12, "blast_furnace[facing=east,lit=true]")
-        d.set(5, 2, 13, "water_cauldron[level=3]")
-        d.set(5, 2, 14, "coal_block")
-        d.set(9, 2, 14, "barrel[facing=up,open=false]")
-        d.set(9, 3, 14, "barrel[facing=up,open=false]")
-        d.window(lx1, 3, 13, lx1, 3, 13)
-        d.lamp(7, 4, 13)
-    # ---- L5: fenced ore yard with a spoil heap ----
+        dr = bld(d, 26, 2, 37, 9, floors=2, axis="x", doors=[(31, 9, "s")], chimney=(37, 5),
+                 pal=dict(wall="white_terracotta", end="white_terracotta", framing=True, roof="brick",
+                          frame="stripped_dark_oak_log", shutter="mangrove", plinth="cobblestone"))
+        d.hearth(36, 2, 5, "west", 5, "bricks", "campfire")
+        for x in range(27, 35, 2):
+            d.chair(x, 2, 7, "south", "spruce", sit=False)
+            d.set(x, 3, 3, "spruce_trapdoor[facing=south,half=bottom,open=true,powered=false,waterlogged=false]")
+            d.set(x, 2, 3, "barrel[facing=south,open=false]")
+        stairs_up(d, 27, 5, "east", 2, rail=False)
+        for x in (28, 31, 34):
+            d.bed(x, 6, 3, "north")
+        run(d, dr, "s", 6, [P.b("chest[facing={f},type=single,waterlogged=false]")] * 3, skip=1)
+        room_rug(d, dr, 6, inset=2)
+        pm = bld(d, 40, 27, 44, 31, floors=1, roof="hip", doors=[(42, 27, "n")], win=99,
+                 pal=dict(wall="stone_bricks", plinth="stone_bricks", roof="deepslate_tile", framing=False,
+                          frame="stripped_spruce_log"))
+        d.set(41, 2, 30, "tnt[unstable=false]")
+        d.set(43, 2, 30, "barrel[facing=up,open=false]")
+        for x in range(38, 46):
+            if x not in (41, 42, 43):
+                d.set(x, 2, 25, "stone_brick_wall")
+    # ---- L5: smithy, workers' cottages, spoil heap ----
     if L >= 5:
-        for x in range(14, 23):
-            d.set(x, 2, 16, "dark_oak_fence")
-        for z in range(12, 17):
-            d.set(22, 2, z, "dark_oak_fence")
-        d.set(18, 2, 16, "dark_oak_fence_gate[facing=south,in_wall=false,open=false,powered=false]")
-        track(d, [(15, z) for z in range(11, 15)] + [(x, 14) for x in range(16, 20)], 2)
-        ore_heap(d, 20, 2, 12, ("raw_copper_block", "raw_iron_block", "coal_block"))
-        d.fill(13, 2, 13, 13, 2, 15, "gravel")
-        d.set(13, 3, 14, "gravel")
-        d.set(21, 3, 15, "lantern[hanging=false,waterlogged=false]")
-        d.set(21, 2, 15, "dark_oak_fence")
+        sm = bld(d, 2, 20, 7, 30, floors=1, axis="z", doors=[(7, 25, "e")], chimney=(2, 23),
+                 pal=dict(wall="mud_bricks", end="mud_bricks", roof="mud_brick", plinth="cobblestone",
+                          frame="stripped_spruce_log", shutter="spruce"))
+        d.hearth(3, 2, 23, "east", 5, "bricks", "campfire")
+        run(d, sm, "w", 2, [P.b("anvil[facing=north]"), P.b("grindstone[face=floor,facing={f}]"),
+                            P.b("water_cauldron[level=3]"), P.b("smithing_table")], skip=3)
+        run(d, sm, "e", 2, [P.b("barrel[facing=up,open=false]", "chain[axis=y,waterlogged=false]")] * 2, skip=0)
+        for i, x0 in enumerate((10, 17, 24)):
+            cot = bld(d, x0, 28, x0 + 5, 34, floors=2, axis="z", doors=[(x0 + 2, 28, "n")], chimney=(x0 + 5, 31),
+                      pal=dict(wall=("white_terracotta", "yellow_terracotta", "pink_terracotta")[i],
+                               end=("white_terracotta", "yellow_terracotta", "pink_terracotta")[i], framing=False,
+                               roof=("deepslate_tile", "brick", "mud_brick")[i], shutter=("mangrove", "warped", "dark_oak")[i],
+                               plinth="cobblestone"))
+            d.hearth(x0 + 4, 2, 31, "west", 5, "bricks", "campfire")
+            d.dining(x0 + 2, 2, 31, 2, "z", "spruce", chairs=("w",), sit=False)
+            flowerbed(d, x0, 26, x0 + 5, 26)
+        for x in range(36, 45):                                       # spoil heap
+            for z in range(12, 23):
+                h = 3 - (abs(x - 40) + abs(z - 17)) // 3
+                for y in range(2, 2 + max(0, h)):
+                    d.set(x, y, z, "gravel" if (x + y + z) % 3 else "cobblestone")
+        track(d, [(x, 11) for x in range(24, 36)], 2)
+    d.cluster(cx, cz)
     return d
 
 
 def miner_cascadia(rel, L):
-    d = Design("Cascadia", rel, (25, 29, 21), gy=1, paving="coarse_dirt")
-    yt = mtop(L)
-    # ---- head-frame: spruce logs with braces around the shaft (cluster at 4..7, 10..12) ----
-    lattice(d, 3, 9, 8, 13, 2, yt, "spruce_log[axis=y]", "stripped_spruce_log", step=3)
-    for y in range(5, yt, 3):                                         # knee braces under each ring
-        for x, z, f in ((3, 10, "south"), (3, 12, "north"), (8, 10, "south"), (8, 12, "north")):
-            d.set(x, y - 1, z, stair("spruce", f, "top"))
-    for z in range(9, 14):
-        for x in range(3, 9):
-            if x in (3, 8) or z in (9, 13):
-                d.set(x, yt, z, "spruce_planks")
-                d.set(x, yt + 1, z, "spruce_fence")
-    # back legs: a raking strut from the frame top down toward the hoist house
-    d.cluster(4, 10)
-    legs = []
+    d = Design("Cascadia", rel, (48, 30, 38), gy=1, paving="coarse_dirt")
+    P.d = d
+    d.palette = dict(wall="spruce_log", siding="spruce_planks", batten="stripped_spruce_log", end="spruce_planks",
+                     roof="spruce", shutter="dark_oak", doorwood="dark_oak", plinth="tuff", trim="stripped_dark_oak_log")
+    cx, cz = 6, 16                                                    # shaft cluster 6..9 x 16..18
+    yt = headframe(d, cx, cz, L, "spruce_log[axis=y]", "stripped_spruce_log", "spruce_planks", "spruce_fence")
+    # ---- hoist house (hut) ----
+    hh = bld(d, 12, 13, 20, 21, floors=1, axis="z", doors=[(12, 17, "w"), (16, 13, "n")], chimney=(20, 17))
+    d.hut(13, 2, 14)
+    d.hearth(19, 2, 17, "west", 5, "cobblestone", "campfire")
+    mine_items(d, hh, "s", skip=1)
+    for z in range(15, 19):                                           # winding drum
+        d.set(14, 3, z, "stripped_spruce_log[axis=z]")
+    for z in (14, 19):
+        if d.air(14, 2, z):
+            d.set(14, 2, z, "spruce_fence")
+    run(d, hh, "e", 2, [P.rack()] * min(2, need_racks(d)), skip=0)
+    porch(d, 12, 20, 13, 3, "n", gaps=(16,))
+    d.sign(18, 4, 12, "north", ["TIMBERLINE", "MINE", "No. 1"], "spruce")
+    track(d, [(cx + 2, z) for z in range(cz - 2, cz - 9, -1)], 2)
+    lamp_post(d, 11, 12)
+    # back legs raking from the frame onto the hoist house roof
     for k in range(1, 12):
         y = yt - 2 * k
         if y < 2:
             break
-        legs.append((8 + k, y))
-    return_legs = legs
-    # ---- hoist house: log walls on river rock, gable to the street ----
-    x1, z1, x2, z2 = 11, 7, 19, 15
-    d.fill(x1, 1, z1, x2, 1, z2, "cobblestone")
-    d.fill(x1 + 1, 1, z1 + 1, x2 - 1, 1, z2 - 1, "spruce_planks")
-    for y in range(2, 6):
-        for x in range(x1, x2 + 1):
-            for z in range(z1, z2 + 1):
-                if x in (x1, x2) or z in (z1, z2):
-                    ax = "x" if z in (z1, z2) else "z"
-                    d.set(x, y, z, logb("spruce_log", ax))
-                else:
-                    d.set(x, y, z, AIR)
-    for x, z in ((x1, z1), (x2, z1), (x1, z2), (x2, z2)):
-        posts(d, [(x, z)], 2, 5, "stripped_spruce_log[axis=y]")
-    for x in range(x1, x2 + 1):
-        for z in range(z1, z2 + 1):
-            if x in (x1, x2) or z in (z1, z2):
-                d.set(x, 2, z, "mossy_cobblestone" if (x + z) % 3 == 0 else "cobblestone")
-    ridge = d.gable(x1, z1, x2, z2, 6, "z", "dark_oak_stairs", "dark_oak_slab", "spruce_planks", overhang=1)
-    for x in range(x1 + 1, x2):                                       # board-and-batten gable ends
-        for z in (z1, z2):
-            for y in range(6, ridge):
-                if d.get(x, y, z) == "minecraft:spruce_planks" and x % 2 == 0:
-                    d.set(x, y, z, "stripped_spruce_log[axis=y]")
-    mid = (x1 + x2) // 2
-    d.door(mid, 2, z1, "south", "spruce")
-    for x in (x1 + 2, x2 - 2):
-        d.window(x, 3, z1, x, 4, z1)
-    for z in range(z1 + 2, z2 - 1, 3):
-        d.window(x2, 3, z, x2, 4, z)
-    d.window(mid, 7, z1, mid, 8, z1)
-    d.door(x1, 2, 11, "west", "spruce")                               # side door toward the shaft
-    d.set(x1 - 1, 1, 11, "spruce_planks")
-    d.sign(mid, 6, z1 - 1, "north", ["TIMBERLINE", "MINE", "No. 1"], "spruce")
-    # porch on the street side
-    pz = z1 - 3
-    d.fill(x1, 1, pz, x2, 1, z1 - 1, "spruce_planks")
-    for x in (x1, x2):
-        posts(d, [(x, pz)], 2, 5, "spruce_log[axis=y]")
-    for x in range(x1 - 1, x2 + 2):
-        d.set(x, 6, pz - 1, stair("spruce", "south"))
-        for z in range(pz, z1):
-            d.set(x, 6, z, slab("spruce"))
-    for x in range(x1 + 1, x2):
-        if x != mid:
-            d.set(x, 2, pz, "spruce_fence")
-    d.chair(x1 + 1, 2, z1 - 1, "south", "spruce", sit=False)
-    d.set(x2 - 1, 2, z1 - 1, "barrel[facing=up,open=false]")
-    d.lamp(mid - 2, 5, z1 - 2)
-    d.lamp(mid + 2, 5, z1 - 2)
-    # ---- interior: hoist drum, workbench, racks ----
-    d.hut(x1 + 1, 2, z1 + 1)
-    for z in range(z1 + 3, z1 + 6):                                   # winding drum on its frame
-        d.set(x1 + 2, 3, z, logb("stripped_spruce_log", "z"))
-    d.set(x1 + 2, 2, z1 + 2, "spruce_fence")
-    d.set(x1 + 2, 3, z1 + 2, "spruce_fence")
-    d.set(x1 + 2, 2, z1 + 6, "spruce_fence")
-    d.set(x1 + 2, 3, z1 + 6, "spruce_fence")
-    d.set(x1 + 3, 2, z1 + 4, "lever[face=floor,facing=east,powered=false]")
-    d.item(x2 - 1, 2, z1 + 2, "crafting_table")
-    d.item(x2 - 1, 2, z1 + 3, "furnace", "west")
-    racks(d, [(x, 2, z2 - 1) for x in range(x2 - 1, x1, -1)], d.req["racks"])
-    d.set(x2 - 1, 2, z1 + 5, "barrel[facing=up,open=false]")
-    d.set(mid, 2, z1 + 4, "spruce_fence")
-    d.set(mid, 3, z1 + 4, "lantern[hanging=false,waterlogged=false]")
-    for z in (z1 + 2, z2 - 3):
-        d.lamp(mid, 5, z)
-    # stone chimney with stove on the east side
-    d.set(x2 - 1, 2, z1 + 6, "smoker[facing=west,lit=true]")
-    for y in range(2, ridge + 1):
-        d.set(x2 + 1, y, z1 + 6, "mossy_cobblestone" if y % 3 == 0 else "cobblestone")
-    for x, y in return_legs:                                         # raking back legs onto the roof
+        x = cx + 4 + k
         stop = False
-        for z in (9, 13):
+        for z in (cz - 1, cz + 3):
             for yy in (y + 1, y):
                 if d.air(x, yy, z) or "stairs" in d.get(x, yy, z) or "slab" in d.get(x, yy, z):
                     d.set(x, yy, z, logb("spruce_log", "x"))
@@ -960,181 +888,221 @@ def miner_cascadia(rel, L):
                     stop = True
         if stop:
             break
-    # ---- L2+: track from the shaft to the cart siding / tipple ----
+    # ---- L2: tipple (ore bin on stilts) and assay shed ----
     if L >= 2:
-        pts = [(6, z) for z in range(8, 1, -1)]
-        track(d, pts, 2)
-        d.set(6, 2, 1, "spruce_fence")
-        d.set(5, 2, 1, "spruce_fence")
-        d.set(7, 2, 1, "spruce_fence")
-        # ore chute: hopper fed from the bin above / a timber chute frame
-        posts(d, [(4, 3), (8, 3), (4, 6), (8, 6)], 2, 5 if L >= 3 else 4, "spruce_log[axis=y]")
-        if L < 3:
-            for x in range(4, 9):
-                for z in range(3, 7):
-                    if x in (4, 8) or z in (3, 6):
-                        d.set(x, 5, z, "spruce_slab[type=bottom,waterlogged=false]")
-            d.item(6, 4, 4, "hopper")
-            d.set(6, 5, 4, "spruce_planks")
-    if L >= 3:                                                         # tipple: ore bin raised on stilts
-        d.fill(4, 6, 3, 8, 6, 6, "spruce_planks")
-        walls(d, 4, 3, 8, 6, 7, 8, "spruce_planks")
-        for x, z in ((4, 3), (8, 3), (4, 6), (8, 6)):
-            posts(d, [(x, z)], 6, 9, "spruce_log[axis=y]")
-        d.fill(5, 7, 4, 7, 7, 5, "raw_iron_block")
-        d.set(6, 8, 4, "coal_block")
-        d.item(6, 5, 4, "hopper")
-        d.set(6, 5, 5, "spruce_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
-        d.gable(4, 3, 8, 6, 9, "z", "spruce_stairs", "spruce_slab", "spruce_planks", overhang=1)
-        for y in range(2, 6):                                          # access ladder to the bin
-            d.set(3, y, 5, "ladder[facing=west,waterlogged=false]")
-        d.set(3, 6, 5, "ladder[facing=west,waterlogged=false]")
-        d.set(3, 7, 5, "ladder[facing=west,waterlogged=false]")
-        d.set(4, 7, 5, AIR)
-        d.set(4, 8, 5, AIR)
-    # ---- L4: powder & tool lean-to on the east ----
+        for x, z in ((6, 3), (10, 3), (6, 7), (10, 7)):
+            posts(d, [(x, z)], 2, 9, "spruce_log[axis=y]")
+        d.fill(6, 6, 3, 10, 6, 7, "spruce_planks")
+        walls(d, 6, 3, 10, 7, 7, 8, "spruce_planks")
+        d.fill(7, 7, 4, 9, 7, 6, "raw_iron_block")
+        d.set(8, 8, 5, "coal_block")
+        d.item(8, 5, 5, "hopper")
+        d.gable(6, 3, 10, 7, 9, "z", "spruce_stairs", "spruce_slab", "spruce_planks", overhang=1)
+        ladder(d, 5, 5, 2, 7, "west")
+        d.set(6, 7, 5, AIR)
+        d.set(6, 8, 5, AIR)
+        as_ = bld(d, 14, 2, 20, 8, floors=1, axis="x", doors=[(17, 8, "s")],
+                  pal=dict(wall="birch_planks", siding="birch_planks", batten="stripped_spruce_log", end="birch_planks",
+                           roof="dark_prismarine", shutter="spruce"))
+        run(d, as_, "n", 2, [P.b("brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]"), P.b("blast_furnace[facing={f},lit=true]"),
+                             P.shelf("spruce", "lantern[hanging=false,waterlogged=false]"), P.books()], skip=1)
+        rest_racks(d, as_, "w", 2)
+        d.sign(17, 4, 9, "south", ["ASSAY", "OFFICE"], "spruce")
+    # ---- L3: bunkhouse ----
+    if L >= 3:
+        bk = bld(d, 24, 2, 35, 9, floors=2, axis="x", doors=[(29, 9, "s")], chimney=(35, 5),
+                 pal=dict(wall="dark_oak_log", siding="dark_oak_planks", batten="stripped_dark_oak_log",
+                          end="dark_oak_planks", roof="mangrove", shutter="spruce", plinth="cobblestone"))
+        d.hearth(34, 2, 5, "west", 5, "cobblestone", "campfire")
+        d.dining(27, 2, 5, 4, "x", "spruce", chairs=("n", "s"), sit=False)
+        stairs_up(d, 25, 8, "north", 2, rail=False)
+        for x in (27, 29, 31, 33):
+            d.bed(x, 6, 3, "north")
+            d.bed(x, 6, 8, "south")
+        room_rug(d, bk, 6, inset=3)
+        porch(d, 24, 35, 9, 2, "s", gaps=(29,))
+        rest_racks(d, hh, "e", 2, skip=0)
+    # ---- L4: stamp mill stepping down the slope ----
     if L >= 4:
-        lx1, lx2 = x2, x2 + 4
-        walls(d, lx1, 10, lx2, 14, 2, 4, "spruce_planks")
-        d.fill(lx1 + 1, 1, 11, lx2 - 1, 1, 13, "spruce_planks")
-        for z in range(9, 16):
-            for x in range(lx1 + 1, lx2 + 2):
-                d.set(x, 5, z, slab("spruce"))
-        d.set(lx1, 2, 11, AIR)
-        d.set(lx1, 3, 11, AIR)
-        d.set(lx2 - 1, 2, 11, "barrel[facing=up,open=false]")
-        d.set(lx2 - 1, 2, 13, "tnt[unstable=false]")
-        d.set(lx2 - 1, 3, 13, "spruce_slab[type=bottom,waterlogged=false]")
-        d.set(lx2 - 1, 2, 12, "barrel[facing=up,open=false]")
-        d.lamp(lx1 + 2, 4, 12)
-        d.window(lx2, 3, 12, lx2, 3, 12)
-    # ---- L5: rock dump, fences and lamp posts ----
+        mm = bld(d, 24, 16, 36, 27, floors=2, fh=6, axis="x", doors=[(24, 21, "w")], chimney=(36, 21),
+                 pal=dict(wall="stripped_spruce_log", siding="spruce_planks", batten="stripped_dark_oak_log",
+                          end="spruce_planks", roof="deepslate_tile", shutter="dark_oak", plinth="andesite"))
+        for x in range(27, 34, 2):                                    # stamp battery
+            for y in range(2, 7):
+                d.set(x, y, 18, "stripped_spruce_log[axis=y]" if y < 6 else "iron_block")
+            d.set(x, 2, 19, "anvil[facing=north]")
+        for x in range(26, 35):
+            d.set(x, 7, 18, "spruce_log[axis=x]")
+        for z in range(22, 27, 2):
+            d.set(26, 2, z, "water_cauldron[level=3]")
+            d.set(27, 2, z, "smooth_stone_slab[type=top,waterlogged=false]")
+        ladder(d, 35, 26, 2, 7, "west")
+        d.set(35, 7, 26, "ladder[facing=west,waterlogged=false]")
+        run(d, mm, "n", 8, [P.b("barrel[facing=up,open=false]")] * 4, skip=4)
+        rest_racks(d, mm, "s", 2, skip=3)
+        track(d, [(x, 23) for x in range(11, 24)], 2)
+    # ---- L5: blacksmith, lamp house, rock dump ----
     if L >= 5:
-        d.fill(1, 2, 16, 4, 2, 19, "gravel")
-        d.fill(1, 3, 17, 3, 3, 18, "gravel")
-        d.set(2, 4, 17, "cobblestone")
-        d.set(4, 2, 17, "mossy_cobblestone")
-        track(d, [(6, z) for z in range(14, 19)] + [(x, 18) for x in range(7, 11)], 2)
-        ore_heap(d, 11, 2, 17, ("raw_gold_block", "raw_iron_block", "coal_block"))
-        for x in range(13, 24):
-            d.set(x, 2, 19, "spruce_fence")
-        for x, z in ((9, 3), (22, 6)):
-            d.set(x, 2, z, "spruce_fence")
-            d.set(x, 3, z, "spruce_fence")
-            d.set(x, 4, z, "lantern[hanging=false,waterlogged=false]")
+        bs = bld(d, 2, 24, 9, 32, floors=1, axis="z", doors=[(9, 28, "e")], chimney=(2, 28),
+                 pal=dict(wall="cobblestone", siding="cobblestone", batten="spruce_log", end="spruce_planks",
+                          roof="spruce", plinth="cobblestone", shutter="spruce"))
+        d.hearth(3, 2, 28, "east", 5, "cobblestone", "campfire")
+        run(d, bs, "e", 2, [P.b("anvil[facing=north]"), P.b("grindstone[face=floor,facing={f}]"), P.b("water_cauldron[level=3]")], skip=6)
+        run(d, bs, "n", 2, [P.b("smithing_table"), P.b("barrel[facing=up,open=false]")], skip=0)
+        lh = bld(d, 39, 2, 45, 9, floors=1, axis="z", doors=[(42, 9, "s")],
+                 pal=dict(wall="mangrove_planks", siding="mangrove_planks", batten="stripped_spruce_log",
+                          end="mangrove_planks", roof="cobbled_deepslate", shutter="birch"))
+        for z in range(3, 9):
+            d.set(44, 2, z, "spruce_slab[type=top,waterlogged=false]")
+            d.set(44, 3, z, "lantern[hanging=false,waterlogged=false]")
+        for x in range(39, 47):
+            for z in range(14, 30):
+                h = 4 - (abs(x - 43) + abs(z - 22)) // 2
+                for y in range(2, 2 + max(0, h)):
+                    d.set(x, y, z, "gravel" if (x + y * 2 + z) % 3 else ("tuff" if x % 2 else "cobblestone"))
+        for x, z in ((14, 34), (20, 34), (28, 33), (46, 35), (2, 36), (8, 36)):
+            tree(d, x, z, 6, "spruce_leaves", "spruce_log", 2)
+        # cookhouse & mess with a covered dining porch
+        ck = bld(d, 12, 26, 22, 33, floors=2, axis="x", doors=[(17, 26, "n")], chimney=(22, 29),
+                 pal=dict(wall="spruce_log", siding="birch_planks", batten="stripped_spruce_log", end="birch_planks",
+                          roof="dark_prismarine", shutter="mangrove", plinth="cobblestone"))
+        d.hearth(21, 2, 29, "west", 5, "cobblestone", "campfire")
+        d.dining(14, 2, 29, 5, "x", "spruce", chairs=("n", "s"), sit=False)
+        run(d, ck, "s", 2, [P.b("smoker[facing={f},lit=true]"), P.b("water_cauldron[level=3]"),
+                            P.shelf("spruce", "cake[bites=0]"), P.b("barrel[facing=up,open=false]", "brown_wool")], skip=1)
+        stairs_up(d, 13, 32, "east", 2, rail=False)
+        for x in (14, 16, 18, 20):
+            d.bed(x, 6, 27, "north")
+        run(d, ck, "s", 6, [P.b("chest[facing={f},type=single,waterlogged=false]")] * 3, skip=5)
+        room_rug(d, ck, 6, inset=2)
+        porch(d, 12, 22, 26, 2, "n", gaps=(17,))
+    d.cluster(cx, cz)
     return d
 
 
 def miner_neoterra(rel, L):
-    d = Design("Neoterra", rel, (21, 29, 17), gy=1, paving="smooth_stone")
+    d = Design("Neoterra", rel, (46, 30, 36), gy=1, paving="smooth_stone")
+    P.d = d
+    d.palette = dict(wall="gray_concrete", post="polished_deepslate", band="yellow_concrete", accent="yellow_concrete",
+                     plinth="polished_blackstone", doorwood="iron")
+    cx, cz = 6, 8                                                     # shaft cluster 6..9 x 8..10
     yt = mtop(L)
-    # ---- enclosed winding tower around the shaft (cluster at 4..7, 6..8) ----
-    for y in range(2, yt):
-        for x in range(3, 9):
-            for z in range(5, 10):
-                if x in (3, 8) or z in (5, 9):
-                    corner = x in (3, 8) and z in (5, 9)
-                    d.set(x, y, z, "white_concrete" if corner else "light_gray_concrete")
-    for y in range(3, yt - 1):                                       # glazed strips
-        for x in (5, 6):
-            d.set(x, y, 5, "gray_stained_glass_pane")
-            d.set(x, y, 9, "gray_stained_glass_pane")
-        d.set(3, y, 7, "gray_stained_glass_pane")
+    for y in range(2, yt):                                            # enclosed winding tower
+        for x in range(cx - 1, cx + 5):
+            for z in range(cz - 1, cz + 4):
+                if x in (cx - 1, cx + 4) or z in (cz - 1, cz + 3):
+                    corner = x in (cx - 1, cx + 4) and z in (cz - 1, cz + 3)
+                    d.set(x, y, z, "polished_deepslate" if corner else
+                          ("gray_stained_glass_pane" if (x in (cx + 1, cx + 2) or z == cz + 1) and 3 <= y < yt - 1 else "light_gray_concrete"))
     for y in range(4, yt, 4):
-        d.set(8, y, 6, "sea_lantern")
-        d.set(8, y, 8, "sea_lantern")
-    for x in range(3, 9):
-        for z in range(5, 10):
-            if x in (3, 8) or z in (5, 9):
+        d.set(cx + 4, y, cz, "sea_lantern")
+        d.set(cx + 4, y, cz + 2, "sea_lantern")
+    for z in range(cz - 1, cz + 4):
+        for x in range(cx - 1, cx + 5):
+            if x in (cx - 1, cx + 4) or z in (cz - 1, cz + 3):
                 d.set(x, yt, z, "smooth_quartz")
                 d.set(x, yt + 1, z, "iron_bars")
-    d.fill(3, yt - 1, 5, 8, yt - 1, 5, "cyan_terracotta")
-    d.fill(3, yt - 1, 9, 8, yt - 1, 9, "cyan_terracotta")
-    d.sign(5, yt - 2, 4, "north", ["SHAFT", "01"], "birch", glow=True, color="cyan")
-    d.door(8, 2, 7, "west", "iron")
-    d.cluster(4, 6)
-    # ---- mining station ----
-    X2 = 15 if L == 1 else 19
-    x1, z1, z2 = 9, 4, 11
-    tall = L >= 3
-    top = 5
-    d.box(x1, 2, z1, X2, top, z2, "white_concrete", floor="polished_andesite")
-    d.fill(x1, 6, z1, X2, 6, z2, "smooth_quartz")
-    d.set(x1, 2, 7, AIR)
-    d.set(x1, 3, 7, AIR)
-    for x in range(x1 + 1, X2):
-        if x != 12:
-            d.window(x, 3, z1, x, 4, z1)
-    for z in range(z1 + 2, z2 - 1, 2):
-        d.window(X2, 3, z, X2, 4, z)
-    d.fill(x1, 5, z1, X2, 5, z1, "cyan_terracotta")
-    d.door(12, 2, z1, "south", "birch")
-    for x in range(11, 15):                                           # entrance canopy
-        d.set(x, 5, z1 - 1, slab("smooth_quartz", "top"))
-        d.set(x, 5, z1 - 2, slab("smooth_quartz", "top"))
-    d.hut(14, 2, 5)
-    d.item(10, 2, 10, "crafting_table")
-    d.item(11, 2, 10, "furnace", "north")
-    if L >= 2:
-        d.item(11, 3, 10, "hopper")
-    racks(d, [(12, 2, 10), (13, 2, 10), (14, 2, 10), (16, 2, 10), (17, 2, 10), (18, 2, 10)], d.req["racks"])
-    # lamp room: helmet lockers (iron trapdoors) and charging lamps
-    for z in (5, 6):
-        d.set(10, 2, z, "iron_block")
-        d.set(10, 3, z, "iron_trapdoor[facing=east,half=bottom,open=true,powered=false,waterlogged=false]")
-    d.set(10, 2, 8, "smooth_quartz_slab[type=top,waterlogged=false]")
-    d.set(10, 3, 8, "lantern[hanging=false,waterlogged=false]")
-    for x in range(11, X2, 3):
-        d.set(x, 5, 7, "sea_lantern")
-    if L >= 2:                                                        # ore sorting bench in the extension
-        for x in range(15, 17):
-            d.set(x, 2, 7, "smooth_quartz_slab[type=top,waterlogged=false]")
-        d.set(15, 2, 5, "barrel[facing=up,open=false]")
-        d.set(16, 2, 5, "barrel[facing=up,open=false]")
-        d.set(17, 2, 8, "stonecutter[facing=west]") if L < 3 else d.set(16, 2, 8, "stonecutter[facing=north]")
-    if tall:                                                          # glazed control floor
-        d.box(x1, 7, z1, X2, 10, z2, "white_concrete")
-        for x in range(x1 + 1, X2):
-            d.window(x, 8, z1, x, 9, z1, "light_blue_stained_glass_pane")
-            d.window(x, 8, z2, x, 9, z2, "light_blue_stained_glass_pane")
-        d.flat(x1, z1, X2, z2, 11, "smooth_quartz", "white_concrete", "smooth_quartz_slab")
-        for i in range(4):                                            # stair along the east wall, rising south
-            d.set(X2 - 1, 2 + i, 5 + i, stair("smooth_quartz", "south"))
-            d.set(X2 - 1, 6, 5 + i, AIR)
-            d.set(X2 - 2, 7, 5 + i, "iron_bars")
-        # control desk facing the tower
-        for z in range(5, 10):
-            d.set(x1 + 1, 7, z, "smooth_quartz_slab[type=top,waterlogged=false]" if z != 7 else "observer[facing=up,powered=false]")
-        d.chair(x1 + 2, 7, 6, "east", "birch", sit=False)
-        d.chair(x1 + 2, 7, 8, "east", "birch", sit=False)
-        d.set(x1, 8, 7, "light_blue_stained_glass_pane")
-        d.set(x1, 9, 7, "light_blue_stained_glass_pane")
-        d.set(13, 7, 9, "potted_bamboo")
-        for x in range(11, X2, 4):
-            d.set(x, 10, 7, "sea_lantern")
-    else:
-        d.flat(x1, z1, X2, z2, 6, "smooth_quartz", "white_concrete", "smooth_quartz_slab")
-    if L >= 4:                                                        # conveyor gallery tower -> station roof
-        for x in range(9, 13):
-            d.set(x, 12, 6, "light_gray_concrete")
-            d.set(x, 12, 8, "light_gray_concrete")
-            d.set(x, 12, 7, "smooth_quartz")
-            d.set(x, 13, 6, "gray_stained_glass_pane")
-            d.set(x, 13, 8, "gray_stained_glass_pane")
-            d.set(x, 14, 7, "smooth_quartz_slab[type=bottom,waterlogged=false]")
-            d.set(x, 14, 6, "smooth_quartz_slab[type=bottom,waterlogged=false]")
-            d.set(x, 14, 8, "smooth_quartz_slab[type=bottom,waterlogged=false]")
-        for x in (14, 17):                                            # solar panels on the roof
-            for z in range(6, 10):
-                d.set(x, 12, z, "daylight_detector[inverted=false,power=0]")
-    if L >= 5:                                                        # ore yard canopy with tracks
-        for x in range(10, 20):
-            for z in range(13, 16):
-                d.set(x, 6, z, "smooth_quartz_slab[type=bottom,waterlogged=false]")
-        posts(d, [(10, 15), (19, 15)], 2, 5, "light_gray_concrete")
-        track(d, [(5, z) for z in range(10, 15)] + [(x, 14) for x in range(6, 17)], 2)
-        ore_heap(d, 17, 2, 13, ("raw_iron_block", "raw_copper_block", "coal_block"))
-        d.set(13, 5, 13, "lantern[hanging=true,waterlogged=false]")
+    d.fill(cx - 1, yt - 1, cz - 1, cx + 4, yt - 1, cz - 1, "yellow_concrete")
+    d.fill(cx - 1, yt - 1, cz + 3, cx + 4, yt - 1, cz + 3, "yellow_concrete")
+    d.sign(cx + 1, yt - 2, cz - 2, "north", ["SHAFT", "01"], "birch", glow=True, color="yellow")
+    d.door(cx + 4, 2, cz + 1, "west", "iron")
+    door_cells(d).update({(cx + 5, 2, cz + 1)})
+    # ---- mining station (hut) ----
+    fl = 1 if L < 2 else 2
+    st_ = bld(d, 11, 5, 19, 13, floors=fl, roof="flat", doors=[(11, 9, "w"), (15, 5, "n")], ribbon=True)
+    if fl == 2:
+        stairs_up(d, 18, 7, "south", 2, rail=False)
+    d.hut(12, 2, 6)
+    mine_items(d, st_, "s", skip=1)
+    run(d, st_, "e", 2, [P.rack()] * min(2, need_racks(d)), skip=3)
+    for z in (6, 7):                                                  # lamp room lockers
+        d.set(12, 2, z + 2, "iron_block")
+        d.set(12, 3, z + 2, "iron_trapdoor[facing=east,half=bottom,open=true,powered=false,waterlogged=false]")
+    room_rug(d, st_, 2, ("yellow_carpet", "gray_carpet"), inset=3)
+    lamp_post(d, 10, 3)
+    lamp_post(d, 20, 3)
+    for x in range(11, 20, 2):
+        d.set(x, 2, 3, "yellow_concrete" if x % 4 == 1 else "polished_blackstone_slab[type=bottom,waterlogged=false]")
+    if fl == 2:
+        run(d, st_, "n", 6, [P.b("smooth_quartz_slab[type=top,waterlogged=false]", "lantern[hanging=false,waterlogged=false]"),
+                             P.chair("birch"), P.b("observer[facing=up,powered=false]"), P.chair("birch"),
+                             P.b("lectern[facing={f},has_book=true,powered=false]")], skip=1)
+        rest_racks(d, st_, "w", 6, skip=1)
+        room_rug(d, st_, 6, ("gray_carpet",), inset=2)
+        for x in range(cx + 5, 11):                                    # conveyor bridge from the tower
+            for z in (cz, cz + 2):
+                d.set(x, 8, z, "light_gray_concrete")
+                d.set(x, 9, z, "gray_stained_glass_pane")
+            d.set(x, 8, cz + 1, "smooth_quartz")
+            d.set(x, 10, cz + 1, "smooth_quartz_slab[type=bottom,waterlogged=false]")
+            d.set(x, 10, cz, "smooth_quartz_slab[type=bottom,waterlogged=false]")
+            d.set(x, 10, cz + 2, "smooth_quartz_slab[type=bottom,waterlogged=false]")
+    # ---- L3: processing hall ----
+    if L >= 3:
+        ph = bld(d, 22, 4, 36, 14, floors=2, fh=5, roof="flat", doors=[(22, 9, "w"), (29, 4, "n")], ribbon=True,
+                 pal=dict(wall="light_gray_concrete", post="yellow_concrete", band="gray_concrete", accent="yellow_terracotta"))
+        for x in range(24, 35, 3):                                    # crushers and sorting belts
+            d.set(x, 2, 7, "blast_furnace[facing=south,lit=true]")
+            d.set(x, 3, 7, "hopper[enabled=true,facing=down]")
+            d.set(x + 1, 2, 7, "smooth_stone_slab[type=top,waterlogged=false]")
+        for x in range(24, 35):
+            d.set(x, 2, 11, "smooth_quartz_slab[type=top,waterlogged=false]" if x % 3 else "stonecutter[facing=north]")
+        stairs_up(d, 35, 6, "south", 2, fh=5, rail=False)
+        run(d, ph, "n", 7, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]")] * 6, skip=1)
+        run(d, ph, "s", 7, [P.chair("birch"), P.b("smooth_quartz_slab[type=top,waterlogged=false]", "lantern[hanging=false,waterlogged=false]")] * 3, skip=1)
+        rest_racks(d, ph, "w", 7, skip=1)
+    # ---- L4: ore silos and control tower ----
+    if L >= 4:
+        for i, x0 in enumerate((24, 29, 34)):
+            ring = [(1, 0), (2, 0), (0, 1), (3, 1), (0, 2), (3, 2), (1, 3), (2, 3)]
+            for y in range(2, 17):
+                for dx, dz in ring:
+                    d.set(x0 + dx, y, 17 + dz, ("light_gray_concrete", "gray_concrete")[(y // 3) % 2] if y < 16 else "yellow_concrete")
+                for dx in (1, 2):
+                    for dz in (1, 2):
+                        d.set(x0 + dx, y, 17 + dz, ("raw_iron_block", "raw_copper_block", "coal_block")[i] if y < 15 else "smooth_quartz")
+            d.set(x0 + 1, 17, 18, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        ct = bld(d, 39, 4, 44, 9, floors=4, roof="flat", doors=[(39, 7, "w")], ribbon=True,
+                 pal=dict(wall="white_concrete", post="polished_deepslate", band="yellow_concrete", accent="yellow_concrete"))
+        ladder(d, 43, 8, 2, 17, "west")
+        for k in range(4):
+            y = 2 + 4 * k
+            d.set(40, y, 5, "smooth_quartz_slab[type=top,waterlogged=false]")
+            d.set(41, y, 5, "observer[facing=up,powered=false]" if k % 2 else "lectern[facing=south,has_book=true,powered=false]")
+            d.chair(40, y, 6, "south", "birch", sit=False)
+        for z in range(15, 22):
+            for x in range(22, 24):
+                if (x + z) % 2:
+                    d.set(x, 1, z, "yellow_concrete")
+    # ---- L5: admin block, staff canteen, parking canopy with solar ----
+    if L >= 5:
+        ad = bld(d, 2, 22, 18, 33, floors=3, roof="flat", doors=[(10, 22, "n")], ribbon=True,
+                 pal=dict(wall="white_concrete", post="gray_concrete", band="polished_deepslate", accent="yellow_concrete",
+                          deck="moss_block"))
+        stairs_up(d, 16, 24, "south", 2, rail=False)
+        stairs_up(d, 16, 29, "north", 6, rail=False)
+        d.dining(6, 2, 26, 4, "x", "birch", chairs=("n", "s"), sit=False)
+        run(d, ad, "s", 2, [P.b("smoker[facing={f},lit=true]"), P.shelf("smooth_quartz", "cake[bites=0]"), P.b("water_cauldron[level=3]"),
+                            P.b("barrel[facing=up,open=false]")], skip=1)
+        for y in (6, 10):
+            for x in (4, 8, 12):
+                d.set(x, y, 25, "smooth_quartz_slab[type=top,waterlogged=false]")
+                d.chair(x, y, 26, "south", "birch", sit=False)
+                d.set(x, y + 1, 25, "lantern[hanging=false,waterlogged=false]")
+            run(d, ad, "w", y, [P.books()] * 4, skip=1)
+            room_rug(d, ad, y, ("gray_carpet", "yellow_carpet"), inset=3)
+        for x in range(21, 44):
+            for z in range(25, 33):
+                if x in (21, 43) and z in (25, 32):
+                    posts(d, [(x, z)], 2, 4, "polished_deepslate")
+                d.set(x, 5, z, "daylight_detector[inverted=false,power=0]" if (x + z) % 2 else "smooth_quartz_slab[type=bottom,waterlogged=false]")
+        for x in range(23, 43, 3):
+            d.set(x, 1, 29, "yellow_concrete")
+        cart(d, 25, 27, "x", "raw_iron_block")
+        cart(d, 31, 27, "x", "coal_block")
+        for x in (20, 26, 32, 38):
+            tree(d, x, 35, 3, "azalea_leaves", "birch_log", 1)
+    d.cluster(cx, cz)
     return d
 
 

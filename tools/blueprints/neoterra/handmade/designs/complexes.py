@@ -1426,6 +1426,12 @@ def twin_nt(rel, L):
     pallet_stack(d, 12, 13, 2, "bricks", 3)
     pallet_stack(d, 11, 11, 2, "glass")
     d.sign(8, 6, 3, "north", ["BUILD DEPOT"], "birch", glow=True, color="cyan")
+    for x, z in ((3, 9), (12, 9)):                       # safety banners and planters by the doors
+        d.set(x, 4, z, "yellow_wall_banner[facing=east]" if x == 3 else "yellow_wall_banner[facing=west]")
+    for x in (2, 13):
+        d.set(x, 2, 3, "moss_block")
+        d.set(x, 3, 3, "azalea")
+    d.set(5, 2, 3, "potted_bamboo")
     # annex (second builder)
     add_child(d, G["AX"], 2, G["AZ"], G["AW"], G["AH"], G["AD"], G["HUT"], ANNEX)
     # ---- rear yard: chain-link fence, materials, scaffold tower, mixer
@@ -1832,6 +1838,14 @@ def twin_ca(rel, L):
         win_ca(d, X1, 3, z, "west")
         win_ca(d, X2, 3, z, "east")
     d.sign(10, 7, Z1 - 1, "north", ["TIMBERLINE", "FRAMERS"], "spruce")
+    for x, z in ((3, 12), (17, 12), (16, 4)):            # hay and feed sacks in the barn corners
+        d.set(x, 2, z, "hay_block[axis=y]")
+    d.set(3, 2, 11, "brown_wool")
+    d.set(3, 5, 7, "green_wall_banner[facing=east]")
+    d.set(17, 5, 7, "green_wall_banner[facing=west]")
+    for x in (1, 19):
+        d.set(x, 2, 2, "barrel[facing=up,open=false]" if x == 1 else "spruce_log[axis=y]")
+        d.set(x, 3, 2, lantern(False))
     # inside: rack aisles, framing bench, tools
     units = [(5, 8, "east", 2, "north"), (13, 8, "east", 2, "south")]
     racks_in(d, units, 2, d.req["racks"], log("spruce_log", "y"), slab("spruce", "top"),

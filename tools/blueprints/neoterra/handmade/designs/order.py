@@ -514,6 +514,39 @@ def tidy(d):
     return repaint(d)
 
 
+def dress(d, x1, z1, x2, z2, y1=2, y2=12, wood=None, lamps=True):
+    """Exterior dressing for an existing building: shutters beside ground-floor windows, flower boxes under
+    upper windows, lamps on brackets either side of each door."""
+    wood = wood or _w(d)
+    for s, x, z in _sides(x1, z1, x2, z2):
+        ox, oz = D4[s]
+        for y in range(y1, y2 + 1):
+            b = d.get(x, y, z)
+            if "glass_pane" in b and "glass_pane" not in d.get(x, y - 1, z):
+                top = y
+                while "glass_pane" in d.get(x, top + 1, z):
+                    top += 1
+                if y <= 4:
+                    for k in (-1, 1):
+                        sx, sz = (x + k, z) if s in ("north", "south") else (x, z + k)
+                        if "glass" in d.get(sx, y, sz):
+                            continue
+                        for yy in range(y, top + 1):
+                            if d.bp.inside(sx + ox, yy, sz + oz) and d.air(sx + ox, yy, sz + oz):
+                                d.set(sx + ox, yy, sz + oz, TD(wood, s, "bottom", "true"))
+                elif d.bp.inside(x + ox, y - 1, z + oz) and d.air(x + ox, y - 1, z + oz) and d.air(x + ox, y, z + oz):
+                    d.set(x + ox, y - 1, z + oz, TD(wood, s, "top", "false"))
+                    d.set(x + ox, y, z + oz, FLOWERS[(x + z * 3) % len(FLOWERS)])
+            if lamps and "_door[" in b and "half=lower" in b and y == y1:
+                for k in (-1, 1):
+                    sx, sz = (x + k, z) if s in ("north", "south") else (x, z + k)
+                    px, pz = sx + ox, sz + oz
+                    if d.bp.inside(px, y + 3, pz) and d.air(px, y + 2, pz) and d.air(px, y + 3, pz) \
+                            and "glass" not in d.get(sx, y + 2, sz) and d.get(sx, y + 2, sz) != AIR:
+                        d.set(px, y + 3, pz, f"{wood}_fence" if d.pack != "Neoterra" else "iron_bars")
+                        d.set(px, y + 2, pz, LANT if d.pack != "Neoterra" else SLANT)
+
+
 def roof_deco(d, x1, z1, x2, z2, y):
     """Neoterra roof: solar panel rows, an AC unit and planters along the parapet."""
     w = x2 - x1 + 1
@@ -909,6 +942,7 @@ def gt_hearthwood(rel, L):
         hipcap(d, x1, z1, x2, z2, 15, "deepslate_tile_stairs", "deepslate_tile_slab", "dark_oak_planks")
         d.set(6, 14, 7, "bell[attachment=ceiling,facing=north,powered=false]")
         d.chair(x1 + 1, 12, z1 + 1, "west", "dark_oak", sit=False)
+    dress(d, x1, z1, x2, z2, 2, 14)
     # ---- L2+: guardroom with a mess (L3+ barracks storey above) east of the tower
     if L >= 2:
         d.set(x2, 2, 7, AIR)
@@ -1112,6 +1146,7 @@ def gt_cascadia(rel, L):
             d.set(mx, y, tz1 + 2, "spruce_fence")
         d.set(mx, yc + 8, tz1 + 1, "red_wall_banner[facing=north]")
         d.set(tx2 + 1, yc + 1, tz1 + 2, "bell[attachment=floor,facing=east,powered=false]")
+    dress(d, x1, z1, x2, z2, 2, 6)
     # ---- growth: a ranger station complex
     if L >= 2:                                                    # equipment shed with a work porch
         building(d, 23, 4, 31, 10, nf=1, axis="z", doors=(("north", 27), ("west", 7)), kinds=["workshop"])
@@ -1270,6 +1305,7 @@ def gt_neoterra(rel, L):
                 if (x in (6, 10) and 9 <= z <= 13) or (z == 11 and 6 <= x <= 10):
                     d.set(x, yp + 4, z, "yellow_concrete")
         d.set(8, yp + 4, 11, "white_concrete")
+    dress(d, x1, z1, x2, z2, 2, 6)
     # ---- growth: a security campus
     if L >= 2:                                                    # vehicle bay / checkpoint
         building(d, 23, 3, 33, 10, nf=1, roof="flat", doors=(("north", 26), ("west", 7)), kinds=["workshop"])
@@ -1444,6 +1480,7 @@ def ar_hearthwood(rel, L):
         for z in range(15, 26, 4):
             d.chair(23, 2, z, "east", "dark_oak", sit=False)
             d.chair(23, 2, z + 1, "east", "dark_oak", sit=False)
+    dress(d, x1, z1, X2, z2, 2, 10)
     # ---- growth: the bowyers' guild yard east of the range
     if L >= 2:                                                    # bowyer's workshop (L3: loft store above)
         building(d, 27, 3, 35, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 31), ("west", 6)),
@@ -1611,6 +1648,7 @@ def ar_cascadia(rel, L):
         d.chair(7, 2, 20, "north", "spruce", sit=False) if False else None
         for x, z in ((6, 21), (8, 21), (7, 22)):
             d.set(x, 2, z, LOG("stripped_spruce_log"))
+    dress(d, x1, z1, x2, Z2, 2, 10)
     # ---- growth: a hunting camp round the range
     if L >= 2:                                                    # outfitter's cabin (L3: loft with bunks)
         building(d, 33, 3, 42, 10, nf=1 if L == 2 else 2, axis="x", doors=(("north", 37), ("west", 7)),
@@ -1965,6 +2003,7 @@ def ca_hearthwood(rel, L):
             for y in range(3, 7):
                 d.set(x, y, rz1, LOG("stripped_dark_oak_log"))
             d.banner(x, 6, rz1 - 1, "north", "red")
+    dress(d, x1, z1, x2, Z2, 2, 12)
     # ---- growth: a school of arms round the tiltyard
     if L >= 2:                                                    # stable for the tilting horses
         building(d, 31, 3, 40, 9, nf=1, axis="x", doors=(("north", 33), ("north", 38)), kinds=["store"])
@@ -2146,6 +2185,7 @@ def ca_cascadia(rel, L):
         for z in (z1 + 9, z1 + 13):
             d.banner(x1 + 1, 6, z, "east", "green")
             d.banner(x2 - 1, 6, z, "west", "green")
+    dress(d, x1, z1, x2, Z2, 2, 12)
     # ---- growth: a logging-camp athletic club round the fight barn
     if L >= 2:                                                    # fighters' bunkhouse
         building(d, 23, 4, 32, 11, nf=1, axis="x", doors=(("north", 27), ("west", 8)), chimney=(33, 8),
@@ -2494,6 +2534,7 @@ def en_hearthwood(rel, L):
         d.fill(8, 1, z2 + 1, 8, 1, gz2 - 1, "gravel")
         d.set(9, 2, gz2 - 1, "stone_brick_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
         d.set(gx1 + 1, 2, gz2 - 1, "oak_sapling[stage=0]") if False else None
+    dress(d, x1, z1, x2, z2, 2, 10)
     # ---- growth: a small college of lore along the lane
     if L >= 3:                                                    # scriptorium with copyists' desks, archive above
         building(d, 26, 3, 34, 10, nf=2, axis="z", doors=(("north", 30), ("west", 7)), chimney=(35, 7),
@@ -2587,6 +2628,7 @@ def en_cascadia(rel, L):
         for z in (Z2 + 1,):
             for x in range(x1, x2 + 1, 2):
                 d.set(x, 2, z, "spruce_fence")
+    dress(d, x1, z1 + 1, x2, Z2, 2, 6)
     # ---- growth: a mountain retreat of scholars
     if L >= 2:                                                    # scribe's cabin (L3: loft)
         building(d, 20, 3, 28, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 24), ("west", 6)),
@@ -2888,6 +2930,7 @@ def al_hearthwood(rel, L):
         d.set(8, 4, z1 - 1, "lantern[hanging=false,waterlogged=false]") if False else None
         d.wall_torch(7, 4, z1 - 1, "north")
         d.wall_torch(9, 4, z1 - 1, "north")
+    dress(d, x1, z1, x2, z2, 2, 10)
     # ---- growth: an apothecaries' row with a physic garden
     if L >= 2:                                                    # still-house for distilling cordials
         building(d, 17, 4, 24, 11, nf=1, axis="z", doors=(("north", 20),), chimney=(25, 8), kinds=["lab"])
@@ -3008,6 +3051,7 @@ def al_cascadia(rel, L):
                 d.set(x, 5, z, "glass")
         d.set(X2, 2, 9, AIR)
         d.set(X2, 3, 9, AIR)
+    dress(d, x1, z1, X2, z2, 2, 6)
     # ---- growth: a forest herb farm
     if L >= 2:                                                    # root cellar & seed store
         building(d, 3, 15, 10, 20, nf=1, axis="x", doors=(("north", 6),), kinds=["store"])
@@ -3290,6 +3334,7 @@ def gy_hearthwood(rel, L):
                 d.set(x, 3, z, LANT_S)
         d.chair(3, 2, 17, "east", "oak", sit=False)
         d.chair(21, 2, 17, "west", "oak", sit=False)
+    dress(d, 8, 18, 16, 25, 2, 9)
     # ---- growth: the parish beside the churchyard
     if L >= 2:                                                    # sexton's cottage (L3: second storey)
         building(d, 27, 3, 35, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 31),), chimney=(36, 6),
@@ -3404,6 +3449,7 @@ def gy_cascadia(rel, L):
     for z in (4, 10, 16):
         d.set(gx - 1, 2, z, "spruce_fence")
         d.set(gx - 1, 3, z, LANT_S)
+    dress(d, x1, z1, x2, z2, 2, 6)
     # ---- growth: a mountain parish
     if L >= 2:                                                    # caretaker's cabin (L3: loft)
         building(d, 30, 3, 38, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 34),), chimney=(39, 6),
@@ -3434,6 +3480,9 @@ def gy_cascadia(rel, L):
         for x in (28, 38):
             lamp_post(d, x, 22)
             lamp_post(d, x, 32)
+        for z in range(12, 20):                                   # woodpile behind the workshop
+            for y in (2, 3):
+                d.set(43, y, z, LOG("spruce_log" if (y + z) % 2 else "birch_log", "z"))
     if L >= 5:                                                    # meeting hall for wakes and gatherings
         building(d, 2, 25, 22, 34, nf=2, axis="x", doors=(("north", 12), ("east", 30)), chimney=(1, 30),
                  kinds=["mess", "lounge"])
@@ -3560,7 +3609,7 @@ Mystical site
 
 
 def ms_hearthwood(rel, L):
-    d = Design("Hearthwood", rel, (23, 12, 23))
+    d = Design("Hearthwood", rel, (40, 26, 35))
     c = 11
     for x in range(1, 22):
         for z in range(1, 22):
@@ -3627,11 +3676,37 @@ def ms_hearthwood(rel, L):
         for x, z in ((c - 1, 2), (c + 1, 2)):
             d.set(x, 2, z, "oak_fence")
             d.set(x, 3, z, LANT_S)
+    # ---- growth: a pilgrimage site
+    if L >= 2:
+        lamp_post(d, 10, 1)
+        lamp_post(d, 12, 1)
+        bench(d, 15, 1, "north", 2) if False else None
+    if L >= 3:                                                    # hermit's cell
+        building(d, 25, 4, 31, 10, nf=1, axis="x", ground="stone_bricks", doors=(("north", 28),), chimney=(32, 7),
+                 kinds=["chapel"])
+        flowerbed(d, 25, 2, 26, 2)
+        flowerbed(d, 30, 2, 31, 2)
+    if L >= 4:                                                    # pilgrims' rest house
+        building(d, 25, 14, 38, 21, nf=2, axis="x", doors=(("north", 31), ("west", 18)), chimney=(39, 18),
+                 kinds=["mess", "bunks"])
+        bench(d, 26, 12, "south", 3)
+        bench(d, 34, 12, "south", 3)
+    if L >= 5:                                                    # wayside chapel with a bell-cote
+        c = building(d, 3, 25, 19, 32, nf=1, axis="x", ground="stone_bricks", doors=(("north", 11),),
+                     chimney=None, kinds=["chapel"])
+        for y in range(c.ridge - 1, c.ridge + 3):
+            d.set(3, y, 28, "stone_bricks")
+            d.set(3, y, 30, "stone_bricks")
+        d.set(3, c.ridge + 1, 29, "bell[attachment=ceiling,facing=east,powered=false]") if False else None
+        d.set(3, c.ridge + 3, 29, "stone_brick_slab[type=bottom,waterlogged=false]")
+        d.set(3, c.ridge + 2, 29, "bell[attachment=ceiling,facing=east,powered=false]")
+        for x in (24, 30, 36):
+            tree(d, x, 2, 31, "oak_log", "oak_leaves", 4, 2)
     return d
 
 
 def ms_cascadia(rel, L):
-    d = Design("Cascadia", rel, (25, 16, 25), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (45, 28, 39), paving="coarse_dirt")
     for x in range(1, 24):
         for z in range(1, 24):
             d.set(x, 1, z, "podzol[snowy=false]" if (x * 5 + z * 3) % 7 == 0 else "grass_block[snowy=false]")
@@ -3695,11 +3770,36 @@ def ms_cascadia(rel, L):
     trees = [(2, 20), (22, 20), (2, 2), (22, 2), (6, 22), (18, 22)]
     for i, (x, z) in enumerate(trees[:1 + L]):
         tree(d, x, 2, z, "spruce_log", "spruce_leaves", 6, 2, cone=True)
+    # ---- growth: a hot-spring retreat
+    if L >= 2:                                                    # bathhouse with soaking tub
+        b = building(d, 27, 14, 35, 21, nf=1, axis="z", doors=(("north", 31), ("west", 17)), kinds=["lounge"])
+        for x in range(29, 34):
+            for z in range(17, 20):
+                if d.air(x, 2, z) or "carpet" in d.get(x, 2, z):
+                    d.set(x, 2, z, AIR)
+                    d.set(x, 1, z, "water[level=0]")
+    if L >= 3:                                                    # meditation lodge
+        building(d, 27, 3, 37, 10, nf=2, axis="x", doors=(("north", 32), ("west", 7)), chimney=(38, 7),
+                 kinds=["lounge", "bunks"])
+        for x in range(27, 38):
+            d.set(x, 1, 2, "spruce_planks")
+        lamp_post(d, 25, 2)
+    if L >= 4:                                                    # guest cabins
+        for gx in (2, 14):
+            building(d, gx, 28, gx + 9, 35, nf=2, axis="z", doors=(("north", gx + 4),), chimney=(gx + 10, 31),
+                     kinds=["lounge", "bunks"])
+        for x in range(2, 26):
+            d.set(x, 1, 26, "spruce_planks")
+    if L >= 5:                                                    # great hall for gatherings
+        building(d, 27, 25, 43, 36, nf=2, axis="x", doors=(("north", 35), ("west", 30)), chimney=(35, 37),
+                 kinds=["mess", "lounge"])
+        for z in range(3, 22, 6):
+            tree(d, 42, 2, z, "spruce_log", "spruce_leaves", 7, 2, cone=True)
     return d
 
 
 def ms_neoterra(rel, L):
-    d = Design("Neoterra", rel, (21, 14, 21), paving="smooth_stone")
+    d = Design("Neoterra", rel, (40, 22, 28), paving="smooth_stone")
     c = 10
     for x in range(0, 21):
         for z in range(0, 21):
@@ -3752,6 +3852,30 @@ def ms_neoterra(rel, L):
         for y in range(6, 9):
             d.set(c, y, c, "end_rod[facing=up]") if False else None
         d.set(c, 6, c, "end_rod[facing=up]")
+    # ---- growth: a contemplation park
+    if L >= 2:
+        for x in (1, 19):
+            lamp_post(d, x, 1)
+        for z in range(14, 20, 2):
+            d.set(1, 1, z, "moss_block")
+            d.set(1, 2, z, "azalea")
+            d.set(19, 1, z, "moss_block")
+            d.set(19, 2, z, "flowering_azalea")
+        for x in (3, 5, 7, 13, 15, 17):                           # entrance gate pylons with light rods
+            if d.air(x, 2, 1):
+                d.set(x, 2, 1, "white_concrete")
+                d.set(x, 3, 1, "white_concrete")
+                d.set(x, 4, 1, ENDROD())
+    if L >= 3:
+        for x in (1, 19):
+            lamp_post(d, x, 19)
+    if L >= 4:                                                    # glass meditation pavilion
+        building(d, 23, 3, 31, 11, nf=1, roof="flat", doors=(("west", 7),), kinds=["lounge"])
+    if L >= 5:                                                    # sanctuary with a sky garden
+        building(d, 23, 14, 38, 26, nf=2, roof="flat", doors=(("west", 20), ("north", 30)), kinds=["chapel", "library"])
+        for x in range(33, 39, 2):
+            d.set(x, 1, 6, "moss_block")
+            d.set(x, 2, 6, "flowering_azalea")
     return d
 
 

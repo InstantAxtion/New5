@@ -2542,6 +2542,14 @@ def furnish(d, kind, ix1, iz1, ix2, iz2, y, keep, extra=()):
         pieces += ["stove", "counter", "sink", "counter", "smoke", "counter", "crate", "sack", "plant"]
     elif kind == "shop":
         pieces += ["sideboard", "pots", "sideboard", "plant", "sideboard", "pots", "crate"]
+    if kind == "greenhouse":
+        for z in range(iz1, iz2 + 1):
+            for x in range(ix1, ix2 + 1):
+                if (x, z) in keep or (z - iz1) % 3 == 1 or not d.air(x, y, z):
+                    continue
+                d.set(x, y - 1, z, "grass_block[snowy=false]" if (x + z) % 4 else "farmland[moisture=7]")
+                d.set(x, y, z, flower(d, x * 7 + z) if (x + z) % 4 else "carrots[age=7]")
+        return
     slots = _wall_slots(ix1, iz1, ix2, iz2)
     # skip corners next to doors etc. by spacing: take every second free slot
     used = set()
@@ -2722,8 +2730,30 @@ def bench(d, x, z, facing, n=2):
         d.chair(x + px * i, 2, z + pz * i, OPP[facing], S["wood"], sit=False)
 
 
+def dormers(d, x1, z1, x2, z2, Y, axis, wallm, roofm, glass=None):
+    """Small gabled dormer windows along both eaves of a gable roof (eave at Y on the wall line)."""
+    if axis == "x":
+        for x in range(x1 + 2, x2 - 1, 4):
+            for z in (z1, z2):
+                d.set(x, Y, z, glass or "glass_pane")
+                for a in (x - 1, x + 1):
+                    d.set(a, Y, z, wallm)
+                d.set(x - 1, Y + 1, z, st(roofm, "east"))
+                d.set(x, Y + 1, z, sl(roofm))
+                d.set(x + 1, Y + 1, z, st(roofm, "west"))
+    else:
+        for z in range(z1 + 2, z2 - 1, 4):
+            for x in (x1, x2):
+                d.set(x, Y, z, glass or "glass_pane")
+                for b in (z - 1, z + 1):
+                    d.set(x, Y, b, wallm)
+                d.set(x, Y + 1, z - 1, st(roofm, "south"))
+                d.set(x, Y + 1, z, sl(roofm))
+                d.set(x, Y + 1, z + 1, st(roofm, "north"))
+
+
 def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, roofdeco=True, stairs_row=None,
-             wall=None, flat=None, extra=(), glass=None, feature=None):
+             wall=None, flat=None, extra=(), glass=None, feature=None, roofkind="gable", dormer=True):
     """A complete furnished building. rooms = list of room kinds, one per storey (ground first). door = (side,
     offset along that wall). Interior must be at least 7 long in x (stairs run along x)."""
     S = STY[d.pack]
@@ -2748,6 +2778,11 @@ def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, 
         elif P == "Cascadia":
             cas_body(d, x1, z1, x2, z2, yb, yb + 3, floor=S["floor"] if k == 0 else None, footing=k == 0,
                      ceiling="spruce_planks", logm=mlog)
+            if wall == "glass":
+                for x, z in perim(x1, z1, x2, z2):
+                    if not ((x - x1) % 3 == 0 and z in (z1, z2) or (z - z1) % 3 == 0 and x in (x1, x2)):
+                        for yy in range(yb + 1, yb + 4):
+                            d.set(x, yy, z, "glass")
             if k > 0:                                              # board-and-batten upper storeys
                 for x, z in perim(x1, z1, x2, z2):
                     for yy in range(yb, yb + 4):
@@ -2772,6 +2807,8 @@ def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, 
                 continue
             along = x - x1 if z in (z1, z2) else z - z1
             wside = "north" if z == z1 else "south" if z == z2 else "west" if x == x1 else "east"
+            if wall == "glass":
+                continue
             if P == "Neoterra":
                 if along % 4 != 0:
                     d.set(x, yb + 1, z, glass or "glass_pane")
@@ -2828,6 +2865,14 @@ def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, 
     if feature:
         feature(d, x1, z1, x2, z2, (dx, dz), side, ytop)
     # roof
+    if roofkind == "glass":
+        if P == "Neoterra":
+            d.flat(x1, z1, x2, z2, ytop + 1, "glass", "light_gray_concrete", "smooth_stone_slab")
+            for x in range(x1, x2 + 1, 3):
+                for z in range(z1, z2 + 1):
+                    d.set(x, ytop + 1, z, "light_gray_concrete")
+            return ytop + 1
+        return glass_gable(d, x1, z1, x2, z2, ytop + 1, axis, S["wood"], "glass", 3, "glass_pane", oh=0)
     if P == "Neoterra" or flat:
         d.flat(x1, z1, x2, z2, ytop + 1, "smooth_quartz", "white_concrete", "smooth_quartz_slab")
         if roofdeco:
@@ -2841,10 +2886,14 @@ def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, 
             d.set(x2 - 2, ytop + 3, z1 + 5, "iron_trapdoor[facing=north,half=bottom,open=false,powered=false,"
                                              "waterlogged=false]")
         return ytop + 1
-    if P == "Hearthwood":
-        ridge = roof(d, x1, z1, x2, z2, ytop + 1, axis, mroof, mroof + "_slab", mwall)
+    gwall = mwall if P == "Hearthwood" else "spruce_planks"
+    if roofkind == "hip":
+        ridge = d.hip(x1, z1, x2, z2, ytop + 1, mroof + "_stairs", mroof + "_slab", 1)
+        d.set((x1 + x2) // 2, ridge + 1, (z1 + z2) // 2, "lightning_rod[facing=up,powered=false,waterlogged=false]")
     else:
-        ridge = roof(d, x1, z1, x2, z2, ytop + 1, axis, mroof, mroof + "_slab", "spruce_planks")
+        ridge = roof(d, x1, z1, x2, z2, ytop + 1, axis, mroof, mroof + "_slab", gwall)
+        if dormer:
+            dormers(d, x1, z1, x2, z2, ytop + 1, axis, gwall, mroof, glass)
     if chimney:                                                    # stack on the outside of a gable end
         if axis == "x":
             cx, cz, wx, wz, f = x2 + 1, (z1 + z2) // 2, x2, (z1 + z2) // 2, "west"
@@ -2864,7 +2913,8 @@ def grow(d, L, base):
     for lv, fn in GROW.get((base, d.pack), []):
         if L >= lv:
             fn(d)
-    yard(d, {1: 0, 2: 2, 3: 4, 4: 6, 5: 10}[L])
+    yard(d, {1: 1, 2: 2, 3: 4, 4: 6, 5: 10}[L])
+    decorate(d)
     reskin(d)
 
 
@@ -3353,3 +3403,131 @@ def reskin(d):
             new = "minecraft:" + n.replace("cyan", pal["accent"])
         if new:
             bp.set(x, y, z, new, bp.tile_entities.get((x, y, z)))
+
+
+# ============================================================================================ DECOR PASS
+LIGHTS = ("lantern", "torch", "sea_lantern", "froglight", "glowstone", "end_rod", "campfire", "shroomlight",
+          "candle")
+NOGO = ("door", "stairs", "ladder", "rack", "blockhut", "furnace", "smoker", "barrel", "crafting", "loom",
+        "cauldron", "lectern", "jukebox", "bed", "gate", "anvil", "grindstone", "stonecutter", "cartography",
+        "brewing", "composter", "chest", "smithing", "fletching")
+
+
+def _name(d, x, y, z):
+    s = d.get(x, y, z)
+    return s.split("[")[0].split(":")[-1]
+
+
+def decorate(d):
+    """Generic finishing pass over the whole complex (core building included, every level): window shutters and
+    sills with flower pots, lamps beside doors, smoking chimney caps, ceiling lamps in unlit rooms and small
+    wall decor (pots, plants) in rooms and along outside walls. Never touches cells next to doors, stairs,
+    ladders or work blocks, so paths and required blocks stay reachable."""
+    bp, P = d.bp, d.pack
+    S = STY[P]
+    H = min(bp.sy - 1, 34)
+
+    def outside(y):
+        st0 = [(x, z) for x in range(bp.sx) for z in (0, bp.sz - 1)] + \
+              [(x, z) for z in range(bp.sz) for x in (0, bp.sx - 1)]
+        seen = {c for c in st0 if bp.get(c[0], y, c[1]) == AIR}
+        stack = list(seen)
+        while stack:
+            x, z = stack.pop()
+            for dx, dz in D4.values():
+                a, b = x + dx, z + dz
+                if 0 <= a < bp.sx and 0 <= b < bp.sz and (a, b) not in seen and bp.get(a, y, b) == AIR:
+                    seen.add((a, b))
+                    stack.append((a, b))
+        return seen
+    out = {y: outside(y) for y in range(2, H)}
+
+    def near(x, y, z, keys, r=1):
+        for a in range(x - r, x + r + 1):
+            for b in range(z - r, z + r + 1):
+                for c in (y - 1, y, y + 1):
+                    if bp.inside(a, c, b) and any(k in _name(d, a, c, b) for k in keys):
+                        return True
+        return False
+
+    # windows: shutters + sills with pots (not on Neoterra curtain walls: planter sills only)
+    for x, y, z, stt in list(bp.blocks()):
+        if y < 3 or y >= H - 1 or not stt.split("[")[0].endswith("glass_pane"):
+            continue
+        if _name(d, x, y - 1, z).endswith("glass_pane"):
+            continue                                                # only the bottom pane of a window
+        for side, (dx, dz) in D4.items():
+            if (x + dx, z + dz) in out[y] and (x - dx, z - dz) not in out[y] and bp.get(x - dx, y, z - dz) == AIR:
+                px, pz = D4[CW[side]]
+                if P != "Neoterra":
+                    for sg in (1, -1):
+                        a, b = x + dx + px * sg, z + dz + pz * sg
+                        wall = bp.get(x + px * sg, y, z + pz * sg)
+                        if (a, b) in out[y] and bp.get(a, y, b) == AIR and wall != AIR and "pane" not in wall:
+                            d.set(a, y, b, td(S["wood"], side, "bottom", True))
+                a, b = x + dx, z + dz
+                if y - 1 >= 3 and (a, b) in out.get(y - 1, ()) and bp.get(a, y - 1, b) == AIR \
+                        and not near(a, y - 1, b, ("door",), 2):
+                    d.set(a, y - 1, b, sl("smooth_quartz", "top") if P == "Neoterra" else td(S["wood"], side, "top"))
+                    if bp.get(a, y, b) == AIR:
+                        d.set(a, y, b, "potted_" + flower(d, x + y + z) if P != "Neoterra" else "potted_azalea_bush")
+                break
+    # lamps beside outside doors
+    for x, y, z, stt in list(bp.blocks()):
+        if "_door" not in stt or "half=lower" not in stt or y > 12:
+            continue
+        for side, (dx, dz) in D4.items():
+            if (x + dx, z + dz) not in out.get(y, ()):
+                continue
+            px, pz = D4[CW[side]]
+            for sg in (1, -1):
+                a, b = x + dx + px * sg, z + dz + pz * sg
+                wa, wb = x + px * sg, z + pz * sg
+                if bp.inside(a, y + 2, b) and bp.get(a, y + 2, b) == AIR and bp.get(wa, y + 2, wb) != AIR \
+                        and "pane" not in bp.get(wa, y + 2, wb) and not near(a, y + 2, b, LIGHTS, 1):
+                    d.set(a, y + 2, b, f"wall_torch[facing={side}]")
+            break
+    # chimney caps: smoke on top of masonry stacks
+    for x in range(bp.sx):
+        for z in range(bp.sz):
+            for y in range(bp.sy - 2, 6, -1):
+                n = _name(d, x, y, z)
+                if n == "air":
+                    continue
+                if n in ("bricks", "cobblestone", "mossy_cobblestone", "stone_bricks", "polished_andesite") \
+                        and _name(d, x, y - 1, z) == n and _name(d, x, y - 2, z) == n \
+                        and all(_name(d, x + a, y, z + b) == "air" for a, b in D4.values()):
+                    d.set(x, y + 1, z, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+                break
+    # rooms: ceiling lamps where dark, pots/plants against walls
+    pots = ["decorated_pot[cracked=false,facing=north,waterlogged=false]", S["plant"],
+            f"candle[candles=3,lit=false,waterlogged=false]"]
+    k = 0
+    for y in range(2, H - 3):
+        floor_cells = [(x, z) for x in range(1, bp.sx - 1) for z in range(1, bp.sz - 1)
+                       if bp.get(x, y, z) == AIR and bp.get(x, y + 1, z) == AIR and (x, z) not in out[y]
+                       and bp.get(x, y - 1, z) != AIR and "stairs" not in bp.get(x, y - 1, z)]
+        for (x, z) in floor_cells:
+            if (x + 2 * z) % 4 == 0 and x % 4 == 1:                  # lamp grid
+                c = next((cy for cy in range(y + 2, min(y + 7, bp.sy)) if bp.get(x, cy, z) != AIR), None)
+                if c and 3 <= c - y <= 4 and "stairs" not in bp.get(x, c, z) and "slab" not in bp.get(x, c, z) \
+                        and not near(x, c - 1, z, LIGHTS, 2) and bp.get(x, c - 1, z) == AIR:
+                    d.set(x, c - 1, z, lant())
+        for (x, z) in floor_cells:
+            if bp.get(x, y, z) != AIR:
+                continue
+            walls = [s for s, (dx, dz) in D4.items() if bp.get(x + dx, y, z + dz) not in (AIR,)
+                     and "pane" not in bp.get(x + dx, y, z + dz) and "door" not in bp.get(x + dx, y, z + dz)]
+            if len(walls) != 1:
+                continue
+            others = [(x + dx, z + dz) for s, (dx, dz) in D4.items() if s != walls[0]]
+            if not all(bp.get(a, y, b) == AIR and bp.get(a, y + 1, b) == AIR for a, b in others):
+                continue
+            if near(x, y, z, NOGO, 2) or (x * 3 + z * 5 + y) % 7:
+                continue
+            k += 1
+            if k % 3 == 2:
+                d.set(x, y, z, sl(S["wood2"], "top"))
+                d.set(x, y + 1, z, pots[k % len(pots)])
+            else:
+                d.set(x, y, z, pots[k % len(pots)])

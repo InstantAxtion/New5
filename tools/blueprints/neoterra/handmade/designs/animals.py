@@ -3131,20 +3131,29 @@ def farmstead(core, pack, rel, L, kind):
             _SIZES[(core.__name__, pack, 3)] = _grow(d, target, (9, 11, 13, 15), lambda w: cottage(d, pack, ex + 2, 10, w))
         else:
             cottage(d, pack, ex + 2, 10, _SIZES.get((core.__name__, pack, 3), 9))
+    flip = kind in ("cattle", "pig", "bees")                           # hall east / barn west in the south strip
     if L >= 4:
-        path(d, 0, ez + 1, ex, ez + 1, lane)
+        path(d, 0, ez + 1, d.sx - 1, ez + 1, lane)
         wr = range(11, ex - 3, 2)
         ws = [(w, False, 9) for w in wr] + [(w, True, 9) for w in wr] + [(w, True, 11) for w in wr] + \
             [(wr[-1], True, 13)]
+
+        def hx(sz):
+            return ex + 26 - sz[0] + 1 if flip else 2
         if L == 4:
-            _SIZES[(core.__name__, pack, 4)] = _grow(d, target, ws, lambda w: hall(d, pack, kind, 2, ez + 2, w))
+            _SIZES[(core.__name__, pack, 4)] = _grow(d, target, ws,
+                                                     lambda w: hall(d, pack, kind, hx(w), ez + 2, w))
         else:
-            hall(d, pack, kind, 2, ez + 2, _SIZES.get((core.__name__, pack, 4), ws[-1]))
+            hs = _SIZES.get((core.__name__, pack, 4), ws[-1])
+            hall(d, pack, kind, hx(hs), ez + 2, hs)
     if L >= 5:
         extra(d, pack, kind, ex + 17, 8)
-        _grow(d, target, [(n, 9, 16) for n in range(11, 26, 2)] + [(n, 11, 16) for n in range(11, 26, 2)] +
-              [(25, 11, 20)],
-              lambda n: haybarn(d, pack, ex - 2, ez + 2, n))
+        bs = [(n, 9, 16) for n in range(11, 26, 2)] + [(n, 11, 16) for n in range(11, 26, 2)] + [(25, 11, 20)]
+        if flip:
+            room = hx(hs) - 7
+            bs = [b for b in bs if b[0] <= room] or [(11, 9, 16)]
+            bs += [(b[0], b[1], 20) for b in bs if b[1] == 11][-1:]
+        _grow(d, target, bs, lambda n: haybarn(d, pack, 2 if flip else ex - 2, ez + 2, n))
     street_front(d, pack, "smooth_stone" if pack == "Neoterra" else "grass_block")
     recolor(d, RECOLOR[(pack, kind)])
     if pack != "Neoterra":

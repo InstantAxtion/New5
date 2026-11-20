@@ -1909,6 +1909,9 @@ def jack_neo(rel, L):
         for x in (15, 19):
             lamp_post(d, x, 24, y0, P) if L < 5 else None
         bench(d, 15, 10, y0, "south", 2, "birch", sit=False)
+        for x in (24, 27):
+            d.set(x, y0, 3, "moss_block")
+            tree(d, x, 3, y0 + 1, "birch", 3, 1)
         if L >= 4:
             d.item(gx2 - 1, y0, gz1 + 2, "composter")
             d.item(gx2 - 1, y0, gz1 + 3, "barrel", "west")
@@ -1924,16 +1927,16 @@ def jack_neo(rel, L):
         rc2.table_group("birch", 4, "slab", rug="lime_carpet", sit=False)
         rc2.fill(["shelf_quartz", "bamboo", "crate"])
         neo_roof(d, c, "solar")
-        wagon(d, 22, 23, y0, "birch", lg("birch_log", "x"))
+        wagon(d, 22, 23, y0, "birch", lg("birch_log", "x")) if L == 4 else None
     # ---- ranger watch tower (L5)
     if L >= 5:
-        t = build(d, 18, 22, 24, 27, 5, roof="flat", core=(19, 23))
-        t.door(21, 22, "north")
+        t = build(d, 18, 21, 24, 28, 5, roof="flat", core=(19, 23))
+        t.door(24, 25, "east")
         for s in range(5):
             rt = t.room(s)
             rt.fill(["shelf_quartz", "bamboo", "crate"] if s < 4 else ["bamboo", "shelf_quartz"])
         # glazed lookout on top
-        for x, z in ring(17, 21, 25, 28):
+        for x, z in ring(17, 20, 25, 29):
             d.set(x, t.yr + 1, z, "glass_pane" if (x + z) % 2 else "white_concrete")
         d.set(21, t.yr + 3, 24, "lightning_rod[facing=up,powered=false,waterlogged=false]")
         for x in (27, 28):
@@ -2034,7 +2037,7 @@ def jack_hw(rel, L):
     # ---- timber storehouse (L5)
     if L >= 5:
         e = build(d, 19, 15, 29, 22, 3, roof="gable", axis="x", core=(20, 16))
-        e.door(22, 16, "north", double=True)
+        e.door(29, 18, "east", double=True)
         re = e.room(0)
         re.fill(["logs", "planks", "keg", "logs"])
         re.center_line([lg("stripped_oak_log", "x")] * 5)
@@ -2050,11 +2053,15 @@ def jack_hw(rel, L):
         for y in range(e.yr - 4, e.yr - 1):
             d.set(31, y, 18, CHAIN)
         d.set(31, e.yr - 5, 18, lg("oak_log", "x"))
+        hedge(d, [(0, z) for z in range(3, 29)], y0, "oak")
+        for z in (8, 16, 24):
+            lamp_post(d, 1, z, y0, P)
+        tree(d, 2, 27, y0, "oak", 4, 1)
     return d
 
 
 def jack_cas(rel, L):
-    d = Design("Cascadia", rel, (30, 30, 32), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (30, 30, 41), paving="coarse_dirt")
     P, y0 = "Cascadia", 2
     sto = 1 if L == 1 else 2
     z2 = {1: 12, 2: 14}.get(L, 16)
@@ -2112,8 +2119,8 @@ def jack_cas(rel, L):
             for x in range(wx1 + 4, wx2):
                 d.set(x, 1, wz1 + 1, "podzol[snowy=false]")
                 d.set(x, y0, wz1 + 1, "spruce_sapling[stage=0]")
-    # ---- saw filer's shop (L4+)
-    if L >= 4:
+    # ---- saw filer's shop (L3+)
+    if L >= 3:
         f = build(d, 19, 23, 27, 29, 1, roof="gable", axis="x", chimney=(26, 26, "west"))
         f.door(22, 23, "north")
         rf = f.room(0)
@@ -2150,8 +2157,8 @@ def jack_cas(rel, L):
         d.set(tx + 2, cy, tz + 3, sl("spruce", "top"))
         d.set(tx + 2, cy + 1, tz + 3, "cartography_table") if False else None
         d.chair(tx + 3, cy, tz + 3, "east", "spruce", sit=False)
-    # ---- crew bunkhouse (L5)
-    if L >= 5:
+    # ---- crew bunkhouse (L4+)
+    if L >= 4:
         e = build(d, 4, 21, 16, 29, 2, roof="gable", axis="x", core=(14, 23), chimney=(5, 25, "east"))
         e.door(9, 21, "north")
         re = e.room(0)
@@ -2164,11 +2171,380 @@ def jack_cas(rel, L):
             re2.bed("spruce", sides=("south", "north", "west"))
         re2.fill(["wardrobe", "plant"])
         re2.lights()
-    tree(d, 27, 28, y0, "spruce", 6, 2)
-    tree(d, 1, 26, y0, "spruce", 5, 2) if L < 5 else None
+    # ---- cookhouse / mess hall (L5)
+    if L >= 5:
+        m = build(d, 4, 33, 20, 40, 3, roof="gable", axis="x", core=(18, 35), chimney=(5, 36, "east"))
+        m.door(11, 33, "north", double=True)
+        rm = m.room(0)
+        for x in range(8, 15):
+            d.set(x, rm.y, 36, sl("spruce", "top"))
+            d.chair(x, rm.y, 35, "north", "spruce", sit=False)
+            rm.used.update({(x, 35), (x, 36)})
+        for blk in ("smoker[facing=north,lit=false]", "furnace[facing=north,lit=false]", "water_cauldron[level=3]"):
+            t = rm.take(("south",))
+            if t:
+                d.set(t[0][0], rm.y, t[0][1], blk)
+        rm.fill(["keg", "shelf_spruce", "sack"])
+        rm.lights()
+        rm2 = m.room(1)
+        for _ in range(4):
+            rm2.bed("spruce", sides=("south", "north"))
+        rm2.fill(["wardrobe", "plant"])
+        rm2.lights()
+        rm3 = m.room(2)
+        rm3.fill(["sack", "keg", "crate", "hay"])
+        rm3.lights()
+    tree(d, 27, 37 if L >= 3 else 28, y0, "spruce", 6, 2)
+    tree(d, 1, 26, y0, "spruce", 5, 2) if L < 4 else None
     return d
 
 
 @design("lumberjack")
 def lumberjack(pack, rel, L):
     return {"Neoterra": jack_neo, "Hearthwood": jack_hw, "Cascadia": jack_cas}[pack](rel, L)
+
+
+# =============================================================================================== FLETCHER
+"""
+Fletcher
+  Neoterra   "Archery centre" (light-grey concrete, white fins, magenta bands): arrow studio (bow lab upstairs from
+             L2) with a glazed outdoor shooting lane; indoor range hall with lanes and targets (L3); pro shop and
+             spectators' gallery (L4); clubhouse tower with a roof deck (L5).
+  Hearthwood "The Bow & Quiver" (yellow colour-washed plaster, oak framing, brown tile roofs, crimson shutters):
+             bowyer's shop with a hanging sign (upper workroom from L2), garden lane with straw butts; stave
+             drying barn (L3); fletcher's cottage and archery field pavilion (L4); archers' guildhall (L5).
+  Cascadia   "Bowyer's cabin" (pale birch board-and-batten, slate roofs, forest-green trim): cabin with a side
+             porch as the shooting line of a long range (loft from L2); stave shed (L3); range clubhouse (L4);
+             hunting lodge with a trophy hall (L5).
+"""
+FLETCH = {1: 2, 2: 3, 3: 4, 4: 5, 5: 5}
+FRACKS = {1: 2, 2: 3, 3: 4, 4: 5, 5: 6}
+
+
+def butt(d, x, z, y, facing, target=True, w=2):
+    """Straw archery butt: hay bales with target faces (the first is the counted yard target)."""
+    dx, dz = (1, 0) if facing in ("north", "south") else (0, 1)
+    for k in range(w):
+        cx, cz = x + dx * k, z + dz * k
+        d.set(cx, y, cz, "hay_block[axis=y]")
+        if k == 0 and target:
+            d.yard_item(cx, y + 1, cz, "target[power=0]")
+        else:
+            d.set(cx, y + 1, cz, "target[power=0]" if k % 2 == 0 else "hay_block[axis=y]")
+
+
+def range_lanes(d, x1, z1, x2, z2, y, facing="south", wood="spruce", every=3, light=True):
+    """Shooting lanes inside a hall: hay backstop wall at the far end with targets, lane dividers (fences)."""
+    if facing == "south":
+        for x in range(x1, x2 + 1):
+            d.set(x, y, z2, "hay_block[axis=x]")
+            d.set(x, y + 1, z2, "target[power=0]" if (x - x1) % every == 1 else "hay_block[axis=x]")
+            d.set(x, y + 2, z2, "hay_block[axis=x]")
+        for x in range(x1 + every - 1, x2, every):
+            for z in range(z1 + 3, z2 - 1, 1):
+                d.set(x, y - 1, z, "white_concrete" if wood == "birch" else "stripped_spruce_wood[axis=y]")
+        for x in range(x1, x2 + 1):
+            d.set(x, y, z1 + 1, sl(wood, "top") if (x - x1) % every != 1 else AIR)
+
+
+def fl_neo(rel, L):
+    d = Design("Neoterra", rel, (36, 26, 34), paving="smooth_stone")
+    P, y0 = "Neoterra", 2
+    sto = 1 if L == 1 else 2
+    a = build(d, 3, 4, 13, 12, sto, roof="flat", core=(11, 6) if sto > 1 else None, street_glass=True)
+    a.door(6, 4, "north", double=True)
+    d.hut(4, y0, 5)
+    d.sign(9, 5, 3, "north", ["ARROW", "STUDIO"], "birch", glow=True, color="magenta")
+    r0 = a.room(0)
+    r0.item("crafting_table", sides=("west",))
+    r0.item("fletching_table", min(FLETCH[L], 3), sides=("south",))
+    racks = r0.racks(min(FRACKS[L], 3), 1, sides=("west", "south"))
+    r0.fill(["shelf_quartz", "banner_cyan", "bamboo"])
+    if sto >= 2:
+        r1 = a.room(1)
+        r1.item("fletching_table", FLETCH[L] - 3 if FLETCH[L] > 3 else 0, sides=("south",))
+        racks += r1.racks(FRACKS[L] - racks, 1, sides=("west", "south"))
+        if L >= 3:
+            r1.item("barrel", 5, sides=("east", "north", "west", "south"))
+        r1.chairs_desk(2, "birch", top=sl("smooth_quartz", "top"), sit=False)
+        r1.fill(["shelf_quartz", "bamboo", "banner_cyan"])
+    neo_roof(d, a, "solar")
+    # glazed outdoor lane east of the studio
+    lx1, lx2 = 16, 20
+    d.fill(lx1, 1, 4, lx2, 1, 22, "grass_block[snowy=false]")
+    for z in range(4, 23):
+        for x in (lx1 - 1, lx2 + 1):
+            d.set(x, y0, z, "light_gray_concrete")
+            d.set(x, y0 + 1, z, "glass_pane")
+            d.set(x, 1, z, "smooth_stone")
+    for x in range(lx1 - 1, lx2 + 2):
+        d.set(x, y0, 23, "hay_block[axis=x]")
+        d.set(x, y0 + 1, 23, "hay_block[axis=x]")
+        d.set(x, y0, 7, sl("smooth_quartz", "top")) if x != 18 else None
+        for z in range(4, 7):
+            d.set(x, 5, z, sl("smooth_quartz", "top"))
+    butt(d, lx1, 22, y0, "north")
+    butt(d, lx2 - 1, 22, y0, "north", target=False)
+    for x in (lx1, lx2):
+        d.set(x, 4, 5, SLANT)
+    lamp_post(d, 14, 2, y0, P)
+    for x in (1, 22):
+        d.set(x, y0, 3, "moss_block")
+        tree(d, x, 3, y0 + 1, "birch", 3, 1)
+    if L >= 2:
+        bench(d, 4, 2, y0, "north", 2, "birch", sit=False)
+        for z in range(5, 12):
+            d.set(1, y0, z, "moss_block")
+            d.set(1, y0 + 1, z, "azalea" if z % 2 else "fern")
+    # ---- indoor range hall (L3+)
+    if L >= 3:
+        h = build(d, 3, 15, 13, 32, 1, H=5, roof="flat")
+        h.door(8, 15, "north", double=True)
+        range_lanes(d, 4, 16, 12, 31, y0, "south", "birch")
+        rh = h.room(0)
+        rh.keep |= {(x, z) for x in range(4, 13) for z in range(16, 32)}
+        for x in (5, 8, 11):
+            d.set(x, 5, 24, "sea_lantern")
+        neo_roof(d, h, "solar")
+    # ---- pro shop + gallery (L4+)
+    if L >= 4:
+        c = build(d, 23, 4, 33, 12, 3, roof="flat", core=(31, 6), street_glass=True)
+        c.door(26, 4, "north", double=True)
+        rc = c.room(0)
+        for x in range(25, 30):
+            d.set(x, rc.y, 8, sl("smooth_quartz", "top"))
+            rc.used.add((x, 8))
+        rc.fill(["shelf_quartz", "banner_cyan", "bamboo", "crate"])
+        rc2 = c.room(1)
+        rc2.table_group("birch", 4, "slab", rug="magenta_carpet", sit=False)
+        rc2.fill(["shelf_quartz", "bamboo"])
+        rc3 = c.room(2)                                              # spectators' gallery over the lanes
+        rc3.chairs_desk(3, "birch", top=sl("smooth_quartz", "top"), sit=False)
+        rc3.fill(["bamboo", "shelf_quartz"])
+        neo_roof(d, c, "garden")
+        d.sign(28, 6, 3, "north", ["PRO SHOP", "BOWS & GEAR"], "birch", glow=True, color="magenta")
+    # ---- clubhouse tower (L5)
+    if L >= 5:
+        t = build(d, 23, 16, 33, 24, 4, roof="flat", core=(31, 18))
+        t.door(26, 16, "north")
+        for s_ in range(4):
+            rt = t.room(s_)
+            if s_ == 0:
+                rt.chairs_desk(2, "birch", top=sl("smooth_quartz", "top"), sit=False)
+            elif s_ == 1:
+                rt.table_group("birch", 4, "slab", rug="light_gray_carpet", sit=False)
+            elif s_ == 2:
+                rt.books(8, sides=("west", "south"))
+            rt.fill(["shelf_quartz", "bamboo", "banner_cyan", "crate"])
+        neo_roof(d, t, "garden")
+        for x in range(23, 34, 2):
+            d.set(x, t.yr + 3, 16, "magenta_stained_glass") if False else None
+    return d
+
+
+def fl_hw(rel, L):
+    d = Design("Hearthwood", rel, (34, 22, 34), paving="gravel")
+    P, y0 = "Hearthwood", 2
+    sto = 1 if L == 1 else 2
+    a = build(d, 4, 4, 14, 11, sto, roof="gable", axis="x", core=(12, 5) if False else None,
+              chimney=(5, 8, "east"))
+    a.door(11, 4, "north")
+    d.hut(5, y0, 5)
+    d.sign(12, 4, 3, "north", ["The Bow", "& Quiver"], "oak", hanging=True)
+    # bay shop window with bows on display
+    for x in range(7, 10):
+        d.set(x, y0, 3, "oak_planks")
+        d.window(x, 3, 3, x, 4, 3)
+        d.set(x, 5, 3, sl("mud_brick"))
+    r0 = a.room(0)
+    r0.used.update({(x, 5) for x in range(7, 10)})
+    for x in range(7, 10):
+        d.set(x, 3, 4, AIR)
+        d.set(x, 4, 4, AIR)
+        d.set(x, y0, 4, sl("oak", "top"))
+    r0.item("crafting_table", sides=("west", "south"))
+    r0.item("fletching_table", min(FLETCH[L], 3), sides=("south", "east"))
+    racks = r0.racks(min(FRACKS[L], 2), 1, sides=("east", "south"))
+    r0.rug(("green_carpet", "brown_carpet"))
+    r0.fill(["shelf_oak", "keg", "plant"])
+    r0.lights()
+    if sto >= 2:
+        for y in range(y0, 7):
+            d.set(13, y, 10, "ladder[facing=north,waterlogged=false]")
+        d.set(13, 7, 10, AIR)
+        d.set(13, 8, 10, AIR)
+        r1 = a.room(1)
+        r1.keep |= {(12, 10), (13, 9), (12, 9), (13, 10)}
+        r1.item("fletching_table", FLETCH[L] - 3 if FLETCH[L] > 3 else 0, sides=("north", "west"))
+        racks += r1.racks(FRACKS[L] - racks if L < 3 else 1, 1, sides=("north", "west"))
+        r1.chairs_desk(1, "oak", sit=False)
+        r1.fill(["shelf_oak", "sack", "plant"])
+        r1.lights()
+    # garden lane with straw butts behind
+    gz1, gz2 = 13, 26
+    for x, z in ring(2, gz1, 16, gz2):
+        if z == gz1 and 4 <= x <= 14:
+            continue
+        d.set(x, y0, z, "oak_fence")
+    d.set(2, y0, gz1 + 2, AIR)
+    d.fill(6, 1, gz1, 11, 1, gz2 - 1, "grass_block[snowy=false]")
+    butt(d, 6, gz2 - 2, y0, "north")
+    butt(d, 9, gz2 - 2, y0, "north", target=False)
+    for x in range(6, 12):
+        d.set(x, 1, gz1 + 2, "stone_bricks")
+    flower_bed(d, 3, gz1 + 1, 4, gz2 - 2, y0, seed=2)
+    flower_bed(d, 13, gz1 + 1, 15, gz2 - 2, y0, seed=5)
+    flower_bed(d, 4, 1, 6, 1, y0, seed=1)
+    lamp_post(d, 15, 2, y0, P)
+    # ---- stave drying barn (L3+)
+    if L >= 3:
+        d.sty_over = dict(wall="oak_planks", wall0="bricks", end="oak_planks")
+        b = build(d, 19, 4, 27, 13, 1, H=5, roof="gable", axis="z")
+        d.sty_over = {}
+        b.door(23, 4, "north", double=True)
+        rb = b.room(0)
+        rb.item("barrel", 5, sides=("east", "west"))
+        racks += rb.racks(FRACKS[L] - racks, 1, sides=("south", "west"))
+        rb.center_line([lg("stripped_oak_log", "z")] * 5, "z", 1)
+        rb.fill(["logs", "sack", "keg"])
+        rb.lights()
+    # ---- fletcher's cottage & field pavilion (L4+)
+    if L >= 4:
+        c = build(d, 19, 17, 29, 24, 2, roof="gable", axis="x", core=(27, 18), chimney=(20, 21, "east"))
+        c.door(23, 17, "north")
+        rc = c.room(0)
+        rc.table_group("oak", 4, "post", rug="yellow_carpet", sit=False)
+        rc.fill(["shelf_oak", "plant", "keg"])
+        rc.lights()
+        rc2 = c.room(1)
+        rc2.bed("oak", sides=("south", "west"))
+        rc2.fill(["wardrobe", "shelf_oak", "plant"])
+        rc2.lights()
+        # open pavilion at the butts end
+        for x, z in ((3, 28), (9, 28), (3, 32), (9, 32)):
+            d.fill(x, y0, z, x, 4, z, lg("stripped_oak_log", "y"))
+        d.hip(3, 28, 9, 32, 5, "mud_brick_stairs", "mud_brick_slab", overhang=0)
+        bench(d, 5, 30, y0, "south", 3, "oak", sit=False)
+    # ---- archers' guildhall (L5)
+    if L >= 5:
+        g = build(d, 13, 27, 31, 33, 2, roof="gable", axis="x", core=(29, 28), chimney=(14, 30, "east"))
+        g.door(20, 27, "north", double=True)
+        rg = g.room(0)
+        for x in range(17, 26):
+            d.set(x, rg.y, 31, sl("oak", "top"))
+            d.chair(x, rg.y, 30, "north", "oak", sit=False)
+            rg.used.update({(x, 30), (x, 31)})
+        rg.fill(["banner_red", "shelf_oak", "keg", "banner_green"])
+        rg.lights()
+        rg2 = g.room(1)
+        rg2.books(8, sides=("south",))
+        rg2.table_group("oak", 4, "post", rug="red_carpet", sit=False)
+        rg2.fill(["chisel", "plant"])
+        rg2.lights()
+        for x in (31, 33):
+            for z in (6, 12, 18):
+                lamp_post(d, x, z, y0, P) if x == 31 else tree(d, x, z, y0, "oak", 4, 1)
+    return d
+
+
+def fl_cas(rel, L):
+    d = Design("Cascadia", rel, (36, 22, 34), paving="coarse_dirt")
+    P, y0 = "Cascadia", 2
+    sto = 1 if L == 1 else 2
+    a = build(d, 3, 5, 11, 13, sto, roof="gable", axis="z", core=(4, 7) if sto > 1 else None)
+    a.door(7, 5, "north")
+    a.door(11, 11, "east")
+    d.sign(7, 5, 4, "north", ["BOWS", "& ARROWS"], "spruce") if False else None
+    d.sign(9, 5, 4, "north", ["BOWS", "& ARROWS"], "spruce")
+    d.hut(10, y0, 6)
+    r0 = a.room(0)
+    r0.item("crafting_table", sides=("east", "south"))
+    r0.item("fletching_table", min(FLETCH[L], 3), sides=("south", "west"))
+    racks = r0.racks(min(FRACKS[L], 2), 1, sides=("south", "west"))
+    r0.fill(["shelf_spruce", "keg", "banner_green", "plant"])
+    r0.lights()
+    if sto >= 2:
+        r1 = a.room(1)
+        r1.item("fletching_table", FLETCH[L] - 3 if FLETCH[L] > 3 else 0, sides=("south", "east"))
+        racks += r1.racks(FRACKS[L] - racks if L < 3 else 1, 1, sides=("south", "east"))
+        r1.bed("spruce", sides=("east", "south"))
+        r1.fill(["wardrobe", "shelf_spruce", "plant"])
+        r1.lights()
+    # side porch = shooting line, range to the east with a hay-bale berm
+    for x in range(12, 15):
+        for z in range(5, 14):
+            d.set(x, 1, z, "spruce_planks")
+            d.set(x, 6, z, sl("dark_oak", "top" if x == 12 else "bottom"))
+    for z in (5, 13):
+        d.fill(14, y0, z, 14, 5, z, lg("spruce_log", "y"))
+    for z in range(6, 13):
+        if z not in (9, 10, 11):
+            d.set(14, y0, z, "spruce_fence")
+    rz1, rz2 = 7, 12
+    for x in range(15, 33):
+        for z in (rz1 - 1, rz2 + 1):
+            d.set(x, y0, z, "spruce_fence")
+    for z in range(rz1 - 1, rz2 + 2):
+        for y in (y0, y0 + 1, y0 + 2):
+            d.set(33, y, z, "hay_block[axis=z]")
+    butt(d, 32, rz1 + 1, y0, "west", w=1)
+    d.set(32, y0, rz2 - 1, "hay_block[axis=y]")
+    d.set(32, y0 + 1, rz2 - 1, "target[power=0]")
+    for x in range(16, 32, 4):
+        d.set(x, y0 + 1, rz1 - 1, "torch")
+    lamp_post(d, 2, 3, y0, P)
+    if L >= 2:
+        bench(d, 4, 3, y0, "north", 2, "spruce", sit=False)
+        log_pile(d, 0, 6, 1, 13, y0, 2, "spruce_log", "z")
+    # ---- stave & feather shed (L3+)
+    if L >= 3:
+        d.sty_over = dict(wall="spruce_planks", wall0="spruce_planks", end="spruce_planks")
+        sb = build(d, 3, 16, 12, 22, 1, H=5, roof="gable", axis="x")
+        d.sty_over = {}
+        sb.door(7, 16, "north", double=True)
+        rs = sb.room(0)
+        rs.item("barrel", 5, sides=("south", "west"))
+        racks += rs.racks(FRACKS[L] - racks, 1, sides=("east", "south"))
+        rs.center_line([lg("stripped_spruce_log", "x")] * 4, "x", 2)
+        rs.center_line(["spruce_fence"] * 4, "x")
+        rs.fill(["sack", "keg", "logs"])
+        rs.lights()
+    # ---- range clubhouse (L4+)
+    if L >= 4:
+        c = build(d, 16, 15, 26, 23, 2, roof="gable", axis="x", core=(24, 16), chimney=(17, 19, "east"))
+        c.door(20, 15, "north", double=True)
+        rc = c.room(0)
+        rc.table_group("spruce", 4, "post", rug="green_carpet", sit=False)
+        rc.fill(["shelf_spruce", "banner_green", "keg", "plant"])
+        rc.lights()
+        rc2 = c.room(1)
+        rc2.chairs_desk(2, "spruce", sit=False)
+        rc2.fill(["shelf_spruce", "chisel", "plant"])
+        rc2.lights()
+        bench(d, 16, 14, y0, "south", 2, "spruce", sit=False) if False else None
+    # ---- hunting lodge (L5)
+    if L >= 5:
+        e = build(d, 3, 25, 26, 33, 2, roof="gable", axis="x", core=(24, 27), chimney=(4, 29, "east"))
+        e.door(14, 25, "north", double=True)
+        re = e.room(0)
+        for x in range(9, 20):
+            if x % 3 == 0:
+                d.set(x, re.y + 2, 32, "red_wall_banner[facing=north]") if False else None
+        re.table_group("spruce", 4, "post", rug="brown_carpet", sit=False)
+        re.table_group("spruce", 4, "post", rug="green_carpet", sit=False)
+        re.fill(["banner_green", "keg", "shelf_spruce", "plant"])
+        re.lights()
+        re2 = e.room(1)
+        for _ in range(4):
+            re2.bed("spruce", sides=("south", "north"))
+        re2.fill(["wardrobe", "plant"])
+        re2.lights()
+        tree(d, 33, 30, y0, "spruce", 6, 2)
+    else:
+        tree(d, 30, 28, y0, "spruce", 6, 2)
+    return d
+
+
+@design("fletcher")
+def fletcher(pack, rel, L):
+    return {"Neoterra": fl_neo, "Hearthwood": fl_hw, "Cascadia": fl_cas}[pack](rel, L)
