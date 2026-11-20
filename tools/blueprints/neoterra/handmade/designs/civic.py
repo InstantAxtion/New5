@@ -1,7 +1,11 @@
 """
 Civic & education landmarks: townhall, hospital, library, school, university, communitycollege.
 
-See the per-type docstrings for what each pack's building is.
+Every type grows from a modest working core (L1) into a complex (L5): new wings, storeys, towers and additional
+buildings with furnished rooms. Shared building blocks: bldg() shells with storey bands, quoins, sills/shutters,
+eave brackets, roofs and lights; room furnishers (office, dorm, ward, classroom, lab, lecture, kitchen, ...);
+outdoor pieces (lawns, bordered paths, flower beds, trees, lamps, benches, fountains, market stalls).
+Each type has its own palette inside each pack (THEMES).
 """
 from hm import Design, design, AIR, D4, OPP, CW
 
