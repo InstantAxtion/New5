@@ -416,11 +416,24 @@ def hc_cathedral(rel, L):
                 d.set(x, ct + 6, z, "lightning_rod[facing=up,powered=false,waterlogged=false]")
             d.fill(12, ct, 19, 18, ct, 25, S)
             if L == 5:
-                spire(d, 15, 22, ct + 1, 3, "deepslate_tiles", "deepslate_tile_stairs", step=3, needle=6,
-                      cross=True, top="end_rod[facing=up]")
-                for x, z in ((12, 19), (18, 19), (12, 25), (18, 25)):         # pinnacles on the broaches
-                    d.set(x, ct + 2, z, wallb("stone_brick_wall"))
-                    d.set(x, ct + 3, z, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+                # octagonal belfry drum, then the spire proper
+                for y in range(ct + 1, ct + 7):
+                    for dx in range(-3, 4):
+                        for dz in range(-3, 4):
+                            if _oct(dx, dz, 3) and not _oct(dx, dz, 2):
+                                d.set(15 + dx, y, 22 + dz, "stone_bricks")
+                            elif _oct(dx, dz, 2):
+                                d.set(15 + dx, y, 22 + dz, AIR)
+                for dx, dz in ((0, -3), (0, 3), (-3, 0), (3, 0)):
+                    lancet(d, 15 + dx, 22 + dz, ct + 2, ct + 4)
+                    d.set(15 + dx, ct + 5, 22 + dz, "chiseled_stone_bricks")
+                for dx, dz in ((-2, -2), (2, -2), (-2, 2), (2, 2)):               # pinnacles on the chamfers
+                    for y in range(ct + 1, ct + 7):
+                        d.set(15 + dx, y, 22 + dz, "polished_andesite")
+                    d.set(15 + dx, ct + 7, 22 + dz, wallb("stone_brick_wall"))
+                    d.set(15 + dx, ct + 8, 22 + dz, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+                spire(d, 15, 22, ct + 7, 3, "deepslate_tiles", "deepslate_tile_stairs", step=3, needle=7,
+                      cross=True, top="end_rod[facing=up]", broach=False)
         # interior: choir stalls, altar, lectern, organ pipes
         for z in range(27, 30):
             d.chair(12, 2, z, "west", "dark_oak")
