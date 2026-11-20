@@ -193,6 +193,101 @@ def shade(c, k):
     return tuple(max(0, min(255, int(v * k))) for v in c)
 
 
+FACE_UV = {"north": (0, 1, 0, 0.5), "south": (0, 1, 0.5, 1), "east": (0.5, 1, 0, 1), "west": (0, 0.5, 0, 1)}
+THIN = 0.1875
+
+
+def shape_boxes(name, state):
+    """Approximate block shape as boxes (u0,u1,v0,v1,y0,y1) in the original orientation (u = +x, v = +z)."""
+    props = parse_state(state)[1] if "[" in state else {}
+    f = props.get("facing", "north")
+    if name.endswith("_stairs"):
+        top = props.get("half") == "top"
+        slab = (0, 1, 0, 1, 0.5, 1) if top else (0, 1, 0, 1, 0, 0.5)
+        u0, u1, v0, v1 = FACE_UV.get(f, (0, 1, 0, 1))
+        step = (u0, u1, v0, v1, 0, 0.5) if top else (u0, u1, v0, v1, 0.5, 1)
+        return [slab, step]
+    if name.endswith("_slab") or name.endswith("_slab_do"):
+        t = props.get("type", "bottom")
+        return [(0, 1, 0, 1, 0, 1)] if t == "double" else [(0, 1, 0, 1, 0.5, 1) if t == "top" else (0, 1, 0, 1, 0, 0.5)]
+    if name.endswith("carpet") or name in ("rail", "powered_rail", "moss_carpet", "lily_pad") or "pressure_plate" in name:
+        return [(0.03, 0.97, 0.03, 0.97, 0, 0.07)]
+    if name in ("daylight_detector",):
+        return [(0, 1, 0, 1, 0, 0.375)]
+    if name.endswith("_bed"):
+        return [(0, 1, 0, 1, 0, 0.5625)]
+    if name.endswith("_fence") or name.endswith("fence_gate"):
+        bx = [(0.375, 0.625, 0.375, 0.625, 0, 1)]
+        for d, uv in (("north", (0.44, 0.56, 0, 0.375)), ("south", (0.44, 0.56, 0.625, 1)),
+                      ("east", (0.625, 1, 0.44, 0.56)), ("west", (0, 0.375, 0.44, 0.56))):
+            if props.get(d) == "true":
+                bx.append(uv + (0.4, 0.9))
+        return bx
+    if name.endswith("_wall") and props:
+        bx = [(0.25, 0.75, 0.25, 0.75, 0, 1)]
+        for d, uv in (("north", (0.31, 0.69, 0, 0.25)), ("south", (0.31, 0.69, 0.75, 1)),
+                      ("east", (0.75, 1, 0.31, 0.69)), ("west", (0, 0.25, 0.31, 0.69))):
+            if props.get(d) in ("low", "tall"):
+                bx.append(uv + (0, 0.85))
+        return bx
+    if name.endswith("pane") or name == "iron_bars":
+        ns = props.get("north") == "true" or props.get("south") == "true"
+        ew = props.get("east") == "true" or props.get("west") == "true"
+        if ew and not ns:
+            return [(0, 1, 0.44, 0.56, 0, 1)]
+        if ns and not ew:
+            return [(0.44, 0.56, 0, 1, 0, 1)]
+        if not ns and not ew:
+            return [(0.44, 0.56, 0.44, 0.56, 0, 1)]
+        return [(0, 1, 0.44, 0.56, 0, 1), (0.44, 0.56, 0, 1, 0, 1)]
+    if name.endswith("_door"):
+        u0, u1, v0, v1 = {"north": (0, 1, 0.81, 1), "south": (0, 1, 0, 0.19), "east": (0, 0.19, 0, 1),
+                          "west": (0.81, 1, 0, 1)}.get(f, (0, 1, 0, 0.19))
+        return [(u0, u1, v0, v1, 0, 1)]
+    if name.endswith("trapdoor"):
+        if props.get("open") == "true":
+            u0, u1, v0, v1 = {"north": (0, 1, 0.81, 1), "south": (0, 1, 0, 0.19), "east": (0, 0.19, 0, 1),
+                              "west": (0.81, 1, 0, 1)}.get(f, (0, 1, 0, 0.19))
+            return [(u0, u1, v0, v1, 0, 1)]
+        return [(0, 1, 0, 1, 0.81, 1)] if props.get("half") == "top" else [(0, 1, 0, 1, 0, 0.19)]
+    if name.endswith("lantern") and "sea" not in name:
+        return [(0.31, 0.69, 0.31, 0.69, 0.1 if props.get("hanging") == "true" else 0, 0.55)]
+    if "torch" in name or name.startswith("potted_") or name == "flower_pot" or "candle" in name \
+            or name in ("end_rod", "lightning_rod", "chain", "brewing_stand"):
+        return [(0.35, 0.65, 0.35, 0.65, 0, 0.6)]
+    if "wall_sign" in name or "wall_hanging_sign" in name or "wall_banner" in name:
+        u0, u1, v0, v1 = {"north": (0, 1, 0.85, 1), "south": (0, 1, 0, 0.15), "east": (0, 0.15, 0, 1),
+                          "west": (0.85, 1, 0, 1)}.get(f, (0, 1, 0.85, 1))
+        if "hanging" in name:
+            u0, u1, v0, v1 = (0.43, 0.57, 0, 1) if f in ("east", "west") else (0, 1, 0.43, 0.57)
+        return [(u0, u1, v0, v1, 0.1, 0.9)]
+    if name in ("ladder", "vine"):
+        u0, u1, v0, v1 = {"north": (0, 1, 0.88, 1), "south": (0, 1, 0, 0.12), "east": (0, 0.12, 0, 1),
+                          "west": (0.88, 1, 0, 1)}.get(f, (0, 1, 0.88, 1))
+        return [(u0, u1, v0, v1, 0, 1)]
+    if name in ("campfire", "soul_campfire"):
+        return [(0, 1, 0, 1, 0, 0.44)]
+    if name in ("short_grass", "fern", "dandelion", "poppy", "azure_bluet", "oxeye_daisy", "cornflower", "allium",
+                "tall_grass", "dead_bush", "sweet_berry_bush", "lily_of_the_valley"):
+        return [(0.3, 0.7, 0.3, 0.7, 0, 0.6)]
+    if name in ("enchanting_table",):
+        return [(0, 1, 0, 1, 0, 0.75)]
+    if name in ("cake",):
+        return [(0.06, 0.94, 0.06, 0.94, 0, 0.5)]
+    return [(0, 1, 0, 1, 0, 1)]
+
+
+def rot_box(bx, rot):
+    u0, u1, v0, v1, y0, y1 = bx
+    if rot == 0:
+        return bx
+    if rot == 2:
+        return (1 - u1, 1 - u0, 1 - v1, 1 - v0, y0, y1)
+    if rot == 1:                      # view u = orig v, view v = 1 - orig u
+        return (v0, v1, 1 - u1, 1 - u0, y0, y1)
+    return (1 - v1, 1 - v0, u0, u1, y0, y1)
+
+
 def iso(bp, rot, path, scale=14):
     """rot: 0..3 quarter turns; viewer sits on the +x'/+z' side after rotation."""
     sx, sy, sz = bp.sx, bp.sy, bp.sz
@@ -235,32 +330,34 @@ def iso(bp, rot, path, scale=14):
         b = at(x, y, z)
         if b is None:
             continue
+        ox_, oz_ = orig(x, z)
+        state = bp.grid[y][oz_][ox_]
         base = b[:-8] if b.endswith("_slab_do") else b
         c = COLORS.get(base) or COLORS.get(base.replace("_stairs", "").replace("_slab", "")) or guess_color(base)
         a = 120 if b in GLASS or "glass" in b else (150 if b == "water" else 255)
-        top = 0.5 if (b in HALF or "slab" in b) else 1.0
-        if b == "rail":
-            top = 0.1
-        yb = y
-        if "slab" in b:
-            ox_, oz_ = orig(x, z)
-            if "type=top" in bp.grid[y][oz_][ox_]:
-                yb, top = y + 0.5, 1.0                    # top slab: upper half of the block
-        yt = y + top
+        boxes = shape_boxes(b, state)
+        full = boxes == [(0, 1, 0, 1, 0, 1)]
 
-        def nb(dx, dy, dz):
+        def solid(dx, dy, dz):
             n = at(x + dx, y + dy, z + dz)
-            return n is not None and n not in GLASS and n not in HALF and b not in GLASS
-
-        faces = []
-        if not nb(0, 1, 0) or top < 1:
-            faces.append(([P(x, yt, z), P(x + 1, yt, z), P(x + 1, yt, z + 1), P(x, yt, z + 1)], 1.0))
-        if not nb(1, 0, 0):
-            faces.append(([P(x + 1, yt, z), P(x + 1, yt, z + 1), P(x + 1, yb, z + 1), P(x + 1, yb, z)], 0.78))
-        if not nb(0, 0, 1):
-            faces.append(([P(x, yt, z + 1), P(x + 1, yt, z + 1), P(x + 1, yb, z + 1), P(x, yb, z + 1)], 0.62))
-        for poly, k in faces:
-            dr.polygon(poly, fill=shade(c, k) + (a,), outline=shade(c, k * 0.85) + (min(255, a + 40),))
+            if n is None or n in GLASS or "glass" in n or b in GLASS:
+                return False
+            ox2, oz2 = orig(x + dx, z + dz)
+            return shape_boxes(n, bp.grid[y + dy][oz2][ox2]) == [(0, 1, 0, 1, 0, 1)]
+        for bx in boxes:
+            u0, u1, v0, v1, y0, y1 = rot_box(bx, rot)
+            faces = []
+            if not (full and solid(0, 1, 0)) or y1 < 1:
+                faces.append(([P(x + u0, y + y1, z + v0), P(x + u1, y + y1, z + v0), P(x + u1, y + y1, z + v1),
+                               P(x + u0, y + y1, z + v1)], 1.0))
+            if not (full and solid(1, 0, 0)) or u1 < 1:
+                faces.append(([P(x + u1, y + y1, z + v0), P(x + u1, y + y1, z + v1), P(x + u1, y + y0, z + v1),
+                               P(x + u1, y + y0, z + v0)], 0.78))
+            if not (full and solid(0, 0, 1)) or v1 < 1:
+                faces.append(([P(x + u0, y + y1, z + v1), P(x + u1, y + y1, z + v1), P(x + u1, y + y0, z + v1),
+                               P(x + u0, y + y0, z + v1)], 0.62))
+            for poly, k in faces:
+                dr.polygon(poly, fill=shade(c, k) + (a,), outline=shade(c, k * 0.85) + (min(255, a + 40),))
     img = img.crop(img.getbbox())
     img.save(path)
 
