@@ -604,6 +604,8 @@ class Design:
         miss = []
         if self.hut_pos is None:
             miss.append("hut block")
+        elif not self.bp.get(*self.hut_pos).startswith(self.req["hut"]):
+            miss.append(f"hut block at {self.hut_pos} was overwritten ({self.bp.get(*self.hut_pos)})")
         if p["beds"] < r["beds"]:
             miss.append(f"beds {p['beds']}/{r['beds']}")
         if p["racks"] < r["racks"]:
@@ -635,6 +637,10 @@ class Design:
         for k, n in r.get("tagreq", {}).items():
             if names.get(k, 0) < n:
                 miss.append(f"tag '{k}' {names.get(k, 0)}/{n}")
+        for (cx, cy, cz, cpath) in self.child_positions:
+            spec = next((c for c in r.get("children", []) if c["path"] == cpath), None)
+            if spec and not self.bp.get(cx, cy, cz).startswith(spec["hut"]):
+                miss.append(f"child hut at {(cx, cy, cz)} was overwritten")
         for c in r.get("children", []):
             got = self.placed.get("children", {}).get(c["path"], 0)
             if got != c["count"]:

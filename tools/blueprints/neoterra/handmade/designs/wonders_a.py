@@ -1332,6 +1332,7 @@ def hk_wing(rel, L):
     pylon_base(d, n, "stone_bricks", "polished_andesite", "dark_oak", HK_WHUT)
     d.fill(0, 1, 0, n, 1, n, "polished_andesite")
     d.clear(1, 1, 1, n - 1, 1, n - 1)
+    d.hut(*HK_WHUT)                                         # the clear above took the hut block out
     d.door(2, 1, 0, "south", "dark_oak")
     for x, z in ((0, 0), (n, 0), (0, n), (n, n)):
         d.fill(x, 1, z, x, 4, z, "chiseled_stone_bricks")
