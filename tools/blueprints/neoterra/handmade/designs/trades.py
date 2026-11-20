@@ -3170,9 +3170,13 @@ def dl_hw(rel, L):
         r3_.lights()
         for x in range(21, 34, 4):
             tree(d, x, 32, y0, "oak", 4, 1)
-        hedge(d, [(34, z) for z in range(2, 38)], y0, "oak")
+            tree(d, x + 2, 36, y0, "oak", 4, 1)
+        for x in (20, 26, 32):
+            lamp_post(d, x, 29, y0, P)
+        bench(d, 22, 29, y0, "south", 3, "dark_oak", sit=False)
         d.sign(12, 5, 27, "north", ["Sorting", "Office"], "dark_oak")
     if L >= 4:
+        hedge(d, [(34, z) for z in range(2, 38)], y0, "oak")
         for x in (18, 32):
             lamp_post(d, x, 16, y0, P)
         bench(d, 22, 16, y0, "south", 3, "dark_oak", sit=False)
@@ -3266,6 +3270,10 @@ def dl_cas(rel, L):
                 d.set(x, y0, z, "spruce_fence")
         d.set(28, y0, 17, "water_cauldron[level=3]")
         d.set(30, y0, 16, "hay_block[axis=x]")
+        for z in (20, 26):
+            tree(d, 34, z, y0, "spruce", 5, 1) if L < 5 else None
+        for x in (21, 27, 33):
+            lamp_post(d, x, 2, y0, P)
         for y in range(y0, t.ridge + 4):                              # telegraph pole
             d.set(34, y, 2, lg("spruce_log", "y") if y < t.ridge + 3 else "spruce_fence")
         d.set(34, t.ridge + 2, 1, "spruce_fence")
@@ -3295,3 +3303,312 @@ def dl_cas(rel, L):
 @design("deliveryman")
 def deliveryman(pack, rel, L):
     return {"Neoterra": dl_neo, "Hearthwood": dl_hw, "Cascadia": dl_cas}[pack](rel, L)
+
+
+# =============================================================================================== COMPOSTER
+"""
+Composter
+  Neoterra   "Green recycling station" (cherry-wood cladding, white fins, lime bands, green roofs): pavilion with
+             concrete compost bays in front; sorting shed (L2); glasshouse (L3); two-storey eco learning centre
+             (L4); biogas digester domes with a gas holder (L5).
+  Hearthwood "Compost yard & potting shed" (mud-brick walls, oak framing, dark shingle roofs): potting shed and
+             plank compost bins in a brick-walled garden (enlarged L2); lean-to glasshouse (L3); head gardener's
+             cottage (L4); orchard with a barn for leaf-mould and manure (L5).
+  Cascadia   "Compost shed" (river-rock walls, dark shake roofs, forest-green trim): pole shed with log-crib bins
+             and a mossy roof (longer at L2); mushroom & root house (L3); worm barn (L4, two storeys at L5) and a
+             greenhouse (L5).
+"""
+CBAR = {1: 1, 2: 2, 3: 3, 4: 4, 5: 4}
+
+
+def bin_bay(d, x, z, y, wall, inner="podzol[snowy=false]", barrel=True, facing="south"):
+    """Three-sided compost bay (opening to the south) with a compost barrel or heap inside."""
+    for dz in range(3):
+        d.set(x, y, z + dz, wall)
+        d.set(x + 2, y, z + dz, wall)
+    d.set(x + 1, y, z, wall)
+    d.set(x + 1, y - 1, z + 2, inner)
+    if barrel:
+        d.item(x + 1, y, z + 1, "minecolonies:barrel_block", facing)
+    else:
+        d.set(x + 1, y, z + 1, "composter[level=6]")
+
+
+def cp_neo(rel, L):
+    d = Design("Neoterra", rel, (32, 16, 30), paving="smooth_stone")
+    P, y0 = "Neoterra", 2
+    a = build(d, 3, 9, 13, 15, 1, roof="flat")
+    a.door(8, 9, "north")
+    d.sign(6, 4, 8, "north", ["RECYCLE", "& COMPOST"], "cherry", glow=True, color="lime")
+    d.hut(4, y0, 10)
+    r0 = a.room(0)
+    r0.item("composter", sides=("south",))
+    r0.racks(min(L, 3), 1, sides=("south", "east"))
+    r0.fill(["crate", "bamboo", "shelf_quartz"])
+    neo_roof(d, a, "garden")
+    for i in range(min(CBAR[L], 2)):
+        bin_bay(d, 3 + i * 4, 4, y0, "light_gray_concrete")
+    for x in (1, 15):
+        for z in range(9, 16):
+            d.set(x, 1, z, "moss_block")
+            d.set(x, y0, z, "fern" if z % 2 else "azalea")
+    lamp_post(d, 2, 2, y0, P)
+    # ---- sorting shed (L2+)
+    if L >= 2:
+        s_ = build(d, 17, 9, 25, 15, 1, roof="flat")
+        s_.opening(20, 9, 22, 9, 3, "lime_concrete")
+        rs = s_.room(0)
+        rs.racks(L - 3 if L > 3 else 0, 1, sides=("south",))
+        rs.center_line(["hopper[enabled=true,facing=down]", sl("smooth_quartz", "top"), "hopper[enabled=true,facing=down]"])
+        rs.fill(["crate", "crate", "bamboo"])
+        neo_roof(d, s_, "solar")
+        for i in range(CBAR[L] - 2):
+            bin_bay(d, 17 + i * 4, 4, y0, "light_gray_concrete")
+    # ---- glasshouse (L3+)
+    if L >= 3:
+        gx1, gz1, gx2, gz2 = 3, 18, 13, 26
+        d.box(gx1, y0, gz1, gx2, 5, gz2, "glass", floor="smooth_stone")
+        d.fill(gx1, 6, gz1, gx2, 6, gz2, "glass")
+        for x, z in ring(gx1, gz1, gx2, gz2):
+            if (x - gx1) % 5 == 0 and z in (gz1, gz2) or x in (gx1, gx2) and (z - gz1) % 4 == 0:
+                d.fill(x, y0, z, x, 6, z, "white_concrete")
+        d.door(8, y0, gz1, "north", "cherry")
+        for x in range(gx1 + 1, gx2):
+            for z in (gz1 + 2, gz1 + 3, gz2 - 2, gz2 - 1):
+                d.set(x, 1, z, "farmland[moisture=7]")
+                d.set(x, y0, z, ["wheat[age=5]", "carrots[age=4]", "potatoes[age=6]", "beetroots[age=2]"][(x + z) % 4])
+        for x in (5, 11):
+            d.set(x, 5, 22, "end_rod[facing=down]")
+    # ---- eco learning centre (L4+)
+    if L >= 4:
+        e = build(d, 17, 18, 27, 26, 2 if L == 4 else 3, roof="flat", core=(25, 19), street_glass=True)
+        e.door(20, 18, "north", double=True)
+        re = e.room(0)
+        re.table_group("cherry", 4, "slab", rug="lime_carpet", sit=False)
+        re.fill(["shelf_quartz", "bamboo", "banner_green"])
+        re2 = e.room(1)
+        re2.chairs_desk(3, "cherry", top=sl("smooth_quartz", "top"), sit=False)
+        re2.books(6, sides=("west",))
+        re2.fill(["bamboo", "shelf_quartz"])
+        if L >= 5:
+            re3 = e.room(2)
+            re3.table_group("cherry", 4, "slab", rug="green_carpet", sit=False)
+            re3.fill(["bamboo", "shelf_quartz", "crate"])
+        neo_roof(d, e, "garden")
+    # ---- biogas digesters (L5)
+    if L >= 5:
+        for cx, cz in ((29, 6), (29, 13)):
+            for y in range(y0, 9):
+                rr = 2 if y < 6 else 1 if y < 8 else 0
+                for dx in range(-2, 3):
+                    for dz in range(-2, 3):
+                        dist = (dx * dx + dz * dz) ** 0.5
+                        if rr - 0.5 <= dist < rr + 0.6 or (rr == 0 and dist < 0.5):
+                            d.set(cx + dx, y, cz + dz, "white_concrete" if y % 3 else "lime_concrete")
+            d.set(cx, 9, cz, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        for z in range(6, 14):
+            d.set(26, y0, z, "light_gray_concrete")
+            d.set(26, y0 + 1, z, "iron_bars")
+        for x in (27, 31):
+            d.fill(x, y0, 22, x, 7, 22, "light_gray_concrete")
+            d.fill(x, y0, 26, x, 7, 26, "light_gray_concrete")
+        for x in range(27, 32):                                       # gas holder
+            for z in range(22, 27):
+                if x in (27, 31) or z in (22, 26):
+                    d.set(x, 4, z, "iron_bars")
+                d.set(x, 8, z, "cut_copper")
+        d.set(29, 9, 24, "cut_copper_slab[type=bottom,waterlogged=false]")
+        for x in (17, 23):
+            lamp_post(d, x, 28, y0, P)
+        # drop-off canopy with sorted recycling bins
+        for x in range(17, 26):
+            d.set(x, 5, 1, sl("smooth_quartz", "top"))
+            d.set(x, 5, 2, sl("smooth_quartz", "top"))
+        for x in (17, 25):
+            d.fill(x, y0, 1, x, 4, 1, "white_concrete")
+        for i, c in enumerate(("lime", "cyan", "orange", "yellow", "gray")):
+            x = 18 + i
+            d.set(x, y0, 1, f"{c}_concrete")
+            d.set(x, y0 + 1, 1, f"{c}_carpet")
+    return d
+
+
+def cp_hw(rel, L):
+    d = Design("Hearthwood", rel, (34, 18, 34), paving="gravel")
+    P, y0 = "Hearthwood", 2
+    wx2, wz2 = (16, 15) if L == 1 else (24, 19)
+    for x, z in ring(2, 3, wx2, wz2):
+        d.set(x, y0, z, "bricks")
+        d.set(x, y0 + 1, z, "bricks" if z != 3 else "brick_wall")
+    for x in (8, 9, 10):
+        d.set(x, y0, 3, AIR)
+        d.set(x, y0 + 1, 3, AIR)
+    for x in (7, 11):
+        d.set(x, y0 + 2, 3, LANT_S)
+    d.fill(3, 1, 4, wx2 - 1, 1, wz2 - 1, "coarse_dirt")
+    a = build(d, 3, 10, 10, 14, 1, roof="gable", axis="x")
+    a.door(6, 10, "north")
+    d.hut(4, y0, 11)
+    r0 = a.room(0)
+    r0.item("composter", sides=("south",))
+    r0.racks(min(L, 3), 1, sides=("south", "east", "west"))
+    r0.fill(["shelf_oak", "plant", "sack"])
+    r0.lights()
+    for i in range(CBAR[L]):
+        bx = 11 + (i % 2) * 4
+        bz = 5 + (i // 2) * 5
+        bin_bay(d, bx, bz, y0, "spruce_planks")
+    for x in range(3, 8):
+        for z in (5, 6):
+            d.set(x, 1, z, "farmland[moisture=7]")
+            d.set(x, y0, z, "carrots[age=5]" if x % 2 else "beetroots[age=2]")
+    flower_bed(d, 3, 8, 7, 8, y0, seed=1)
+    if L >= 2:
+        for x in range(18, 24):
+            for z in (5, 6, 8, 9):
+                d.set(x, 1, z, "farmland[moisture=7]")
+                d.set(x, y0, z, "potatoes[age=7]" if z < 7 else "wheat[age=7]")
+        d.set(20, y0, 12, "water_cauldron[level=3]")
+        wagon(d, 18, 15, y0, "oak", "podzol[snowy=false]")
+        tree(d, 22, 15, y0, "oak", 3, 1)
+        tree(d, 13, 17, y0, "oak", 3, 1)
+        bench(d, 4, 2, y0, "north", 2, "oak", sit=False)
+        for x in (1, 25):
+            lamp_post(d, x, 2, y0, P)
+    # ---- lean-to glasshouse (L3+)
+    if L >= 3:
+        for x in range(3, 10):
+            for z in (16, 17, 18):
+                d.set(x, 1, z, "farmland[moisture=7]" if z > 16 else "gravel")
+                if z > 16:
+                    d.set(x, y0, z, "melon_stem[age=7]" if x % 2 else "pumpkin_stem[age=7]")
+            d.set(x, 5, 15, "glass")
+            d.set(x, 4, 16, "glass")
+            d.set(x, 3, 17, "glass") if False else None
+        for z in (16, 17, 18):
+            d.set(3, y0, z, "bricks")
+            d.set(9, y0, z, "bricks")
+        r0.keep.add((0, 0))
+    # ---- head gardener's cottage (L4+)
+    if L >= 4:
+        c = build(d, 3, 22, 13, 29, 2, roof="gable", axis="x", core=(11, 23), chimney=(4, 26, "east"))
+        c.door(8, 22, "north")
+        d.set(8, y0, 21, AIR) if False else None
+        for x in (8,):
+            d.set(x, y0, wz2, AIR)
+            d.set(x, y0 + 1, wz2, AIR)
+        rc = c.room(0)
+        rc.racks(L - 3, 1, sides=("south",))
+        rc.table_group("oak", 4, "post", rug="green_carpet", sit=False)
+        rc.fill(["shelf_dark", "plant", "keg"])
+        rc.lights()
+        rc2 = c.room(1)
+        rc2.bed("oak", sides=("south", "west"))
+        rc2.fill(["wardrobe", "plant", "shelf_dark"])
+        rc2.lights()
+    # ---- orchard and leaf-mould barn (L5)
+    if L >= 5:
+        for x in (17, 21, 25, 29):
+            for z in (23, 28):
+                tree(d, x, z, y0, "oak", 3, 1)
+                d.set(x + 1, y0 + 4, z, "flowering_azalea_leaves[distance=1,persistent=true,waterlogged=false]") \
+                    if d.air(x + 1, y0 + 4, z) else None
+        b = build(d, 26, 3, 33, 18, 2, roof="gable", axis="z", core=(31, 5))
+        b.opening(26, 9, 26, 11, 3, lg("stripped_oak_log", "z"))
+        rb = b.room(0)
+        rb.fill(["sack", "keg", "hay", "sack"])
+        rb.center_line(["podzol[snowy=false]", "rooted_dirt", "podzol[snowy=false]", "rooted_dirt"], "z")
+        rb.lights()
+        rb2 = b.room(1)
+        rb2.fill(["hay", "sack"])
+        rb2.lights()
+        hedge(d, [(x, 32) for x in range(0, 34)], y0, "oak")
+    return d
+
+
+def cp_cas(rel, L):
+    d = Design("Cascadia", rel, (32, 16, 32), paving="coarse_dirt")
+    P, y0 = "Cascadia", 2
+    x1, z1, z2 = 3, 4, 10
+    x2 = 9 if L == 1 else 15
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            d.set(x, 1, z, "packed_mud")
+    for x in list(range(x1, x2 + 1, 3)) + [x2]:
+        for z in (z1, z2):
+            d.fill(x, y0, z, x, 4, z, lg("spruce_log", "y"))
+            d.set(x, 1, z, "cobblestone")
+    for x in range(x1, x2 + 1):
+        d.set(x, 5, z1, lg("stripped_spruce_log", "x"))
+        d.set(x, 5, z2, lg("stripped_spruce_log", "x"))
+        if d.air(x, y0, z2):
+            d.set(x, y0, z2, "mossy_cobblestone")
+            d.set(x, y0 + 1, z2, "cobblestone")
+    d.gable(x1, z1, x2, z2, 6, "x", "dark_oak_stairs", "dark_oak_slab", "spruce_planks")
+    for x in range(x1, x2 + 1):
+        for k, z in enumerate(range(z1 - 1, (z1 + z2) // 2)):
+            y = 6 + k
+            if (x + k) % 3 == 0 and d.air(x, y, z):
+                d.set(x, y, z, "moss_carpet")
+    d.hut(x1 + 1, y0, z1 + 1)
+    d.item(x1 + 1, y0, z2 - 1, "composter")
+    rack_line(d, [(x1 + 2, z2 - 1)] + [(x, z2 - 1) for x in range(x1 + 4, x2, 3)], y0, min(L, 2), 1)
+    for i in range(CBAR[L]):
+        bx = x1 + 2 + i * 3
+        d.item(bx, y0, z2 - 2, "minecolonies:barrel_block", "north")
+        if d.air(bx - 1, y0, z2 - 2):
+            d.set(bx - 1, y0, z2 - 2, lg("spruce_log", "z"))
+    d.set(x1 + 3, 4, (z1 + z2) // 2, LANT)
+    d.set(x2 + 2, y0, 6, "composter[level=4]")
+    for z in range(2, 13):
+        d.set(1, y0, z, "spruce_fence")
+    lamp_post(d, x1, 2, y0, P)
+    if L >= 2:
+        for x in range(1, 18):
+            d.set(x, y0, 13, "spruce_fence") if x != 8 else None
+        wagon(d, x2 + 2, 8, y0, "spruce", "podzol[snowy=false]", "x") if False else None
+        tree(d, 18, 3, y0, "spruce", 5, 1)
+    # ---- mushroom & root house (L3+)
+    if L >= 3:
+        m = build(d, 3, 16, 11, 22, 1, roof="gable", axis="x")
+        m.door(7, 16, "north")
+        rm = m.room(0)
+        rm.racks(L - 2, 1, sides=("south", "east"))
+        for x, z in ((5, 19), (6, 19), (8, 19), (9, 19)):
+            d.set(x, y0, z, "mycelium[snowy=false]" if False else "podzol[snowy=false]")
+            d.set(x, y0 + 1, z, "brown_mushroom" if (x + z) % 2 else "red_mushroom")
+            rm.used.add((x, z))
+        rm.fill(["sack", "keg", "plant"])
+        rm.lights()
+        d.set(7, y0, 15, AIR)
+    # ---- worm barn (L4, two storeys at L5), greenhouse (L5)
+    if L >= 4:
+        w = build(d, 18, 6, 28, 16, 2 if L >= 5 else 1, roof="gable", axis="z", core=(26, 8) if L >= 5 else None)
+        w.door(22, 6, "north", double=True)
+        rw = w.room(0)
+        rw.center_line(["podzol[snowy=false]", "rooted_dirt", "podzol[snowy=false]", "rooted_dirt", "podzol[snowy=false]"], "z")
+        rw.fill(["keg", "sack", "hay"])
+        rw.lights()
+        if L >= 5:
+            rw2 = w.room(1)
+            rw2.fill(["hay", "sack", "keg"])
+            rw2.lights()
+    if L >= 5:
+        gx1, gz1, gx2, gz2 = 15, 19, 27, 27
+        d.box(gx1, y0, gz1, gx2, 4, gz2, "glass", floor="spruce_planks")
+        for x, z in ring(gx1, gz1, gx2, gz2):
+            if (x - gx1) % 4 == 0 or (z - gz1) % 4 == 0:
+                d.fill(x, y0, z, x, 4, z, lg("spruce_log", "y"))
+        d.gable(gx1, gz1, gx2, gz2, 5, "x", "glass_pane" if False else "spruce_stairs", "spruce_slab", "glass")
+        d.door(21, y0, gz1, "north", "spruce")
+        for x in range(gx1 + 1, gx2):
+            for z in (gz1 + 2, gz2 - 2):
+                d.set(x, 1, z, "farmland[moisture=7]")
+                d.set(x, y0, z, "carrots[age=5]" if x % 2 else "potatoes[age=6]")
+        tree(d, 30, 29, y0, "spruce", 5, 1)
+    return d
+
+
+@design("composter")
+def composter(pack, rel, L):
+    return {"Neoterra": cp_neo, "Hearthwood": cp_hw, "Cascadia": cp_cas}[pack](rel, L)

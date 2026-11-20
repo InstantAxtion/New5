@@ -553,7 +553,7 @@ def _blocky(n):
                                 "fletching", "crafting", "cartography", "chest", "trapdoor", "fence_gate"))
 
 
-def deco_ring(d, x1, z1, x2, z2, y, items, lights=True, rug=None, every=1):
+def deco_ring(d, x1, z1, x2, z2, y, items, lights=True, rug="auto", every=1):
     """Hand-picked decor for an existing room (inner cells x1..x2/z1..z2, walk layer y): `items` (a block, a
     (lower, upper) pair or a callable f(d,x,y,z,facing)) go into free wall-side cells that keep an aisle in
     front of them and stay clear of doors, stairs, ladders and work blocks; lanterns under the ceiling; an
@@ -621,6 +621,9 @@ def deco_ring(d, x1, z1, x2, z2, y, items, lights=True, rug=None, every=1):
                         if not near and h - 1 >= 2:
                             d.set(x, y + h - 1, z, lamp)
                         break
+    if rug == "auto":
+        rug = {"Hearthwood": ("red_carpet", "orange_carpet"), "Cascadia": ("green_carpet", "brown_carpet"),
+               "Neoterra": ("light_gray_carpet", "white_carpet")}[d.pack]
     if rug:
         for x in range(x1 + 1, x2):
             for z in range(z1 + 1, z2):
@@ -1417,7 +1420,7 @@ def gt_neoterra(rel, L):
                     d.set(x, yp + 4, z, "yellow_concrete")
         d.set(8, yp + 4, 11, "white_concrete")
     deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, [nt_sofa, "potted_bamboo", (SLABTOP("smooth_quartz"), "potted_azure_bluet"),
-              nt_screen], rug=None)
+              nt_screen])
     deco_ring(d, 5, 8, 11, 14, yp + 1, ["potted_bamboo", nt_screen, (SLABTOP("smooth_quartz"), "potted_fern")])
     # ---- growth: a security campus
     if L >= 2:                                                    # vehicle bay / checkpoint
@@ -2500,6 +2503,8 @@ def ca_neoterra(rel, L):
             d.set(16, 1, z, "moss_block")
             d.set(16, 2, z, "azalea" if z % 4 == 1 else "flowering_azalea")
         bench(d, 17, 22, "north", 3)
+        lamp_post(d, 1, 22)
+        lamp_post(d, 16, 37)
     if L >= 5:                                                    # conditioning centre with a pool
         b = building(d, 17, 31, 44, 44, nf=2, roof="flat", doors=(("north", 22), ("north", 39), ("west", 38)),
                      kinds=["gym", "mess"])

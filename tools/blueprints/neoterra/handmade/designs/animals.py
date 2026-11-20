@@ -3110,18 +3110,22 @@ def fit_core(d, pack, kind):
 
     def free(x, z):
         return bp.inside(x, y, z) and d.air(x, y, z) and d.air(x, y + 1, z) and not d.air(x, y - 1, z)
-    start = [(hx + dx, hz + dz) for dx, dz in D4.values() if free(hx + dx, hz + dz)] or \
-        [(hx + dx, hz + dz) for dx in (-2, -1, 0, 1, 2) for dz in (-2, -1, 0, 1, 2) if free(hx + dx, hz + dz)][:1]
-    room, todo = set(start), list(start)
-    while todo:
-        x, z = todo.pop()
-        for dx, dz in D4.values():
-            n = (x + dx, z + dz)
-            if n not in room and free(*n):
-                room.add(n)
-                todo.append(n)
-        if len(room) > 260:
-            return
+    cands0 = sorted(((hx + dx, hz + dz) for dx in range(-3, 4) for dz in range(-3, 4) if free(hx + dx, hz + dz)),
+                    key=lambda c: abs(c[0] - hx) + abs(c[1] - hz))
+    room = set()
+    for c0 in cands0:
+        room, todo = {c0}, [c0]
+        while todo and len(room) <= 260:
+            x, z = todo.pop()
+            for dx, dz in D4.values():
+                n = (x + dx, z + dz)
+                if n not in room and free(*n):
+                    room.add(n)
+                    todo.append(n)
+        if len(room) <= 260:
+            break
+    else:
+        return
     if len(room) < 6:
         return
 

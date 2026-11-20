@@ -269,6 +269,14 @@ def fireplace(d, wx, wz, y, inward, top, frame="bricks", stack=None, fire="campf
             d.set(cx, y, cz, frame)
         d.set(cx, y + 1, cz, frame)
     ix, iz = wx - ox, wz - oz
+    # mantel: a shelf over the hearth front with candles and a pot
+    for k, item in ((-1, "candle[candles=2,lit=false,waterlogged=false]"), (0, None),
+                    (1, "decorated_pot[cracked=false,facing=north,waterlogged=false]")):
+        cx, cz = ix + sx * k, iz + sz * k
+        if d.bp.inside(cx, y + 2, cz) and d.air(cx, y + 2, cz) and d.air(cx, y + 3, cz):
+            d.set(cx, y + 2, cz, slab("dark_oak" if fire == "campfire" else "smooth_quartz", "top"))
+            if item:
+                d.set(cx, y + 3, cz, item)
     if stack_out:
         for k in range(-(width // 2), width // 2 + 1):
             cx, cz = wx + ox + sx * k, wz + oz + sz * k
@@ -3700,6 +3708,13 @@ def cottage_retreat_ca(rel, L):
             d.set(x, 3, 1, log("spruce_log", "x"))
         lamp_post(d, 58, 18, 1, "ca")
         bench(d, 50, 18, 2, "east", "north", "spruce")
+        # picnic tables and a fire bowl between the huts
+        for tx in (40, 52):
+            d.dining(tx, 2, 15, 2, "x", "spruce", ("n", "s"), sit=False)
+        d.set(46, 1, 15, "cobblestone")
+        d.set(46, 2, 15, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+        tree(d, 22, 27, 2, "spruce", 6, 2)
+        tree(d, 57, 31, 2, "spruce", 6, 2)
     if L >= 4:
         orchard(d, 3, 30, 19, 38, "spruce", 5)
         pond(d, 26, 24, 40, 34)
@@ -3983,4 +3998,160 @@ DECOR = {
 def finish_decor(d, base):
     sh, bx, sl, li = DECOR[(d.pack, base)]
     facade_decor(d, sh, bx or "dark_oak", sl, li)
+    interior_decor(d)
+    return d
+
+
+# ============================================================================================ interior decor pass
+LIGHTS = ("lantern", "sea_lantern", "end_rod", "glowstone", "torch", "shroomlight", "campfire", "candle",
+          "redstone_lamp", "froglight")
+NO_TOUCH = ("stairs", "slab", "ladder", "door", "trapdoor", "_bed", "fence", "water", "barrel", "furnace",
+            "smoker", "crafting", "anvil", "smithing", "grindstone", "stonecutter", "lectern", "loom",
+            "cartography", "fletching", "brewing", "enchanting", "ender_chest", "jukebox", "composter", "cauldron",
+            "blockhut", "rack", "campfire", "chest", "bookshelf", "pane", "glass", "_wall")
+SOLID_WALL = ("concrete", "bricks", "planks", "_log", "calcite", "terracotta", "quartz", "sandstone", "stone",
+              "deepslate", "blackstone", "cobble", "andesite", "diorite", "granite", "prismarine", "mud_bricks")
+ROOM_COL = {"Hearthwood": ("red", "blue", "green", "yellow"), "Cascadia": ("green", "brown", "red", "orange"),
+            "Neoterra": ("cyan", "light_gray", "lime", "orange")}
+SHELF_ITEMS = ("potted_fern", "decorated_pot[cracked=false,facing=north,waterlogged=false]",
+               "candle[candles=3,lit=false,waterlogged=false]", "potted_red_tulip", "flower_pot",
+               "potted_azure_bluet")
+PLANTS = ("potted_fern", "potted_bamboo", "potted_azalea_bush", "potted_flowering_azalea_bush", "potted_red_tulip")
+
+
+def _nm(st):
+    return st.split("[")[0].split(":")[-1]
+
+
+def interior_decor(d):
+    """Find every enclosed room on every floor and add what a lived-in room has: a chained ceiling light,
+    a rug, wall decoration (banners and shelves with pots / candles) and a plant in a corner.
+    Cells next to stairs, ladders, doors, beds and work blocks are left alone."""
+    from collections import deque
+    bp, gy, pack = d.bp, d.gy, d.pack
+    O = _outside(d)
+    cols = ROOM_COL[pack]
+    rug_cols = {"Hearthwood": ("red", "brown"), "Cascadia": ("brown", "green"), "Neoterra": ("light_gray", "cyan")}[pack]
+    wood = SHELL[pack]["wood"]
+    g = bp.grid
+    ri = 0
+
+    def cell(x, y, z):
+        return g[y][z][x] if 0 <= x < bp.sx and 0 <= z < bp.sz and 0 <= y < bp.sy else AIR
+
+    def walk(x, y, z):
+        if not (0 < x < bp.sx - 1 and 0 < z < bp.sz - 1 and gy + 1 <= y < bp.sy - 2):
+            return False
+        if g[y][z][x] != AIR or g[y + 1][z][x] != AIR or (x, z) in O.get(y, ()):
+            return False
+        b = _nm(g[y - 1][z][x])
+        return b != "air" and not any(k in b for k in ("carpet", "slab", "stairs", "fence", "water", "leaves"))
+
+    def quiet(x, y, z):
+        """No stairs / ladders / doors / beds / work blocks around (x,z) at y..y+2."""
+        for dx, dz in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)):
+            for yy in (y - 1, y, y + 1, y + 2):
+                n = _nm(cell(x + dx, yy, z + dz))
+                if any(k in n for k in ("stairs", "ladder", "door", "_bed", "slab")):
+                    return False
+            for yy in (y, y + 1):
+                n = _nm(cell(x + dx, yy, z + dz))
+                if any(k in n for k in NO_TOUCH):
+                    return False
+        return True
+
+    def solid(st):
+        n = _nm(st)
+        return any(k in n for k in SOLID_WALL) and not any(k in n for k in ("stairs", "slab", "wall", "pane"))
+
+    done = set()
+    for y in range(gy + 1, bp.sy - 3):
+        for z0 in range(1, bp.sz - 1):
+            for x0 in range(1, bp.sx - 1):
+                if (x0, y, z0) in done or not walk(x0, y, z0):
+                    continue
+                room = []
+                q = deque([(x0, z0)])
+                done.add((x0, y, z0))
+                while q:
+                    x, z = q.popleft()
+                    room.append((x, z))
+                    for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        nx, nz = x + dx, z + dz
+                        if (nx, y, nz) not in done and walk(nx, y, nz):
+                            done.add((nx, y, nz))
+                            q.append((nx, nz))
+                if len(room) < 5:
+                    continue
+                ri += 1
+                rs = set(room)
+                cx = sum(x for x, _ in room) / len(room)
+                cz = sum(z for _, z in room) / len(room)
+                room.sort(key=lambda p: (p[0] - cx) ** 2 + (p[1] - cz) ** 2)
+                # ceiling height over the room centre
+                def ceil_at(x, z):
+                    yy = y
+                    while yy < bp.sy - 1 and g[yy][z][x] == AIR:
+                        yy += 1
+                    return yy
+                lit = False
+                for x, z in room:
+                    top = ceil_at(x, z)
+                    for yy in range(y, min(top + 1, bp.sy)):
+                        if any(k in _nm(g[yy][z][x]) for k in LIGHTS):
+                            lit = True
+                            break
+                    if lit:
+                        break
+                if not lit:
+                    for x, z in room[:6]:
+                        top = ceil_at(x, z)
+                        if top >= bp.sy - 1 or top - y < 3 or not quiet(x, y, z):
+                            continue
+                        if pack == "Neoterra" and solid(g[top][z][x]):
+                            g[top][z][x] = "minecraft:sea_lantern"
+                        else:
+                            for yy in range(y + 3, top):
+                                d.set(x, yy, z, "chain[axis=y,waterlogged=false]")
+                            d.set(x, y + 2, z, lantern(True))
+                        break
+                # rug in the middle of the floor
+                if not any("carpet" in _nm(g[y][z][x]) for x, z in room) and len(room) >= 8:
+                    c = rug_cols[ri % 2]
+                    for x, z in room[:min(9, len(room) // 3)]:
+                        if True:
+                            n = [_nm(cell(x + dx, y, z + dz)) for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1))]
+                            if not any("door" in k or "stairs" in k or "ladder" in k for k in n):
+                                d.set(x, y, z, f"{c}_carpet")
+                # wall decoration: banners and shelves at the third block up
+                want = max(1, len(room) // 10)
+                placed = 0
+                for x, z in sorted(room, key=lambda p: (p[0] * 31 + p[1] * 17) % 97):
+                    if placed >= want:
+                        break
+                    if g[y][z][x] not in (AIR,) and "carpet" not in g[y][z][x]:
+                        continue
+                    if g[y + 2][z][x] != AIR or not quiet(x, y, z):
+                        continue
+                    for wdir, (dx, dz) in D4.items():
+                        if solid(cell(x + dx, y + 2, z + dz)) and solid(cell(x + dx, y + 1, z + dz)) \
+                                and (x + dx, z + dz) not in rs:
+                            face = OPP[wdir]
+                            if (placed + ri) % 2 == 0:
+                                d.set(x, y + 2, z, f"{cols[(ri + placed) % len(cols)]}_wall_banner[facing={face}]")
+                            elif y + 3 < bp.sy and g[y + 3][z][x] == AIR:
+                                d.set(x, y + 2, z, slab(wood, "top"))
+                                d.set(x, y + 3, z, SHELF_ITEMS[(x + z + y) % len(SHELF_ITEMS)])
+                            else:
+                                continue
+                            placed += 1
+                            break
+                # a plant in a quiet corner
+                for x, z in reversed(room):
+                    if g[y][z][x] != AIR:
+                        continue
+                    walls = [w for w, (dx, dz) in D4.items() if solid(cell(x + dx, y, z + dz))]
+                    if len(walls) == 2 and walls[0] != OPP[walls[1]] and quiet(x, y, z):
+                        d.set(x, y, z, PLANTS[(x + z) % len(PLANTS)])
+                        break
     return d
