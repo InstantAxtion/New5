@@ -139,6 +139,15 @@ class Design:
             self.fill(0, 0, 0, sx - 1, gy - 1, sz - 1, ground or SOLID)
         self.fill(0, gy, 0, sx - 1, gy, sz - 1, pave)
 
+    # ------------------------------------------------------------------------------------------- variety
+    def vary(self, options, salt=""):
+        """Pick one of `options` per building type (stable across levels, different between types), so a town in
+        one pack mixes roof colours, wall materials and trims instead of repeating one palette."""
+        import hashlib
+        base = self.req.get("base", "")
+        h = int(hashlib.md5(f"{self.pack}:{base}:{salt}".encode()).hexdigest()[:8], 16)
+        return options[h % len(options)]
+
     # ------------------------------------------------------------------------------------------- basics
     @property
     def sx(self):
