@@ -5894,6 +5894,9 @@ def col_hearthwood(rel, L):
         if L >= 3:
             link(d, 30, 7, 17, "east")
             tables(d, (31, 14, 37, 20), 7, sit=False)
+            for x in (40, 44):
+                post_lamp(d, x, 10)
+            flowerbed(d, 39, 12, 44, 14)
             runs += [(31, 14, 37, 14, 7, 3), (31, 20, 37, 20, 7, 3)]
         d.sign(34, 5, 12, "north", ["READING", "ROOM"], "dark_oak")
         if need(d, "lectern") > 1:
@@ -6127,8 +6130,16 @@ def col_cascadia(rel, L):
         dorm(d, (37, 31, 48, 39), 7, 8, head="n")
         chimney(d, 50, 35, Y0, 16)
         d.sign(43, 5, 29, "north", ["BUNKHOUSE"], "spruce")
+        for x in range(36, 51):                                      # bunkhouse porch
+            for z in (27, 28, 29):
+                d.set(x, 1, z, "spruce_planks")
+            if x % 4 == 0:
+                for y in range(Y0, 5):
+                    put(d, x, y, 27, log("spruce_log"))
+            put(d, x, 5, 27, slab("spruce_slab")) if x % 4 else None
     if L >= 5:
-        sm = bldg(d, 36, 42, 50, 50, 1, "gable", "x", mat="stripped_spruce_log", wh=5)
+        sm = bldg(d, 36, 42, 50, 50, 2, "gable", "x", mat="stripped_spruce_log")
+        stair_up(d, 49, 43, Y0, 7, "south") if False else None
         ext_door(d, 43, Y0, 42, "south", double=True)
         workshop(d, (37, 43, 49, 49), Y0)
         for x in range(37, 50, 2):
