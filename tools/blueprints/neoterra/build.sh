@@ -7,6 +7,9 @@ PACK=stylepacks/Neoterra
 PREV=docs/previews/neoterra
 T=tools/blueprints
 mkdir -p "$PREV"
+# files that later steps regenerate from scratch must not run through the early passes
+rm -f "$PACK"/fundamentals/twinbuilder*.blueprint
+find "$PACK" -path "*/wonders/*.blueprint" -delete 2>/dev/null || true
 
 python3 $T/neoterra/townhall.py "$PACK/fundamentals"
 python3 $T/neoterra/check_townhall.py
