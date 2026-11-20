@@ -956,7 +956,7 @@ def skytower_hw(rel, L):
     # ---- rear garden (L4+), roof lantern (L5)
     if L >= 4:
         for x, z in cells(0, 18, 30, 24):
-            if x in (0, 30) or z == 24:
+            if (x in (0, 30) or z == 24) and not (z == 24 and 14 <= x <= 16):
                 d.set(x, 2, z, "oak_leaves[distance=1,persistent=true,waterlogged=false]")
         d.door(15, 2, Z2, "south", "dark_oak")
         for z in range(18, 23):
@@ -2137,41 +2137,68 @@ def furnish(d, pack, kind, x1, z1, x2, z2, y, ceil, keep=()):
                     d.set(lx, ceil - 1, lz, lantern())
 
 
-def _wall_cell(d, pack, x, yy, z, x1, z1, x2, z2, Y, H, f):
+DEF_ST = {
+    "Neoterra": dict(trim="light_gray_concrete", fin="white_concrete", glass="light_blue_stained_glass_pane",
+                     clad=None, band=("white_concrete", "cyan_terracotta"), edge="smooth_quartz",
+                     parapet="white_concrete", coping="smooth_quartz", door="birch", green=False),
+    "Hearthwood": dict(wall0="bricks", wall="bricks", plinth="stone_bricks", quoin="calcite", frame=None,
+                       lintel="calcite", band="stone_bricks", roof="deepslate_tile", gable="bricks",
+                       door="dark_oak", box="dark_oak", chimney="bricks"),
+    "Cascadia": dict(wall0=None, wall="stripped_spruce_log", trim="spruce_log", band="dark_oak_planks",
+                     roof="dark_oak", gable="spruce_planks", shutter="spruce", door="spruce"),
+}
+
+
+def _st(pack, st):
+    out = dict(DEF_ST[pack])
+    out.update(st or {})
+    return out
+
+
+def _wall_cell(d, pack, x, yy, z, x1, z1, x2, z2, Y, H, f, st):
     corner = x in (x1, x2) and z in (z1, z2)
     pos = (x - x1) if z in (z1, z2) else (z - z1)
     if pack == "Neoterra":
         if corner:
-            return "light_gray_concrete"
+            return st["trim"]
         if pos % 4 == 0:
-            return "white_concrete"
-        return "light_blue_stained_glass_pane"
+            return st["fin"]
+        if st["clad"] and yy == Y + H - 2:
+            return st["clad"]
+        return st["glass"]
     if pack == "Hearthwood":
+        wall = st["wall0"] if f == 0 else st["wall"]
         if corner:
-            return "calcite" if yy % 2 == 0 else "bricks"
+            return st["quoin"] if yy % 2 == 0 else wall
         if f == 0 and yy == Y:
-            return "stone_bricks"
+            return st["plinth"]
         if pos % 3 == 1 and Y + 1 <= yy <= Y + 2:
             return "glass_pane"
         if pos % 3 == 1 and yy == Y + 3:
-            return "calcite"
-        return "bricks"
+            return st["lintel"]
+        if st["frame"] and f > 0 and (pos % 3 == 0 or yy == Y + H - 2):
+            return log(st["frame"], "y" if pos % 3 == 0 else ("x" if z in (z1, z2) else "z"))
+        return wall
     # Cascadia
     if f == 0:
         if pos % 4 == 2 and Y + 1 <= yy <= Y + 2 and not corner:
             return "glass_pane"
-        return stone(x, yy, z)
+        return st["wall0"] or stone(x, yy, z)
     if corner:
-        return log("spruce_log", "y")
+        return log(st["trim"], "y") if st["trim"].endswith(("_log", "_wood")) else st["trim"]
     if pos % 4 == 2 and Y + 1 <= yy <= Y + 2:
         return "glass_pane"
-    return log("stripped_spruce_log", "x" if z in (z1, z2) else "z")
+    w = st["wall"]
+    return log(w, "x" if z in (z1, z2) else "z") if w.endswith(("_log", "_wood")) else w
 
 
-def wing(d, pack, x1, z1, x2, z2, y0, n, kinds, H=5, roof="flat", axis="x", doors=(), stair=True, chimneys=True):
-    """A multi-storey block in the pack's style with an internal switch-back stair on its east side, every floor
-    furnished (kinds[f]), and a roof. Returns the walking levels."""
+def wing(d, pack, x1, z1, x2, z2, y0, n, kinds, H=5, roof="flat", axis="x", doors=(), stair=True, chimneys=True,
+         st=None):
+    """A multi-storey block in the pack's family with an internal switch-back stair on its east side, every floor
+    furnished (kinds[f]), and a roof. `st` picks this building's own materials (walls, trims, roof, accents) so
+    the blocks of a complex do not share one palette. Returns the walking levels."""
     S = STY[pack]
+    st = _st(pack, st)
     levels = []
     A, B, zs = x2 - 1, x2 - 2, z1 + 2
     for f in range(n):
@@ -2180,22 +2207,19 @@ def wing(d, pack, x1, z1, x2, z2, y0, n, kinds, H=5, roof="flat", axis="x", door
         for x, z in cells(x1, z1, x2, z2):
             per = x in (x1, x2) or z in (z1, z2)
             if pack == "Neoterra":
-                b = ("cyan_terracotta" if f % 2 else "white_concrete") if per else S["floor"]
-            elif pack == "Hearthwood":
-                b = "stone_bricks" if per else S["floor"]
+                b = st["band"][f % 2] if per else S["floor"]
             else:
-                b = "dark_oak_planks" if per else S["floor"]
+                b = st["band"] if per else S["floor"]
             d.set(x, Y - 1, z, b)
         for yy in range(Y, Y + H - 1):
             for x, z in cells(x1, z1, x2, z2):
                 if x in (x1, x2) or z in (z1, z2):
-                    d.set(x, yy, z, _wall_cell(d, pack, x, yy, z, x1, z1, x2, z2, Y, H, f))
+                    d.set(x, yy, z, _wall_cell(d, pack, x, yy, z, x1, z1, x2, z2, Y, H, f, st))
                 else:
                     d.set(x, yy, z, AIR)
     top = y0 + H * n - 1
     for x, z in cells(x1, z1, x2, z2):
-        d.set(x, top, z, ("smooth_quartz" if pack == "Neoterra" else
-                          ("stone_bricks" if pack == "Hearthwood" else "dark_oak_planks"))
+        d.set(x, top, z, (st["edge"] if pack == "Neoterra" else st["band"])
               if (x in (x1, x2) or z in (z1, z2)) else S["floor"])
     if stair and n > 1:
         for f in range(n - 1):
@@ -2205,9 +2229,9 @@ def wing(d, pack, x1, z1, x2, z2, y0, n, kinds, H=5, roof="flat", axis="x", door
             else:
                 flight(d, B, zs + H - 1, Y, H, "north", S["stairb"])
     for (x, z, fc) in doors:
-        d.door(x, y0, z, fc, S["wood"])
+        d.door(x, y0, z, fc, st["door"])
         if pack == "Neoterra":
-            d.set(x, y0 + 2, z, "light_blue_stained_glass_pane")
+            d.set(x, y0 + 2, z, st["glass"])
     # outside: window boxes (Hearthwood), shutters (Cascadia) – never in front of a door
     door_out = {(x + D4[fc][0] + a, z + D4[fc][1] + b) for (x, z, fc) in doors for a in (-1, 0, 1) for b in (-1, 0, 1)}
     if pack in ("Hearthwood", "Cascadia"):
@@ -2222,14 +2246,14 @@ def wing(d, pack, x1, z1, x2, z2, y0, n, kinds, H=5, roof="flat", axis="x", door
                     continue
                 if pack == "Hearthwood":
                     if d.air(ox, Y, oz):
-                        d.set(ox, Y, oz, trap("dark_oak", out, "top"))
+                        d.set(ox, Y, oz, trap(st["box"], out, "top"))
                         d.set(ox, Y + 1, oz, S["plants"][(x + z) % 3].replace("potted_fern", "potted_blue_orchid"))
                 else:
                     sx, sz = D4[CW[out]]
                     for (cx, cz), side in (((ox - sx, oz - sz), OPP[CW[out]]), ((ox + sx, oz + sz), CW[out])):
                         for k in (1, 2):
                             if d.bp.inside(cx, Y + k, cz) and d.air(cx, Y + k, cz):
-                                d.set(cx, Y + k, cz, trap("spruce", side, "bottom", True))
+                                d.set(cx, Y + k, cz, trap(st["shutter"], side, "bottom", True))
     # furnish
     keep = [(x + D4[OPP[fc]][0], z + D4[OPP[fc]][1]) for (x, z, fc) in doors]
     fx2 = x2 - 3 if stair and n > 1 else x2 - 1
@@ -2242,10 +2266,14 @@ def wing(d, pack, x1, z1, x2, z2, y0, n, kinds, H=5, roof="flat", axis="x", door
     if roof == "flat":
         for x, z in cells(x1, z1, x2, z2):
             if x in (x1, x2) or z in (z1, z2):
-                d.set(x, top + 1, z, "white_concrete")
-                d.set(x, top + 2, z, slab("smooth_quartz"))
+                d.set(x, top + 1, z, st["parapet"])
+                d.set(x, top + 2, z, slab(st["coping"]))
         for x, z in cells(x1 + 1, z1 + 1, x2 - 1, z2 - 1):
-            if x in (x1 + 1, x2 - 1) or z in (z1 + 1, z2 - 1):
+            if st["green"]:
+                d.set(x, top, z, "moss_block" if (x + z) % 3 else "grass_block[snowy=false]")
+                if (x * 5 + z * 3) % 7 == 0:
+                    d.set(x, top + 1, z, ("azalea", "flowering_azalea", "fern")[(x + z) % 3])
+            elif x in (x1 + 1, x2 - 1) or z in (z1 + 1, z2 - 1):
                 if (x + z) % 2 == 0:
                     d.set(x, top + 1, z, "moss_block")
                     d.set(x, top + 2, z, ("azalea", "flowering_azalea")[(x // 2 + z) % 2])
@@ -2254,13 +2282,12 @@ def wing(d, pack, x1, z1, x2, z2, y0, n, kinds, H=5, roof="flat", axis="x", door
         d.set(x2 - 2, top + 1, z2 - 2, "smooth_stone")
         d.set(x2 - 2, top + 2, z2 - 2, "iron_trapdoor[facing=north,half=bottom,open=false,powered=false,"
                                        "waterlogged=false]")
-    elif roof == "gable":
-        if pack == "Hearthwood":
-            ridge = d.gable(x1, z1, x2, z2, top + 1, axis, "deepslate_tile_stairs", "deepslate_tile_slab", "bricks")
-            mat = "bricks"
+    elif roof in ("gable", "hip"):
+        rs, rsl = st["roof"] + "_stairs", st["roof"] + "_slab"
+        if roof == "gable":
+            ridge = d.gable(x1, z1, x2, z2, top + 1, axis, rs, rsl, st["gable"])
         else:
-            ridge = d.gable(x1, z1, x2, z2, top + 1, axis, "dark_oak_stairs", "dark_oak_slab", "spruce_planks")
-            mat = None
+            ridge = d.hip(x1, z1, x2, z2, top + 1, rs, rsl)
         if chimneys:
             ends = ((x1, (z1 + z2) // 2), (x2, (z1 + z2) // 2)) if axis == "x" else \
                 (((x1 + x2) // 2, z1), ((x1 + x2) // 2, z2))
@@ -2268,17 +2295,16 @@ def wing(d, pack, x1, z1, x2, z2, y0, n, kinds, H=5, roof="flat", axis="x", door
                 if pack == "Cascadia" and i_ == 1:
                     continue
                 for yy in range(top + 1, ridge + 3):
-                    d.set(cx, yy, cz, mat or stone(cx, yy, cz))
+                    d.set(cx, yy, cz, st["chimney"] if pack == "Hearthwood" else stone(cx, yy, cz))
                 d.set(cx, ridge + 3, cz, "flower_pot" if pack == "Hearthwood" else
                       "cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
-        # gable-end timber / roof-space lights
-        if pack == "Cascadia":
+        if pack == "Cascadia" and roof == "gable":
             ends = (z1, z2) if axis == "z" else (x1, x2)
             mid = (x1 + x2) // 2 if axis == "z" else (z1 + z2) // 2
             for e in ends:
                 for yy in range(top + 1, ridge):
                     p_ = (mid, yy, e) if axis == "z" else (e, yy, mid)
-                    if d.get(*p_) == "minecraft:spruce_planks":
+                    if d.get(*p_) == _hm._mc(st["gable"]):
                         d.set(*p_, log("spruce_log", "y"))
     return levels
 
@@ -2328,6 +2354,41 @@ def path_line(d, pts, y, block):
             d.set(x, y, z, block)
 
 
+
+# Each building of each complex has its own material set (the pack's family, never one palette for all).
+NT_CLUB = dict(trim="gray_concrete", fin="mangrove_planks", glass="glass_pane", clad="orange_terracotta",
+               band=("gray_concrete", "orange_terracotta"), edge="smooth_stone", parapet="gray_concrete",
+               coping="smooth_stone", door="mangrove", green=True)
+NT_TOWER_B = dict(trim="polished_deepslate", fin="cyan_concrete", glass="gray_stained_glass_pane",
+                  clad="polished_deepslate", band=("polished_deepslate", "cyan_concrete"), edge="polished_deepslate",
+                  parapet="polished_deepslate", coping="polished_deepslate", door="dark_oak")
+NT_TOWER_C = dict(trim="white_terracotta", fin="lime_concrete", glass="light_gray_stained_glass_pane",
+                  clad="white_terracotta", band=("white_terracotta", "lime_terracotta"), edge="smooth_quartz",
+                  parapet="white_terracotta", coping="cut_copper", door="cherry", green=True)
+HW_WEST = dict(wall0="sandstone", wall="smooth_sandstone", plinth="cut_sandstone", quoin="chiseled_sandstone",
+               lintel="cut_sandstone", band="cut_sandstone", roof="brick", gable="smooth_sandstone", door="oak",
+               box="oak", chimney="sandstone")
+HW_EAST = dict(wall0="bricks", wall="white_terracotta", frame="dark_oak_log", plinth="stone_bricks", quoin="bricks",
+               lintel="dark_oak_planks", band="dark_oak_planks", roof="dark_prismarine", gable="white_terracotta",
+               door="spruce", box="spruce", chimney="bricks")
+HW_SOUTH = dict(wall0="stone_bricks", wall="yellow_terracotta", frame="oak_log", plinth="mossy_stone_bricks",
+                quoin="stone_bricks", lintel="oak_planks", band="stone_bricks", roof="granite", gable="yellow_terracotta",
+                door="oak", box="oak", chimney="stone_bricks")
+HW_LINK = dict(wall0="mud_bricks", wall="mud_bricks", plinth="stone_bricks", quoin="packed_mud", lintel="packed_mud",
+               band="packed_mud", roof="mud_brick", gable="mud_bricks", door="cherry", box="jungle")
+CA_HALL = dict(wall="mangrove_planks", trim="dark_oak_log", band="red_terracotta", roof="cobbled_deepslate",
+               gable="mangrove_planks", shutter="dark_oak", door="mangrove")
+CA_EAST = dict(wall="birch_planks", trim="spruce_log", band="green_terracotta", roof="spruce", gable="birch_planks",
+               shutter="dark_oak", door="birch")
+CA_TOWER = dict(wall0="tuff", wall="dark_oak_planks", trim="stripped_spruce_log", band="yellow_terracotta",
+                roof="dark_prismarine", gable="dark_oak_planks", shutter="spruce", door="dark_oak")
+CA_BATH = dict(wall="spruce_planks", trim="spruce_log", band="dark_oak_planks", roof="mangrove",
+               gable="stripped_spruce_wood[axis=y]", shutter="mangrove", door="spruce")
+CA_BARN = dict(wall="red_terracotta", trim="white_terracotta", band="white_terracotta", roof="spruce",
+               gable="red_terracotta", shutter="birch", door="spruce")
+CA_SOUTH = dict(wall="spruce_log", trim="stripped_spruce_log", band="dark_oak_planks", roof="deepslate_tile",
+                gable="spruce_planks", shutter="mangrove", door="dark_oak")
+
 # ---------------------------------------------------------------------------------------------- sky tower growth
 def _door_through(d, x, y, z, facing, wood, clear_in=None):
     """Door in an existing wall; clears the cell (and 2 above) on the inner side `clear_in` (dx, dz)."""
@@ -2340,7 +2401,7 @@ def _door_through(d, x, y, z, facing, wood, clear_in=None):
 
 def grow_sky_nt(d, L):
     P = "Neoterra"
-    regrid(d, 51, 47, 14, 4, 96)
+    regrid(d, 51, 47, 14, 4, 104)
     lv = [8, 13, 18, 23, 28]
     # plaza in front of all buildings: avenue trees, lamps, benches
     for x in range(0, 51):
@@ -2354,15 +2415,21 @@ def grow_sky_nt(d, L):
     bench(d, 8, 3, 2, P, "south")
     bench(d, 41, 3, 2, P, "south")
     if L >= 2:                                        # west residents' club: gym, lounge, library (+ bar)
-        lv += wing(d, P, 2, 8, 12, 22, 2, {2: 4, 3: 4, 4: 5, 5: 6}[L], ["gym", "lounge", "library", "bar"],
-                   doors=[(7, 8, "north")])
+        lv += wing(d, P, 2, 8, 12, 22, 2, {2: 5, 3: 5, 4: 6, 5: 7}[L], ["gym", "lounge", "library", "bar", "office"],
+                   doors=[(7, 8, "north")], st=NT_CLUB)
+        for x in range(5, 10):                         # mangrove canopy over the club entrance
+            d.set(x, 6, 7, slab("mangrove", "top"))
+            d.set(x, 6, 6, slab("mangrove", "top"))
+        for x in (5, 9):
+            for y in range(2, 6):
+                d.set(x, y, 6, "mangrove_fence")
         d.sign(7, 5, 7, "north", ["RESIDENTS", "CLUB"], "birch", glow=True, color="cyan")
         for x in (3, 11):
             tree(d, x, 25, 2, h=5)
     if L >= 3:                                        # east tower B: restaurant, offices, lounges, sky bar
-        nB = {3: 7, 4: 12, 5: 15}[L]
+        nB = {3: 8, 4: 13, 5: 18}[L]
         lv += wing(d, P, 39, 8, 49, 22, 3, nB, ["dining", "office", "lounge", "library", "gym", "bar", "office"],
-                   doors=[(44, 8, "north")])
+                   doors=[(44, 8, "north")], st=NT_TOWER_B)
         d.set(44, 2, 7, stair("smooth_quartz", "south"))
         d.sign(44, 7, 7, "north", ["SKYLINE", "CLUB"], "birch", glow=True, color="cyan")
         # pool garden behind the towers
@@ -2391,9 +2458,9 @@ def grow_sky_nt(d, L):
         _door_through(d, 33, 23, 19, "east", "birch", (-1, 0))
         _door_through(d, 39, 23, 19, "west", "birch", (1, 0))
         d.set(32, 23, 19, AIR)
-        nC = {4: 5, 5: 13}[L]
+        nC = {4: 6, 5: 18}[L]
         lv += wing(d, P, 20, 29, 32, 43, 2, nC, ["dining", "lounge", "office", "library", "gym", "bar"],
-                   doors=[(26, 29, "north")])
+                   doors=[(26, 29, "north")], st=NT_TOWER_C)
         d.sign(26, 6, 28, "north", ["GARDEN", "PAVILION"], "birch", glow=True, color="cyan")
         for x in range(25, 28):
             for z in range(23, 29):
@@ -2406,7 +2473,7 @@ def grow_sky_nt(d, L):
         d.set(40, 2, 35, "water[level=0]")
         d.set(40, 1, 35, "sea_lantern")
     if L >= 5:                                        # crown on tower B, west club roof pavilion
-        top = 3 + 5 * 15 - 1
+        top = 3 + 5 * 18 - 1
         for x, z in ((39, 8), (49, 8), (39, 22), (49, 22)):
             for y in range(top + 1, top + 6):
                 d.set(x, y, z, "sea_lantern" if y % 2 else "white_concrete")
@@ -2429,41 +2496,41 @@ def grow_sky_hw(d, L):
             lamp_post(d, x, 1, 2, P, 3)
     if L >= 2:                                        # west wing: residents' dining hall, library, guest lounge
         lv += wing(d, P, 2, 5, 14, 29, 2, {2: 3, 3: 4, 4: 4, 5: 5}[L], ["dining", "library", "lounge", "hall"],
-                   roof="gable", axis="z", doors=[(8, 5, "north")])
+                   roof="gable", axis="z", doors=[(8, 5, "north")], st=HW_WEST)
         d.sign(8, 5, 4, "north", ["Albion", "Club"], "dark_oak") if d.air(8, 5, 4) else None
         flowerbed(d, 3, 1, 6, 3, 2, P)
         flowerbed(d, 10, 1, 13, 3, 2, P)
     if L >= 3:                                        # east wing: billiard room, smoking room, reading room
         lv += wing(d, P, 48, 5, 60, 29, 2, {3: 3, 4: 4, 5: 5}[L], ["bar", "lounge", "library", "hall"],
-                   roof="gable", axis="z", doors=[(54, 5, "north")])
+                   roof="gable", axis="z", doors=[(54, 5, "north")], st=HW_EAST)
         flowerbed(d, 49, 1, 52, 3, 2, P)
         flowerbed(d, 56, 1, 59, 3, 2, P)
     if L >= 4:                                        # south range closing a garden court
         lv += wing(d, P, 2, 38, 60, 50, 2, {4: 3, 5: 5}[L], ["dining", "lounge", "library", "office"],
-                   roof="gable", axis="x", doors=[(31, 38, "north"), (12, 38, "north"), (50, 38, "north")])
+                   roof="gable", axis="x", doors=[(31, 38, "north"), (12, 38, "north"), (50, 38, "north")], st=HW_SOUTH)
         for x, z in cells(16, 26, 46, 36):
             d.set(x, 1, z, "grass_block[snowy=false]")
         path_line(d, [(31, z) for z in range(25, 38)], 1, "gravel")
-        path_line(d, [(x, 31) for x in range(16, 47)], 1, "gravel")
-        for x, z in cells(29, 29, 33, 33):                 # fountain
-            if x in (29, 33) or z in (29, 33):
+        path_line(d, [(x, 28) for x in range(16, 47)], 1, "gravel")
+        for x, z in cells(29, 26, 33, 30):                 # fountain
+            if x in (29, 33) or z in (26, 30):
                 d.set(x, 2, z, slab("stone_brick"))
             else:
                 d.set(x, 1, z, "water[level=0]")
-        d.set(31, 2, 31, "stone_brick_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
+        d.set(31, 2, 28, "stone_brick_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
         d.set(31, 3, 31, "water[level=0]") if False else None
         for x, z in ((18, 27), (44, 27), (18, 35), (44, 35)):
             tree(d, x, z, 2, "oak_log", "oak_leaves", 5)
         for x, z in ((24, 28), (38, 28), (24, 34), (38, 34)):
             flowerbed(d, x, z, x + 1, z + 1, 2, P)
         bench(d, 26, 31, 2, P, "west")
-        bench(d, 36, 30, 2, P, "east")
+        bench(d, 36, 31, 2, P, "east")
     if L >= 5:                                        # link ranges (coach houses) closing the court corners
-        lv += wing(d, P, 2, 30, 14, 37, 2, 4, ["store", "office", "lounge", "library"], roof="gable", axis="z",
-                   doors=[(14, 33, "east")], stair=False, chimneys=False)
-        lv += wing(d, P, 48, 30, 60, 37, 2, 4, ["store", "office", "lounge", "library"], roof="gable", axis="z",
-                   doors=[(48, 33, "west")], stair=False, chimneys=False)
-        for Y in (2, 7, 12, 17):                      # through-doors from the wings into the link ranges
+        lv += wing(d, P, 2, 30, 14, 37, 2, 5, ["store", "office", "lounge", "library", "dining"], roof="gable", axis="z",
+                   doors=[(14, 33, "east")], stair=False, chimneys=False, st=HW_LINK)
+        lv += wing(d, P, 48, 30, 60, 37, 2, 5, ["store", "office", "lounge", "library", "dining"], roof="gable", axis="z",
+                   doors=[(48, 33, "west")], stair=False, chimneys=False, st=HW_LINK)
+        for Y in (2, 7, 12, 17, 22):                  # through-doors from the wings into the link ranges
             for xx in (8, 54):
                 for zz, fc in ((29, "south"), (30, "south")):
                     d.door(xx, Y, zz, fc, "dark_oak")
@@ -2475,7 +2542,7 @@ def grow_sky_hw(d, L):
         for y in range(2, 33):
             for x, z in cells(tx1, tz1, tx1 + 6, tz1 + 4):
                 if x in (tx1, tx1 + 6) or z in (tz1, tz1 + 4):
-                    if not (2 <= y <= 5 and z == tz1 and tx1 + 2 <= x <= tx1 + 4):
+                    if not (2 <= y <= 5 and z in (tz1, tz1 + 4) and tx1 + 2 <= x <= tx1 + 4):
                         d.set(x, y, z, "calcite" if (x in (tx1, tx1 + 6) and z in (tz1, tz1 + 4) and y % 2)
                               else "bricks")
         for x in range(tx1 + 1, tx1 + 6):
@@ -2501,7 +2568,7 @@ def grow_sky_ca(d, L):
         lamp_post(d, x, 2, 2, P, 3)
     if L >= 2:                                        # great hall chalet (restaurant + loft lounge)
         lv += wing(d, P, 2, 6, 16, 24, 2, 2 if L < 5 else 3, ["dining", "lounge", "library"], roof="gable", axis="z",
-                   doors=[(9, 6, "north")])
+                   doors=[(9, 6, "north")], st=CA_HALL)
         for x in range(2, 17):                         # covered porch
             d.set(x, 6, 3, slab("dark_oak"))
             d.set(x, 6, 4, slab("dark_oak"))
@@ -2516,7 +2583,7 @@ def grow_sky_ca(d, L):
             tree(d, x, 28, 2, "spruce_log", "spruce_leaves", 6)
     if L >= 3:                                        # east wing: game room, library, guest lounge
         lv += wing(d, P, 46, 4, 58, 28, 2, {3: 3, 4: 3, 5: 4}[L], ["bar", "library", "lounge", "hall"],
-                   roof="gable", axis="z", doors=[(52, 4, "north"), (46, 16, "west")])
+                   roof="gable", axis="z", doors=[(52, 4, "north"), (46, 16, "west")], st=CA_EAST)
         for x in range(41, 46):                        # covered walkway to the lodge
             for z in (15, 16, 17):
                 d.set(x, 1, z, "spruce_planks")
@@ -2528,16 +2595,18 @@ def grow_sky_ca(d, L):
         for x, z in ((50, 34), (56, 34), (42, 2)):
             tree(d, x, z, 2, "spruce_log", "spruce_leaves", 6)
     if L >= 4:                                        # lookout tower and the bathhouse
-        lv += wing(d, P, 22, 40, 30, 50, 2, {4: 7, 5: 10}[L], ["store", "lounge", "library", "office", "bar"],
-                   roof="gable", axis="x", doors=[(26, 40, "north")])
-        lv += wing(d, P, 2, 32, 16, 46, 2, 2, ["spa", "lounge"], roof="gable", axis="x", doors=[(9, 32, "north")])
-        lv += wing(d, P, 2, 50, 16, 62, 2, 2, ["store", "store"], roof="gable", axis="x", doors=[(9, 50, "north")])
+        lv += wing(d, P, 22, 40, 30, 50, 2, {4: 7, 5: 11}[L], ["store", "lounge", "library", "office", "bar"],
+                   roof="hip", doors=[(26, 40, "north")], st=CA_TOWER)
+        lv += wing(d, P, 2, 32, 16, 46, 2, 2, ["spa", "lounge"], roof="gable", axis="x", doors=[(9, 32, "north")],
+                   st=CA_BATH)
+        lv += wing(d, P, 2, 50, 16, 62, 2, 2, ["store", "store"], roof="gable", axis="x", doors=[(9, 50, "north")],
+                   st=CA_BARN)
         path_line(d, [(9, z) for z in range(47, 50)], 1, "gravel")
         path_line(d, [(26, z) for z in range(31, 40)], 1, "gravel")
         path_line(d, [(9, z) for z in range(25, 32)], 1, "gravel")
     if L >= 5:                                        # south chalet wing: dining room, suites lounge, library
-        lv += wing(d, P, 38, 36, 58, 52, 2, 4, ["dining", "lounge", "library", "bar"], roof="gable", axis="x",
-                   doors=[(48, 36, "north")])
+        lv += wing(d, P, 38, 36, 58, 52, 2, 5, ["dining", "lounge", "library", "bar", "hall"], roof="gable", axis="x",
+                   doors=[(48, 36, "north")], st=CA_SOUTH)
         for x, z in ((34, 56), (20, 56), (44, 58), (58, 58)):
             tree(d, x, z, 2, "spruce_log", "spruce_leaves", 7)
     rail_openings(d, "spruce_fence", tuple(sorted(set(lv))))

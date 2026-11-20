@@ -2723,7 +2723,7 @@ def bench(d, x, z, facing, n=2):
 
 
 def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, roofdeco=True, stairs_row=None,
-             wall=None, flat=None):
+             wall=None, flat=None, extra=(), glass=None, feature=None):
     """A complete furnished building. rooms = list of room kinds, one per storey (ground first). door = (side,
     offset along that wall). Interior must be at least 7 long in x (stairs run along x)."""
     S = STY[d.pack]
@@ -2731,22 +2731,30 @@ def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, 
     n = len(rooms)
     y0 = 2
     tops = []
+    salt = f"m{x1},{z1}"
+    mwall = d.vary(["smooth_sandstone", "white_terracotta", "calcite", "yellow_terracotta", "bricks"], salt) \
+        if P == "Hearthwood" else d.vary(["white_concrete", "light_gray_concrete", "white_terracotta",
+                                          "quartz_block"], salt)
+    mroof = d.vary({"Hearthwood": ["dark_prismarine", "brick", "mud_brick", "granite"],
+                    "Cascadia": ["cobbled_deepslate", "dark_prismarine", "mangrove", "deepslate_tile"]}.get(P, ["x"]),
+                   salt)
+    mlog = d.vary(["stripped_spruce_log", "stripped_dark_oak_log", "spruce_log", "stripped_birch_log"], salt)
     for k in range(n):
         yb = y0 + 5 * k
         if P == "Hearthwood":
-            hw_body(d, x1, z1, x2, z2, yb, yb + 3, wall=wall or ("bricks" if k == 0 and n > 2 else "calcite"),
+            hw_body(d, x1, z1, x2, z2, yb, yb + 3, wall=wall or ("bricks" if k == 0 and n > 2 else mwall),
                     base="stone_bricks" if k == 0 else "dark_oak_planks", floor=S["floor"] if k == 0 else None,
                     ceiling="dark_oak_planks")
         elif P == "Cascadia":
             cas_body(d, x1, z1, x2, z2, yb, yb + 3, floor=S["floor"] if k == 0 else None, footing=k == 0,
-                     ceiling="spruce_planks")
+                     ceiling="spruce_planks", logm=mlog)
             if k > 0:                                              # board-and-batten upper storeys
                 for x, z in perim(x1, z1, x2, z2):
                     for yy in range(yb, yb + 4):
                         if "log" in d.get(x, yy, z) and not (x in (x1, x2) and z in (z1, z2)):
                             d.set(x, yy, z, "spruce_planks" if (x + z) % 2 else lg("stripped_spruce_log"))
         else:
-            neo_body(d, x1, z1, x2, z2, yb, yb + 3, wall=wall or "white_concrete", floor=S["floor"] if k == 0 else None,
+            neo_body(d, x1, z1, x2, z2, yb, yb + 3, wall=wall or mwall, floor=S["floor"] if k == 0 else None,
                      roof_=None)
             d.fill(x1, yb + 4, z1, x2, yb + 4, z2, "light_gray_concrete")
             d.fill(x1 + 1, yb + 4, z1 + 1, x2 - 1, yb + 4, z2 - 1, "smooth_stone")
@@ -2766,11 +2774,11 @@ def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, 
             wside = "north" if z == z1 else "south" if z == z2 else "west" if x == x1 else "east"
             if P == "Neoterra":
                 if along % 4 != 0:
-                    d.set(x, yb + 1, z, "glass_pane")
-                    d.set(x, yb + 2, z, "glass_pane")
+                    d.set(x, yb + 1, z, glass or "glass_pane")
+                    d.set(x, yb + 2, z, glass or "glass_pane")
                 continue
             if along % 3 == 2 and (P != "Hearthwood" or "log" not in d.get(x, yb + 1, z)):
-                d.window(x, yb + 1, z, x, yb + 2, z)
+                d.window(x, yb + 1, z, x, yb + 2, z, glass)
                 window_dressing(d, x, yb + 1, z, wside, shutters=k == 0, box=k == 0 or P != "Cascadia")
     # door
     for yy in (y0, y0 + 1, y0 + 2):
@@ -2816,7 +2824,9 @@ def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, 
             keep_by[k].add((c[0], rowz + inner))
             keep_by[k + 1].add((c[0], rowz + inner))
     for k, kind in enumerate(rooms):
-        furnish(d, kind, ix1, iz1, ix2, iz2, tops[k], keep_by[k])
+        furnish(d, kind, ix1, iz1, ix2, iz2, tops[k], keep_by[k], extra)
+    if feature:
+        feature(d, x1, z1, x2, z2, (dx, dz), side, ytop)
     # roof
     if P == "Neoterra" or flat:
         d.flat(x1, z1, x2, z2, ytop + 1, "smooth_quartz", "white_concrete", "smooth_quartz_slab")
@@ -2832,9 +2842,9 @@ def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, 
                                              "waterlogged=false]")
         return ytop + 1
     if P == "Hearthwood":
-        ridge = roof(d, x1, z1, x2, z2, ytop + 1, axis, "deepslate_tile", "deepslate_tile_slab", "calcite")
+        ridge = roof(d, x1, z1, x2, z2, ytop + 1, axis, mroof, mroof + "_slab", mwall)
     else:
-        ridge = roof(d, x1, z1, x2, z2, ytop + 1, axis, "dark_oak", "dark_oak_slab", "spruce_planks")
+        ridge = roof(d, x1, z1, x2, z2, ytop + 1, axis, mroof, mroof + "_slab", "spruce_planks")
     if chimney:                                                    # stack on the outside of a gable end
         if axis == "x":
             cx, cz, wx, wz, f = x2 + 1, (z1 + z2) // 2, x2, (z1 + z2) // 2, "west"
@@ -2854,7 +2864,8 @@ def grow(d, L, base):
     for lv, fn in GROW.get((base, d.pack), []):
         if L >= lv:
             fn(d)
-    yard(d, {1: 2, 2: 3, 3: 5, 4: 7, 5: 10}[L])
+    yard(d, {1: 0, 2: 2, 3: 4, 4: 6, 5: 10}[L])
+    reskin(d)
 
 
 def _open(d, x1, z1, x2, z2, y1=2, y2=9):
@@ -2926,8 +2937,156 @@ def yard(d, n):
 S_POT = {"Hearthwood": "potted_red_tulip", "Cascadia": "potted_fern", "Neoterra": "potted_bamboo"}
 
 
+# --------------------------------------------------------------------------- type-specific add-on features
+def _behind(x1, z1, x2, z2, side, depth):
+    """Rectangle of `depth` rows outside the wall opposite the door (the yard of an add-on building)."""
+    if side == "north":
+        return x1, z2 + 2, x2, z2 + 1 + depth
+    if side == "south":
+        return x1, z1 - 1 - depth, x2, z1 - 2
+    if side == "west":
+        return x2 + 2, z1, x2 + 1 + depth, z2
+    return x1 - 1 - depth, z1, x1 - 2, z2
+
+
+def _yard_ok(d, r):
+    a1, b1, a2, b2 = r
+    return a2 - a1 >= 2 and b2 - b1 >= 1 and _open(d, a1, b1, a2, b2, 2, 5)
+
+
+def F(*fs):
+    def run(d, x1, z1, x2, z2, door, side, ytop):
+        for f in fs:
+            f(d, x1, z1, x2, z2, door, side, ytop)
+    return run
+
+
+def hoist(d, x1, z1, x2, z2, door, side, ytop):
+    """Sack hoist: a beam out over the door at the top storey with a chain and a hanging bale."""
+    if ytop < 10:
+        return
+    dx, dz = door
+    ox, oz = D4[side]
+    for i in (1, 2):
+        d.set(dx + ox * i, ytop, dz + oz * i, lg("stripped_spruce_log", "x" if ox else "z"))
+    for y in range(ytop - 3, ytop):
+        d.set(dx + ox * 2, y, dz + oz * 2, "chain[axis=y,waterlogged=false]")
+    d.set(dx + ox * 2, ytop - 4, dz + oz * 2, "hay_block[axis=y]")
+    d.set(dx, ytop - 3, dz, td("spruce", side, "bottom", True))
+
+
+def awning_f(colors):
+    def f(d, x1, z1, x2, z2, door, side, ytop):
+        if side == "north":
+            awning(d, x1 + 1, x2 - 1, z1 - 1, 5, colors, "north")
+        elif side == "south":
+            awning(d, x1 + 1, x2 - 1, z2 + 1, 5, colors, "south")
+        elif side == "west":
+            awning_z(d, z1 + 1, z2 - 1, x1 - 1, 5, colors, "west")
+        else:
+            awning_z(d, z1 + 1, z2 - 1, x2 + 1, 5, colors, "east")
+    return f
+
+
+def yard_f(kind, *blocks):
+    """Working yard behind an add-on: piles of material, stacked crates, a cart, a paddock, cold frames, drying
+    lines, tables - whatever fits the trade."""
+    def f(d, x1, z1, x2, z2, door, side, ytop):
+        r = _behind(x1, z1, x2, z2, side, 5)
+        a1, b1, a2, b2 = r
+        a1, a2 = max(a1, 1), min(a2, d.sx - 2)
+        b1, b2 = max(b1, 1), min(b2, d.sz - 2)
+        if not _yard_ok(d, (a1, b1, a2, b2)):
+            return
+        P = d.pack
+        edge = {"Hearthwood": "stone_brick_wall", "Cascadia": "spruce_fence", "Neoterra": "smooth_quartz_slab"
+                                                                                       "[type=bottom,waterlogged=false]"}[P]
+        if kind == "piles":
+            for i, x in enumerate(range(a1 + 1, a2, 3)):
+                m = blocks[i % len(blocks)]
+                for a in (x - 1, x, x + 1):
+                    for b in (b1 + 1, b1 + 2):
+                        if b <= b2:
+                            d.set(a, 2, b, m)
+                if b1 + 1 <= b2:
+                    d.set(x, 3, b1 + 1, m)
+        elif kind == "crates":
+            for x in range(a1 + 1, a2, 2):
+                d.keg(x, 2, b1 + 1, "up")
+                d.set(x, 3, b1 + 1, blocks[x % len(blocks)] if blocks else "barrel[facing=up,open=false]")
+        elif kind == "paddock":
+            for x, z in perim(a1, b1, a2, b2):
+                d.set(x, 2, z, STY[P]["wood"] + "_fence")
+            for x in range(a1 + 1, a2):
+                for z in range(b1 + 1, b2):
+                    d.set(x, 1, z, "coarse_dirt")
+            d.set(a1 + 1, 2, b1 + 1, "hay_block[axis=y]")
+            d.set(a1 + 2, 2, b1 + 1, "water_cauldron[level=3]")
+            d.set((a1 + a2) // 2, 2, b1 if side != "north" else b2, STY[P]["wood"] + "_fence_gate[facing=north,"
+                                                                                  "in_wall=false,open=false,powered=false]")
+        elif kind == "frames":
+            for x in range(a1, a2 + 1):
+                for z in range(b1, b2 + 1):
+                    d.set(x, 1, z, "grass_block[snowy=false]" if (z - b1) % 2 == 0 else "gravel")
+                    if (z - b1) % 2 == 0:
+                        d.set(x, 2, z, flower(d, x + z) if x % 3 else "glass_pane")
+        elif kind == "drying":
+            if b2 - b1 >= 2:
+                drying_line(d, a1, a2, (b1 + b2) // 2, 5, "stripped_spruce_log", STY[P]["wood"] + "_log"
+                            if P != "Neoterra" else "light_gray_concrete", a1)
+        elif kind == "terrace":
+            for x in range(a1, a2 + 1):
+                for z in range(b1, b2 + 1):
+                    d.set(x, 1, z, blocks[(x + z) % len(blocks)] if blocks else "stone_bricks")
+            for x in range(a1 + 1, a2 - 1, 4):
+                if b1 + 2 <= b2:
+                    d.dining(x + 1, 2, b1 + 1, 1, "x", STY[P]["wood"], ("e", "w"), sit=False)
+            for x, z in perim(a1, b1, a2, b2):
+                if (x + z) % 3 == 0 and d.air(x, 2, z):
+                    d.set(x, 2, z, edge)
+    return f
+
+
+def cart_f(load):
+    def f(d, x1, z1, x2, z2, door, side, ytop):
+        r = _behind(x1, z1, x2, z2, side, 3)
+        a1, b1, a2, b2 = r
+        cx = (a1 + a2) // 2
+        cz = (b1 + b2) // 2
+        if not _open(d, cx - 2, cz - 1, cx + 2, cz + 1, 2, 4):
+            return
+        w = STY[d.pack]["wood"]
+        for x in (cx - 1, cx, cx + 1):
+            d.set(x, 2, cz, sl(w, "top"))
+            d.set(x, 3, cz, load)
+        for x in (cx - 1, cx + 1):
+            d.set(x, 2, cz - 1, td("dark_oak", "north", "bottom", True))
+            d.set(x, 2, cz + 1, td("dark_oak", "south", "bottom", True))
+        d.set(cx + 2, 2, cz, f"{w}_fence")
+    return f
+
+
+def facade_banners(color):
+    def f(d, x1, z1, x2, z2, door, side, ytop):
+        ox, oz = D4[side]
+        if side in ("north", "south"):
+            z = z1 - 1 if side == "north" else z2 + 1
+            for x in range(x1 + 2, x2 - 1, 3):
+                if d.air(x, ytop - 1, z):
+                    d.set(x, ytop - 1, z, f"{color}_wall_banner[facing={side}]")
+        else:
+            x = x1 - 1 if side == "west" else x2 + 1
+            for z in range(z1 + 2, z2 - 1, 3):
+                if d.air(x, ytop - 1, z):
+                    d.set(x, ytop - 1, z, f"{color}_wall_banner[facing={side}]")
+    return f
+
+
 def B(*args, **kw):
     return lambda d: building(d, *args, **kw)
+
+
+WOOL = ["block:red_wool", "block:yellow_wool", "block:blue_wool"]
 
 
 GROW = {
@@ -3077,3 +3236,115 @@ GROW = {
         (3, B(4, 21, 14, 29, ["dining", "bedroom", "bedroom", "living"], ("north", 5), sign=["SKYLINE", "HOTEL"])),
     ],
 }
+
+
+# ============================================================================================ PALETTE VARIETY
+# Every building type gets its own roof / wall / timber / accent combination from its pack's family (stable per
+# type via d.vary), so a street of one pack mixes slate, red tile and blue slate roofs, plaster, Cotswold stone
+# and colour-washed walls, etc. Applied as a re-skin of the pack's base materials at the end of each design.
+ROOF_SRC = {"Hearthwood": ("deepslate_tile",), "Cascadia": ("dark_oak", "spruce"), "Neoterra": ("smooth_quartz",)}
+ROOF_FAM = {
+    "Hearthwood": ["deepslate_tile", "dark_prismarine", "brick", "mud_brick", "granite", "deepslate_tile"],
+    "Cascadia": ["cobbled_deepslate", "dark_prismarine", "mangrove", "spruce", "deepslate_tile", "dark_oak"],
+    "Neoterra": ["smooth_quartz", "deepslate_tile", "cut_copper", "smooth_stone"],
+}
+FULL = {"deepslate_tile": "deepslate_tiles", "brick": "bricks", "mud_brick": "mud_bricks", "spruce": "spruce_planks",
+        "dark_oak": "dark_oak_planks", "mangrove": "mangrove_planks", "smooth_stone": "smooth_stone",
+        "cobbled_deepslate": "cobbled_deepslate", "dark_prismarine": "dark_prismarine", "granite": "granite",
+        "cut_copper": "cut_copper", "smooth_quartz": "smooth_quartz"}
+WALL_SRC = {"Hearthwood": "calcite", "Cascadia": "stripped_spruce_log", "Neoterra": "white_concrete"}
+WALL_FAM = {
+    "Hearthwood": ["calcite", "smooth_sandstone", "white_terracotta", "yellow_terracotta", "light_blue_terracotta",
+                   "calcite"],
+    "Cascadia": ["stripped_spruce_log", "stripped_dark_oak_log", "mangrove_planks", "birch_planks",
+                 "stripped_spruce_log"],
+    "Neoterra": ["white_concrete", "light_gray_concrete", "white_terracotta", "quartz_block", "white_concrete"],
+}
+TRIM_FAM = {"Hearthwood": ["dark_oak", "spruce", "oak", "dark_oak"]}
+SHUTTER_FAM = {"Hearthwood": ["crimson", "warped", "spruce", "oak", "dark_oak"],
+               "Cascadia": ["crimson", "spruce", "warped", "dark_oak", "birch"],
+               "Neoterra": ["birch", "mangrove", "cherry", "birch"]}
+ACCENT_FAM = {"Neoterra": ["cyan", "orange", "yellow", "lime", "magenta"],
+              "Cascadia": ["red", "green", "yellow", "red"], "Hearthwood": ["red", "blue", "green", "yellow"]}
+
+
+PAL = {   # (roof, wall, trim, shutter/door accent wood, accent colour) chosen per type so no two look alike
+    "Hearthwood": {
+        "cook": ("mud_brick", "yellow_terracotta", "oak", "crimson", "red"),
+        "cookery": ("granite", "calcite", "spruce", "warped", "green"),
+        "baker": ("brick", "calcite", "dark_oak", "crimson", "red"),
+        "florist": ("deepslate_tile", "white_terracotta", "oak", "warped", "green"),
+        "dyer": ("dark_prismarine", "light_blue_terracotta", "dark_oak", "spruce", "blue"),
+        "glassblower": ("deepslate_tile", "smooth_sandstone", "spruce", "crimson", "yellow"),
+        "concretemixer": ("spruce", "calcite", "dark_oak", "oak", "yellow"),
+        "tavern": ("deepslate_tile", "calcite", "dark_oak", "crimson", "red"),
+    },
+    "Cascadia": {
+        "cook": ("mangrove", "stripped_spruce_log", None, "crimson", "red"),
+        "cookery": ("cobbled_deepslate", "stripped_dark_oak_log", None, "spruce", "yellow"),
+        "baker": ("dark_oak", "birch_planks", None, "crimson", "red"),
+        "florist": ("dark_prismarine", "stripped_spruce_log", None, "warped", "green"),
+        "dyer": ("deepslate_tile", "mangrove_planks", None, "birch", "yellow"),
+        "glassblower": ("cobbled_deepslate", "stripped_spruce_log", None, "crimson", "red"),
+        "concretemixer": ("dark_prismarine", "stripped_dark_oak_log", None, "spruce", "yellow"),
+        "tavern": ("spruce", "stripped_spruce_log", None, "crimson", "red"),
+    },
+    "Neoterra": {
+        "cook": ("smooth_quartz", "white_concrete", None, "mangrove", "orange"),
+        "cookery": ("smooth_stone", "light_gray_concrete", None, "birch", "cyan"),
+        "baker": ("smooth_quartz", "white_terracotta", None, "cherry", "yellow"),
+        "florist": ("cut_copper", "quartz_block", None, "birch", "lime"),
+        "dyer": ("smooth_quartz", "white_concrete", None, "mangrove", "magenta"),
+        "glassblower": ("cut_copper", "white_concrete", None, "cherry", "cyan"),
+        "concretemixer": ("smooth_stone", "light_gray_concrete", None, "birch", "orange"),
+        "tavern": ("smooth_quartz", "white_concrete", None, "birch", "cyan"),
+    },
+}
+
+
+def palette(d):
+    r, w, t, sh, ac = PAL[d.pack][d.req["base"]]
+    return dict(roof=r, wall=w, trim=t or "dark_oak", shutter=sh, accent=ac)
+
+
+def reskin(d):
+    from blueprint import parse_state, format_state
+    P = d.pack
+    pal = palette(d)
+    bp = d.bp
+    src_roofs = ROOF_SRC[P]
+    # topmost block of every column = the roof surface
+    tops = {}
+    for x in range(bp.sx):
+        for z in range(bp.sz):
+            for y in range(bp.sy - 1, d.gy, -1):
+                if bp.get(x, y, z) != AIR:
+                    tops[(x, z)] = y
+                    break
+    wsrc, wdst = WALL_SRC[P], pal["wall"]
+    for (x, z), ytop in tops.items():
+        for y in (ytop, ytop - 1):
+            stt = bp.get(x, y, z)
+            name, props = parse_state(stt)
+            n = name.split(":")[1]
+            for r in src_roofs:
+                if n in (r + "_stairs", r + "_slab") and pal["roof"] != r:
+                    bp.set(x, y, z, format_state("minecraft:" + pal["roof"] + n[len(r):], props), None)
+                elif n == FULL.get(r) and P == "Neoterra" and y == ytop - 1:
+                    bp.set(x, y, z, "minecraft:" + FULL[pal["roof"]], None)
+    for x, y, z, stt in list(bp.blocks()):
+        name, props = parse_state(stt)
+        n = name.split(":")[1]
+        new = None
+        if n == wsrc and wdst != wsrc:
+            new = format_state("minecraft:" + wdst, props if wdst.endswith("_log") else {})
+        elif P == "Hearthwood" and pal["trim"] != "dark_oak" and "dark_oak" in n and "trapdoor" not in n \
+                and (x, y, z) not in bp.tile_entities:
+            new = format_state("minecraft:" + n.replace("dark_oak", pal["trim"]), props)
+        elif n.endswith("_trapdoor") and n != "iron_trapdoor" and props.get("open") == "true" \
+                and n != pal["shutter"] + "_trapdoor":
+            new = format_state(f"minecraft:{pal['shutter']}_trapdoor", props)
+        elif P == "Neoterra" and n in ("cyan_terracotta", "cyan_concrete") and pal["accent"] != "cyan":
+            new = "minecraft:" + n.replace("cyan", pal["accent"])
+        if new:
+            bp.set(x, y, z, new, bp.tile_entities.get((x, y, z)))

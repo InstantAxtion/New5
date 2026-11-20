@@ -1560,9 +1560,9 @@ def apartment_ca(rel, L, B=None, F=None):
 
 
 # ============================================================================================ QUADPLEX
-def quadplex_hw(rel, L):
+def quadplex_hw(rel, L, U=None):
     d = Design("Hearthwood", rel, (29, 22, 21), paving="grass_block[snowy=false]")
-    U = min(L, 4)
+    U = U or min(L, 4)
     x0, z1, z2 = 3, 6, 15
     xe = x0 + 6 * U
     fills = ["calcite", "smooth_sandstone", "calcite", "white_terracotta"]
@@ -1688,45 +1688,59 @@ def cabin(d, x1, z1, out, mirror, Y, bedc, extra_barrel=True, double=False, porc
 
 
 def quadplex_ca(rel, L):
-    d = Design("Cascadia", rel, (27, 20, 29), paving="grass_block[snowy=false]")
-    U = min(L, 4)
-    spec = [(1, 2, "north", False, "brown"), (17, 2, "north", True, "green"),
-            (1, 19, "south", True, "orange"), (17, 19, "south", False, "cyan")]
-    for k in range(U):
+    """Cabin camp: cabins round a courtyard with a fire ring, growing into a camp of eight cabins with the
+    common lodge, a bathhouse and a wood yard."""
+    d = Design("Cascadia", rel, (62, 22, 60), paving="grass_block[snowy=false]")
+    N = {1: 1, 2: 2, 3: 4, 4: 6, 5: 8}[L]
+    # (x1, z1, window side, mirror, colour): inner ring round the court, then an outer row
+    spec = [(17, 2, "north", False, "brown"), (33, 2, "north", True, "green"),
+            (17, 19, "south", True, "orange"), (33, 19, "south", False, "cyan"),
+            (1, 2, "north", False, "red"), (49, 2, "north", True, "yellow"),
+            (1, 19, "south", True, "purple"), (49, 19, "south", False, "lime")]
+    for k in range(N):
         x1, z1, out, mir, c = spec[k]
         Wf = cabin(d, x1, z1, out, mir, 2, c, True, double=(k == 0 and L >= 5))
         if k == 0:
             hx, hz = Wf(4, 0)
             d.hut(hx, 2, hz)
-    # courtyard: gravel paths, fire ring with log benches
-    for x, z in cells(3, 12, 23, 16):
+    # court: fire ring with log benches, paths
+    for x, z in cells(3, 12, 57, 16):
         d.set(x, 1, z, "coarse_dirt" if (x * 3 + z) % 4 else "gravel")
-    for z in range(0, 29):
-        d.set(13, 1, z, "gravel")
-    d.set(13, 1, 14, "cobblestone")
-    d.set(13, 2, 14, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
-    for x in (12, 13, 14):
+    for z in range(0, 60):
+        d.set(29, 1, z, "gravel")
+        d.set(30, 1, z, "gravel")
+    d.set(29, 1, 14, "cobblestone")
+    d.set(29, 2, 14, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+    for x in (28, 29, 30):
         d.set(x, 2, 12, log("spruce_log", "x"))
         d.set(x, 2, 16, log("spruce_log", "x"))
+    for x in (13, 46):
+        lamp_post(d, x, 14, 1, "ca")
+    if L >= 4:
+        # common lodge (the family log house of the camp warden) behind the court
+        stamp(d, house_ca(rel, 3), 0, 33, hut_to="barrel[facing=up,open=false]")
+        outbuilding(d, 30, 36, 40, 43, "bakehouse", h=3)
     if L >= 5:
-        # common pavilion: open timber shelter with a jukebox and the ender chest
-        px1, px2, pz1, pz2 = 19, 25, 11, 17
-        for x, z in cells(px1, pz1, px2, pz2):
-            d.set(x, 1, z, "spruce_planks")
-        for x, z in ((px1, pz1), (px2, pz1), (px1, pz2), (px2, pz2)):
-            for y in range(2, 5):
-                d.set(x, y, z, log("spruce_log", "y"))
-        d.gable(px1, pz1, px2, pz2, 5, "z", "dark_oak_stairs", "dark_oak_slab", "spruce_planks")
-        d.item(px2 - 1, 2, 14, "jukebox")
-        d.item(px2 - 1, 2, 13, "ender_chest", "west")
-        d.dining(22, 2, 14, 1, "x", "spruce", ("n", "s", "w"))
-        d.set(22, 4, 14, lantern(True))
+        px1, px2, pz1, pz2 = 44, 56, 35, 44                     # bathhouse / common pavilion
+        outbuilding(d, px1, pz1, px2, pz2, "workshop", h=4)
+        d.item(px1 + 1, 2, pz1 + 3, "jukebox")
+        d.item(px2 - 1, 2, pz1 + 3, "ender_chest", "west")
+        for x, z in cells(30, 48, 43, 59):
+            d.set(x, 1, z, "coarse_dirt" if (x + z) % 3 else "packed_mud")
+        for z in (50, 53, 56):
+            for x in range(32, 42):
+                d.set(x, 2, z, log("spruce_log", "x"))
+                if x % 3:
+                    d.set(x, 3, z, log("spruce_log", "x"))
+        wagon(d, 33, 58, 2, "spruce", log("spruce_log", "x"))
+        outbuilding(d, 45, 47, 58, 56, "garage", h=4)            # camp store and tack room
+        lamp_post(d, 31, 47, 1, "ca")
     return d
 
 
-def quadplex_nt(rel, L):
+def quadplex_nt(rel, L, U=None):
     d = Design("Neoterra", rel, (31, 20, 19), paving="smooth_stone")
-    U = min(L, 4)
+    U = U or min(L, 4)
     W = "birch"
     for k in range(U):
         a = 3 + 7 * k                                       # interior a..a+4
@@ -3055,3 +3069,433 @@ def cottage_pavilions_nt(rel, L):
 def cottage(pack, rel, L):
     return {"Hearthwood": cottage_hamlet_hw, "Cascadia": cottage_retreat_ca, "Neoterra": cottage_pavilions_nt}[pack](
         rel, L)
+
+
+# ============================================================================================ compositions: APARTMENT
+def apartment_towers_nt(rel, L):
+    """Residential towers on a landscaped podium: one tower that climbs, then a second and third tower of
+    different heights, linked by a glass-canopied lobby walk, pool deck and planters."""
+    d = Design("Neoterra", rel, (62, 80, 26), paving="smooth_stone")
+    A = {1: 2, 2: 4, 3: 5, 4: 8, 5: 11}[L]
+    stamp(d, apartment_nt(rel, L, A), 0, 0, primary=True)
+    if L >= 3:
+        stamp(d, apartment_nt(rel, 3, {3: 3, 4: 5, 5: 8}[L]), 22, 0)
+    if L >= 5:
+        stamp(d, apartment_nt(rel, 3, 5), 44, 0)
+    if L >= 3:
+        # podium walk between the towers: canopy on slim columns, planters, benches
+        for x in range(14, 25 if L < 5 else 47):
+            for z in (21, 22, 23):
+                d.set(x, 1, z, "polished_diorite" if (x + z) % 2 else "smooth_stone")
+            d.set(x, 5, 22, slab("smooth_quartz", "top"))
+            d.set(x, 5, 21, slab("smooth_quartz", "top"))
+            d.set(x, 5, 23, slab("smooth_quartz", "top"))
+            if x % 4 == 0:
+                for y in range(2, 5):
+                    d.set(x, y, 23, "white_concrete")
+        for x in range(15, 24 if L < 5 else 46, 5):
+            bench(d, x, 20, 2, "east", "north", "birch")
+            planter(d, x + 2, 19, x + 3, 19, 1)
+    if L >= 4:
+        for x, z in cells(14, 0, 22, 3):
+            d.set(x, 1, z, "smooth_quartz")
+        for x, z in cells(15, 1, 21, 2):
+            d.set(x, 1, z, "water")
+        for x in (14, 22):
+            lamp_post(d, x, 4, 1, "nt")
+    return d
+
+
+def apartment_square_hw(rel, L):
+    """Victorian mansion blocks round a garden square: the first block rises, then wings close three and finally
+    four sides of the square."""
+    d = Design("Hearthwood", rel, (64, 40, 58), paving="grass_block[snowy=false]")
+    A = {1: 1, 2: 2, 3: 3, 4: 3, 5: 4}[L]
+    stamp(d, apartment_hw(rel, L, A), 18, 0, primary=True)
+    if L >= 3:
+        stamp(d, apartment_hw(rel, 3, {3: 2, 4: 3, 5: 4}[L], False), 45, 12, rot=3)
+    if L >= 4:
+        stamp(d, apartment_hw(rel, 3, 3 if L == 4 else 4, False), 0, 12, rot=1)
+    if L >= 5:
+        stamp(d, apartment_hw(rel, 3, 3, False), 18, 39)
+    if L >= 3:
+        # the square: lawn, gravel walks, a fountain, lamp posts and benches
+        for x, z in cells(22, 22, 40, 36):
+            d.set(x, 1, z, "gravel" if x in (30, 31, 32) or z in (28, 29, 30) else "grass_block[snowy=false]")
+        for x, z in cells(29, 27, 33, 31):
+            d.set(x, 2, z, "stone_bricks" if x in (29, 33) or z in (27, 31) else "water")
+        d.set(31, 3, 29, "stone_brick_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
+        for x, z in ((24, 24), (38, 24), (24, 34), (38, 34)):
+            lamp_post(d, x, z, 1)
+        for x, z in ((25, 28), (36, 28)):
+            bench(d, x, z, 2, "south", "east" if x < 30 else "west", "dark_oak")
+        for x, z in ((23, 27), (39, 31)):
+            tree(d, x, z, 2, "oak", 4, 2)
+    return d
+
+
+def apartment_rows_ca(rel, L):
+    """Mill-town company housing: one boarding house with a gallery, then further boarding houses in two rows
+    either side of a plank-walk street, with a bunkhouse and wood yard."""
+    d = Design("Cascadia", rel, (63, 30, 44), paving="grass_block[snowy=false]")
+    a = {1: (2, 1), 2: (2, 2), 3: (3, 2), 4: (3, 2), 5: (3, 2)}[L]
+    stamp(d, apartment_ca(rel, L, *a), 0, 0, primary=True)
+    if L >= 3:
+        stamp(d, apartment_ca(rel, 3, 2, 1 if L == 3 else 2), 32, 0)
+    if L >= 4:
+        stamp(d, apartment_ca(rel, 3, 2 if L == 4 else 3, 2 if L == 5 else 1), 0, 22)
+    if L >= 5:
+        stamp(d, apartment_ca(rel, 3, 3, 2), 32, 22)
+    if L >= 3:
+        for x in range(0, 63):
+            for z in (19, 20, 21):
+                d.set(x, 1, z, "spruce_planks" if z == 20 else "coarse_dirt")
+        for x in (8, 24, 40, 56):
+            lamp_post(d, x, 19, 1, "ca")
+    if L == 4:
+        # wood yard on the empty lot: stacked logs, a wagon, a chopping block
+        for x, z in cells(21, 24, 31, 38):
+            d.set(x, 1, z, "coarse_dirt" if (x * z) % 3 else "packed_mud")
+        for z in (26, 30, 34):
+            for x in range(22, 30):
+                d.set(x, 2, z, log("spruce_log", "x"))
+                if x % 3:
+                    d.set(x, 3, z, log("spruce_log", "x"))
+        wagon(d, 23, 37, 2, "spruce", log("spruce_log", "x"))
+        d.set(30, 2, 28, log("stripped_spruce_log", "y"))
+    return d
+
+
+@design("apartment")
+def apartment(pack, rel, L):
+    return {"Neoterra": apartment_towers_nt, "Hearthwood": apartment_square_hw, "Cascadia": apartment_rows_ca}[pack](
+        rel, L)
+
+
+# ============================================================================================ compositions: QUADPLEX
+def quadplex_streets_hw(rel, L):
+    """Tudor terraces: the first town cottage, a pair, the full terrace of four, then a second terrace across a
+    shared green and finally a third terrace closing a little close."""
+    d = Design("Hearthwood", rel, (60, 22, 48), paving="grass_block[snowy=false]")
+    stamp(d, quadplex_hw(rel, L, {1: 1, 2: 2, 3: 4, 4: 4, 5: 4}[L]), 0, 0, primary=True)
+    if L >= 4:
+        stamp(d, quadplex_hw(rel, 3, 3 if L == 4 else 4), 30, 0)
+    if L >= 5:
+        stamp(d, quadplex_hw(rel, 3, 4), 0, 26)
+    if L >= 4:
+        for x in range(0, 60):
+            d.set(x, 1, 22, "gravel")
+            d.set(x, 1, 23, "gravel")
+        for x in (6, 20, 34, 48):
+            lamp_post(d, x, 24, 1)
+    return d
+
+
+def quadplex_mews_nt(rel, L):
+    """Modern townhouse mews: duplexes added in pairs, then a second staggered row and a back row across a
+    planted mews court."""
+    d = Design("Neoterra", rel, (63, 22, 42), paving="smooth_stone")
+    stamp(d, quadplex_nt(rel, L, {1: 1, 2: 2, 3: 4, 4: 4, 5: 4}[L]), 0, 0, primary=True)
+    if L >= 4:
+        stamp(d, quadplex_nt(rel, 3, 3 if L == 4 else 4), 32, 0)
+    if L >= 5:
+        stamp(d, quadplex_nt(rel, 3, 4), 0, 22)
+        stamp(d, quadplex_nt(rel, 3, 4), 32, 22)
+    if L >= 4:
+        for x in range(0, 63, 4):
+            planter(d, x, 19, x + 1, 19, 1)
+        for x in (3, 18, 33, 48):
+            lamp_post(d, x, 20, 1, "nt")
+    return d
+
+
+@design("quadplex")
+def quadplex(pack, rel, L):
+    return {"Hearthwood": quadplex_streets_hw, "Cascadia": quadplex_ca, "Neoterra": quadplex_mews_nt}[pack](rel, L)
+
+
+# ============================================================================================ player-house add-ons
+def ph_shell(d, x1, z1, x2, z2, y1, y2, part="wall"):
+    """Pack walls for player-house add-ons."""
+    p = d.pack
+    if p == "Hearthwood":
+        brick_walls(d, x1, z1, x2, z2, y1, y2, "stone_bricks", "cobblestone", "chiseled_stone_bricks")
+    elif p == "Cascadia":
+        log_walls(d, x1, z1, x2, z2, y1, y2, "stripped_spruce_log", "spruce_log", footing=(y1 == d.gy + 1),
+                  plinth=(y1 == d.gy + 1))
+    else:
+        nt_box(d, x1, z1, x2, z2, y1, y2, "white_concrete", "polished_blackstone")
+
+
+def ph_tower(d, x1, z1, floors, uses):
+    """7x7 tower of `floors` storeys joined by a ladder, door in the north wall; `uses` per floor:
+    library / alchemy / study / armory / observatory. Pyramid roof (flat glazed lantern in Neoterra)."""
+    p = d.pack
+    x2, z2 = x1 + 6, z1 + 6
+    W = SHELL[p]["wood"]
+    H = 4
+    top = d.gy + 1 + H * floors
+    for f in range(floors):
+        Y = d.gy + 1 + H * f
+        ph_shell(d, x1, z1, x2, z2, Y, Y + H - 1)
+        d.fill(x1 + 1, Y - 1, z1 + 1, x2 - 1, Y - 1, z2 - 1, f"{W}_planks" if p != "Neoterra" else "polished_diorite")
+        d.clear(x1 + 1, Y, z1 + 1, x2 - 1, Y + H - 1, z2 - 1)
+        for x in (x1 + 2, x1 + 4):
+            d.window(x, Y + 1, z1, x, Y + 2, z1) if f else None
+            d.window(x, Y + 1, z2, x, Y + 2, z2)
+        d.window(x1, Y + 1, z1 + 3, x1, Y + 2, z1 + 3)
+        d.window(x2, Y + 1, z1 + 3, x2, Y + 2, z1 + 3)
+        use = uses[f % len(uses)]
+        if use == "library":
+            for z in range(z1 + 1, z2):
+                for k in range(3):
+                    d.set(x2 - 1, Y + k, z, "bookshelf" if (z + k) % 3 else
+                          "chiseled_bookshelf[facing=west,slot_0_occupied=true,slot_1_occupied=true,slot_2_occupied="
+                          "false,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
+            d.set(x1 + 3, Y, z2 - 1, "lectern[facing=north,has_book=false,powered=false]")
+            d.set(x1 + 2, Y, z1 + 3, slab(W, "top"))
+            d.chair(x1 + 2, Y, z1 + 4, "south", W, sit=False)
+            rugc(d, x1 + 2, z1 + 2, x1 + 4, z1 + 4, Y, "purple")
+        elif use == "alchemy":
+            for z in range(z1 + 2, z2):
+                d.set(x2 - 1, Y, z, slab(W, "top") if z % 2 else "water_cauldron[level=3]")
+                d.set(x2 - 1, Y + 1, z, "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]"
+                      if z % 2 else AIR)
+            d.set(x1 + 3, Y, z2 - 1, "cauldron")
+            d.set(x1 + 2, Y, z2 - 1, "barrel[facing=north,open=false]")
+            d.set(x1 + 4, Y, z2 - 1, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
+            rugc(d, x1 + 2, z1 + 2, x1 + 4, z1 + 3, Y, "green")
+        elif use == "armory":
+            for z in range(z1 + 1, z2):
+                d.set(x2 - 1, Y, z, "smithing_table" if z == z1 + 3 else f"{W}_planks")
+                d.set(x2 - 1, Y + 1, z, ("red_wall_banner[facing=west]" if z % 2 else
+                                         "iron_bars"))
+            d.set(x1 + 3, Y, z2 - 1, "grindstone[face=floor,facing=north]")
+            d.set(x1 + 2, Y, z2 - 1, "chest[facing=north,type=single,waterlogged=false]")
+            d.set(x1 + 4, Y, z2 - 1, "anvil[facing=east]")
+        elif use == "study":
+            d.set(x2 - 1, Y, z1 + 2, slab(W, "top"))
+            d.set(x2 - 1, Y, z1 + 3, slab(W, "top"))
+            d.set(x2 - 1, Y + 1, z1 + 2, "candle[candles=3,lit=false,waterlogged=false]")
+            d.chair(x2 - 2, Y, z1 + 3, "west", W, sit=False)
+            d.set(x2 - 1, Y, z2 - 1, "cartography_table")
+            d.set(x1 + 3, Y, z2 - 1, "chest[facing=north,type=single,waterlogged=false]")
+            d.set(x2 - 1, Y, z1 + 4, "bookshelf")
+            rugc(d, x1 + 2, z1 + 2, x1 + 4, z1 + 4, Y, "blue")
+        elif use == "observatory":
+            d.set(x1 + 3, Y, z1 + 3, fence(W))
+            d.set(x1 + 3, Y + 1, z1 + 3, "end_rod[facing=north]")
+            d.set(x1 + 2, Y, z2 - 1, "cartography_table")
+            d.chair(x1 + 4, Y, z2 - 1, "south", W, sit=False)
+            for x in range(x1 + 1, x2):
+                for z in (z1, z2):
+                    if x % 2:
+                        d.set(x, Y + 1, z, "glass_pane")
+                        d.set(x, Y + 2, z, "glass_pane")
+        # light on chains
+        d.set(x1 + 3, Y + H - 2, z1 + 3, lantern(True) if p != "Neoterra" else "sea_lantern") if use != "observatory" \
+            else None
+    # ladder up in the north-west corner through every floor
+    for y in range(d.gy + 1, d.gy + 1 + H * (floors - 1) + 1):
+        d.set(x1 + 1, y, z1 + 1, "ladder[facing=east,waterlogged=false]")
+    d.door(x1 + 3, d.gy + 1, z1, "south", W)
+    # roof
+    if p == "Neoterra":
+        d.flat(x1, z1, x2, z2, top, "smooth_quartz", "glass", "smooth_quartz_slab")
+        d.set(x1 + 3, top + 1, z1 + 3, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+    else:
+        rb = SHELL[p]["roof"]
+        d.fill(x1 + 1, top, z1 + 1, x2 - 1, top, z2 - 1, f"{W}_planks")
+        _spire(d, x1, z1, x2, z2, top, rb)
+    return top
+
+
+def _spire(d, x1, z1, x2, z2, y, rb):
+    """Steep pyramid roof: rings of stairs, two layers per ring, finial on top."""
+    i, yy = 0, y
+    while x1 - 1 + i <= x2 + 1 - i:
+        a1, a2, b1, b2 = x1 - 1 + i, x2 + 1 - i, z1 - 1 + i, z2 + 1 - i
+        if a2 - a1 < 1:
+            d.set(a1, yy, b1, f"{rb}_slab[type=bottom,waterlogged=false]" if not rb.endswith("planks") else rb)
+            d.set(a1, yy + 1, b1, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+            break
+        for x, z in cells(a1, b1, a2, b2):
+            if x in (a1, a2) or z in (b1, b2):
+                f = "south" if z == b1 else "north" if z == b2 else "east" if x == a1 else "west"
+                shape = "straight"
+                if x in (a1, a2) and z in (b1, b2):
+                    shape = "outer_left" if (x == a1) == (z == b1) else "outer_right"
+                    f = "south" if z == b1 else "north"
+                d.set(x, yy, z, f"{rb}_stairs[facing={f},half=bottom,shape={shape},waterlogged=false]")
+                if i > 0:
+                    d.set(x, yy - 1, z, f"{rb}_stairs[facing={f},half=bottom,shape={shape},waterlogged=false]"
+                          if d.air(x, yy - 1, z) else d.get(x, yy - 1, z))
+        i += 1
+        yy += 2
+
+
+def ph_hall(d, x1, z1, x2, z2, h=6):
+    """Great hall: tall single room with long tables and benches, hearths at both ends, banners,
+    chandeliers on chains; door in the north wall."""
+    p = d.pack
+    W = SHELL[p]["wood"]
+    y0 = d.gy + 1
+    yt = y0 + h - 1
+    ph_shell(d, x1, z1, x2, z2, y0, yt)
+    d.fill(x1 + 1, d.gy, z1 + 1, x2 - 1, d.gy, z2 - 1, "polished_andesite" if p == "Neoterra" else
+           f"{W}_planks" if p == "Cascadia" else "stone_bricks")
+    d.clear(x1 + 1, y0, z1 + 1, x2 - 1, yt, z2 - 1)
+    for x in range(x1 + 2, x2 - 1, 3):
+        d.window(x, y0 + 2, z1, x, yt - 1, z1)
+        d.window(x, y0 + 2, z2, x, yt - 1, z2)
+    if p == "Neoterra":
+        d.flat(x1, z1, x2, z2, yt + 1, "smooth_quartz", "white_concrete", "smooth_quartz_slab")
+        for x in range(x1 + 2, x2 - 1, 3):
+            for z in range(z1 + 2, z2 - 1, 3):
+                d.set(x, yt + 1, z, "glass")
+    else:
+        rb = SHELL[p]["roof"]
+        d.gable(x1, z1, x2, z2, yt + 1, "x", f"{rb}_stairs", f"{rb}_slab",
+                "stone_bricks" if p == "Hearthwood" else log("stripped_spruce_log", "z"))
+        for x in range(x1 + 2, x2 - 1, 4):                         # tie beams
+            for z in range(z1 + 1, z2):
+                d.set(x, yt, z, log("dark_oak_log" if p == "Hearthwood" else "spruce_log", "z"))
+    door = (x1 + x2) // 2
+    d.double_door(door, y0, z1, "x", "south", W)
+    for y in (y0 + 2,):
+        d.set(door, y, z1, "chiseled_stone_bricks" if p == "Hearthwood" else d.get(door, y, z1))
+    # hearths at both ends
+    zc = (z1 + z2) // 2
+    fire = "soul_campfire" if p == "Neoterra" else "campfire"
+    frame = {"Hearthwood": "stone_bricks", "Cascadia": "cobblestone", "Neoterra": "polished_blackstone_bricks"}[p]
+    fireplace(d, x1, zc, y0, "east", yt + 4, frame, frame, fire)
+    fireplace(d, x2, zc, y0, "west", yt + 4, frame, frame, fire)
+    # long tables with benches
+    for tz in (zc - 2, zc + 2):
+        if tz - 1 <= z1 or tz + 1 >= z2:
+            continue
+        for x in range(x1 + 4, x2 - 3):
+            d.table(x, y0, tz, W, "slab")
+            d.chair(x, y0, tz - 1, "north", W, sit=False)
+            d.chair(x, y0, tz + 1, "south", W, sit=False)
+            if x % 3 == 0:
+                d.candle(x, y0 + 1, tz, 3)
+    # chandeliers and banners
+    for x in range(x1 + 4, x2 - 2, 5):
+        for y in range(yt - 1, yt + 1):
+            d.set(x, y, zc, "chain[axis=y,waterlogged=false]") if d.air(x, y, zc) else None
+        d.set(x, yt - 2, zc, lantern(True) if p != "Neoterra" else "sea_lantern")
+    col = {"Hearthwood": "red", "Cascadia": "green", "Neoterra": "cyan"}[p]
+    for x in range(x1 + 3, x2 - 1, 3):
+        d.banner(x, y0 + 3, z2 - 1, "north", col)
+    return d
+
+
+def ph_vault(d, x1, z1, x2, z2, h=4):
+    """Storehouse: barrel shelving three high along the walls and back-to-back down the middle."""
+    p = d.pack
+    W = SHELL[p]["wood"]
+    y0 = d.gy + 1
+    yt = y0 + h - 1
+    ph_shell(d, x1, z1, x2, z2, y0, yt)
+    d.fill(x1 + 1, d.gy, z1 + 1, x2 - 1, d.gy, z2 - 1, SHELL[p]["floor"])
+    d.clear(x1 + 1, y0, z1 + 1, x2 - 1, yt, z2 - 1)
+    if p == "Neoterra":
+        d.flat(x1, z1, x2, z2, yt + 1, "smooth_quartz", "white_concrete", "smooth_quartz_slab")
+    else:
+        rb = SHELL[p]["roof"]
+        d.gable(x1, z1, x2, z2, yt + 1, "x", f"{rb}_stairs", f"{rb}_slab",
+                "stone_bricks" if p == "Hearthwood" else "spruce_planks")
+    door = (x1 + x2) // 2
+    d.double_door(door, y0, z1, "x", "south", W)
+    for x in range(x1 + 1, x2):
+        if abs(x - door) > 1:
+            for k in range(3):
+                d.set(x, y0 + k, z2 - 1, "barrel[facing=north,open=false]")
+    mid = (z1 + z2) // 2
+    for x in range(x1 + 3, x2 - 2):
+        for k in range(3):
+            d.set(x, y0 + k, mid, "barrel[facing=north,open=false]")
+    for z in range(z1 + 2, z2 - 1):
+        d.set(x1 + 1, y0, z, "chest[facing=east,type=single,waterlogged=false]")
+    for x in range(x1 + 3, x2 - 2, 4):
+        d.set(x, yt, z1 + 2, lantern(True) if p != "Neoterra" else "sea_lantern")
+
+
+# ============================================================================================ compositions: PLAYER HOUSE
+def player_estate(rel, L):
+    """The player's seat grows into an estate: the house with its stores and workshop (L1-2), then a library
+    tower in a walled garden, a great hall for feasts, and finally a second tower and a storehouse vault."""
+    pack = REQ_PACK[0]
+    d = Design(pack, rel, (64, 50, 64), paving="grass_block[snowy=false]" if pack != "Neoterra" else "smooth_stone")
+    fn = {"Hearthwood": playerhouse_hw, "Cascadia": playerhouse_ca, "Neoterra": playerhouse_nt}[pack]
+    stamp(d, fn(rel, L), 0, 0, primary=True)
+    lamp = {"Hearthwood": "hw", "Cascadia": "ca", "Neoterra": "nt"}[pack]
+    W = SHELL[pack]["wood"]
+    path_b = {"Hearthwood": "gravel", "Cascadia": "coarse_dirt", "Neoterra": "polished_diorite"}[pack]
+    if pack == "Hearthwood":
+        T1, G, HALL, VAULT, T2 = (36, 2), (33, 11, 62, 28), (33, 32, 62, 44), (2, 34, 24, 46), (55, 2)
+    elif pack == "Cascadia":
+        T1, G, HALL, VAULT, T2 = (34, 26), (42, 22, 62, 40), (33, 2, 62, 14), (2, 34, 24, 46), (34, 44)
+    else:
+        T1, G, HALL, VAULT, T2 = (32, 34), (40, 34, 62, 50), (32, 2, 62, 12), (2, 34, 26, 46), (32, 52)
+    if L >= 3:
+        ph_tower(d, T1[0], T1[1], 4, ("library", "alchemy", "study", "observatory"))
+        gx1, gz1, gx2, gz2 = G
+        hedge(d, gx1, gz1, gx2, gz2, "oak" if pack != "Cascadia" else "spruce",
+              gaps=((gx1, (gz1 + gz2) // 2), ((gx1 + gx2) // 2, gz1)))
+        cx, cz = (gx1 + gx2) // 2, (gz1 + gz2) // 2
+        for x in range(gx1 + 1, gx2):
+            d.set(x, 1, cz, path_b)
+        for z in range(gz1 + 1, gz2):
+            d.set(cx, 1, z, path_b)
+        for ax, az in cells(cx - 1, cz - 1, cx + 1, cz + 1):
+            d.set(ax, 2, az, "stone_bricks" if (ax, az) != (cx, cz) else "water")
+        for x, z in ((gx1 + 3, gz1 + 3), (gx2 - 3, gz1 + 3), (gx1 + 3, gz2 - 3), (gx2 - 3, gz2 - 3)):
+            tree(d, x, z, 2, "oak" if pack != "Cascadia" else "spruce", 4, 2)
+        for x, z in ((cx - 4, cz - 1), (cx + 3, cz + 1)):
+            bench(d, x, z, 2, "east", "north" if z < cz else "south", W)
+        for x in range(gx1 + 2, gx2 - 1, 2):
+            for z in (gz1 + 1, gz2 - 1):
+                d.set(x, 2, z, ("rose_bush[half=lower]", "peony[half=lower]", "lilac[half=lower]")[x % 3])
+                d.set(x, 3, z, ("rose_bush[half=upper]", "peony[half=upper]", "lilac[half=upper]")[x % 3])
+    if L >= 4:
+        ph_hall(d, *HALL, h=7)
+        hx = (HALL[0] + HALL[2]) // 2
+        for x in (HALL[0], HALL[2]):
+            lamp_post(d, x, HALL[1] - 2 if HALL[1] > 3 else HALL[3] + 2, 1, lamp)
+        ph_vault(d, *VAULT, h=4)
+        for x in range(VAULT[0], VAULT[2] + 1, 6):
+            lamp_post(d, x, VAULT[1] - 2, 1, lamp)
+    if L >= 5:
+        ph_tower(d, T2[0], T2[1], 5, ("armory", "library", "study", "alchemy", "observatory"))
+        ph_tower(d, 2, 50, 4, ("study", "library", "alchemy", "observatory"))
+        ph_hall(d, 12, 50, 30, 61, h=5)
+        # estate wall with a gate on the street and piers with lamps
+        wall = {"Hearthwood": "stone_brick_wall", "Cascadia": "cobblestone_wall", "Neoterra": "polished_blackstone_wall"}[pack]
+        ws = f"{wall}[east=low,north=none,south=none,up=false,waterlogged=false,west=low]"
+        for x in range(0, 64):
+            if d.air(x, 2, 0) and not (12 <= x <= 14):
+                d.set(x, 2, 0, ws)
+        for z in range(0, 64):
+            for x in (0, 63):
+                if d.air(x, 2, z):
+                    d.set(x, 2, z, f"{wall}[east=none,north=low,south=low,up=false,waterlogged=false,west=none]")
+        for x in range(0, 64):
+            if d.air(x, 2, 63):
+                d.set(x, 2, 63, ws)
+        for x in range(0, 64, 8):
+            for z in (0, 63):
+                if d.get(x, 2, z).startswith("minecraft:" + wall):
+                    d.set(x, 2, z, f"{wall}[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
+                    d.set(x, 3, z, lantern(False))
+    return d
+
+
+REQ_PACK = [None]
+
+
+@design("playerhouse")
+def playerhouse(pack, rel, L):
+    REQ_PACK[0] = pack
+    return player_estate(rel, L)
