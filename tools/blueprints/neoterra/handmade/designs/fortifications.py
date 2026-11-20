@@ -1980,6 +1980,100 @@ def shutters(d, cells, y, wood, out):
             put(d, x + ox_ + sx_ * sgn, y, z + oz_ + sz_ * sgn, TD(wood, out, "bottom", "true"))
 
 
+def safe(d, x, y, z):
+    """A detail block may go here: inside, empty, and nobody can stand right below it."""
+    return d.bp.inside(x, y, z) and d.air(x, y, z) and (y < 2 or (d.air(x, y - 1, z) and d.air(x, y - 2, z)))
+
+
+def sput(d, x, y, z, b):
+    if safe(d, x, y, z):
+        d.set(x, y, z, b)
+
+
+def frames(d, x1, z1, x2, z2, sill, lintel, y1=2, y2=40):
+    """Window frames on the outer faces of a wall rectangle: a sill (upside-down stair, back to the wall) under
+    and a lintel slab over every window column, where it does not block anybody."""
+    sides = [((x, z1), "north") for x in range(x1, x2 + 1)] + [((x, z2), "south") for x in range(x1, x2 + 1)] + \
+            [((x1, z), "west") for z in range(z1 + 1, z2)] + [((x2, z), "east") for z in range(z1 + 1, z2)]
+    for (x, z), out in sides:
+        ox_, oz_ = OUT[out]
+        y = y1
+        while y <= y2:
+            if d.bp.inside(x, y, z) and "glass" in d.get(x, y, z):
+                yb = y
+                while d.bp.inside(x, y + 1, z) and "glass" in d.get(x, y + 1, z):
+                    y += 1
+                sput(d, x + ox_, yb - 1, z + oz_, ST(sill, OPP[out], "top"))
+                sput(d, x + ox_, y + 1, z + oz_, lintel)
+            y += 1
+
+
+def eave_trim(d, x1, z1, x2, z2, wood, ylo=3, yhi=40):
+    """Fascia / bargeboards: a trapdoor under every roof stair hanging over the wall line."""
+    for x in range(x1 - 1, x2 + 2):
+        for z in range(z1 - 1, z2 + 2):
+            if x1 <= x <= x2 and z1 <= z <= z2:
+                continue
+            if x in (x1 - 1, x2 + 1) and z in (z1 - 1, z2 + 1):
+                continue
+            out = "north" if z == z1 - 1 else "south" if z == z2 + 1 else "west" if x == x1 - 1 else "east"
+            for y in range(yhi, ylo - 1, -1):
+                if not d.bp.inside(x, y, z):
+                    continue
+                b = d.get(x, y, z)
+                if "_stairs" in b and "half=bottom" in b:
+                    sput(d, x, y - 1, z, TD(wood, out, "top"))
+                    break
+
+
+def log_notches(d, x1, z1, x2, z2, y1, y2, log="spruce_log"):
+    """Log-cabin corners: log ends sticking out past the corners on alternate courses."""
+    for x, z in ((x1, z1), (x2, z1), (x1, z2), (x2, z2)):
+        sx = -1 if x == x1 else 1
+        sz = -1 if z == z1 else 1
+        for y in range(y1, y2 + 1):
+            if y % 2:
+                sput(d, x + sx, y, z, LOG(log, "x"))
+            else:
+                sput(d, x, y, z + sz, LOG(log, "z"))
+
+
+def corbels(d, cells, y, mat):
+    """Corbel table: upside-down stairs on the outside of the given wall cells (x, z, outward)."""
+    for x, z, out in cells:
+        ox_, oz_ = OUT[out]
+        sput(d, x + ox_, y, z + oz_, ST(mat, OPP[out], "top"))
+
+
+def ring_out(foot, X0, Z0):
+    """Outer-boundary cells of a footprint mask with the outward direction."""
+    out = []
+    for (rx, rz) in foot:
+        for f, (dx, dz) in OUT.items():
+            if (rx + dx, rz + dz) not in foot:
+                out.append((X0 + rx, Z0 + rz, f))
+    return out
+
+
+def roof_units(d, cells, y):
+    """Rooftop plant: AC units with grilles and a vent pipe (Neoterra)."""
+    for x, z in cells:
+        if d.air(x, y, z):
+            d.set(x, y, z, "light_gray_concrete")
+            put(d, x, y + 1, z, "iron_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]")
+    if cells:
+        x, z = cells[0]
+        put(d, x - 1, y, z, "iron_bars")
+        put(d, x - 1, y + 1, z, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+
+
+def fins(d, cells, y1, y2, mat):
+    """Vertical facade fins standing proud of the wall (only where nobody walks)."""
+    for x, z in cells:
+        for y in range(y1, y2 + 1):
+            sput(d, x, y, z, mat) if y > 3 else put(d, x, y, z, mat)
+
+
 def dress_barracks(d, L):
     pk = d.pack
     if pk == "Hearthwood":
@@ -1998,6 +2092,22 @@ def dress_barracks(d, L):
         weapon_rack(d, [(6, 6), (6, 7)], 2, "spruce") if d.air(6, 2, 6) and d.air(6, 2, 7) else None
         lamp_post(d, 13, 17)
         lamp_post(d, 19, 17)
+        HT = 6 if L < 5 else 10
+        frames(d, 10, 19, 22, 29, "stone_brick", "stone_brick_slab[type=top,waterlogged=false]")
+        eave_trim(d, 10, 19, 22, 29, "dark_oak")
+        for x in (14, 18):                                    # buttresses
+            for z, out in ((18, "north"), (30, "south")):
+                for y in range(2, HT - 1):
+                    put(d, x, y, z, stone_mix(x, y, z))
+                put(d, x, HT - 1, z, ST("stone_brick", OPP[out]))
+        for y in range(30, 2, -1):                            # chimney cap on the hall flue
+            if d.get(22, y, 24) == "minecraft:bricks":
+                put(d, 22, y + 1, 24, "brick_wall") if d.get(21, y, 24) != AIR else None
+                put(d, 21, y + 1, 24, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+                break
+        if L >= 3:                                            # corbel table under the gate-tower parapet
+            corbels(d, [(x, 2, "north") for x in range(13, 20)] + [(x, 5, "south") for x in range(13, 20)], 10,
+                    "stone_brick")
     elif pk == "Cascadia":
         furnish(d, "deco", 12, 14, 20, 20, 2, free=[(16, 14), (13, 14), (12, 15)], center=False, lamps=False)
         shutters(d, [(13, 13), (19, 13)], 4, "dark_oak", "north")
@@ -2010,6 +2120,14 @@ def dress_barracks(d, L):
         lamp_post(d, 18, 9)
         bench(d, 9, 20, "west", along="z") if L >= 2 else None
         cart(d, 23, 21, "z") if L >= 2 else None
+        frames(d, 11, 13, 21, 21, "spruce", LOG("stripped_spruce_log", "x"))
+        eave_trim(d, 11, 13, 21, 21, "spruce")
+        log_notches(d, 11, 13, 21, 21, 3, 5)
+        for y in range(30, 2, -1):
+            if d.get(22, y, 17).split("[")[0].split(":")[1] in ("cobblestone", "mossy_cobblestone", "andesite", "tuff"):
+                put(d, 22, y + 1, 17, "cobblestone_wall")
+                put(d, 22, y + 2, 17, "cobblestone_slab[type=bottom,waterlogged=false]")
+                break
     else:
         for x, z, b in ((10, 22, "potted_bamboo"), (12, 21, "potted_azalea_bush"), (15, 21, "potted_bamboo")):
             put(d, x, 2, z, b)
@@ -2024,6 +2142,13 @@ def dress_barracks(d, L):
             lamp_post(d, x, 19)
         bench(d, 4, 21, "west", along="z")
         bench(d, 22, 21, "east", along="z")
+        top = 12 if L >= 3 else 7
+        frames(d, 8, 20, 18, 30, "smooth_quartz", "smooth_quartz_slab[type=top,waterlogged=false]", y1=4)
+        fins(d, [(8, 19), (18, 19)], 2, top, "cyan_concrete")
+        if L < 5:
+            roof_units(d, [(10, 28), (11, 28), (15, 28)], top + 2)
+        else:
+            roof_units(d, [(10, 22), (16, 22)], top + 2)
 
 
 def dress_gatehouse(d, L):
@@ -2038,6 +2163,9 @@ def dress_gatehouse(d, L):
         for z in (5, 8):                                      # chained lanterns in the passage
             d.set(9, 6, z, LANT)
             d.set(10, 6, z, LANT)
+        for X0 in (1, 12):
+            corbels(d, ring_out(D7_FOOT, X0, 1), 11, "stone_brick")
+            frames(d, X0, 1, X0 + 6, 10, "stone_brick", "stone_brick_slab[type=top,waterlogged=false]", y1=5)
         d.banner(8, 4, 7, "east", "red") if d.air(8, 4, 7) else None
         d.banner(11, 4, 7, "west", "red") if d.air(11, 4, 7) else None
     elif pk == "Cascadia":
@@ -2046,6 +2174,10 @@ def dress_gatehouse(d, L):
                 lamps=False)
         for X0 in (1, 11):
             shutters(d, [(X0 + 2, 2)], 9, "dark_oak", "north")
+            eave_trim(d, X0, 2, X0 + 5, 7, "spruce", ylo=8)
+            log_notches(d, X0, 2, X0 + 5, 7, 5, 9)
+            frames(d, X0, 2, X0 + 5, 7, "spruce", LOG("stripped_spruce_log", "x"), y1=6)
+            put(d, X0 + 3, 16, 4, "lightning_rod[facing=up,powered=false,waterlogged=false]")
         for z in (4, 6):
             d.set(8, 6, z, LANT) if d.air(8, 6, z) else None
         d.banner(7, 4, 6, "east", "green") if d.air(7, 4, 6) else None
@@ -2056,6 +2188,10 @@ def dress_gatehouse(d, L):
                 center=False, lamps=False)
         for X0, dx, lx in ((1, 6, 4), (14, 15, 17)):
             furnish(d, "deco", X0 + 1, 3, X0 + 5, 7, 7, free=[(dx, 5), (lx, 7)], center=True, lamps=False)
+        for X0 in (1, 14):
+            roof_units(d, [(X0 + 2, 6), (X0 + 3, 6)], 12) if L < 3 else roof_units(d, [(X0 + 2, 7)], 12)
+            fins(d, [(X0, 1), (X0 + 6, 1)], 2, 11, "cyan_concrete")
+            frames(d, X0, 2, X0 + 6, 8, "smooth_quartz", "smooth_quartz_slab[type=top,waterlogged=false]", y1=7)
         for x in (9, 12):
             d.set(x, 5, 6, "sea_lantern") if False else None
 
@@ -2070,15 +2206,30 @@ def dress_wallguard(d, L):
             furnish(d, "deco", 5, 3, 9, 7, 13, free=[(9, 3)], center=False, lamps=False)
         put(d, 6, 4, 9, "red_wall_banner[facing=south]")
         put(d, 8, 4, 9, "white_wall_banner[facing=south]")
+        top = 12 if L == 1 else 17
+        cells = [(x, 2, "north") for x in range(4, 11)] + [(x, 8, "south") for x in range(4, 11)] + \
+                [(4, z, "west") for z in range(3, 8)] + [(10, z, "east") for z in range(3, 8)]
+        corbels(d, cells, top, "stone_brick")
+        frames(d, 4, 2, 10, 8, "stone_brick", "stone_brick_slab[type=top,waterlogged=false]", y1=8)
     elif pk == "Cascadia":
         furnish(d, "deco", 4, 4, 8, 8, 2, free=[(6, 8), (6, 4), (6, 5), (4, 4), (8, 4), (4, 6), (4, 7), (8, 8)],
                 center=False, lamps=False)
         furnish(d, "deco", 3, 3, 9, 9, 8, free=[(3, 5), (9, 5), (6, 4)], center=True, lamps=False)
         shutters(d, [(4, 2), (8, 2), (6, 10)], 10, "dark_oak", "north")
+        eave_trim(d, 2, 2, 10, 10, "spruce", ylo=9)
+        log_notches(d, 2, 2, 10, 10, 8, 10)
+        log_notches(d, 3, 3, 9, 9, 4, 6)
+        for y in range(25, 10, -1):
+            if "dark_oak_slab" in d.get(6, y, 6) or ("dark_oak" in d.get(6, y, 6) and L == 1):
+                put(d, 6, y + 1, 6, "lightning_rod[facing=up,powered=false,waterlogged=false]") if L == 1 else None
+                break
     else:
         furnish(d, "deco", 3, 3, 7, 7, 2, free=[(5, 7), (5, 4), (3, 3), (7, 3), (3, 5), (3, 6), (3, 7)],
                 center=False, lamps=False)
         furnish(d, "deco", 3, 3, 7, 7, 9, free=[(3, 5), (7, 5), (5, 4)], center=True, lamps=False)
+        fins(d, [(1, 2), (9, 2), (1, 8), (9, 8)] if L == 1 else [], 2, 12, "cyan_concrete")
+        fins(d, [(x, 9) for x in (3, 7)], 2, 7, "cyan_concrete")
+        frames(d, 2, 2, 8, 8, "smooth_quartz", "smooth_quartz_slab[type=top,waterlogged=false]", y1=9)
 
 
 @design("barracks")

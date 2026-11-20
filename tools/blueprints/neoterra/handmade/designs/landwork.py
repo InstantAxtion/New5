@@ -205,7 +205,7 @@ def door_cells(d):
 
 def bld(d, x1, z1, x2, z2, floors=1, fh=4, roof="gable", axis="x", doors=(), win=3, chimney=None,
         floor=None, nowin=(), glass=None, deco=True, overhang=1, roofmat=None, lamps=True, ceiling=True,
-        wallfn=None, ribbon=False, pal=None):
+        wallfn=None, ribbon=False, pal=None, blind=()):
     """Decorated building shell. doors: (x, z, side[, storey]) with side n/s/e/w = which wall it is in.
     Storey k: air y = 2+k*fh .. fh+k*fh, ceiling/floor slab at 1+(k+1)*fh. Roof eave at top+1."""
     pack = d.pack
@@ -240,6 +240,8 @@ def bld(d, x1, z1, x2, z2, floors=1, fh=4, roof="gable", axis="x", doors=(), win
     for k in range(floors):
         yb = 2 + k * fh
         for side, cells in sides.items():
+            if side in blind:
+                continue
             out = D4[SIDES[side]]
             for i, (x, z) in enumerate(cells):
                 p = x if side in "ns" else z
@@ -1134,7 +1136,7 @@ def nw_brazier(d, x, z, pack):
 
 
 def netherworker_design(pack, rel, L):
-    size = {"Neoterra": (40, 34, 32), "Hearthwood": (42, 34, 34), "Cascadia": (44, 34, 36)}[pack]
+    size = {"Neoterra": (40, 38, 36), "Hearthwood": (42, 38, 38), "Cascadia": (44, 38, 40)}[pack]
     d = Design(pack, rel, size, gy=1, paving={"Neoterra": "smooth_stone", "Cascadia": "coarse_dirt"}.get(pack))
     P.d = d
     d.palette = NW_PAL[pack]
@@ -1163,7 +1165,7 @@ def netherworker_design(pack, rel, L):
             lamp_post(d, x, Z + 4)
         if L >= 2:
             nx = bld(d, X + 4, Z + 1, X + 11, Z + 6, floors=2, roof=roof, axis="z" if pack != "Neoterra" else "x",
-                     doors=[(X + 7, Z + 1, "n")], win=3)
+                     doors=[(X + 7, Z + 1, "n")], win=3, blind=("s",))
             d.door(X + 7, 2, Z + 6, "south", S["doorwood"])
             door_cells(d).update({(X + 7, 2, Z + 5), (X + 7, 2, Z + 7)})
             stairs_up(d, X + 10, Z + 2, "south", 2, rail=False)
@@ -1172,7 +1174,8 @@ def netherworker_design(pack, rel, L):
             run(d, nx, "n", 6, [P.chair(W), P.shelf("polished_blackstone_brick", "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]")], skip=1)
             room_rug(d, nx, 2, ("red_carpet", "black_carpet"), inset=2)
             room_rug(d, nx, 6, ("red_carpet", "black_carpet"), inset=2)
-            vs = bld(d, X + 15, Z + 8, X + 20, Z + 13, floors=1, roof=roof, axis="x", doors=[(X + 15, Z + 10, "w")])
+            vs = bld(d, X + 15, Z + 8, X + 20, Z + 13, floors=1, roof=roof, axis="x", doors=[(X + 15, Z + 10, "w")],
+                     blind=("w",))
             d.door(X + 13, 2, Z + 10, "east", S["doorwood"])
             door_cells(d).update({(X + 12, 2, Z + 10), (X + 14, 2, Z + 10)})
             run(d, vs, "e", 2, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]"),
@@ -1220,6 +1223,26 @@ def netherworker_design(pack, rel, L):
         for x in (x1 - 1, x2 + 1):
             if 0 <= x < d.sx:
                 lamp_post(d, x, z1 - 2 if z1 >= 2 else z1)
+        # ---- L3: south annex - sacristy below, scriptorium above ----
+        sa = bld(d, X + 2, Z + 15, X + 14, Z + 20, floors=2, roof=roof, axis="x", doors=[(X + 8, Z + 15, "n")],
+                 blind=("n",),
+                 pal={"Neoterra": dict(wall="white_concrete", post="polished_blackstone", band="magenta_terracotta"),
+                      "Hearthwood": dict(wall="calcite", end="calcite", roof="dark_prismarine", framing=True),
+                      "Cascadia": dict(siding="birch_planks", end="birch_planks", roof="dark_prismarine")}[pack])
+        d.door(X + 8, 2, Z + 13, "south", S["doorwood"])
+        door_cells(d).update({(X + 8, 2, Z + 12), (X + 8, 2, Z + 14)})
+        d.set(X + 8, 1, Z + 14, S["floor"])
+        stairs_up(d, X + 3, Z + 19, "east", 2, rail=False)
+        run(d, sa, "n", 2, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]"),
+                            P.b("chest[facing={f},type=single,waterlogged=false]"), P.b("crying_obsidian"),
+                            P.shelf("polished_blackstone_brick", "potted_crimson_fungus")], skip=1)
+        run(d, sa, "e", 2, [P.b("smithing_table"), P.b("water_cauldron[level=3]"), P.b("magma_block")], skip=0)
+        run(d, sa, "n", 6, [P.books()] * 5 + [P.b("lectern[facing={f},has_book=true,powered=false]")], skip=1)
+        for x in (X + 6, X + 9, X + 12):
+            d.set(x, 6, Z + 18, "polished_blackstone_slab[type=top,waterlogged=false]")
+            d.chair(x, 6, Z + 19, "south", W, sit=False)
+            d.candle(x, 7, Z + 18, 2, "red")
+        room_rug(d, sa, 2, ("black_carpet", "red_carpet"), inset=2)
         # ---- L4: east wing: library & sample laboratory over a vaulted store ----
         if L >= 4:
             ex1 = x2 + 2
@@ -1248,17 +1271,17 @@ def netherworker_design(pack, rel, L):
         # ---- L5: watch tower over the gate and an ember garden ----
         if L >= 5:
             tx = x2 + 2
-            tw = bld(d, tx, Z + 15, tx + 5, Z + 20, floors=5, roof="hip" if pack != "Neoterra" else "flat", axis="x",
+            tw = bld(d, tx, Z + 15, tx + 5, Z + 20, floors=6, roof="hip" if pack != "Neoterra" else "flat", axis="x",
                      doors=[(tx, Z + 17, "w")], win=2,
                      pal={"Neoterra": dict(wall="polished_blackstone_bricks", post="smooth_quartz", band="magenta_concrete"),
                           "Hearthwood": dict(roof="deepslate_tile"), "Cascadia": dict(roof="cobbled_deepslate")}[pack])
-            ladder(d, tx + 4, Z + 19, 2, 21, "west")
-            for k in range(5):
+            ladder(d, tx + 4, Z + 19, 2, 25, "west")
+            for k in range(6):
                 y = 2 + 4 * k
                 d.set(tx + 1, y, Z + 16, "lectern[facing=south,has_book=true,powered=false]" if k % 2 else "chiseled_bookshelf[facing=south,slot_0_occupied=true,slot_1_occupied=true,slot_2_occupied=false,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
                 d.set(tx + 2, y, Z + 16, "barrel[facing=up,open=false]")
                 d.set(tx + 1, y + 2, Z + 18, "soul_lantern[hanging=true,waterlogged=false]")
-            gx1, gz1 = X, Z + 15
+            gx1, gz1 = X, Z + 22
             for x in range(gx1, gx1 + 15):
                 for z in range(gz1, gz1 + 5):
                     edge = x in (gx1, gx1 + 14) or z in (gz1, gz1 + 4)

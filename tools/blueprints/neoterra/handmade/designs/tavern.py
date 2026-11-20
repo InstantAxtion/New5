@@ -47,7 +47,7 @@ def bar(d, x1, x2, z, y, top, stools_side, wood=None):
 
 # ----------------------------------------------------------------------------------------------- Hearthwood
 def hearthwood(rel, L):
-    d = Design("Hearthwood", rel, (44, 42, 40), gy=1)
+    d = Design("Hearthwood", rel, (37, 42, 35), gy=1)
     P = d.P
     X2 = 15 if L == 1 else 19
     x1, z1, z2 = 3, 4, 12
@@ -202,7 +202,7 @@ def hearthwood(rel, L):
 # ----------------------------------------------------------------------------------------------- Cascadia
 def cascadia(rel, L):
     W = {1: 11, 2: 13, 3: 13}[L]
-    d = Design("Cascadia", rel, (46, 42, 42), gy=1, paving="coarse_dirt")
+    d = Design("Cascadia", rel, (49, 42, 33), gy=1, paving="coarse_dirt")
     x1, z1 = 4, 7
     x2, z2 = x1 + W - 1, z1 + 14
     y0 = 2
@@ -329,7 +329,7 @@ def cascadia(rel, L):
 
 # ----------------------------------------------------------------------------------------------- Neoterra
 def neoterra(rel, L):
-    d = Design("Neoterra", rel, (44, 42, 40), gy=1, paving="smooth_stone")
+    d = Design("Neoterra", rel, (36, 42, 33), gy=1, paving="smooth_stone")
     W = {1: 13, 2: 17, 3: 17}[L]
     x1, z1 = 3, 4
     x2, z2 = x1 + W - 1, z1 + 11

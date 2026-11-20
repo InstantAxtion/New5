@@ -2660,3 +2660,207 @@ def wh_neo(rel, L):
         for x in range(22, 33, 3):
             crate_stack(d, x, 18, y0, 2)
     return d
+
+
+def barn_bays(d, room, x1, x2, nave, z0, units, need):
+    """Tithe-barn storage: double rows of rack columns across the barn either side of a central nave,
+    a cross aisle after every pair. Returns racks placed."""
+    n = 0
+    for u in range(units):
+        za = z0 + 3 * u
+        for z in (za, za + 1):
+            for x in list(range(x1, nave[0])) + list(range(nave[1] + 1, x2 + 1)):
+                if n < need:
+                    n += rack_col(d, x, z, room.y)
+    room.keep |= {(x, z) for x in range(x1, x2 + 1) for z in range(z0 - 1, z0 + 3 * units + 1)}
+    return n
+
+
+def buttresses(d, b, mat="stone_bricks", stair="stone_brick"):
+    for z in range(b.z1 + 3, b.z2, 3):
+        for x, f in ((b.x1 - 1, "east"), (b.x2 + 1, "west")):
+            if d.bp.inside(x, 2, z):
+                d.fill(x, 2, z, x, 4, z, mat)
+                d.set(x, 5, z, st(stair, f))
+
+
+def wh_hw(rel, L):
+    d = Design("Hearthwood", rel, (34, 26, 40), paving="gravel")
+    P, y0 = "Hearthwood", 2
+    U = {1: 1, 2: 2, 3: 3, 4: 3, 5: 4}[L]
+    z2 = 9 + 3 * U
+    a = build(d, 3, 4, 17, z2, 1, H=6, roof="gable", axis="z")
+    buttresses(d, a, "sandstone", "sandstone")
+    # cart porch (midstrey)
+    for z in range(1, 4):
+        for y in range(y0, 6):
+            d.set(8, y, z, "sandstone")
+            d.set(12, y, z, "sandstone")
+        for x in range(9, 12):
+            d.set(x, 1, z, "spruce_planks")
+    d.gable(8, 1, 12, 3, 6, "z", "dark_prismarine_stairs", "dark_prismarine_slab", "smooth_sandstone", overhang=0)
+    a.opening(9, 4, 11, 4, 4, lg("stripped_spruce_log", "x"))
+    for x in range(9, 12):
+        for y in range(y0, 6):
+            d.set(x, y, 1, AIR)
+        d.set(x, 6, 1, lg("stripped_spruce_log", "x"))
+    d.sign(7, 4, 0, "north", ["Tithe Barn", "Stores"], "spruce") if False else None
+    d.sign(13, 4, 3, "north", ["Tithe Barn", "Stores"], "spruce")
+    d.hut(4, y0, 5)
+    r0 = a.room(0)
+    racks = barn_bays(d, r0, 4, 16, (9, 11), 9, U, WH[L])
+    r0.item("crafting_table", sides=("north", "west", "east"))
+    if L <= 2:
+        r0.chairs_desk(0, "spruce")
+    r0.fill(["sack", "keg", "crate", "hay"], sides=("north", "west", "east"))
+    for z in range(9, z2, 3):
+        d.set(10, 6, z, LANT)
+    for x in (1, 19):
+        lamp_post(d, x, 1, y0, P)
+    flower_bed(d, 3, 1, 6, 2, y0, seed=2)
+    flower_bed(d, 14, 1, 17, 2, y0, seed=3)
+    # ---- steward's house (L3+)
+    if L >= 3:
+        d.sty_over = dict(wall="calcite", wall0="sandstone", post="stripped_spruce_log[axis=y]")
+        b = build(d, 21, 4, 31, 11, 2, roof="gable", axis="x", core=(29, 5), chimney=(22, 8, "east"))
+        d.sty_over = {}
+        b.door(25, 4, "north")
+        rb = b.room(0)
+        wh_items(rb, L, ("south", "east", "west", "north"))
+        rb.chairs_desk(2, "spruce")
+        rb.fill(["shelf_dark", "plant", "keg"])
+        rb.lights()
+        rb1 = b.room(1)
+        rb1.bed("spruce", sides=("south", "west"))
+        rb1.books(6, sides=("south",))
+        rb1.fill(["wardrobe", "plant", "shelf_dark"])
+        rb1.lights()
+        for x in range(21, 32):
+            if x != 25:
+                d.set(x, y0, 2, "spruce_fence")
+        flower_bed(d, 22, 3, 23, 3, y0, seed=6)
+    # ---- granary loft barn (L4+)
+    if L >= 4:
+        g = build(d, 21, 15, 31, 25, 2, roof="gable", axis="z", core=(29, 17))
+        buttresses(d, g, "sandstone", "sandstone")
+        g.opening(25, 15, 26, 15, 3, lg("stripped_spruce_log", "x"))
+        rg = g.room(0)
+        racks += wh_racks(d, rg, 22, 18, 27, 24, WH[L] - racks)
+        rg.fill(["sack", "keg"], sides=("north",))
+        rg.lights()
+        rg1 = g.room(1)
+        racks += wh_racks(d, rg1, 22, 18, 27, 24, WH[L] - racks)
+        rg1.fill(["sack", "hay"], sides=("north",))
+        rg1.lights()
+    # ---- second barn closing the yard (L5)
+    if L >= 5:
+        e = build(d, 21, 28, 31, 38, 2, roof="gable", axis="x", core=(29, 30))
+        buttresses(d, e, "sandstone", "sandstone")
+        e.opening(24, 28, 26, 28, 3, lg("stripped_spruce_log", "x"))
+        re = e.room(0)
+        racks += wh_racks(d, re, 22, 31, 27, 37, WH[L] - racks)
+        re.fill(["sack", "keg"], sides=("north",))
+        re.lights()
+        re1 = e.room(1)
+        racks += wh_racks(d, re1, 22, 31, 27, 37, WH[L] - racks)
+        re1.lights()
+        wagon(d, 18, 30, y0, "spruce", "hay_block[axis=z]", "z")
+    return d
+
+
+def wh_cas(rel, L):
+    d = Design("Cascadia", rel, (40, 24, 32), paving="coarse_dirt")
+    P, y0 = "Cascadia", 3
+    U = {1: 1, 2: 2, 3: 3, 4: 3, 5: 4}[L]
+    sto = 1 if L < 4 else 2
+    x2 = 9 + 3 * U + 1
+    a = build(d, 3, 6, x2, 19, sto, H=5 if sto == 1 else 4, roof="gable", axis="x", y0=y0,
+              core=(4, 12) if sto > 1 else None)
+    d.fill(3, 2, 6, x2, 2, 19, "spruce_planks")
+    for x, z in ring(3, 6, x2, 19):
+        d.set(x, 2, z, "cobblestone" if (x + z) % 4 else "mossy_cobblestone")
+    # dock with canopy, steps, rail siding
+    for x in range(3, x2 + 1):
+        for z in range(2, 6):
+            d.set(x, 1, z, "cobblestone")
+            d.set(x, 2, z, "spruce_planks")
+        d.set(x, 7, 1, st("cobbled_deepslate", "south"))
+        for z in range(2, 6):
+            d.set(x, 7, z, sl("cobbled_deepslate", "bottom" if z < 4 else "top"))
+    for x in range(3, x2 + 1, 4):
+        d.fill(x, y0, 2, x, 6, 2, lg("spruce_log", "y"))
+    d.set(2, 2, 3, st("spruce", "east"))
+    d.set(2, 2, 4, st("spruce", "east"))
+    for x in range(0, d.sx):
+        d.set(x, 1, 0, "gravel")
+        d.set(x, 2, 0, "rail[shape=east_west,waterlogged=false]")
+    a.door(5, 6, "north")
+    for u in range(U):
+        ax = 11 + 3 * u
+        a.opening(ax, 6, ax, 6, 3, "yellow_terracotta")
+    d.sign(7, 6, 5, "north", ["FREIGHT", "DEPOT"], "spruce")
+    d.hut(4, y0, 7)
+    r0 = a.room(0)
+    racks = wh_racks(d, r0, 8, 8, x2 - 1, 18, WH[L])
+    if L < 3:
+        wh_items(r0, L, ("west", "north", "south"))
+    r0.fill(["crate", "sack", "keg"], sides=("west", "south"))
+    r0.lights()
+    if sto > 1:
+        r1 = a.room(1)
+        racks += wh_racks(d, r1, 8, 8, x2 - 1, 18, WH[L] - racks)
+        r1.fill(["crate", "sack"], sides=("west",))
+        r1.lights()
+    crate_stack(d, x2 - 1, 3, y0, 2)
+    d.set(x2 - 2, y0, 3, "hay_block[axis=x]")
+    lamp_post(d, 1, 7, 2, P)
+    # ---- freight agent's office (L3+)
+    if L >= 3:
+        b = build(d, 26, 2, 34, 10, 2, roof="gable", axis="z", core=(32, 4))
+        for x in range(25, 36):
+            for y in range(2, b.ridge + 2):
+                if y >= b.yr or x in (25, 35):
+                    d.set(x, y, 1, "mangrove_planks" if x not in (25, 35) else lg("spruce_log", "y"))
+            d.set(x, b.ridge + 2, 1, sl("cobbled_deepslate"))
+            d.set(x, b.yr, 1, "yellow_terracotta")
+        b.door(28, 2, "north")
+        d.set(28, 2, 1, AIR)
+        d.set(28, 3, 1, AIR)
+        d.sign(30, b.ridge, 0, "north", ["FREIGHT", "AGENT"], "spruce")
+        rb = b.room(0)
+        wh_items(rb, L, ("south", "east", "west"))
+        rb.chairs_desk(2, "spruce")
+        rb.fill(["shelf_spruce", "keg", "plant"])
+        rb.lights()
+        rb1 = b.room(1)
+        rb1.bed("spruce", sides=("south", "east"))
+        rb1.fill(["wardrobe", "shelf_spruce", "plant"])
+        rb1.lights()
+    # ---- second depot shed and team stable (L5)
+    if L >= 5:
+        e = build(d, 3, 22, 21, 30, 2, roof="gable", axis="x", core=(19, 24))
+        e.opening(7, 22, 9, 22, 3, "yellow_terracotta")
+        re = e.room(0)
+        racks += wh_racks(d, re, 4, 25, 16, 29, WH[L] - racks, "x")
+        re.lights()
+        re1 = e.room(1)
+        racks += wh_racks(d, re1, 4, 25, 16, 29, WH[L] - racks, "x")
+        re1.fill(["sack", "crate"], sides=("north",))
+        re1.lights()
+        st_ = build(d, 25, 14, 37, 22, 1, roof="gable", axis="x")
+        st_.opening(25, 17, 25, 19, 3, lg("spruce_log", "z"))
+        for zz in (15, 18):
+            for x in range(33, 37):
+                d.set(x, 2, zz, "spruce_fence")
+            d.set(36, 2, zz + 1, "hay_block[axis=x]")
+        d.set(36, 2, 21, "water_cauldron[level=3]")
+        rs = st_.room(0)
+        rs.fill(["hay", "keg", "sack"], sides=("north", "west"))
+        rs.lights()
+        wagon(d, 27, 25, 2, "spruce", "barrel[facing=up,open=false]")
+    return d
+
+
+@design("warehouse")
+def warehouse(pack, rel, L):
+    return {"Neoterra": wh_neo, "Hearthwood": wh_hw, "Cascadia": wh_cas}[pack](rel, L)

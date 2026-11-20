@@ -162,7 +162,7 @@ def awning_z(d, z1, z2, x, y, colors=("red_wool", "white_wool"), outward="east")
 # Neoterra "LUMEN BAKERY": white box with a full glass shopfront, cyan canopy, glass display counter, stacked
 #   deck ovens in polished andesite; L3 adds an upper café floor (glass) and roof terrace by L5.
 def baker_hw(rel, L):
-    d = Design("Hearthwood", rel, (40, 42, 36))
+    d = Design("Hearthwood", rel, (50, 42, 44))
     x1, z1, x2, z2, y0, y1 = 3, 5, 15, 11, 2, 5
     oak = "dark_oak"
     hw_body(d, x1, z1, x2, z2, y0, y1)
@@ -313,7 +313,7 @@ def porch(d, x1, x2, z1, z2, y0, ytop, posts, wood="spruce", rail=True, gap=(), 
 
 
 def baker_cas(rel, L):
-    d = Design("Cascadia", rel, (42, 42, 44), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (50, 42, 46), paving="coarse_dirt")
     x1, z1, x2, z2, y0, y1 = 6, 7, 16, 19, 2, 6
     cas_body(d, x1, z1, x2, z2, y0, y1)
     ridge = roof(d, x1, z1, x2, z2, 7, "z", "dark_oak", "dark_oak_slab", "spruce_planks", ends=(2, 1),
@@ -476,7 +476,7 @@ def planter(d, x, z, y, plant="flowering_azalea", box="smooth_quartz"):
 
 
 def baker_neo(rel, L):
-    d = Design("Neoterra", rel, (42, 42, 38), paving="smooth_stone")
+    d = Design("Neoterra", rel, (49, 42, 34), paving="smooth_stone")
     x1, z1, z2, y0, y1 = 3, 4, 11, 2, 5
     x2 = 13 if L == 1 else 21
     neo_body(d, x1, z1, x2, z2, y0, y1)
@@ -688,7 +688,7 @@ def bar_row(d, x1, x2, z, y, top, stool_side, wood):
 # Neoterra "Orbit Bistro": glass-fronted concrete restaurant, open kitchen behind a quartz pass, L3 adds a
 #   glazed upper dining floor with a straight stair, L5 a roof terrace.
 def cook_hw(rel, L):
-    d = Design("Hearthwood", rel, (40, 32, 42))
+    d = Design("Hearthwood", rel, (54, 42, 50))
     y0, y1 = 2, 5
     oak = "dark_oak"
     Z2 = {1: 13, 2: 19}.get(L, 25)
@@ -818,7 +818,7 @@ def cook_hw(rel, L):
 
 
 def cook_cas(rel, L):
-    d = Design("Cascadia", rel, (44, 32, 44), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (54, 42, 48), paving="coarse_dirt")
     y0, y1 = 2, 5
     x1, z1, z2 = 3, 7, 15
     x2 = 15 if L == 1 else 25
@@ -904,7 +904,7 @@ def cook_cas(rel, L):
 
 
 def cook_neo(rel, L):
-    d = Design("Neoterra", rel, (42, 42, 40), paving="smooth_stone")
+    d = Design("Neoterra", rel, (50, 42, 44), paving="smooth_stone")
     x1, z1, x2, z2, y0 = 3, 4, 19, 16, 2
     two = L >= 3
     neo_body(d, x1, z1, x2, z2, y0, 5, roof_=None)
@@ -1033,7 +1033,7 @@ def cook(pack, rel, L):
 #   (andesite/iron) cooking line, walk-in cold room of packed ice with the racks, loading bay with a roller
 #   door, extract ducts and condensers on the roof growing with each level.
 def cookery_hw(rel, L):
-    d = Design("Hearthwood", rel, (40, 42, 42))
+    d = Design("Hearthwood", rel, (48, 42, 46))
     x1, z1, x2, z2, y0, y1 = 5, 5, 15, 15, 2, 6
     d.box(x1, y0, z1, x2, y1, z2, "stone_bricks", floor="stone_bricks")
     for x, z in perim(x1, z1, x2, z2):
@@ -1172,7 +1172,7 @@ def cookery_hw(rel, L):
 
 
 def cookery_cas(rel, L):
-    d = Design("Cascadia", rel, (42, 42, 42), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (46, 42, 44), paving="coarse_dirt")
     x1, z1, x2, z2, y0, y1 = 4, 5, 12, 17, 2, 5
     cas_body(d, x1, z1, x2, z2, y0, y1, ceiling=None)
     ridge = roof(d, x1, z1, x2, z2, 6, "z", "spruce", "spruce_slab", "spruce_planks", ends=(1, 1),
@@ -1273,7 +1273,7 @@ def cookery_cas(rel, L):
 
 
 def cookery_neo(rel, L):
-    d = Design("Neoterra", rel, (44, 42, 36), paving="smooth_stone")
+    d = Design("Neoterra", rel, (48, 42, 40), paving="smooth_stone")
     x1, z1, z2, y0, y1 = 3, 4, 14, 2, 5
     x2 = 15 if L == 1 else 22
     neo_body(d, x1, z1, x2, z2, y0, y1, wall="light_gray_concrete", pillar="gray_concrete", floor="smooth_stone",
@@ -1447,7 +1447,7 @@ def flower_stall(d, x1, x2, z, y, wood="spruce"):
 # Neoterra "BLOOM LAB": a single glass pavilion on a concrete frame, living green wall, flower bar at the
 #   front, grid of quartz-edged planters; grows in length, L4 green roof edges, L5 glowing sign + benches.
 def florist_hw(rel, L):
-    d = Design("Hearthwood", rel, (40, 42, 40))
+    d = Design("Hearthwood", rel, (50, 42, 46))
     y0, y1 = 2, 5
     oak = "dark_oak"
     hw_body(d, 3, 4, 12, 10, y0, y1)
@@ -1545,7 +1545,7 @@ def florist_hw(rel, L):
 
 
 def florist_cas(rel, L):
-    d = Design("Cascadia", rel, (42, 42, 42), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (50, 42, 46), paving="coarse_dirt")
     y0 = 2
     x1, z1, x2, z2 = 4, 7, 10, 15
     cas_body(d, x1, z1, x2, z2, y0, 3)
@@ -1631,7 +1631,7 @@ def florist_cas(rel, L):
 
 
 def florist_neo(rel, L):
-    d = Design("Neoterra", rel, (42, 42, 42), paving="smooth_stone")
+    d = Design("Neoterra", rel, (48, 42, 44), paving="smooth_stone")
     y0, y1 = 2, 6
     x1, z1, x2 = 4, 4, 18
     z2 = 12 if L < 3 else 18
@@ -1740,7 +1740,7 @@ def vats(d, cells, y, n):
 # Neoterra "CHROMA TEXTILES": concrete studio with a facade of rainbow concrete fins, glass front, vat line
 #   inside, rooftop drying deck with banners on rails (L3+).
 def dyer_hw(rel, L):
-    d = Design("Hearthwood", rel, (42, 42, 40))
+    d = Design("Hearthwood", rel, (51, 42, 46))
     y0, y1 = 2, 5
     oak = "dark_oak"
     nv = {1: 2, 2: 3, 3: 4}.get(L, 5)
@@ -1832,7 +1832,7 @@ def dyer_hw(rel, L):
 
 
 def dyer_cas(rel, L):
-    d = Design("Cascadia", rel, (42, 42, 44), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (50, 42, 46), paving="coarse_dirt")
     y0 = 2
     nv = {1: 2, 2: 3, 3: 4}.get(L, 5)
     x1, x2, z1 = 5, 13, 4
@@ -1923,7 +1923,7 @@ def dyer_cas(rel, L):
 
 
 def dyer_neo(rel, L):
-    d = Design("Neoterra", rel, (44, 42, 38), paving="smooth_stone")
+    d = Design("Neoterra", rel, (49, 42, 44), paving="smooth_stone")
     y0, y1 = 2, 6
     nv = {1: 2, 2: 3, 3: 4}.get(L, 5)
     x1, z1, z2 = 3, 5, 13
@@ -2006,7 +2006,7 @@ def glass_c(d, i, pane=False):
 # Neoterra "PRISM GLASS STUDIO": white concrete cube with a stained-glass mosaic curtain wall, furnace island
 #   under an extract hood in the middle; L3 a cantilevered glass display box over the entrance, L5 roof sign.
 def glassblower_hw(rel, L):
-    d = Design("Hearthwood", rel, (42, 42, 40))
+    d = Design("Hearthwood", rel, (48, 42, 44))
     y0 = 2
     cx, cz = 15, 13
     top = 16
@@ -2102,7 +2102,7 @@ def glassblower_hw(rel, L):
 
 
 def glassblower_cas(rel, L):
-    d = Design("Cascadia", rel, (42, 42, 41), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (49, 42, 41), paving="coarse_dirt")
     y0, y1 = 2, 5
     x1, z1, z2 = 3, 7, 14
     x2 = 13 if L < 3 else 20
@@ -2174,7 +2174,7 @@ def glassblower_cas(rel, L):
 
 
 def glassblower_neo(rel, L):
-    d = Design("Neoterra", rel, (40, 42, 40), paving="smooth_stone")
+    d = Design("Neoterra", rel, (46, 42, 40), paving="smooth_stone")
     y0, y1 = 2, 7
     x1, z1, x2, z2 = 4, 5, 16, 15
     neo_body(d, x1, z1, x2, z2, y0, y1)
@@ -2274,7 +2274,7 @@ def silo(d, cx, cz, y0, h, wall="white_concrete", band="cyan_concrete", r=2.3, c
 # Neoterra "NEOCRETE PLANT": glass control office with cyan trim, a row of white banded silos (1 at L1, 2 at
 #   L2, 3 at L3+) with chutes down to the basin, L4 conveyor bridge, L5 roof sign.
 def concretemixer_hw(rel, L):
-    d = Design("Hearthwood", rel, (42, 42, 40))
+    d = Design("Hearthwood", rel, (49, 42, 46))
     y0 = 2
     d.cluster(3, 17)                                             # basin x3..21, z17..20
     # workshop
@@ -2355,7 +2355,7 @@ def concretemixer_hw(rel, L):
 
 
 def concretemixer_cas(rel, L):
-    d = Design("Cascadia", rel, (42, 42, 44), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (48, 42, 47), paving="coarse_dirt")
     y0 = 2
     d.cluster(2, 21)                                             # basin x2..20, z21..24
     # office shack
@@ -2432,7 +2432,7 @@ def concretemixer_cas(rel, L):
 
 
 def concretemixer_neo(rel, L):
-    d = Design("Neoterra", rel, (42, 42, 42), paving="smooth_stone")
+    d = Design("Neoterra", rel, (45, 42, 41), paving="smooth_stone")
     y0 = 2
     d.cluster(2, 18)                                             # basin x2..20, z18..21
     # glass control office (two storeys at L3+)
@@ -3142,6 +3142,43 @@ def B(*args, **kw):
 
 
 WOOL = ["block:red_wool", "block:yellow_wool", "block:blue_wool"]
+
+
+SP = {
+    "cook2": dict(extra=["block:melon", "block:pumpkin", "block:hay_block[axis=y]"],
+                  feature=yard_f("crates", "melon", "pumpkin")),
+    "cook3": dict(feature=yard_f("terrace", "stone_bricks", "polished_andesite")),
+    "cook4": dict(extra=["sideboard", "block:brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]"],
+                  feature=F(awning_f(("red_wool", "white_wool")), yard_f("terrace", "stone_bricks", "andesite"))),
+    "cook5": dict(feature=F(facade_banners("red"), yard_f("terrace", "polished_andesite", "stone_bricks"))),
+    "cookery2": dict(extra=["block:hay_block[axis=y]", "block:melon", "block:pumpkin"],
+                     feature=yard_f("crates", "pumpkin", "melon")),
+    "cookery3": dict(extra=["sink", "sink", "counter"], feature=cart_f("hay_block[axis=x]")),
+    "cookery4": dict(feature=F(hoist, yard_f("crates", "hay_block[axis=y]", "melon"))),
+    "cookery5": dict(feature=F(facade_banners("green"), yard_f("terrace", "stone_bricks", "polished_andesite"))),
+    "baker2": dict(extra=["sack", "sack", "hay"], feature=cart_f("white_wool")),
+    "baker3": dict(feature=yard_f("frames")),
+    "baker4": dict(extra=["sack", "hay", "sack"], feature=F(hoist, yard_f("piles", "hay_block[axis=y]", "white_wool"))),
+    "baker5": dict(feature=F(awning_f(("red_wool", "white_wool")), yard_f("terrace", "bricks", "stone_bricks"))),
+    "florist2": dict(extra=["block:flower_pot", "block:composter[level=5]", "pots"], feature=yard_f("frames")),
+    "florist4": dict(extra=["block:flowering_azalea", "block:azalea"], feature=awning_f(("green_wool", "white_wool"))),
+    "florist5": dict(feature=F(facade_banners("green"), yard_f("frames"))),
+    "dyer2": dict(extra=WOOL, feature=yard_f("crates", "red_wool", "blue_wool", "yellow_wool")),
+    "dyer3": dict(extra=["block:loom[facing=north]"], feature=yard_f("drying")),
+    "dyer4": dict(extra=WOOL, feature=F(facade_banners("blue"), hoist)),
+    "dyer5": dict(extra=WOOL, feature=F(facade_banners("purple"), yard_f("drying"))),
+    "glassblower2": dict(feature=yard_f("piles", "sand", "gravel", "red_sand")),
+    "glassblower3": dict(feature=awning_f(("blue_wool", "white_wool")), glass="STAINED"),
+    "glassblower4": dict(extra=["block:stonecutter[facing=north]", "block:sand"], feature=yard_f("crates", "sand")),
+    "glassblower5": dict(feature=facade_banners("yellow"), glass="STAINED"),
+    "concretemixer2": dict(feature=yard_f("piles", "white_concrete_powder", "light_gray_concrete_powder", "sand")),
+    "concretemixer3": dict(feature=facade_banners("orange")),
+    "concretemixer4": dict(extra=["block:stonecutter[facing=north]", "grindstone"],
+                           feature=yard_f("piles", "stone", "cobblestone", "gravel")),
+    "concretemixer5": dict(feature=F(hoist, cart_f("gravel"))),
+    "tavern2": dict(feature=cart_f("hay_block[axis=x]")),
+    "tavern3": dict(extra=["hay", "crate"], feature=F(hoist, yard_f("paddock"))),
+}
 
 
 GW = dict(wall="glass", roofkind="glass", chimney=False)
