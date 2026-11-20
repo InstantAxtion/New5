@@ -3150,7 +3150,7 @@ def dl_hw(rel, L):
             d.set(x, y0, 11, "water_cauldron[level=3]")
     # ---- mail-coach house (L4+), sorting office (L5)
     if L >= 5:
-        so = build(d, 3, 28, 19, 37, 2, roof="gable", axis="x", core=(17, 30), chimney=(4, 32, "east"))
+        so = build(d, 3, 28, 19, 37, 3, roof="gable", axis="x", core=(17, 30), chimney=(4, 32, "east"))
         so.door(10, 28, "north", double=True)
         r_ = so.room(0)
         for x in range(7, 14):
@@ -3163,8 +3163,20 @@ def dl_hw(rel, L):
         r2_.fill(["crate", "keg", "chisel"])
         r2_.table_group("dark_oak", 4, "post", rug="red_carpet", sit=False)
         r2_.lights()
+        r3_ = so.room(2)
+        for _ in range(3):
+            r3_.bed("dark_oak", sides=("south", "north"))
+        r3_.fill(["wardrobe", "plant", "shelf_dark"])
+        r3_.lights()
+        for x in range(21, 34, 4):
+            tree(d, x, 32, y0, "oak", 4, 1)
+        hedge(d, [(34, z) for z in range(2, 38)], y0, "oak")
         d.sign(12, 5, 27, "north", ["Sorting", "Office"], "dark_oak")
     if L >= 4:
+        for x in (18, 32):
+            lamp_post(d, x, 16, y0, P)
+        bench(d, 22, 16, y0, "south", 3, "dark_oak", sit=False)
+        flower_bed(d, 26, 16, 30, 16, y0, seed=4)
         c = build(d, 20, 18, 33, 26, 2, roof="gable", axis="x", core=(31, 19))
         c.opening(23, 18, 26, 18, 3, lg("stripped_dark_oak_log", "x"))
         rc = c.room(0)
@@ -3249,6 +3261,11 @@ def dl_cas(rel, L):
         t = build(d, 23, 4, 33, 12, 2, roof="gable", axis="x", core=(31, 5), chimney=(24, 8, "east"))
         t.door(28, 4, "north")
         rooms += [t.room(0), t.room(1)]
+        for x, z in ring(22, 15, 34, 18):                               # corral
+            if d.air(x, y0, z) and x != 22:
+                d.set(x, y0, z, "spruce_fence")
+        d.set(28, y0, 17, "water_cauldron[level=3]")
+        d.set(30, y0, 16, "hay_block[axis=x]")
         for y in range(y0, t.ridge + 4):                              # telegraph pole
             d.set(34, y, 2, lg("spruce_log", "y") if y < t.ridge + 3 else "spruce_fence")
         d.set(34, t.ridge + 2, 1, "spruce_fence")
