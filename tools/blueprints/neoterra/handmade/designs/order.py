@@ -394,7 +394,7 @@ def gt_cascadia(rel, L):
     d.set(mx, yc + 1, tz1 + 3, "spruce_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]")
     d.lamp(mx, yc + 3, tz1 + 2)
     cs_trim(d, x1, z1, x2, z2, 2, 5)
-    d.sign(8, 4, z1 - 1, "north", ["RANGER", "STATION"], "spruce")
+    d.sign(6, 4, z1 - 1, "north", ["RANGER", "STATION"], "spruce")
     for x in range(x1 + 1, x2):                                   # window boxes
         if d.get(x, 3, z1) == "minecraft:glass_pane":
             d.set(x, 2, z1 - 1, "spruce_trapdoor[facing=north,half=top,open=true,powered=false,waterlogged=false]") if False else None
