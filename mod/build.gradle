@@ -19,6 +19,9 @@ neoForge {
     runs { server { server(); programArgument '--nogui'; systemProperty 'neoterra.selftest', 'true' } }
 }
 
+// the self-test needs a fresh world: huts left over from an earlier run would capture the new ones
+tasks.matching { it.name == 'runServer' }.configureEach { doFirst { delete "$projectDir/run/world" } }
+
 dependencies {
     implementation("com.ldtteam:minecolonies:${minecolonies_version}") { transitive = true }
     implementation("com.ldtteam:structurize:1.0.837-1.21.1-snapshot")
