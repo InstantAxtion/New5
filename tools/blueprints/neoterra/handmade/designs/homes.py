@@ -1461,7 +1461,7 @@ def apartment_nt(rel, L):
     d.sign(x1 - 1, 4, 12, "west", ["", "SKYLINE", "RESIDENCES"], "birch", glow=True, color="cyan")
     d.hut(10, 2, 13)
     if L >= 5:
-        d.item(4, 2, 13, "ender_chest", "east")
+        d.item(10, 2, 14, "ender_chest", "west")
     planter(d, 0, 6, 1, 11, 1)
     for x in range(x1, x2 + 1):
         d.set(x, 1, z1 - 2, "moss_block" if x % 3 else "grass_block[snowy=false]")

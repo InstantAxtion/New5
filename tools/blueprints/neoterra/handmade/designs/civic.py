@@ -2089,7 +2089,7 @@ def university_hearthwood(rel, L):
         for z in (12, 14, 16, 18):
             d.bed(25, Y0, z, "east", "blue") if False else None
         d.set(24, 6, 15, "lantern[hanging=true,waterlogged=false]")
-        for z in range(11, 20, 2):
+        for z in range(11, 19, 2):
             d.chair(25, Y0, z, "east", "dark_oak", sit=False)
             d.set(24, Y0, z, slab("dark_oak_slab", "top"))
     shelf_runs(d, runs, d.req["bookshelves"])
@@ -2352,3 +2352,340 @@ def university_cascadia(rel, L):
 def university(pack, rel, L):
     return {"Hearthwood": university_hearthwood, "Cascadia": university_cascadia,
             "Neoterra": university_neoterra}[pack](rel, L)
+
+
+# ============================================================================================ COMMUNITY COLLEGE
+"""
+Community college (smaller campus building with an outdoor teaching spot).
+  Hearthwood  Mechanics' Institute: red-brick hall with stone quoins, pedimented gable to the street, stone
+              porch; lecture room with benches facing the lecturer's lectern and wall shelves; reading room on a
+              new upper floor from L4. Walled front garden with a speaker's plinth and benches.
+  Neoterra    learning pavilion: glass-fronted flat-roofed classroom behind an open-air amphitheatre (tiered
+              seats facing a stage with the outdoor lecturer's spot and lectern); green roof at L5.
+  Cascadia    grange-style timber hall broadside to the street with a deep porch, outdoor fire circle with log
+              benches and a speaker's stump; reading lean-to from L4.
+"""
+
+
+def sit_out(d, x, y, z, back, wood):
+    d.chair(x, y, z, back, wood, sit=False)
+    d.tag(x, y, z, "sit_out")
+
+
+def college_hearthwood(rel, L):
+    d = Design("Hearthwood", rel, (23, 24, 27), gy=1)
+    B, Q = "bricks", "stone_bricks"
+    X1, X2, Z1, Z2 = 4, 18, 9, 21
+    two = L >= 4
+    top = 11 if two else 6
+    d.box(X1, Y0, Z1, X2, top, Z2, B, floor="oak_planks")
+    for x in range(X1, X2 + 1):
+        for z in range(Z1, Z2 + 1):
+            if x in (X1, X2) or z in (Z1, Z2):
+                d.set(x, Y0, z, Q)
+    for x, z in ((X1, Z1), (X2, Z1), (X1, Z2), (X2, Z2)):           # quoins
+        for y in range(Y0, top + 1):
+            d.set(x, y, z, Q if y % 2 else "polished_andesite")
+    if two:
+        d.fill(X1 + 1, 7, Z1 + 1, X2 - 1, 7, Z2 - 1, "oak_planks")
+        for x in range(X1, X2 + 1):
+            d.set(x, 7, Z1, Q)
+            d.set(x, 7, Z2, Q)
+        for z in range(Z1, Z2 + 1):
+            d.set(X1, 7, z, Q)
+            d.set(X2, 7, z, Q)
+    ridge = d.gable(X1, Z1, X2, Z2, top + 1, "z", "deepslate_tile_stairs", "deepslate_tile_slab", B, overhang=1)
+    if not two:
+        beams(d, X1 + 1, X2 - 1, Z1 + 2, Z2 - 2, 7, "stripped_dark_oak_log", every=4, axis="x")
+    # pediment: stone string course across the street gable, oculus, name
+    for x in range(X1 - 1, X2 + 2):
+        d.set(x, top + 1, Z1 - 1, st("stone_brick_stairs", "south", "top")) if False else None
+    for x in range(X1, X2 + 1):
+        d.set(x, top + 1, Z1, Q) if d.get(x, top + 1, Z1) == "minecraft:bricks" else None
+    d.set(11, top + 3, Z1, "glass_pane")
+    d.set(11, top + 4, Z1, "glass_pane")
+    d.sign(11, top + 2, Z1 - 1, "north", ["MECHANICS'", "INSTITUTE"], "dark_oak")
+    # windows: tall sashes with stone heads
+    for x in (6, 8, 14, 16):
+        d.window(x, 3, Z1, x, 5, Z1)
+        d.set(x, 6, Z1, Q)
+        if two:
+            d.window(x, 8, Z1, x, 10, Z1)
+    for z in range(Z1 + 2, Z2 - 1, 3):
+        d.window(X1, 4, z, X1, 5, z)
+        d.window(X2, 4, z, X2, 5, z)
+        if two:
+            d.window(X1, 9, z, X1, 10, z)
+            d.window(X2, 9, z, X2, 10, z)
+    # porch: two columns and a small pediment, steps
+    d.double_door(11, Y0, Z1, "x", "south", "dark_oak") if False else d.door(11, Y0, Z1, "south", "dark_oak")
+    for x in (9, 13):
+        for y in range(Y0, 6):
+            d.set(x, y, Z1 - 2, "quartz_pillar[axis=y]" if L >= 3 else Q)
+    d.fill(9, 6, Z1 - 2, 13, 6, Z1 - 1, Q)
+    for x in range(9, 14):
+        d.set(x, 7, Z1 - 2, st("stone_brick_stairs", "south") if x != 11 else Q)
+    d.fill(9, 1, Z1 - 2, 13, 1, Z1 - 1, "polished_andesite")
+    # ---- lecture room
+    d.hut(X1 + 2, Y0, Z1 + 1)
+    d.item(11, Y0, Z2 - 2, "lectern", "north")
+    blackboard(d, 9, Z2 - 1, 13, Z2 - 1, 3, "north")
+    if need(d, "lectern") > 1:
+        d.item(15, Y0, Z2 - 2, "lectern", "north")                 # demonstrator's stand
+    n = 0
+    for z in (Z1 + 3, Z1 + 5):
+        for x in list(range(7, 11)) + list(range(12, 16)):
+            if d.placed["seats"] < d.req["seats"]:
+                d.chair(x, Y0, z, "north", "dark_oak")
+    shelf_runs(d, [(X2 - 1, Z1 + 1, X2 - 1, Z1 + 5, Y0, 2), (X2 - 1, Z1 + 6, X2 - 1, Z2 - 1, Y0, 1),
+                   (X2 - 1, Z1 + 6, X2 - 1, Z2 - 1, Y0 + 1, 1), (X2 - 1, Z1 + 1, X2 - 1, Z2 - 1, Y0 + 2, 1)],
+               min(d.req["bookshelves"], 18))
+    for z in (Z1 + 4, Z2 - 4):
+        d.set(11, 6, z, "lantern[hanging=true,waterlogged=false]")
+    # ---- reading room upstairs (L4+)
+    if two:
+        flight(d, X1 + 1, Z1 + 2, Y0, 8, "south", "oak_stairs", under="oak_planks")
+        rail(d, X1 + 2, Z1 + 3, X1 + 2, Z1 + 7, 8, "dark_oak_fence")
+        shelf_runs(d, [(X2 - 1, Z1 + 1, X2 - 1, Z2 - 1, 8, 3), (X1 + 2, Z2 - 1, X2 - 2, Z2 - 1, 8, 3),
+                       (X1 + 1, Z2 - 3, X1 + 1, Z2 - 1, 8, 3)], d.req["bookshelves"])
+        for x in (9, 12):
+            d.dining(x, 8, 15, 1, "x", "dark_oak", ("n", "s"), sit=False)
+        for z in (12, 17):
+            d.set(11, 11, z, "lantern[hanging=true,waterlogged=false]") if False else d.lamp(11, 11, z)
+    # ---- walled front garden: speaker's plinth + benches (outdoor class)
+    for x in range(2, 21):
+        for z in range(1, Z1 - 2):
+            d.set(x, 1, z, "grass_block[snowy=false]")
+    for z in range(1, Z1 - 2):
+        for x in (10, 11, 12):
+            d.set(x, 1, z, "gravel")
+    for x in range(2, 21):
+        if x not in (10, 11, 12):
+            d.set(x, Y0, 0, "brick_wall")
+    for z in range(0, Z1 - 1):
+        d.set(2, Y0, z, "brick_wall")
+        d.set(20, Y0, z, "brick_wall")
+    d.set(5, 1, 3, Q)
+    d.set(5, Y0, 3, slab("stone_brick_slab"))
+    d.spot(5, Y0 + 1, 3, "stand_out") if False else d.tag(5, Y0, 3, "stand_out")
+    d.placed["spots"]["stand_out"] = 1
+    for x in (4, 6, 7):
+        pass
+    for x in (3, 4, 6, 7):
+        sit_out(d, x, Y0, 5, "south", "dark_oak")
+    sit_out(d, 8, Y0, 4, "east", "dark_oak")
+    sit_out(d, 8, Y0, 3, "east", "dark_oak")
+    for x in (14, 17):
+        d.set(x, Y0, 3, "rose_bush[half=lower]")
+        d.set(x, Y0 + 1, 3, "rose_bush[half=upper]")
+    if L >= 5:
+        tree(d, 16, Y0, 4, "oak_log", "oak_leaves", 4, 2)
+        for x in (10, 12):
+            d.set(x, Y0, 1, "brick_wall")
+            d.set(x, Y0 + 1, 1, "lantern[hanging=false,waterlogged=false]")
+    return d
+
+
+def college_neoterra(rel, L):
+    d = Design("Neoterra", rel, (25, 16, 29), gy=1, paving="smooth_stone")
+    W, Q = "white_concrete", "smooth_quartz"
+    X1, X2, Z1, Z2 = 4, 20, 15, 26
+    d.box(X1, Y0, Z1, X2, 6, Z2, W, floor="polished_diorite")
+    d.fill(X1 - 1, 7, Z1 - 2, X2 + 1, 7, Z2 + 1, Q)
+    for x in range(X1 - 1, X2 + 2):
+        d.set(x, 8, Z1 - 2, slab("smooth_quartz_slab"))
+    for x in range(X1 + 1, X2):
+        d.window(x, Y0, Z1, x, 6, Z1, "glass_pane")
+    for x in range(X1, X2 + 1, 4):
+        for y in range(Y0, 7):
+            d.set(x, y, Z1, "cyan_terracotta")
+    for z in range(Z1 + 2, Z2 - 1, 3):
+        d.window(X1, 3, z, X1, 5, z, "glass_pane")
+    d.double_door(11, Y0, Z1, "x", "south", "birch")
+    d.set(11, Y0, Z1, AIR) if False else None
+    d.sign(12, 7, Z1 - 3, "north", ["LEARNING", "PAVILION"], "birch", glow=True, color="cyan") if False else \
+        d.sign(11, 6, Z1 - 1, "north", ["LEARNING", "PAVILION"], "birch", glow=True, color="cyan")
+    # ---- classroom: screen + lectern on the east wall, seats facing it
+    d.hut(X1 + 1, Y0, Z1 + 1)
+    d.item(X2 - 2, Y0, 20, "lectern", "west")
+    for z in range(18, 23):
+        d.set(X2 - 1, 4, z, "black_concrete")
+        d.set(X2 - 1, 5, z, "black_concrete")
+    for x in (9, 11, 13, 15):
+        for z in (18, 19, 21, 22):
+            if d.placed["seats"] < d.req["seats"]:
+                d.chair(x, Y0, z, "west", "birch")
+                d.table(x + 1, Y0, z, "birch", "slab", "smooth_quartz_slab") if False else None
+    runs = [(X1 + 1, Z2 - 1, X1 + 5, Z2 - 1, Y0, 2), (X1 + 6, Z2 - 1, X1 + 10, Z2 - 1, Y0, 2),
+            (X1 + 11, Z2 - 1, X2 - 1, Z2 - 1, Y0, 2), (X1 + 1, Z2 - 1, X2 - 1, Z2 - 1, Y0 + 2, 1),
+            (X1 + 1, Z1 + 4, X1 + 1, Z2 - 2, Y0, 3), (X1 + 2, Z1 + 4, X1 + 3, Z1 + 4, Y0, 2)]
+    shelf_runs(d, runs, d.req["bookshelves"])
+    for x in (8, 12, 16):
+        d.set(x, 6, 20, "sea_lantern")
+    # ---- amphitheatre: stage by the pavilion, tiers rising to the street
+    for x in range(6, 19):
+        for z in (11, 12):
+            d.set(x, 1, z, "polished_andesite")
+    d.spot(12, Y0, 12, "stand_out")
+    if need(d, "lectern") > 1:
+        d.item(14, Y0, 12, "lectern", "north")
+    for k, z in enumerate((9, 7, 5, 3)):
+        for zz in (z, z - 1):
+            for x in range(5, 20):
+                for y in range(Y0, Y0 + k):
+                    d.set(x, y, zz, Q)
+        for x in range(6, 19):
+            if x == 12:
+                continue
+            if k < 2 or L >= 3:
+                sit_out(d, x, Y0 + k, z, "north", "birch") if k < 3 else None
+    for y in range(Y0, Y0 + 3):                                     # aisle steps
+        pass
+    for x in (5, 19):
+        for z in range(3, 12):
+            d.set(x, Y0 + 3, z, "birch_fence") if False else None
+    if L >= 2:
+        for x in (4, 20):
+            d.set(x, Y0, 11, "birch_fence")
+            d.set(x, Y0 + 1, 11, "end_rod[facing=up]")
+    if L >= 3:                                                       # shade canopy over the stage
+        for x in (6, 18):
+            for y in range(Y0, 7):
+                d.set(x, y, 10, "white_concrete")
+        for x in range(6, 19):
+            d.set(x, 7, 10, Q)
+            d.set(x, 7, 11, slab("smooth_quartz_slab", "top"))
+            d.set(x, 7, 12, slab("smooth_quartz_slab", "top"))
+            d.set(x, 7, 13, slab("smooth_quartz_slab", "top"))
+        for x in range(8, 18, 3):
+            d.set(x, 6, 10, "sea_lantern") if False else None
+    if L >= 5:                                                       # green roof
+        for x in range(X1, X2 + 1):
+            for z in range(Z1 - 1, Z2 + 1):
+                if x not in (X1 - 1, X2 + 1):
+                    d.set(x, 8, z, "moss_carpet")
+        for x in range(X1 + 1, X2, 4):
+            d.set(x, 8, Z2, "flowering_azalea")
+    return d
+
+
+def college_cascadia(rel, L):
+    d = Design("Cascadia", rel, (25, 18, 29), gy=1, paving="coarse_dirt")
+    lg = "spruce_log"
+    X1, X2, Z1, Z2 = 3, 19, 15, 25
+    d.box(X1, Y0, Z1, X2, 6, Z2, log("stripped_spruce_log", "x"), floor="spruce_planks")
+    for z in range(Z1, Z2 + 1):
+        for y in range(Y0, 7):
+            d.set(X1, y, z, log("stripped_spruce_log", "z"))
+            d.set(X2, y, z, log("stripped_spruce_log", "z"))
+    for x in range(X1, X2 + 1):
+        for z in range(Z1, Z2 + 1):
+            if x in (X1, X2) or z in (Z1, Z2):
+                d.set(x, Y0, z, "cobblestone" if (x + z) % 3 else "mossy_cobblestone")
+    for x in range(X1, X2 + 1, 4):
+        for z in (Z1, Z2):
+            for y in range(Y0 + 1, 7):
+                d.set(x, y, z, log(lg))
+    ridge = d.gable(X1, Z1, X2, Z2, 7, "x", "dark_oak_stairs", "dark_oak_slab", "spruce_planks", overhang=1)
+    beams(d, X1 + 2, X2 - 2, Z1 + 1, Z2 - 1, 7, "spruce_log", every=4)
+    for x in (5, 9, 13, 17):
+        d.window(x + 1, 3, Z1, x + 2, 4, Z1) if x + 2 < X2 else None
+    for x in (6, 10, 14):
+        d.window(x, 3, Z2, x + 1, 4, Z2)
+    d.double_door(11, Y0, Z1, "x", "south", "spruce") if False else d.door(11, Y0, Z1, "south", "spruce")
+    d.set(10, Y0, Z1, log("stripped_spruce_log", "x"))
+    d.set(10, Y0 + 1, Z1, log("stripped_spruce_log", "x"))
+    # deep porch along the street side
+    d.fill(X1, 1, Z1 - 3, X2, 1, Z1 - 1, "spruce_planks")
+    for x in (X1, 7, 15, X2):
+        for y in range(Y0, 6):
+            d.set(x, y, Z1 - 3, log(lg))
+    for x in range(X1 - 1, X2 + 2):
+        d.set(x, 6, Z1 - 4, st("spruce_stairs", "south"))
+        for z in range(Z1 - 3, Z1):
+            d.set(x, 6, z, slab("spruce_slab"))
+    d.sign(11, 5, Z1 - 1, "north", ["VALLEY", "COLLEGE"], "spruce")
+    for x in (8, 14):
+        d.set(x, 5, Z1 - 2, "lantern[hanging=true,waterlogged=false]")
+    # stone chimney on the west end
+    for y in range(Y0, ridge + 1):
+        d.set(X1 - 1, y, 20, "cobblestone" if y % 3 else "mossy_cobblestone")
+    d.hearth(X1 + 1, Y0, 20, "east", 7, "cobblestone", "campfire")
+    for y in range(Y0 + 2, 7):
+        d.set(X1, y, 20, "cobblestone")
+    # ---- classroom: lectern on the east end, benches facing it
+    d.hut(X1 + 2, Y0, Z1 + 1)
+    d.item(X2 - 2, Y0, 20, "lectern", "west")
+    blackboard(d, X2 - 1, 18, X2 - 1, 22, 3, "west", "black_concrete", "spruce")
+    for x in (8, 10, 12, 14):
+        for z in (17, 18, 19, 21, 22, 23):
+            if d.placed["seats"] < d.req["seats"]:
+                d.chair(x, Y0, z, "west", "spruce")
+    runs = [(X1 + 1, Z2 - 1, X1 + 5, Z2 - 1, Y0, 2), (X1 + 1, Z1 + 1, X1 + 1, Z1 + 3, Y0, 2),
+            (X1 + 6, Z2 - 1, X1 + 9, Z2 - 1, Y0, 2)]
+    for x in (9, 13):
+        d.set(x, 6, 20, "lantern[hanging=true,waterlogged=false]")
+    # ---- reading lean-to (L4+) on the east end
+    if L >= 4:
+        d.box(X2, Y0, 16, 23, 5, 24, log("stripped_spruce_log", "z"), floor="spruce_planks")
+        for z in range(15, 26):
+            for x in range(X2 + 1, 25):
+                d.set(x, 6, z, slab("spruce_slab"))
+        d.clear(X2, Y0, 24 - 4, X2, Y0 + 1, 20)
+        d.set(X2 - 1, 3, 20, AIR) if False else None
+        d.set(X2, Y0, 20, AIR)
+        d.set(X2, Y0 + 1, 20, AIR)
+        d.door(X2, Y0, 23, "east", "spruce") if False else None
+        d.item(X2 - 2, Y0, 20, "lectern", "west") if False else None
+        runs += [(21, 17, 21, 19, Y0, 3), (21, 21, 21, 23, Y0, 3), (22, 17, 22, 23, Y0, 3),
+                 (20, 17, 20, 17, Y0, 3), (20, 23, 20, 23, Y0, 3)]
+        d.window(23, 3, 19, 23, 4, 21) if False else None
+        d.set(21, 5, 20, "lantern[hanging=true,waterlogged=false]")
+        # the classroom lectern moves off the doorway
+        d.set(X2 - 2, Y0, 20, AIR)
+        d.placed["items"]["minecraft:lectern"] -= 1
+        d.item(X2 - 2, Y0, 19, "lectern", "west")
+        for z in range(18, 23):
+            d.set(X2 - 1, 3, z, AIR)
+            d.set(X2 - 1, 4, z, AIR)
+            d.set(X2 - 1, Y0, z, AIR)
+        blackboard(d, X2 - 1, 17, X2 - 1, 18, 3, "west", "black_concrete", "spruce")
+        blackboard(d, X2 - 1, 22, X2 - 1, 23, 3, "west", "black_concrete", "spruce")
+    shelf_runs(d, runs, d.req["bookshelves"])
+    # ---- fire circle with log benches and the speaker's stump
+    cx, cz = 11, 6
+    for x in range(cx - 4, cx + 5):
+        for z in range(cz - 4, cz + 5):
+            if abs(x - cx) + abs(z - cz) <= 6:
+                d.set(x, 1, z, "gravel" if abs(x - cx) + abs(z - cz) <= 2 else "coarse_dirt")
+    d.set(cx, 1, cz, "cobblestone")
+    d.set(cx, Y0, cz, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+    for x in (cx - 1, cx, cx + 1):
+        sit_out(d, x, Y0, cz - 3, "north", "spruce")
+    for z in (cz - 1, cz, cz + 1):
+        sit_out(d, cx - 3, Y0, z, "west", "spruce")
+        sit_out(d, cx + 3, Y0, z, "east", "spruce")
+    d.set(cx, 1, cz + 3, log("stripped_spruce_log"))
+    d.spot(cx, Y0, cz + 3, "stand_out")
+    if need(d, "lectern") > 1 and L < 4:
+        d.item(cx + 1, Y0, cz + 3, "lectern", "north")
+    elif need(d, "lectern") > 1:
+        d.item(cx + 1, Y0, cz + 3, "lectern", "north")
+    for x, z in ((cx - 4, cz - 3), (cx + 4, cz - 3)):
+        d.set(x, Y0, z, "spruce_fence")
+        d.set(x, Y0 + 1, z, "lantern[hanging=false,waterlogged=false]")
+    if L >= 5:                                                       # woodpile and chopping stumps
+        for x in range(19, 23):
+            for y in (Y0, Y0 + 1):
+                d.set(x, y, 2, log("spruce_log", "x"))
+        d.set(2, Y0, 4, log("stripped_spruce_log"))
+        d.set(2, Y0, 7, log("stripped_spruce_log"))
+        for z in range(1, 12):
+            d.set(0, Y0, z, "spruce_fence")
+            d.set(24, Y0, z, "spruce_fence")
+    return d
+
+
+@design("communitycollege")
+def communitycollege(pack, rel, L):
+    return {"Hearthwood": college_hearthwood, "Cascadia": college_cascadia, "Neoterra": college_neoterra}[pack](rel, L)

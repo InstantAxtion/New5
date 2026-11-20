@@ -41,6 +41,38 @@ D4 = {"north": (0, -1), "south": (0, 1), "east": (1, 0), "west": (-1, 0)}
 OPP = {"north": "south", "south": "north", "east": "west", "west": "east"}
 CW = {"north": "east", "east": "south", "south": "west", "west": "north"}
 
+# restyling of the decorative blocks inside functional clusters (snapshots come from the Neoterra pack)
+CLUSTER_SKIN = {
+    "Hearthwood": {"white_concrete": "stone_bricks", "light_gray_concrete": "mossy_stone_bricks",
+                   "gray_concrete": "dark_oak_log[axis=y]", "cyan_concrete": "dark_oak_planks",
+                   "smooth_stone": "oak_planks", "polished_andesite": "stone_bricks",
+                   "quartz_pillar": "stripped_dark_oak_log[axis=y]", "smooth_quartz": "calcite",
+                   "light_gray_concrete_framed": "dark_oak_planks", "birch_door": "dark_oak_door",
+                   "light_blue_stained_glass_pane": "glass_pane"},
+    "Cascadia": {"white_concrete": "cobblestone", "light_gray_concrete": "mossy_cobblestone",
+                 "gray_concrete": "spruce_log[axis=y]", "cyan_concrete": "spruce_planks",
+                 "smooth_stone": "spruce_planks", "polished_andesite": "andesite",
+                 "quartz_pillar": "spruce_log[axis=y]", "smooth_quartz": "stripped_spruce_log[axis=y]",
+                 "birch_door": "spruce_door", "light_blue_stained_glass_pane": "glass_pane"},
+}
+
+
+def _skin(pack, state):
+    m = CLUSTER_SKIN.get(pack)
+    if not m:
+        return state
+    name, props = parse_state(state)
+    n = name.split(":")[1]
+    new = m.get(n)
+    if new is None:
+        return state
+    if "[" in new or n.endswith("_door") is False:
+        if n.endswith("_door"):
+            return format_state(_mc(new), props)
+        return _mc(new)
+    return format_state(_mc(new), props)
+
+
 # --------------------------------------------------------------------------------------------- pack palettes
 # Starting vocabularies; a design may use any vanilla block it likes.
 PALETTES = {
@@ -506,6 +538,12 @@ class Design:
             if ty < 0:
                 continue
             te = src.tile_entities.get((x, y, z))
+            if s.startswith("domum_ornamentum:") and "architectscutter" not in s:
+                from vanillaize import convert
+                n, props = parse_state(s)
+                s = _mc(convert(n.split(":")[1], props, te))
+                te = None
+            s = _skin(self.pack, s)
             self.bp.set(x0 + x, ty, z0 + z, s, te)
         for x, y, z, t in c["tags"]:
             self.tag(x0 + x, self.gy + y, z0 + z, t)

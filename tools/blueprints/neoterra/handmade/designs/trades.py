@@ -258,23 +258,23 @@ def builder_neo(rel, L):
     d.item(7, y0, z2 - 1, "barrel", "up")
     d.item(8, y0, z2 - 1, "barrel", "up")
     if two:
-        for i, b in enumerate(("smithing_table", "anvil", "grindstone", "stonecutter")):
-            d.item(x2 - 1, y0, 5 + i, b, "west" if b != "anvil" else "north")
+        for (x, z), b in zip(((x2 - 1, 8), (x2 - 1, 9), (x2 - 1, 10), (10, 10)),
+                             ("smithing_table", "anvil", "grindstone", "stonecutter")):
+            d.item(x, y0, z, b, "west" if b != "anvil" else "north")
         if L <= 3:
-            d.item(x2 - 1, y0, 9, "hopper")
+            d.item(9, y0, 10, "hopper")
         else:
-            d.item(x2 - 1, y0, 9, "domum_ornamentum:architectscutter", "west")
+            d.item(9, y0, 10, "domum_ornamentum:architectscutter", "north")
         if L >= 5:
-            d.item(9, y0, z2 - 1, "ender_chest", "north")
+            d.item(10, y0, 8, "ender_chest", "west")
         d.rug(7, 6, 9, 8, y0, ("gray_carpet",), "plain")
     for x in (4, 8):
         d.set(x, 5 if not two else 5, 7, "sea_lantern")
     # ---- upper floor: drafting library
     if two:
-        run_stairs(d, 10, 4, y0, 4, "south", "smooth_quartz", fill="smooth_quartz")
-        # landing at (10,8) on y6; railing along the stair well
-        for z in (4, 5, 6, 7):
-            d.set(9, 7, z, "glass_pane")
+        run_stairs(d, x2 - 1, 4, y0, 4, "south", "smooth_quartz", fill="smooth_quartz")
+        for z in (4, 5, 6, 7):                                       # glass balustrade along the stair well
+            d.set(x2 - 2, 7, z, "glass_pane")
         yb = 7
         for z in range(5, 11):
             d.bookshelf(x1 + 1, yb, z, 2)
@@ -294,7 +294,7 @@ def builder_neo(rel, L):
             d.chair(8, yb, 6, "east", "birch")
             d.chair(7, yb, 9, "south", "birch")
             d.bed(x2 - 1, yb, z2 - 1, "south")
-            d.set(x2 - 1, yb, z2 - 3, sl("birch", "top"))
+            d.set(x2 - 2, yb, z2 - 1, sl("birch", "top"))
             d.item(8, yb, z2 - 1, "jukebox")
         d.set(8, yb, 4, "potted_bamboo")
         for x in (5, 9):
@@ -408,8 +408,8 @@ def builder_hw(rel, L):
         d.set(hx1, y, 9, "bricks")
     d.hut(4, y0, 4)
     # ---- ground floor
-    d.item(12, y0, 4, "cartography_table")
-    d.item(13, y0, 4, "crafting_table")
+    d.item(11, y0, 4, "cartography_table")
+    d.item(12, y0, 4, "crafting_table")
     d.table(12, y0, 6, "dark_oak")
     d.chair(12, y0, 7, "south", "dark_oak")
     d.chair(13, y0, 6, "east", "dark_oak")
@@ -806,7 +806,7 @@ def saw_hw(rel, L):
     saw_line(d, [(8, z) for z in range(z1 + 1, z1 + n + 3)], y0, n, "stripped_oak_log", "z")
     r = rack_line(d, [(x1 + 1, z) for z in range(z2 - 1, z1 + 2, -1)], y0, min(L, 3), 1, "east")
     if L > 3:
-        rack_line(d, [(x, z2 - 1) for x in range(x1 + 2, x1 + 5)], y0, L - 3, 1, "north")
+        rack_line(d, [(x, z2 - 1) for x in range(x1 + 3, x1 + 6)], y0, L - 3, 1, "north")
     log_pile(d, 11, z2 - 2, 12, z2 - 1, y0, 2, "oak_log", "z")
     for z in range(z1 + 2, z2 - 1, 3):
         d.set(9, 5, z, LANT)
@@ -1216,7 +1216,7 @@ def fl_neo(rel, L):
     for i in range(FLETCH[L]):
         d.item(x1 + 3 + i, y0, z2 - 1, "fletching_table")
     for i in range(FLETCH[L]):
-        d.chair(x1 + 3 + i, y0, z2 - 2, "south", "birch", sit=False) if i % 2 == 0 else None
+        d.chair(x1 + 3 + i, y0, z2 - 2, "south", "birch", sit=False) if i in (0, 2) else None
     rack_line(d, [(x1 + 1, z) for z in range(z2 - 1, z1 + 2, -1)], y0, FRACKS[L], 2, "east")
     if L >= 3:
         for i in range(5):
@@ -1339,11 +1339,11 @@ def fl_cas(rel, L):
     d.item(x1 + 1, y0, z1 + 2, "crafting_table")
     for i in range(FLETCH[L]):
         d.item(x1 + 1, y0, z1 + 4 + i, "fletching_table")
-    d.chair(x1 + 2, y0, z1 + 5, "west", "spruce", sit=False)
-    rack_line(d, [(x, z2 - 1) for x in range(x1 + 1, x2)], y0, FRACKS[L], 1)
+    d.chair(x1 + 2, y0, z1 + 4, "west", "spruce", sit=False)
+    rack_line(d, [(x, z2 - 1) for x in range(x1 + 2, x2)], y0, FRACKS[L], 1)
     if L >= 3:
-        for i, (x, z) in enumerate([(x2 - 1, z1 + 1), (x2 - 2, z1 + 1), (x2 - 3, z1 + 1), (x2 - 1, z1 + 2),
-                                    (x2 - 1, z1 + 6)]):
+        for i, (x, z) in enumerate([(x2 - 1, z1 + 1), (x2 - 2, z1 + 1), (x2 - 3, z1 + 1), (x1 + 3, z1 + 1),
+                                    (x2 - 1, z1 + 5)]):
             d.item(x, y0, z, "barrel", "up")
     d.set(mid, 5, z1 + 4, LANT)
     d.set(mid, 5, z2 - 3, LANT)
@@ -1460,7 +1460,7 @@ def wh_neo(rel, L):
     # office strip z5..7, cross aisle z8, racks z9..15
     cells = [(x1 + 2, y0, z1 + 1, "north"), (x1 + 3, y0, z1 + 1, "north"), (x1 + 4, y0, z1 + 1, "north"),
              (9, y0, z1 + 1, "north"), (10, y0, z1 + 1, "north"), (10, y0, z1 + 2, "west"),
-             (10, y0, z1 + 3, "west"), (x1 + 1, y0, z1 + 3, "east"), (x1 + 1, y0, z1 + 2, "east")]
+             (10, y0, z1 + 3, "west"), (x1 + 1, y0, z1 + 3, "east"), (9, y0, z1 + 2, "north")]
     wh_office(d, L, cells, (6, y0, z1 + 3, "west", "east"))
     n = aisles(d, x1 + 1, z1 + 5, x2 - 1, z2 - 1, y0, min(WH[L], 168))
     for x in range(x1 + 1, x2, 3):
@@ -1543,9 +1543,9 @@ def wh_hw(rel, L):
     d.set(13, y0 + 2, z1 - 1, "wall_torch[facing=north]")
     d.hut(x1 + 1, y0, z1 + 1)
     cells = [(x1 + 2, y0, z1 + 1, "north"), (x1 + 3, y0, z1 + 1, "north"), (x1 + 4, y0, z1 + 1, "north"),
-             (x2 - 1, y0, z1 + 1, "north"), (x2 - 1, y0, z1 + 2, "west"), (x2 - 2, y0, z1 + 1, "west"),
-             (x2 - 3, y0, z1 + 1, "west"), (x2 - 1, y0, z1 + 3, "west"), (x1 + 1, y0, z1 + 3, "east")]
-    wh_office(d, L, cells, (x1 + 3, y0, z1 + 3, "south", "east"))
+             (x2 - 1, y0, z1 + 2, "west"), (x2 - 1, y0, z1 + 3, "west"), (x2 - 2, y0, z1 + 1, "north"),
+             (x2 - 3, y0, z1 + 1, "north"), (x2 - 4, y0, z1 + 1, "north"), (x1 + 1, y0, z1 + 3, "east")]
+    wh_office(d, L, cells, (x1 + 3, y0, z1 + 2, "south", "east"))
     # rack bays: double rows across the barn either side of the 3-wide nave, cross aisles between
     n = 0
     for u in range(U):
@@ -1782,7 +1782,7 @@ def dl_hw(rel, L):
     d.item(x2 - 1, y0, z1 + 4, "crafting_table")
     d.item(x2 - 1, y0, z1 + 5, "cartography_table")
     if L >= 2:
-        d.item(x2 - 1, y0, z1 + 6, "lectern", "west")
+        d.item(x2 - 1, y0, z1 + 3, "lectern", "north")
     if L >= 5:
         d.item(x1 + 5, y0, z1 + 4, "ender_chest", "north")
     seats = 0
