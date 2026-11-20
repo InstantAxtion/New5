@@ -660,8 +660,8 @@ def bay_hw(d, a, storeys, top):
             for x, z in cells(a, 3, a + 4, 4):
                 edge = x in (a, a + 4) or z == 3
                 d.set(x, y, z, "bricks" if edge else AIR)
-            d.set(a, y, 3, "calcite")
-            d.set(a + 4, y, 3, "calcite")
+            d.set(a, y, 3, "calcite" if y % 2 == 0 else "bricks")
+            d.set(a + 4, y, 3, "calcite" if y % 2 == 0 else "bricks")
         for x in range(a + 1, a + 4):
             d.set(x, ya, 3, "calcite")
             d.set(x, ya + 1, 3, "glass_pane")
@@ -908,11 +908,9 @@ def skytower_hw(rel, L):
         d.set(13, 3, 1, lantern(False))
         d.set(17, 3, 1, lantern(False))
         for x in range(8, 13):
-            d.set(x, 2, 3, ("rose_bush[half=lower]", "peony[half=lower]")[x % 2])
-            d.set(x, 3, 3, ("rose_bush[half=upper]", "peony[half=upper]")[x % 2])
+            d.set(x, 2, 3, ("poppy", "allium", "oxeye_daisy")[x % 3])
         for x in range(24, 29):
-            d.set(x, 2, 3, "lilac[half=lower]" if x % 2 else "rose_bush[half=lower]")
-            d.set(x, 3, 3, "lilac[half=upper]" if x % 2 else "rose_bush[half=upper]")
+            d.set(x, 2, 3, ("cornflower", "poppy", "azure_bluet")[x % 3])
     if L >= 3:
         for x in (1, 29):
             d.set(x, 2, 0, "stone_bricks")
@@ -932,8 +930,8 @@ def skytower_hw(rel, L):
             d.table(x + (1 if x == 6 else -1), 2, 20, "dark_oak")
         for x in range(2, 29, 3):
             if abs(x - 15) > 1:
-                d.set(x, 2, 23, ("rose_bush[half=lower]", "peony[half=lower]", "lilac[half=lower]")[x % 3])
-                d.set(x, 3, 23, ("rose_bush[half=upper]", "peony[half=upper]", "lilac[half=upper]")[x % 3])
+                d.set(x, 2, 23, ("poppy", "allium", "cornflower")[x % 3])
+                d.set(x, 2, 22, ("oxeye_daisy", "azure_bluet", "dandelion")[x % 3])
         d.set(15, 2, 21, "stone_brick_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
         d.set(15, 3, 21, "lantern[hanging=false,waterlogged=false]")
     if L >= 5:
@@ -982,10 +980,8 @@ def skytower_ca(rel, L):
     X1, X2, Z1, Z2 = G["X1"], G["X2"], G["Z1"], G["Z2"]
     S = G["SLABS"]
     for x, z in cells(0, 0, 28, 30):
-        if (x * 3 + z * 7) % 11 == 0:
-            d.set(x, 1, z, "grass_block[snowy=false]")
-        elif (x + z * 5) % 13 == 0:
-            d.set(x, 1, z, "podzol[snowy=false]")
+        if not (10 <= x <= 18 and z <= 3):
+            d.set(x, 1, z, "grass_block[snowy=false]" if (x * 3 + z * 7) % 5 else "moss_block")
     # ---- river-rock ground storey
     for x, z in cells(X1, Z1, X2, Z2):
         d.set(x, 1, z, stone(x, 1, z) if x in (X1, X2) or z in (Z1, Z2) else "spruce_planks")
@@ -997,21 +993,21 @@ def skytower_ca(rel, L):
     for s in S + (G["ROOF"],):
         d.fill(X1 + 1, s, Z1 + 1, X2 - 1, s, Z2 - 1, "spruce_planks")
         for x in range(X1, X2 + 1):
-            d.set(x, s, Z1, log("stripped_spruce_log", "x"))
-            d.set(x, s, Z2, log("stripped_spruce_log", "x"))
+            d.set(x, s, Z1, "dark_oak_planks")
+            d.set(x, s, Z2, "dark_oak_planks")
         for z in range(Z1, Z2 + 1):
-            d.set(X1, s, z, log("stripped_spruce_log", "z"))
-            d.set(X2, s, z, log("stripped_spruce_log", "z"))
+            d.set(X1, s, z, "dark_oak_planks")
+            d.set(X2, s, z, "dark_oak_planks")
     for s in S:
         for y in range(s + 1, s + 5):
             for x in range(X1, X2 + 1):
-                d.set(x, y, Z1, log("spruce_log", "x"))
-                d.set(x, y, Z2, log("spruce_log", "x"))
+                d.set(x, y, Z1, log("stripped_spruce_log", "x"))
+                d.set(x, y, Z2, log("stripped_spruce_log", "x"))
             for z in range(Z1, Z2 + 1):
-                d.set(X1, y, z, log("spruce_log", "z"))
-                d.set(X2, y, z, log("spruce_log", "z"))
+                d.set(X1, y, z, log("stripped_spruce_log", "z"))
+                d.set(X2, y, z, log("stripped_spruce_log", "z"))
             for x, z in ((X1, Z1), (X2, Z1), (X1, Z2), (X2, Z2), (X1, 15), (X2, 15)):
-                d.set(x, y, z, log("stripped_spruce_log", "y"))
+                d.set(x, y, z, log("spruce_log", "y"))
             d.fill(X1 + 1, y, 15, X2 - 1, y, 15, "spruce_planks")
     # ---- roof: steep dark gable, gable to the street; catslide over the west gallery
     ridge = d.gable(X1, Z1, X2, Z2, 17, "z", "dark_oak_stairs", "dark_oak_slab", "spruce_planks")
@@ -1028,10 +1024,10 @@ def skytower_ca(rel, L):
     # ---- gallery (west): decks, posts, railings, outside stairs
     for s in S:
         for x, z in cells(5, Z1, 7, Z2):
-            d.set(x, s, z, "spruce_planks")
+            d.set(x, s, z, "dark_oak_planks")
         for z in range(Z1, Z2 + 1):
-            d.set(4, s + 1, z, fence("spruce"))
-        d.set(4, s, Z1, "spruce_planks")
+            d.set(4, s + 1, z, fence("dark_oak"))
+            d.set(4, s, z, "dark_oak_planks")
     for z in (Z1, 9, 15, 21, Z2):
         for y in range(2, 13):
             d.set(4, y, z, log("spruce_log", "y"))
@@ -1068,9 +1064,9 @@ def skytower_ca(rel, L):
     for fz in G["FZS"]:
         for s in S:
             for x, z in cells(21, fz + 1, 23, fz + 7):
-                d.set(x, s, z, "spruce_planks")
+                d.set(x, s, z, "dark_oak_planks")
                 if x == 23 or z in (fz + 1, fz + 7):
-                    d.set(x, s + 1, z, fence("spruce"))
+                    d.set(x, s + 1, z, fence("dark_oak"))
             d.chair(22, s + 1, fz + 2, "south", "spruce", sit=False)
             d.set(22, s + 1, fz + 3, slab("spruce", "top"))
             d.set(22, s + 2, fz + 3, "potted_fern")

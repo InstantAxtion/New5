@@ -964,3 +964,761 @@ def grandbridge(pack, rel, L):
 @design("grandbridgewing")
 def grandbridgewing(pack, rel, L):
     return {"Hearthwood": gbw_hearthwood, "Cascadia": gbw_cascadia, "Neoterra": gbw_neoterra}[pack](rel, L)
+
+
+# =============================================================================================================
+#                                                 ROYAL GRANARY
+# =============================================================================================================
+def cone(d, cx, cz, r0, y0, stairs, cap, step=0.75, solid=None):
+    """Conical roof: rings of stairs facing up-slope, radius shrinking by `step` per layer; returns the top y."""
+    y, r = y0, r0
+    while True:
+        cells = disc(r, cx, cz)
+        inner = disc(r - step, cx, cz) if r - step > 0.6 else set()
+        if not inner:
+            for x, z in cells:
+                d.set(x, y, z, cap)
+            return y
+        for x, z in cells - inner:
+            dx, dz = x - cx, z - cz
+            if abs(dx) >= abs(dz):
+                f = "east" if dx < 0 else "west"
+            else:
+                f = "south" if dz < 0 else "north"
+            d.set(x, y, z, stair(stairs, f))
+        if solid:
+            for x, z in inner:
+                if d.air(x, y, z):
+                    d.set(x, y, z, solid)
+        y += 1
+        r -= step
+
+
+GR = {
+    "Hearthwood": dict(size=(33, 26, 27), res=(1, 1), wsize=(9, 20, 9), whut=(3, 1, 2)),
+    "Cascadia": dict(size=(31, 34, 31), res=(1, 13), wsize=(9, 30, 9), whut=(3, 1, 2)),
+    "Neoterra": dict(size=(33, 26, 31), res=(1, 1), wsize=(7, 24, 7), whut=(2, 1, 1)),
+}
+
+
+def gr_place_wings(d, g, path):
+    x1, z1 = g["res"]
+    wx, wy, wz = g["wsize"]
+    hx, hy, hz = g["whut"]
+    for ox in (x1, d.sx - x1 - wx):
+        d.reserve(ox, 1, z1, ox + wx - 1, d.sy - 1, z1 + wz - 1)
+        d.child_hut(ox + hx, hy + 1, z1 + hz, path)
+
+
+# ----------------------------------------------------------------------------------------------- Hearthwood
+DOVE_H = {1: 4, 2: 5, 3: 6, 4: 7, 5: 8}
+
+
+def rg_hearthwood(rel, L):
+    g = GR["Hearthwood"]
+    d = Design("Hearthwood", rel, g["size"], gy=1, paving="grass_block[snowy=false]")
+    BX1, BX2 = (9, 23) if L == 1 else (3, 29)
+    BZ1, BZ2 = 13, 23
+    stone, sst = "stone_bricks", "stone_brick_stairs"
+    # forecourt
+    for x in range(10, 23):
+        for z in range(0, BZ1):
+            d.set(x, 1, z, "gravel" if (x * 7 + z * 5) % 9 else "coarse_dirt")
+    for z in range(0, BZ1):
+        for x in (15, 17):
+            d.set(x, 1, z, "cobblestone")                   # cart ruts
+    # walls
+    for x in range(BX1, BX2 + 1):
+        for z in range(BZ1, BZ2 + 1):
+            d.set(x, 1, z, "packed_mud")
+            edge = x in (BX1, BX2) or z in (BZ1, BZ2)
+            for y in range(2, 8):
+                if edge:
+                    if y == 2:
+                        st = "mossy_stone_bricks" if (x + z) % 3 == 0 else "cobblestone"
+                    else:
+                        st = ("stone_bricks", "stone_bricks", "cobblestone", "stone_bricks", "andesite")[(x * 3 + y * 5 + z) % 5]
+                    d.set(x, y, z, st)
+                else:
+                    d.set(x, y, z, AIR)
+    for x, z in ((BX1, BZ1), (BX2, BZ1), (BX1, BZ2), (BX2, BZ2)):          # dressed quoins
+        for y in range(2, 8):
+            d.set(x, y, z, "polished_andesite" if y % 2 else stone)
+    # threshing floor between the porch and the back doors
+    for x in range(15, 18):
+        for z in range(BZ1, BZ2 + 1):
+            d.set(x, 1, z, "oak_planks")
+    # aisle posts and tie beams
+    for x in range(BX1 + 2, BX2 - 1, 4):
+        if 14 <= x <= 18:
+            continue
+        for z in (BZ1 + 2, BZ2 - 2):
+            for y in range(2, 8):
+                d.set(x, y, z, "dark_oak_log[axis=y]")
+            d.set(x - 1, 7, z, stair("dark_oak_stairs", "east", "top"))
+            d.set(x + 1, 7, z, stair("dark_oak_stairs", "west", "top"))
+        for z in range(BZ1 + 1, BZ2):
+            d.set(x, 8, z, "dark_oak_log[axis=z]")
+    # roof
+    ridge = d.gable(BX1, BZ1, BX2, BZ2, 8, "x", "deepslate_tile_stairs", "deepslate_tile_slab", stone, overhang=1)
+    if L >= 3:                                             # owl holes in the gables
+        for x in (BX1, BX2):
+            d.set(x, ridge - 2, 18, AIR)
+    # ventilation slits on the long walls
+    for x in range(BX1 + 2, BX2 - 1, 3):
+        if 13 <= x <= 19:
+            continue
+        for z in (BZ1, BZ2):
+            d.set(x, 4, z, AIR)
+            d.set(x, 5, z, AIR)
+    # porch (midstrey) with the wagon entrance
+    PX1, PX2, PZ = 14, 18, 9
+    for z in range(PZ, BZ1):
+        for x in (PX1, PX2):
+            for y in range(2, 7):
+                d.set(x, y, z, stone if (x + y + z) % 4 else "cobblestone")
+        for x in range(PX1 + 1, PX2):
+            d.set(x, 1, z, "oak_planks")
+    for x in range(PX1 + 1, PX2):
+        for y in range(2, 6):
+            d.set(x, y, BZ1, AIR)
+        d.set(x, 6, PZ, "dark_oak_log[axis=x]")
+        for y in range(2, 6):
+            d.set(x, y, PZ, AIR)
+    for x in range(PX1, PX2 + 1):
+        d.set(x, 6, PZ, "dark_oak_log[axis=x]") if x in (PX1, PX2) else None
+    pr = d.gable(PX1, PZ, PX2, BZ1, 7, "z", "deepslate_tile_stairs", "deepslate_tile_slab",
+                 "calcite" if L >= 3 else stone, overhang=1)
+    for z in range(PZ, BZ1):
+        for x in range(PX1 + 1, PX2):
+            d.set(x, 6, z, "dark_oak_planks") if z > PZ else None
+    if L >= 3:                                             # timber-framed porch gable
+        for y in range(7, pr):
+            d.set(16, y, PZ, "dark_oak_log[axis=y]")
+        d.set(15, 7, PZ, "dark_oak_log[axis=x]")
+        d.set(17, 7, PZ, "dark_oak_log[axis=x]")
+    # back wagon doors
+    for x in range(15, 18):
+        for y in range(2, 6):
+            d.set(x, y, BZ2, "dark_oak_planks")
+    d.door(16, 2, BZ2, "south", "dark_oak")
+    d.set(16, 4, BZ2, "dark_oak_planks")
+    d.set(16, 5, BZ2, "dark_oak_planks")
+    # hut in the porch
+    d.hut(15, 2, 10, "east")
+    d.set(17, 2, 10, "barrel[facing=up,open=false]")
+    d.set(15, 5, 11, lantern(True)) if False else None
+    d.set(16, 5, 11, lantern(True))
+    # interior: hay mows in the bays, grain bins, sacks
+    for x in range(BX1 + 1, BX2):
+        if 14 <= x <= 18:
+            continue
+        for z in range(BZ1 + 1, BZ2):
+            if z in (BZ1 + 2, BZ2 - 2) and d.get(x, 2, z).startswith("minecraft:dark_oak_log"):
+                continue
+            far = min(abs(x - 16), 99)
+            if z >= BZ2 - 3 and far > 3:
+                h = 1 + ((x + z) % 3 == 0) + (z == BZ2 - 1)
+                for y in range(2, 2 + h):
+                    d.set(x, y, z, "hay_block[axis=x]")
+            elif z == BZ1 + 1 and far > 3 and x % 3 == 0:
+                d.set(x, 2, z, "barrel[facing=up,open=false]")
+                d.set(x, 3, z, "barrel[facing=up,open=false]") if x % 2 else None
+    for x in range(BX1 + 2, BX2 - 1, 4):
+        if not (14 <= x <= 18):
+            d.set(x, 6, (BZ1 + BZ2) // 2, lantern(True)) if False else None
+    for x in (13, 19):
+        if BX1 < x < BX2:
+            d.set(x, 7, (BZ1 + BZ2) // 2, lantern(True))
+    d.set(16, 7, 18, "chain[axis=y,waterlogged=false]")
+    d.set(16, 6, 18, lantern(True))
+    # ---- level extras
+    if L >= 2:                                             # cart in the forecourt, mounting block
+        d.set(20, 2, 7, "oak_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
+        d.set(21, 2, 7, "oak_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
+        d.set(20, 2, 6, "hay_block[axis=y]")
+        d.set(21, 2, 6, "hay_block[axis=y]")
+        d.set(19, 2, 6, "dark_oak_fence")
+        d.set(12, 2, 11, stair(sst, "east"))
+    if L >= 3:                                             # buttresses
+        for x in range(BX1 + 2, BX2 - 1, 4):
+            if 13 <= x <= 19:
+                continue
+            for z, f in ((BZ1 - 1, "south"), (BZ2 + 1, "north")):
+                for y in range(2, 5):
+                    d.set(x, y, z, stone)
+                d.set(x, 5, z, stair(sst, f))
+        for x in range(10, 23):                            # low forecourt wall with gateposts
+            if x in (15, 16, 17):
+                continue
+            d.set(x, 2, 0, "cobblestone_wall")
+        for x in (14, 18):
+            d.set(x, 2, 0, stone)
+            d.set(x, 3, 0, "stone_brick_slab[type=bottom,waterlogged=false]")
+    if L >= 4:                                             # louvred ventilators on the ridge, finials, well
+        for x in (BX1 + 4, BX2 - 4):
+            d.set(x, ridge + 1, 18, "dark_oak_fence")
+            d.set(x, ridge + 2, 18, stair("deepslate_tile_stairs", "south"))
+            d.set(x, ridge + 1, 18, "dark_oak_slab[type=top,waterlogged=false]")
+            d.set(x, ridge + 2, 18, "deepslate_tile_slab[type=bottom,waterlogged=false]")
+        for x in (BX1, BX2):
+            d.set(x, ridge + 1, 18, "stone_brick_wall")
+        d.set(16, pr + 1, PZ - 1, "stone_brick_wall") if False else None
+        # well
+        for x, z in ((11, 4), (12, 4), (11, 5), (12, 5)):
+            d.set(x, 2, z, "cobblestone_wall")
+        d.set(11, 1, 4, WATER) if False else None
+        d.set(11, 3, 4, "oak_fence")
+        d.set(12, 3, 5, "oak_fence")
+        d.set(11, 4, 4, "oak_slab[type=bottom,waterlogged=false]")
+        d.set(12, 4, 4, "oak_slab[type=bottom,waterlogged=false]")
+        d.set(11, 4, 5, "oak_slab[type=bottom,waterlogged=false]")
+        d.set(12, 4, 5, "oak_slab[type=bottom,waterlogged=false]")
+    if L >= 5:                                             # bellcote on the porch, royal banners, garden
+        d.set(16, pr + 1, PZ + 1, stone)
+        d.set(15, pr + 1, PZ + 1, stone)
+        d.set(17, pr + 1, PZ + 1, stone)
+        d.set(15, pr + 2, PZ + 1, "stone_brick_wall")
+        d.set(17, pr + 2, PZ + 1, "stone_brick_wall")
+        d.set(16, pr + 3, PZ + 1, "bell[attachment=ceiling,facing=north,powered=false]")
+        for x in (15, 16, 17):
+            d.set(x, pr + 4, PZ + 1, "deepslate_tile_slab[type=bottom,waterlogged=false]")
+        d.set(16, pr + 4, PZ + 1, "deepslate_tiles")
+        d.set(16, pr + 5, PZ + 1, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        for x in (PX1, PX2):
+            d.banner(x, 5, PZ - 1, "north", "red")
+        for x in range(4, 29):
+            if 13 <= x <= 19:
+                continue
+            if x % 2:
+                d.set(x, 2, 11, ("rose_bush[half=lower]", "peony[half=lower]", "lilac[half=lower]")[x % 3])
+                d.set(x, 3, 11, ("rose_bush[half=upper]", "peony[half=upper]", "lilac[half=upper]")[x % 3])
+        for x in range(3, 30, 6):
+            if 13 <= x <= 19:
+                continue
+            tree(d, x, 25, h=3, leaves="oak_leaves", r=1)
+    gr_place_wings(d, g, wonder_path("royalgranary"))
+    connect_walls(d)
+    return d
+
+
+def rgw_hearthwood(rel, L):
+    """Round stone dovecote with a conical slate roof; potence (ladder post) inside."""
+    g = GR["Hearthwood"]
+    d = wing_design("Hearthwood", rel, g["wsize"])
+    cx = cz = 4
+    H = DOVE_H[L]
+    body = disc(3.5, cx, cz)
+    edge = ring(3.5, cx, cz)
+    for x, z in disc(4.5, cx, cz):
+        d.set(x, 0, z, "gravel")
+    for x, z in body:
+        d.set(x, 0, z, "cobblestone")
+        for y in range(1, H + 1):
+            if (x, z) in edge:
+                st = ("stone_bricks", "cobblestone", "stone_bricks", "andesite")[(x + y * 3 + z * 2) % 4]
+                if y == 1:
+                    st = "mossy_cobblestone" if (x + z) % 2 else "cobblestone"
+                d.set(x, y, z, st)
+            else:
+                d.set(x, y, z, AIR)
+    # string course
+    if L >= 3:
+        for x, z in edge:
+            d.set(x, H - 2, z, "polished_andesite")
+    # nest ledges inside, potence in the middle
+    for x, z in edge:
+        for y in range(3, H, 2):
+            dx, dz = cx - x, cz - z
+            if abs(dx) >= abs(dz):
+                f = "east" if dx > 0 else "west"
+            else:
+                f = "south" if dz > 0 else "north"
+            nx, nz = x + (1 if f == "east" else -1 if f == "west" else 0), z + (1 if f == "south" else -1 if f == "north" else 0)
+            if d.air(nx, y, nz) and (nx, nz) not in ((cx, cz), (cx, cz - 2), (cx, cz - 3), (3, 2)):
+                d.set(nx, y, nz, f"spruce_trapdoor[facing={f},half=top,open=false,powered=false,waterlogged=false]")
+    for y in range(1, H + 1):
+        d.set(cx, y, cz, "dark_oak_log[axis=y]")
+    for y in range(1, H):
+        d.set(cx, y, cz - 1, "ladder[facing=north,waterlogged=false]")
+    d.door(cx, 1, cz - 3, "north", "dark_oak")
+    d.set(cx, 3, cz - 3, "dark_oak_planks") if H >= 3 else None
+    d.hut(*g["whut"], facing="east")
+    d.set(cx, H, cz - 2, lantern(True)) if False else None
+    # flight holes (pigeon entrances) under the eaves
+    for x, z in ((cx, cz + 3), (cx - 3, cz), (cx + 3, cz)):
+        d.set(x, H - 1, z, "dark_oak_trapdoor[facing=north,half=bottom,open=true,powered=false,waterlogged=false]") if False else None
+        d.set(x, H - 1, z, AIR)
+    # eaves ring + conical roof
+    top = cone(d, cx, cz, 4.5, H + 1, "deepslate_tile_stairs", "deepslate_tiles", step=0.8 if L < 3 else 0.6,
+               solid="deepslate_tiles")
+    if L >= 4:                                             # glover (pigeon lantern) on the apex
+        for x, z in ((cx - 1, cz - 1), (cx + 1, cz - 1), (cx - 1, cz + 1), (cx + 1, cz + 1)):
+            d.set(x, top + 1, z, "dark_oak_fence")
+        d.fill(cx - 1, top + 2, cz - 1, cx + 1, top + 2, cz + 1, "deepslate_tile_slab[type=bottom,waterlogged=false]")
+        d.set(cx, top + 1, cz, AIR)
+        top += 2
+    d.set(cx, top + 1, cz, "dark_oak_fence")
+    d.set(cx, top + 2, cz, "lightning_rod[facing=up,powered=false,waterlogged=false]" if L >= 5 else "dark_oak_fence")
+    if L >= 2:
+        d.set(cx - 2, 1, cz - 4, "potted_red_tulip") if False else None
+    connect_walls(d)
+    return d
+
+
+# ----------------------------------------------------------------------------------------------- Cascadia
+SILO_H = {1: 8, 2: 11, 3: 14, 4: 17, 5: 20}             # child y of the silo wall top
+ELEV_T = {1: 10, 2: 13, 3: 16, 4: 19, 5: 22}            # parent y of the elevator wall top
+
+
+def rg_cascadia(rel, L):
+    g = GR["Cascadia"]
+    d = Design("Cascadia", rel, g["size"], gy=1, paving="coarse_dirt")
+    X1, X2, Z1, Z2 = 11, 19, 12, 20
+    T = ELEV_T[L]
+    log, pl = "dark_oak_log", "spruce_planks"
+    # yard, rail siding along the street
+    for x in range(d.sx):
+        for z in range(d.sz):
+            if (x * 5 + z * 3) % 7 == 0:
+                d.set(x, 1, z, "grass_block[snowy=false]")
+    for x in range(d.sx):
+        for z in (1, 2, 3):
+            d.set(x, 1, z, "gravel")
+        d.set(x, 2, 2, "rail[shape=east_west,waterlogged=false]")
+        if x % 2 == 0:
+            d.set(x, 1, 2, "spruce_planks")
+    # elevator: stone foundation, board walls, dark corner posts and bands
+    for x in range(X1, X2 + 1):
+        for z in range(Z1, Z2 + 1):
+            d.set(x, 1, z, "spruce_planks")
+            edge = x in (X1, X2) or z in (Z1, Z2)
+            for y in range(2, T + 1):
+                if not edge:
+                    d.set(x, y, z, AIR)
+                elif y == 2:
+                    d.set(x, y, z, ("cobblestone", "mossy_cobblestone", "andesite")[(x + z) % 3])
+                elif x in (X1, X2) and z in (Z1, Z2):
+                    d.set(x, y, z, f"{log}[axis=y]")
+                elif (y - 2) % 5 == 0:
+                    d.set(x, y, z, f"{log}[axis={'x' if z in (Z1, Z2) else 'z'}]")
+                else:
+                    d.set(x, y, z, pl)
+    # bin floors inside every 5, ladder (the "leg") up the north-west corner
+    for fy in range(7, T, 5):
+        d.fill(X1 + 1, fy, Z1 + 1, X2 - 1, fy, Z2 - 1, "spruce_planks")
+    for y in range(2, T + 1):
+        d.set(X1 + 1, y, Z2 - 1, "ladder[facing=north,waterlogged=false]") if False else None
+        d.set(X2 - 1, y, Z2 - 1, "ladder[facing=north,waterlogged=false]")
+    # small windows
+    for y in range(9, T - 1, 5):
+        for x in (13, 17):
+            d.set(x, y, Z1, "glass_pane")
+            d.set(x, y, Z2, "glass_pane")
+        for z in (14, 18):
+            d.set(X1, y, z, "glass_pane")
+            d.set(X2, y, z, "glass_pane")
+    # roof (ridge north-south) and the headhouse on top
+    ridge = d.gable(X1, Z1, X2, Z2, T + 1, "z", "dark_oak_stairs", "dark_oak_slab", pl, overhang=1)
+    if L >= 2:
+        hx1, hx2, hz1, hz2 = 13, 17, 14, 18
+        hy = ridge - 2
+        for x in range(hx1, hx2 + 1):
+            for z in range(hz1, hz2 + 1):
+                edge = x in (hx1, hx2) or z in (hz1, hz2)
+                for y in range(hy, hy + 4):
+                    if edge:
+                        d.set(x, y, z, f"{log}[axis=y]" if x in (hx1, hx2) and z in (hz1, hz2) else pl)
+                    else:
+                        d.set(x, y, z, AIR)
+        d.set(15, hy + 2, hz1, "glass_pane")
+        d.set(15, hy + 2, hz2, "glass_pane")
+        d.gable(hx1, hz1, hx2, hz2, hy + 4, "x", "dark_oak_stairs", "dark_oak_slab", pl, overhang=1)
+    # company sign on the street face
+    sy = T - 2
+    for x in range(X1 + 1, X2):
+        d.set(x, sy, Z1, "stripped_spruce_wood[axis=x]")
+        d.set(x, sy - 1, Z1, "stripped_spruce_wood[axis=x]")
+    for x, t in ((13, ["CASCADIA"]), (14, ["GRAIN"]), (15, ["CO-OP"]), (16, ["ELEVATOR"]), (17, ["No 1"])):
+        d.sign(x, sy, Z1 - 1, "north", t, "dark_oak")
+    # drive shed in front: open lean-to with the grain pit and the hut
+    SX1, SX2, SZ1 = 12, 18, 6
+    for x in range(SX1, SX2 + 1):
+        for z in range(SZ1, Z1):
+            d.set(x, 1, z, "spruce_planks")
+    for x in (SX1, SX2):
+        for z in (SZ1, Z1 - 3):
+            for y in range(2, 6):
+                d.set(x, y, z, "spruce_log[axis=y]")
+    for x in range(SX1 - 1, SX2 + 2):
+        for i, z in enumerate(range(SZ1 - 1, Z1)):
+            y = 5 + (i + 1) // 2
+            d.set(x, y, z, stair("dark_oak_stairs", "south") if (i % 2 == 0) else slab("dark_oak_slab", "bottom"))
+    for x in range(14, 17):
+        for y in range(2, 6):
+            d.set(x, y, Z1, AIR)
+    d.set(15, 1, 9, "iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
+    d.set(15, 0, 9, "hopper[enabled=true,facing=down]")
+    d.hut(SX1 + 1, 2, Z1 - 1, "south")
+    d.set(SX2 - 1, 2, Z1 - 1, "composter[level=8]")
+    d.set(SX2 - 1, 3, Z1 - 1, lantern()) if False else None
+    d.set(15, 5, 10, lantern(True)) if d.air(15, 5, 10) else None
+    # inside the workfloor: grain cleaner (composter), sacks, scale
+    d.set(X1 + 1, 2, Z1 + 1, "barrel[facing=up,open=false]")
+    d.set(X1 + 1, 2, Z1 + 2, "barrel[facing=up,open=false]")
+    d.set(X1 + 1, 3, Z1 + 1, "barrel[facing=up,open=false]")
+    d.set(X2 - 1, 2, Z1 + 1, "hay_block[axis=y]")
+    d.set(X2 - 1, 2, Z1 + 2, "hay_block[axis=y]")
+    d.set(15, 2, 16, "composter[level=4]")
+    d.set(15, 3, 16, "hopper[enabled=true,facing=down]")
+    d.set(15, 6, 16, lantern(True))
+    # ---- levels
+    if L >= 3:                                             # loading spout over the rail siding
+        for i in range(0, 8):
+            y = T - 3 - i
+            z = Z1 - 1 - i
+            if z < 3 or y < 5:
+                break
+            d.set(15, y, z, "chain[axis=y,waterlogged=false]") if False else d.set(15, y, z, "spruce_fence")
+        # a grain boxcar on the siding
+        for x in range(3, 9):
+            d.set(x, 3, 2, "mangrove_planks" if x not in (3, 8) else "dark_oak_planks")
+            d.set(x, 4, 2, "mangrove_planks")
+            d.set(x, 5, 2, "dark_oak_slab[type=bottom,waterlogged=false]")
+            for z in (1, 3):
+                d.set(x, 3, z, "mangrove_planks" if x not in (3, 8) else "dark_oak_planks")
+                d.set(x, 4, z, "mangrove_planks")
+                d.set(x, 5, z, "dark_oak_slab[type=bottom,waterlogged=false]")
+        for x in range(3, 9):
+            d.set(x, 2, 2, "rail[shape=east_west,waterlogged=false]")
+        for x in (4, 7):
+            for z in (1, 3):
+                d.set(x, 2, z, "polished_blackstone_button[face=floor,facing=north,powered=false]") if False else None
+    if L >= 4:                                             # conveyor galleries to the silos
+        gy = SILO_H[L] + 1
+        for x in (10, 20):
+            for y in range(gy, gy + 3):
+                d.set(x, y, 16, "spruce_planks" if y != gy + 1 else "glass_pane")
+                d.set(x, y, 15, f"{log}[axis=x]" if y == gy else "spruce_planks")
+                d.set(x, y, 17, f"{log}[axis=x]" if y == gy else "spruce_planks")
+            d.set(x, gy + 3, 16, "dark_oak_slab[type=bottom,waterlogged=false]")
+            d.set(x, gy + 3, 15, "dark_oak_slab[type=bottom,waterlogged=false]")
+            d.set(x, gy + 3, 17, "dark_oak_slab[type=bottom,waterlogged=false]")
+        # scale office shack by the siding
+        for x in range(23, 29):
+            for z in range(5, 10):
+                edge = x in (23, 28) or z in (5, 9)
+                d.set(x, 1, z, "spruce_planks")
+                for y in range(2, 5):
+                    d.set(x, y, z, ("stripped_spruce_log[axis=y]" if x in (23, 28) and z in (5, 9) else pl) if edge else AIR)
+        d.door(25, 2, 5, "north", "spruce")
+        d.set(27, 3, 5, "glass_pane")
+        d.set(23, 3, 7, "glass_pane")
+        d.gable(23, 5, 28, 9, 5, "x", "dark_oak_stairs", "dark_oak_slab", pl, overhang=1)
+        d.set(24, 2, 8, "lectern[facing=north,has_book=false,powered=false]")
+        d.set(27, 2, 8, "barrel[facing=up,open=false]")
+        d.set(25, 4, 7, lantern(True))
+        d.set(26, 2, 6, "spruce_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
+    if L >= 5:                                             # yard dressing: lamps, hay, barrels, firs
+        for x, z in ((10, 6), (20, 6)):
+            lamppost(d, x, z, post="spruce_fence")
+        for x, z in ((2, 7), (3, 7), (2, 8), (27, 25), (28, 25)):
+            d.set(x, 2, z, "hay_block[axis=y]")
+        d.set(2, 3, 7, "hay_block[axis=x]")
+        for x, z in ((4, 26), (26, 27), (15, 27)):
+            tree(d, x, z, h=6, log="spruce_log", leaves="spruce_leaves", r=2)
+        for x in range(X1 - 1, X2 + 2):
+            d.set(x, 2, Z2 + 1, "spruce_fence") if x % 2 else None
+    gr_place_wings(d, g, wonder_path("royalgranary"))
+    connect_walls(d)
+    return d
+
+
+def rgw_cascadia(rel, L):
+    """Round concrete stave silo with iron hoop bands, ladder cage and a conical roof; conveyor stubs at the top."""
+    g = GR["Cascadia"]
+    d = wing_design("Cascadia", rel, g["wsize"])
+    cx = cz = 4
+    H = SILO_H[L]
+    body = disc(3.5, cx, cz)
+    edge = ring(3.5, cx, cz)
+    for x, z in disc(4.5, cx, cz):
+        d.set(x, 0, z, "gravel")
+    for x, z in body:
+        d.set(x, 0, z, "cobblestone")
+        for y in range(1, H + 1):
+            if (x, z) in edge:
+                st = "polished_andesite" if y % 4 == 0 else ("andesite" if (x + z + y) % 3 else "tuff")
+                if y == 1:
+                    st = "mossy_cobblestone" if (x + z) % 2 else "cobblestone"
+                d.set(x, y, z, st)
+            else:
+                d.set(x, y, z, AIR)
+    d.door(cx, 1, cz - 3, "north", "spruce")
+    d.hut(*g["whut"], facing="east")
+    # chute door strip up the front (the classic column of little doors)
+    for y in range(3, H, 2):
+        d.set(cx, y, cz - 3, "spruce_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]") if False else None
+        d.set(cx, y, cz - 3, "spruce_planks")
+    for y in range(3, H + 1):
+        d.set(cx - 1, y, cz - 4, "ladder[facing=north,waterlogged=false]")
+    # interior: a grain heap and a lantern
+    d.set(cx, 1, cz + 1, "hay_block[axis=y]")
+    d.set(cx + 1, 1, cz + 1, "hay_block[axis=y]")
+    d.set(cx, 4, cz, lantern(True)) if False else None
+    d.set(cx, H, cz, "spruce_planks")
+    d.set(cx, H - 1, cz, lantern(True))
+    top = cone(d, cx, cz, 4.0, H + 1, "dark_oak_stairs", "dark_oak_planks", step=1.0, solid="dark_oak_planks")
+    d.set(cx, top + 1, cz, "spruce_fence")
+    d.set(cx, top + 2, cz, lantern() if L >= 3 else "spruce_fence")
+    if L >= 4:                                             # conveyor stubs both sides (one meets the elevator gallery)
+        for x in (0, 8):
+            for y in range(H, H + 3):
+                for z in (3, 4, 5):
+                    d.set(x, y, z, "spruce_planks" if not (z == 4 and y == H + 1) else "glass_pane")
+                d.set(x, H, 3, "dark_oak_log[axis=x]")
+                d.set(x, H, 5, "dark_oak_log[axis=x]")
+            for z in (3, 4, 5):
+                d.set(x, H + 3, z, "dark_oak_slab[type=bottom,waterlogged=false]")
+        for x in (1, 7):
+            for y in range(H, H + 3):
+                for z in (3, 4, 5):
+                    if d.air(x, y, z):
+                        d.set(x, y, z, "spruce_planks")
+            for z in (3, 4, 5):
+                if d.air(x, H + 3, z):
+                    d.set(x, H + 3, z, "dark_oak_slab[type=bottom,waterlogged=false]")
+    connect_walls(d)
+    return d
+
+
+# ----------------------------------------------------------------------------------------------- Neoterra
+NSILO_H = {1: 5, 2: 8, 3: 11, 4: 14, 5: 17}
+
+
+def rg_neoterra(rel, L):
+    g = GR["Neoterra"]
+    d = Design("Neoterra", rel, g["size"], gy=1, paving="grass_block[snowy=false]")
+    SOLIDB = "structurize:blocksolidsubstitution"
+    # plaza along the street and the approach
+    for x in range(d.sx):
+        for z in range(0, 5):
+            d.set(x, 1, z, "smooth_stone" if (x + z) % 4 else "light_gray_concrete")
+    for x in range(13, 20):
+        for z in range(0, 13):
+            d.set(x, 1, z, "white_concrete" if x in (13, 19) else "smooth_stone")
+    # ---- the mound (grassed hill over the vault)
+    mx, mz, rx, rz = 16, 22, 10, 8.5
+    Hm = 8 if L == 1 else 9
+    hmap = {}
+    for x in range(d.sx):
+        for z in range(d.sz):
+            t = 1 - ((x - mx) / rx) ** 2 - ((z - mz) / rz) ** 2
+            if t > 0:
+                h = int(round(Hm * (t ** 0.6)))
+                if h > 0:
+                    hmap[(x, z)] = h
+    for (x, z), h in hmap.items():
+        for y in range(2, 1 + h):
+            d.set(x, y, z, SOLIDB)
+        d.set(x, 1 + h, z, "grass_block[snowy=false]" if h < Hm - 1 or L < 3 else "moss_block")
+    # ---- vault chamber inside the mound
+    VX1, VX2, VZ1, VZ2 = 12, 20, 19, 27
+    for x in range(VX1, VX2 + 1):
+        for z in range(VZ1, VZ2 + 1):
+            d.set(x, 1, z, "polished_diorite" if (x + z) % 2 else "packed_ice")
+            for y in range(2, 6):
+                d.set(x, y, z, "white_concrete" if x in (VX1, VX2) or z in (VZ1, VZ2) else AIR)
+            d.set(x, 6, z, "light_gray_concrete")
+    for x in range(VX1 + 2, VX2 - 1, 3):
+        for z in (VZ1 + 2, VZ1 + 5):
+            d.set(x, 5, z, "sea_lantern")
+    # seed shelving: aisles of barrels 2 high along x, with a central aisle
+    for z in (VZ1 + 2, VZ1 + 4, VZ1 + 6):
+        for x in range(VX1 + 1, VX2):
+            if x == 16:
+                continue
+            d.set(x, 2, z, "barrel[facing=up,open=false]")
+            d.set(x, 3, z, "barrel[facing=north,open=false]" if x % 2 else "decorated_pot[cracked=false,facing=north,waterlogged=false]")
+    # ---- corridor from the portal
+    for z in range(6, VZ1):
+        for x in range(14, 19):
+            edge = x in (14, 18)
+            d.set(x, 1, z, "polished_andesite" if not edge else "white_concrete")
+            for y in range(2, 5):
+                d.set(x, y, z, "white_concrete" if edge else AIR)
+            d.set(x, 5, z, "light_gray_concrete")
+            if not edge and z > 13:
+                pass
+        if z % 3 == 0:
+            d.set(16, 4, z, "end_rod[facing=down]") if False else d.set(16, 5, z, "sea_lantern")
+    for y in range(2, 4):
+        d.set(16, y, VZ1, AIR)
+    d.set(16, 2, VZ1, "iron_door[facing=south,half=lower,hinge=left,open=false,powered=false]")
+    d.set(16, 3, VZ1, "iron_door[facing=south,half=upper,hinge=left,open=false,powered=false]")
+    # ---- the portal wedge
+    PX1, PX2, PZ1, PZ2 = 13, 19, 5, 13
+    for z in range(PZ1, PZ2 + 1):
+        ytop = 12 - (z - PZ1)
+        for x in range(PX1, PX2 + 1):
+            for y in range(2, ytop + 1):
+                inside = 15 <= x <= 17 and y <= 4 and z > PZ1
+                if inside:
+                    continue
+                if 15 <= x <= 17 and 2 <= y <= 4:
+                    continue
+                d.set(x, y, z, "light_gray_concrete" if x in (PX1, PX2) or z == PZ1 or y == ytop else SOLIDB)
+            d.set(x, ytop + 1, z, "smooth_stone_slab[type=bottom,waterlogged=false]") if False else None
+    # the glowing art on the front face and roof (diagonal light strips)
+    for z in range(PZ1, PZ2 + 1):
+        ytop = 12 - (z - PZ1)
+        for x in range(PX1 + 1, PX2):
+            if (x + z) % 3 == 0:
+                d.set(x, ytop, z, "sea_lantern" if L >= 2 else "cyan_concrete")
+            elif L >= 3:
+                d.set(x, ytop, z, "prismarine_bricks" if (x + z) % 3 == 1 else "light_blue_stained_glass")
+    for y in range(6, 13):
+        for x in range(PX1 + 1, PX2):
+            if (x + y) % 3 == 0:
+                d.set(x, y, PZ1, "sea_lantern" if L >= 2 else "cyan_concrete")
+            elif L >= 4 and (x + y) % 3 == 1:
+                d.set(x, y, PZ1, "light_blue_stained_glass")
+    # entrance
+    for x in range(15, 18):
+        for y in range(2, 5):
+            d.set(x, y, PZ1, "glass_pane" if x != 16 else AIR)
+        d.set(x, 5, PZ1, "light_gray_concrete")
+    d.set(16, 2, PZ1, "iron_door[facing=north,half=lower,hinge=left,open=false,powered=false]")
+    d.set(16, 3, PZ1, "iron_door[facing=north,half=upper,hinge=left,open=false,powered=false]")
+    d.set(16, 4, PZ1, "glass_pane")
+    d.hut(15, 2, PZ1 + 2, "east")
+    d.sign(17, 4, PZ1 - 1, "north", ["NEOTERRA", "SEED VAULT"], "birch", glow=True, color="cyan") if False else None
+    d.sign(13, 3, PZ1 - 1, "north", ["NEOTERRA", "SEED VAULT"], "birch", glow=True, color="cyan")
+    d.set(17, 2, PZ1 + 2, "light_gray_concrete") if False else None
+    # ---- research pavilion (L3+) and greenhouse (L4+)
+    if L >= 3:
+        x1, x2, z1, z2 = 23, 31, 9, 16
+        for x in range(x1, x2 + 1):
+            for z in range(z1, z2 + 1):
+                d.set(x, 1, z, "smooth_stone")
+                edge = x in (x1, x2) or z in (z1, z2)
+                for y in range(2, 6):
+                    if edge:
+                        corner = x in (x1, x2) and z in (z1, z2)
+                        d.set(x, y, z, "white_concrete" if corner or y == 5 else "light_blue_stained_glass_pane" if L >= 4 else "glass_pane")
+                    else:
+                        d.set(x, y, z, AIR)
+        d.flat(x1 - 1, z1 - 1, x2 + 1, z2 + 1, 6, "smooth_quartz")
+        for x in range(x1 + 1, x2, 2):
+            for z in range(z1 + 1, z2, 2):
+                d.set(x, 7, z, "daylight_detector[inverted=false,power=0]")
+        d.set(27, 2, z1, AIR)
+        d.set(27, 3, z1, AIR)
+        d.door(27, 2, z1, "north", "birch")
+        for x in range(x1 + 1, x2):
+            d.set(x, 2, z2 - 1, "smooth_quartz_slab[type=top,waterlogged=false]") if x % 3 else None
+        d.set(x1 + 2, 2, z2 - 2, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]")
+        d.set(x1 + 3, 2, z2 - 1, "birch_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]") if False else None
+        d.set(x2 - 1, 2, z1 + 1, "potted_bamboo")
+        for x in range(x1 + 2, x2 - 1, 3):
+            d.set(x, 5, (z1 + z2) // 2, "sea_lantern")
+        for x in range(x1 + 1, x2):
+            if x % 3 == 0:
+                d.set(x, 3, z2 - 1, "flower_pot") if False else d.set(x, 3, z2 - 1, "potted_fern")
+    if L >= 4:
+        x1, x2, z1, z2 = 1, 9, 9, 16
+        for x in range(x1, x2 + 1):
+            for z in range(z1, z2 + 1):
+                d.set(x, 1, z, "moss_block" if x not in (x1, x2, 5) and z not in (z1, z2) else "smooth_stone")
+                edge = x in (x1, x2) or z in (z1, z2)
+                for y in range(2, 5):
+                    d.set(x, y, z, ("white_concrete" if x in (x1, x2) and z in (z1, z2) else "glass_pane") if edge else AIR)
+        for x in range(x1, x2 + 1):
+            for z in range(z1, z2 + 1):
+                d.set(x, 5, z, "glass" if x not in (x1, x2) and z not in (z1, z2) else "white_concrete")
+        d.set(5, 2, z1, AIR)
+        d.set(5, 3, z1, AIR)
+        d.door(5, 2, z1, "north", "birch")
+        for x in range(x1 + 1, x2):
+            for z in range(z1 + 1, z2):
+                if x != 5 and (x + z) % 2 == 0:
+                    d.set(x, 2, z, ("wheat[age=7]", "carrots[age=5]", "potatoes[age=7]", "beetroots[age=3]")[(x + z) % 4])
+                    d.set(x, 1, z, "farmland[moisture=7]")
+                elif x != 5:
+                    d.set(x, 1, z, "farmland[moisture=7]")
+    if L >= 5:                                             # reflecting pools and flag poles on the plaza
+        for x0 in (9, 20):
+            for x in range(x0, x0 + 4):
+                for z in (6, 7, 8):
+                    d.set(x, 1, z, WATER)
+                d.set(x, 1, 5, "white_concrete")
+                d.set(x, 1, 9, "white_concrete")
+        for x in (11, 21):
+            for y in range(2, 9):
+                d.set(x, y, 2, "white_concrete_wall") if False else d.set(x, y, 2, "iron_bars")
+            d.set(x, 9, 2, "sea_lantern")
+            d.banner(x, 7, 3, "south", "cyan") if False else None
+        for x in range(10, 23, 3):
+            d.set(x, 1, 0, "sea_lantern")
+    gr_place_wings(d, g, wonder_path("royalgranary"))
+    connect_walls(d)
+    return d
+
+
+def rgw_neoterra(rel, L):
+    """White concrete silo with cyan bands, a vertical window strip and (later) a glass observation crown."""
+    g = GR["Neoterra"]
+    d = wing_design("Neoterra", rel, g["wsize"])
+    cx = cz = 3
+    H = NSILO_H[L]
+    body = disc(3.4, cx, cz)
+    edge = ring(3.4, cx, cz)
+    for x, z in body:
+        d.set(x, 0, z, "smooth_stone")
+        for y in range(1, H + 1):
+            if (x, z) in edge:
+                st = "cyan_terracotta" if y % 4 == 0 else "white_concrete"
+                if y == 1:
+                    st = "light_gray_concrete"
+                d.set(x, y, z, st)
+            else:
+                d.set(x, y, z, AIR)
+    for y in range(2, H):
+        d.set(cx, y, cz + 3, "light_blue_stained_glass_pane" if L >= 3 else "glass_pane")
+    d.set(cx, 1, 0, AIR)
+    d.set(cx, 2, 0, AIR)
+    d.door(cx, 1, 0, "north", "birch")
+    d.hut(*g["whut"], facing="east")
+    d.set(cx, H, cz, "sea_lantern")
+    for x, z in body:
+        if (x, z) not in edge:
+            d.set(x, H, z, "white_concrete")
+    d.set(cx, H, cz, "sea_lantern")
+    top = H + 1
+    if L >= 3:                                             # glass observation ring with a flat cap
+        for x, z in edge:
+            d.set(x, top, z, "light_blue_stained_glass")
+            d.set(x, top + 1, z, "light_blue_stained_glass" if L >= 4 else "white_concrete")
+        for x, z in body:
+            d.set(x, top + 2, z, "smooth_quartz")
+        top += 3
+    else:
+        for x, z in edge:
+            d.set(x, top, z, "smooth_quartz_slab[type=bottom,waterlogged=false]")
+    if L >= 5:
+        for x, z in disc(2.2, cx, cz):
+            d.set(x, top, z, "light_blue_stained_glass")
+        d.set(cx, top + 1, cz, "sea_lantern")
+        d.set(cx, top + 2, cz, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+    connect_walls(d)
+    return d
+
+
+@design("royalgranary")
+def royalgranary(pack, rel, L):
+    return {"Hearthwood": rg_hearthwood, "Cascadia": rg_cascadia, "Neoterra": rg_neoterra}[pack](rel, L)
+
+
+@design("royalgranarywing")
+def royalgranarywing(pack, rel, L):
+    return {"Hearthwood": rgw_hearthwood, "Cascadia": rgw_cascadia, "Neoterra": rgw_neoterra}[pack](rel, L)

@@ -1348,6 +1348,28 @@ def gatehouse(pack, rel, L):
 RACKS = {1: 1, 2: 1, 3: 2, 4: 2, 5: 3}
 
 
+class Shifted(Design):
+    """Design whose drawing coordinates are offset by `ox` in x (lets a layout drawn for a narrower plot sit in
+    the middle of a wider one)."""
+    ox = 0
+
+    def set(self, x, y, z, block, te=None):
+        super().set(x + self.ox, y, z, block, te)
+
+    def get(self, x, y, z):
+        return super().get(x + self.ox, y, z)
+
+    def air(self, x, y, z):
+        return super().air(x + self.ox, y, z)
+
+    def hut(self, x, y, z, facing="north"):
+        self.set(x, y, z, f"{self.req['hut']}[facing={facing}]")
+        self.hut_pos = (x + self.ox, y, z)
+
+    def tag(self, x, y, z, name):
+        super().tag(x + self.ox, y, z, name)
+
+
 def wt_hearthwood(rel, L):
     d = Design("Hearthwood", rel, (15, 26, 11), gy=1, paving="grass_block[snowy=false]")
     x1, x2, z1, z2 = 4, 10, 2, 8
@@ -1435,9 +1457,10 @@ def wt_hearthwood(rel, L):
 
 
 def wt_cascadia(rel, L):
-    d = Design("Cascadia", rel, (13, 22, 13), gy=1, paving="coarse_dirt")
+    d = Shifted("Cascadia", rel, (17, 22, 13), gy=1, paving="coarse_dirt")
+    d.ox = 2
     # palisade z4 with a plank walk (deck y7) behind it
-    for x in range(0, 13):
+    for x in range(-2, 15):
         if 2 <= x <= 10:
             continue
         for y in range(2, 9):
@@ -1447,7 +1470,7 @@ def wt_cascadia(rel, L):
         for z in (5, 6):
             d.set(x, 7, z, "spruce_planks")
         for y in range(2, 7):
-            d.set(x, y, 6, "spruce_fence" if x in (0, 12) else AIR)
+            d.set(x, y, 6, "spruce_fence" if x in (-2, 0, 12, 14) else AIR)
     # blockhouse: river-rock ground storey 7x7, overhanging log storey 9x9
     gx1, gz1, gx2, gz2 = 3, 3, 9, 9
     for x in range(gx1, gx2 + 1):
@@ -1514,22 +1537,23 @@ def wt_cascadia(rel, L):
         d.set(5, 2, 11, "spruce_log[axis=x]")
         d.set(5, 3, 11, AIR)
     if L >= 4:
-        for x in (0, 12):
+        for x in (-2, 14):
             d.set(x, 8, 5, LANT_S)
     if L >= 5:
         for y in range(8, 13):
-            d.set(0, y, 6, "spruce_fence")
-        d.set(0, 12, 7, "green_wool")
-        d.set(0, 11, 7, "white_wool")
+            d.set(-2, y, 6, "spruce_fence")
+        d.set(-2, 12, 7, "green_wool")
+        d.set(-2, 11, 7, "white_wool")
         for x in range(9, 12):
             d.set(x, 2, 11, LOG("spruce_log", "x"))
     return d
 
 
 def wt_neoterra(rel, L):
-    d = Design("Neoterra", rel, (11, 26, 13), gy=1, paving="smooth_stone")
+    d = Shifted("Neoterra", rel, (15, 26, 13), gy=1, paving="smooth_stone")
+    d.ox = 2
     # security wall z4..6, walk deck at y8, glass parapet on the outside
-    for x in range(0, 11):
+    for x in range(-2, 13):
         if 2 <= x <= 8:
             continue
         for z in range(4, 7):
