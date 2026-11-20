@@ -256,6 +256,13 @@ def free(d, R, x, z, h=1):
     return (x, z) not in R.keep and all(d.air(x, R.y + k, z) for k in range(h))
 
 
+def flush_ok(d, x, y, z):
+    """A flush ceiling light only where the ceiling is ours and nothing walks on top of it."""
+    here = d.get(x, y, z)
+    return "substitution" not in here and here != AIR and d.bp.inside(x, y + 1, z) and not d.air(x, y + 1, z) \
+        and "substitution" not in d.get(x, y + 1, z) or (d.bp.inside(x, y + 1, z) and is_earth(d, x, y + 1, z))
+
+
 def lights(d, R, M, ceil_y, step=4, skip=()):
     """Ceiling lights on a grid: flush light blocks in the ceiling (if it is ours) or hanging lanterns."""
     xs = list(range(R.x1 + (R.W % step) // 2 + 1, R.x2, step)) or [(R.x1 + R.x2) // 2]
@@ -269,9 +276,10 @@ def lights(d, R, M, ceil_y, step=4, skip=()):
             if (x, z) in skip:
                 continue
             if M["light"] == "flush":
-                if d.get(x, ceil_y, z) not in ("minecraft:" + KEEP.split(":")[1], AIR) and \
-                        "substitution" not in d.get(x, ceil_y, z):
+                if flush_ok(d, x, ceil_y, z):
                     d.set(x, ceil_y, z, M["lightblock"])
+                elif d.air(x, R.top, z):
+                    d.set(x, R.top, z, "end_rod[facing=down]")
             elif d.air(x, R.top, z):
                 d.lamp(x, R.top, z, "lantern")
 
@@ -542,8 +550,10 @@ def f_vault(d, R, M, L, count, along, cross, ender=False, pack=""):
         for a in range(A0, A1 + 1, 4):
             x, z = xz(a + 1 if a + 1 <= A1 else a, b)
             if M["light"] == "flush":
-                if "substitution" not in d.get(x, R.top + 1, z):
+                if flush_ok(d, x, R.top + 1, z):
                     d.set(x, R.top + 1, z, M["lightblock"])
+                elif d.air(x, R.top, z):
+                    d.set(x, R.top, z, "end_rod[facing=down]")
             elif d.air(x, R.top, z):
                 d.lamp(x, R.top, z, "lantern")
     for c in cross:
