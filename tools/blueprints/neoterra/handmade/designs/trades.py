@@ -3448,6 +3448,12 @@ def cp_neo(rel, L):
         for z in range(18, 27, 4):
             d.set(15, y0, z, "moss_block")
             tree(d, 15, z, y0 + 1, "birch", 3, 1)
+        for x in (0, 31):
+            for z in (3, 17):
+                d.set(x, y0, z, "moss_block")
+                tree(d, x, z, y0 + 1, "birch", 3, 1)
+        for x in (19, 21):
+            lamp_post(d, x, 0, y0, P)
     return d
 
 
@@ -3491,7 +3497,7 @@ def cp_hw(rel, L):
         tree(d, 22, 15, y0, "oak", 3, 1)
         tree(d, 13, 17, y0, "oak", 3, 1)
         bench(d, 4, 2, y0, "north", 2, "oak", sit=False)
-        for x in (1, 25):
+        for x in (1, 25, 33):
             lamp_post(d, x, 2, y0, P)
         flower_bed(d, 12, 1, 16, 2, y0, seed=3)
     # ---- lean-to glasshouse (L3+)
@@ -3529,8 +3535,18 @@ def cp_hw(rel, L):
             rc2.lights()
     # ---- leaf-mould barn (L4, loft L5) and orchard (L5)
     if L >= 5:
-        for x in (17, 21, 25, 29):
-            for z in (23, 28):
+        bo = build(d, 27, 21, 33, 28, 1, roof="gable", axis="z", chimney=(32, 25, "west"))
+        bo.door(27, 24, "west")
+        rbo = bo.room(0)
+        rbo.bed("oak", sides=("south", "east"))
+        rbo.chairs_desk(1, "oak", sit=False)
+        rbo.fill(["shelf_dark", "plant", "keg"])
+        rbo.lights()
+        for x in (18, 22, 24):
+            d.set(x, y0, 31, "beehive[facing=north,honey_level=0]")
+        lamp_post(d, 25, 21, y0, P)
+        for x in (16, 20, 24) if False else (16, 20):
+            for z in (22, 26, 30):
                 tree(d, x, z, y0, "oak", 3, 1)
                 d.set(x + 1, y0 + 4, z, "flowering_azalea_leaves[distance=1,persistent=true,waterlogged=false]") \
                     if d.air(x + 1, y0 + 4, z) else None

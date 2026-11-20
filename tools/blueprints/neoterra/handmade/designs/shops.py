@@ -1545,7 +1545,7 @@ def florist_hw(rel, L):
 
 
 def florist_cas(rel, L):
-    d = Design("Cascadia", rel, (50, 42, 46), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (50, 42, 47), paving="coarse_dirt")
     y0 = 2
     x1, z1, x2, z2 = 4, 7, 10, 15
     cas_body(d, x1, z1, x2, z2, y0, 3)
@@ -2519,6 +2519,7 @@ def furnish(d, kind, ix1, iz1, ix2, iz2, y, keep, extra=()):
     Pieces go against the walls (spaced so every piece stays reachable), a centre group on a rug, a hanging lamp
     under the ceiling (y + 3) and wall decoration."""
     S = STY[d.pack]
+    P = d.pack
     w, w2 = S["wood"], S["wood2"]
     pot = "decorated_pot[cracked=false,facing=north,waterlogged=false]"
     cand = lambda: f"candle[candles={1 + (ix1 + iz1) % 3},lit=false,waterlogged=false]"   # noqa: E731
@@ -2634,6 +2635,68 @@ def furnish(d, kind, ix1, iz1, ix2, iz2, y, keep, extra=()):
         used.add((x, z))
         pieces_at.append((x, z))
         k += 1
+    # furniture groups on a grid over the rest of the floor (each needs a free 3x3, aisles stay between)
+    def g_free(cx, cz):
+        return all(ix1 <= a <= ix2 and iz1 <= b <= iz2 and _ok(d, a, y, b, keep)
+                   for a in (cx - 1, cx, cx + 1) for b in (cz - 1, cz, cz + 1))
+    n = 0
+    for cz in range(iz1 + 2, iz2 - 1, 4):
+        for cx in range(ix1 + 2, ix2 - 1, 4):
+            if not g_free(cx, cz) or kind in ("greenhouse",):
+                continue
+            n += 1
+            if kind in ("dining", "living"):
+                d.rug(cx - 1, cz - 1, cx + 1, cz + 1, y, S["rug"], "border")
+                for a in (cx - 1, cx, cx + 1):
+                    for b in (cz - 1, cz, cz + 1):
+                        d.set(a, y, b, AIR)
+                d.table(cx, y, cz, w, "post")
+                sides = ("north", "south", "east", "west") if kind == "dining" else ("north", "south")
+                for sd in sides:
+                    dx, dz = D4[sd]
+                    d.chair(cx + dx, y, cz + dz, sd, w, sit=False)
+                d.set(cx - 1, y, cz - 1, S["rug"][0])
+                if kind == "living":
+                    d.set(cx + 1, y, cz + 1, S["plant"])
+            elif kind == "office":
+                d.set(cx, y, cz, sl(w, "top"))
+                d.set(cx + 1, y, cz, sl(w, "top"))
+                d.set(cx, y + 1, cz, cand())
+                d.set(cx + 1, y + 1, cz, "flower_pot")
+                d.chair(cx, y, cz + 1, "south", w, sit=False)
+                d.rug(cx - 1, cz - 1, cx + 1, cz - 1, y, S["rug"], "plain")
+            elif kind in ("bedroom", "dorm"):
+                d.bed(cx, y, cz - 1, "north", S["bed"])
+                d.placed["beds"] -= 1
+                d.set(cx + 1, y, cz - 1, sl(w2, "top"))
+                d.set(cx + 1, y + 1, cz - 1, cand())
+                d.rug(cx - 1, cz + 1, cx + 1, cz + 1, y, S["rug"], "plain")
+                pieces_at.append((cx, cz - 1))
+            elif kind == "store":
+                for a in (cx - 1, cx):
+                    d.keg(a, y, cz, "up")
+                    d.set(a, y + 1, cz, ("white_wool", "hay_block[axis=y]", "barrel[facing=up,open=false]")[(a + n) % 3])
+                    pieces_at.append((a, cz))
+                d.set(cx + 1, y, cz, "white_wool")
+            elif kind == "workshop":
+                d.set(cx - 1, y, cz, sl(w2, "top"))
+                d.set(cx, y, cz, sl(w2, "top"))
+                d.set(cx - 1, y + 1, cz, "flower_pot" if n % 2 else cand())
+                d.set(cx + 1, y, cz, ("grindstone[face=floor,facing=north]", "anvil[facing=north]",
+                                      "stonecutter[facing=north]")[n % 3])
+                d.chair(cx, y, cz + 1, "south", w, sit=False)
+                pieces_at.append((cx + 1, cz))
+            elif kind == "shop":
+                d.set(cx, y, cz, sl(w2, "top"))
+                d.set(cx + 1, y, cz, sl(w2, "top"))
+                d.set(cx, y + 1, cz, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
+                d.set(cx + 1, y + 1, cz, S["plant"])
+                d.rug(cx - 1, cz + 1, cx + 1, cz + 1, y, S["rug"], "plain")
+            elif kind == "kitchen":
+                for a in (cx - 1, cx, cx + 1):
+                    d.set(a, y, cz, sl("smooth_stone" if P != "Hearthwood" else "spruce", "top"))
+                d.set(cx - 1, y + 1, cz, "melon" if n % 2 else "pumpkin")
+                d.set(cx + 1, y + 1, cz, CAKE)
     # drop any wall piece the rest of the furniture has boxed in (no free floor cell next to it reachable from
     # the room's entrances)
     free_c = {(a, b) for a in range(ix1, ix2 + 1) for b in range(iz1, iz2 + 1)
@@ -2655,26 +2718,6 @@ def furnish(d, kind, ix1, iz1, ix2, iz2, y, keep, extra=()):
             for a, b in D4.values():
                 if "_bed" in d.get(x + a, y, z + b):
                     d.set(x + a, y, z + b, AIR)
-    # centre: rug + table group
-    cx, cz = (ix1 + ix2) // 2, (iz1 + iz2) // 2
-    if kind in ("living", "dining", "office", "bedroom", "shop") and ix2 - ix1 >= 4 and iz2 - iz1 >= 4:
-        d.rug(cx - 1, cz - 1, cx + 1, cz + 1, y, S["rug"], "border")
-        if kind in ("living", "dining", "office"):
-            if all(_ok(d, a, y, b, keep) or d.get(a, y, b).endswith("carpet") for a in (cx - 1, cx, cx + 1)
-                   for b in (cz - 1, cz, cz + 1)):
-                for a in (cx - 1, cx, cx + 1):
-                    for b in (cz - 1, cz, cz + 1):
-                        d.set(a, y, b, AIR)
-                d.table(cx, y, cz, w, "post")
-                for side in (("north", "south") if kind != "dining" else ("north", "south", "east", "west")):
-                    dx, dz = D4[side]
-                    d.chair(cx + dx, y, cz + dz, side, w, sit=False)
-                d.set(cx - 1, y, cz - 1, S["rug"][0])
-    elif kind == "store" and ix2 - ix1 >= 5 and iz2 - iz1 >= 4:
-        for a in range(cx - 1, cx + 1):
-            if _ok(d, a, y, cz, keep):
-                d.keg(a, y, cz, "up")
-                d.set(a, y + 1, cz, "white_wool" if a % 2 else "hay_block[axis=y]")
     # hanging lamps
     for a in range(ix1 + 1, ix2, 4):
         for b in range(iz1 + 1, iz2, 4):

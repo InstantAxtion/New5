@@ -940,6 +940,12 @@ def cottage_hw(rel, L):
     if L >= 5:
         d.item(11, y0, 9, "jukebox")
     d.lamp(12, 4, 11)
+    if L < 3:                                              # east attic: sewing and writing room
+        d.set(13, 6, 9, slab("spruce", "top"))
+        d.set(13, 7, 9, "candle[candles=2,lit=false,waterlogged=false]")
+        d.chair(12, 6, 9, "west", "spruce", sit=False)
+        d.set(13, 6, 11, "loom[facing=west]")
+        d.set(11, 6, 9, "bookshelf")
     # ---- attic bedrooms
     bedset(d, 5, 6, 9, "west", ("r",), "white", "spruce")
     if L >= 2:
@@ -4045,7 +4051,14 @@ def interior_decor(d):
         if g[y][z][x] != AIR or g[y + 1][z][x] != AIR or (x, z) in O.get(y, ()):
             return False
         b = _nm(g[y - 1][z][x])
-        return b != "air" and not any(k in b for k in ("carpet", "slab", "stairs", "fence", "water", "leaves"))
+        if b == "air" or any(k in b for k in ("carpet", "slab", "stairs", "fence", "water", "leaves")):
+            return False
+        if not (any(k in b for k in SOLID_WALL) or any(k in b for k in ("dirt", "grass", "gravel", "mud", "tiles"))):
+            return False                                  # standing on barrels, hay, crops ... is not a room
+        yy = y + 2                                        # needs a ceiling (roof decks are not rooms)
+        while yy < min(bp.sy, y + 14) and g[yy][z][x] == AIR:
+            yy += 1
+        return yy < min(bp.sy, y + 14)
 
     def quiet(x, y, z):
         """No stairs / ladders / doors / beds / work blocks around (x,z) at y..y+2."""

@@ -1603,13 +1603,13 @@ def ar_hearthwood(rel, L):
               "white_wool", CHISEL])
     # ---- growth: the bowyers' guild yard east of the range
     if L >= 2:                                                    # bowyer's workshop (L3: loft store above)
-        building(d, 27, 3, 35, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 31), ("west", 6)),
+        building(d, 27, 3, 36, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 31), ("west", 6)),
                  chimney=(31, 10), kinds=["workshop", "store"])
         d.sign(29, 4, 2, "north", ["Bows &", "Arrows"], "dark_oak")
         for x in range(28, 35):                                   # striped awning over the shop window
             d.set(x, 5, 2, "red_wool" if x % 2 else "white_wool")
         lamp_post(d, 26, 1)
-        cart(d, 37, 2, "x")
+        cart(d, 38, 2, "x")
         flowerbed(d, 28, 0, 30, 1)
         flowerbed(d, 32, 0, 34, 1)
     if L >= 3:                                                    # timber store / seasoning shed for staves
@@ -2150,6 +2150,9 @@ def ca_hearthwood(rel, L):
         d.set(30, 2, 18, "anvil[facing=north]")
         d.set(30, 2, 19, "water_cauldron[level=3]") if False else None
         d.sign(34, 4, 17, "north", ["Armourer"], "dark_oak")
+        lamp_post(d, 30, 16)
+        lamp_post(d, 43, 16)
+        bench(d, 37, 16, "north", 3)
     if L >= 4:                                                    # masters' house: library, office, rooms
         building(d, 2, 27, 16, 36, nf=2, axis="x", doors=(("north", 9), ("east", 31)), chimney=(17, 31),
                  kinds=["library", "office"])
@@ -2337,7 +2340,15 @@ def ca_cascadia(rel, L):
         building(d, 23, 14, 36, 21, nf=2, axis="z", doors=(("north", 28), ("west", 18)), chimney=(37, 18),
                  kinds=["kitchen", "lounge"])
         cart(d, 39, 14, "z")
+        for z in range(14, 22):                                   # sauna woodpile
+            for y in (2, 3, 4):
+                d.set(41, y, z, LOG("birch_log" if (y + z) % 2 else "spruce_log", "z"))
     if L >= 4:                                                    # timbersports yard: chopping blocks, log toss
+        for x in range(2, 21):                                    # log-rolling logs and a judges' stand
+            d.set(x, 2, 32, LOG("stripped_spruce_log", "x"))
+        for y in (2, 3, 4):
+            d.set(20, y, 30, LOG("spruce_log"))
+            d.set(20, y, 29, "spruce_fence")
         for x in range(3, 20, 3):
             d.set(x, 2, 30, LOG("spruce_log"))
             d.set(x, 3, 30, LOG("stripped_spruce_log")) if x % 2 else None
@@ -2358,6 +2369,12 @@ def ca_cascadia(rel, L):
         for x in range(7, 16):
             d.set(x, 7, 27, LOG("stripped_spruce_log", "x"))
         d.sign(11, 6, 26, "north", ["TIMBER", "GAMES"], "spruce")
+        for x in range(2, 21, 2):                                 # spectators' log benches along the yard
+            d.set(x, 2, 35, LOG("spruce_log", "x"))
+            d.set(x, 2, 26, LOG("spruce_log", "x")) if x not in (8, 14) and d.air(x, 2, 26) else None
+        for z in range(37, 44):
+            for y in (2, 3):
+                d.set(21, y, z, LOG("spruce_log", "z") if d.air(21, y, z) else d.get(21, y, z))
     return d
 
 
@@ -2491,6 +2508,11 @@ def ca_neoterra(rel, L):
         lamp_post(d, 37, 1)
         lamp_post(d, 22, 12)
         lamp_post(d, 37, 12)
+        bench(d, 25, 13, "north", 3)
+        bench(d, 31, 13, "north", 3)
+        for z in range(13, 24, 2):
+            d.set(22, 1, z, "moss_block")
+            d.set(22, 2, z, "azalea")
     if L >= 3:                                                    # dojo hall with sparring mats
         building(d, 24, 15, 44, 27, nf=2, roof="flat", doors=(("north", 33), ("west", 21)), kinds=["gym", "gym"])
         bench(d, 26, 13, "north", 3)
@@ -2505,6 +2527,9 @@ def ca_neoterra(rel, L):
         bench(d, 17, 22, "north", 3)
         lamp_post(d, 1, 22)
         lamp_post(d, 16, 37)
+        for x in range(3, 15, 2):                                 # bike / gear racks along the residence
+            d.set(x, 2, 38, "iron_bars")
+            d.set(x, 3, 38, "iron_bars")
     if L >= 5:                                                    # conditioning centre with a pool
         b = building(d, 17, 31, 44, 44, nf=2, roof="flat", doors=(("north", 22), ("north", 39), ("west", 38)),
                      kinds=["gym", "mess"])
@@ -3335,6 +3360,8 @@ def al_neoterra(rel, L):
             d.set(x, 1, 1, "moss_block")
             d.set(x, 2, 1, "azalea" if x % 4 else "flowering_azalea")
         d.set(30, 2, 5, "water_cauldron[level=3]")
+        lamp_post(d, 31, 1)
+        lamp_post(d, 31, 12)
         for z in (3, 7, 11):
             d.set(30, 2, z, "smooth_quartz")
             d.set(30, 3, z, "potted_allium")
@@ -3638,7 +3665,7 @@ def gy_cascadia(rel, L):
         for x in (28, 38):
             lamp_post(d, x, 22)
             lamp_post(d, x, 32)
-        for z in range(11, 21):                                   # woodpile behind the workshop
+        for z in range(10, 22):                                   # woodpile behind the workshop
             for y in (2, 3):
                 d.set(43, y, z, LOG("spruce_log" if (y + z) % 2 else "birch_log", "z"))
     if L >= 5:                                                    # meeting hall for wakes and gatherings
