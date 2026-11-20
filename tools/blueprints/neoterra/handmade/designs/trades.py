@@ -1214,9 +1214,9 @@ def fl_neo(rel, L):
     d.hut(x1 + 1, y0, z1 + 1)
     d.item(x1 + 1, y0, z1 + 2, "crafting_table")
     for i in range(FLETCH[L]):
-        d.item(x1 + 2 + i, y0, z2 - 1, "fletching_table")
+        d.item(x1 + 3 + i, y0, z2 - 1, "fletching_table")
     for i in range(FLETCH[L]):
-        d.chair(x1 + 2 + i, y0, z2 - 2, "south", "birch", sit=False) if i % 2 == 0 else None
+        d.chair(x1 + 3 + i, y0, z2 - 2, "south", "birch", sit=False) if i % 2 == 0 else None
     rack_line(d, [(x1 + 1, z) for z in range(z2 - 1, z1 + 2, -1)], y0, FRACKS[L], 2, "east")
     if L >= 3:
         for i in range(5):
@@ -1615,7 +1615,6 @@ def wh_cas(rel, L):
         ax = 8 + 3 * u
         for z in range(z1 + 3, z2, 4):
             d.set(ax, 7, z, LANT) if d.air(ax, 7, z) and not d.air(ax, 8, z) else None
-    for z in range(z1 + 1, z2):                                       # tie beams carry the lamps
     for x in range(8, x2, 3):
         for z in range(z1 + 1, z2):
             d.set(x, 8, z, lg("stripped_spruce_log", "z"))
@@ -1898,9 +1897,6 @@ def dl_cas(rel, L):
     n = barrel_wall(d, [(x, bz) for x in range(x1 + 1, x2) if x != x1 + 2], y0, DLV[L], "north")
     n += barrel_wall(d, [(x1 + 1, z1 + 4)], y0, DLV[L] - n, "east")
     seats = 0
-    for i, x in enumerate((x1, x1 + 1, x2 - 1)):
-        if i < min(DSEAT[L], 3):
-            d.chair(x if x != x1 else x1 + 1, y0, z1 - 2, "south", "spruce") if x != x1 else None
     if DSEAT[L] >= 3:
         d.chair(x1 + 1, y0, z1 - 2, "south", "spruce")
         d.chair(x1 + 2, y0, z1 - 2, "south", "spruce")

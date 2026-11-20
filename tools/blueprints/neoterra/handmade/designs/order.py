@@ -101,6 +101,51 @@ def cs_walls(d, x1, z1, x2, z2, y1, y2, log="spruce_log", corner="stripped_spruc
                 d.set(x, y, z, LOG(corner) if corner_ else LOG(log, "x" if z in (z1, z2) else "z"))
             if footing:
                 d.set(x, y1 - 1, z, "mossy_cobblestone" if (x * 7 + z * 3) % 4 == 0 else "cobblestone")
+                d.set(x, y1, z, RIVER[(x * 5 + z * 3) % len(RIVER)])
+
+
+RIVER = ["cobblestone", "mossy_cobblestone", "andesite", "cobblestone", "tuff", "mossy_cobblestone"]
+
+
+def cs_roof(d, x1, z1, x2, z2, y, axis, end="spruce_planks", o=1, tiles="deepslate_tile"):
+    """Cascadia roof: dark deepslate-tile slopes, a stripped-log ridge beam and light spruce barge boards /
+    fascia along the gable edges and the eaves. Returns the ridge height."""
+    ridge = soft(d, d.gable, x1, z1, x2, z2, y, axis, f"{tiles}_stairs",
+                 LOG("stripped_spruce_log", axis), end, o)
+    if axis == "x":
+        ends = [(x1 - o, z) for z in range(z1 - o, z2 + o + 1)] + [(x2 + o, z) for z in range(z1 - o, z2 + o + 1)]
+        eaves = [(x, z1 - o) for x in range(x1 - o, x2 + o + 1)] + [(x, z2 + o) for x in range(x1 - o, x2 + o + 1)]
+    else:
+        ends = [(x, z1 - o) for x in range(x1 - o, x2 + o + 1)] + [(x, z2 + o) for x in range(x1 - o, x2 + o + 1)]
+        eaves = [(x1 - o, z) for z in range(z1 - o, z2 + o + 1)] + [(x2 + o, z) for z in range(z1 - o, z2 + o + 1)]
+    for x, z in ends + eaves:
+        for yy in range(y - o, ridge + 1):
+            if d.bp.inside(x, yy, z) and d.get(x, yy, z).startswith(f"minecraft:{tiles}_stairs"):
+                d.set(x, yy, z, d.get(x, yy, z).replace(f"{tiles}_stairs", "spruce_stairs"))
+    return ridge
+
+
+def cs_trim(d, x1, z1, x2, z2, y1, y2):
+    """Stripped-log trims on a log building: lintels and sills round windows, jambs beside doors."""
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            if not (x in (x1, x2) or z in (z1, z2)):
+                continue
+            ax = "x" if z in (z1, z2) else "z"
+            for y in range(y1, y2 + 1):
+                b = d.get(x, y, z)
+                if "glass_pane" in b:
+                    for yy in (y - 1, y + 1):
+                        n = d.get(x, yy, z)
+                        if n.startswith("minecraft:spruce_log") or n.startswith("minecraft:dark_oak_log"):
+                            d.set(x, yy, z, LOG("stripped_spruce_log", ax))
+                if "_door[" in b and "half=lower" in b:
+                    for dx, dz in (((1, 0), (-1, 0)) if ax == "x" else ((0, 1), (0, -1))):
+                        for yy in (y, y + 1, y + 2):
+                            n = d.get(x + dx, yy, z + dz) if d.bp.inside(x + dx, yy, z + dz) else ""
+                            if n.startswith("minecraft:spruce_log") or n.split("[")[0] in \
+                                    ["minecraft:" + r for r in RIVER]:
+                                d.set(x + dx, yy, z + dz, LOG("stripped_spruce_log"))
 
 
 def nt_walls(d, x1, z1, x2, z2, y1, y2, wall="white_concrete", corner="light_gray_concrete"):
@@ -267,7 +312,7 @@ def gt_cascadia(rel, L):
     d.window(8, 3, z1, 8, 4, z1)
     d.window(x2, 3, 9, x2, 4, 9)
     d.window(6, 3, z2, 6, 4, z2)
-    ridge = soft(d, d.gable, x1, z1, x2, z2, 6, "x", "dark_oak_stairs", "dark_oak_slab", "stripped_spruce_log", 1)
+    ridge = cs_roof(d, x1, z1, x2, z2, 6, "x", "spruce_planks")
     d.fill(x1 + 1, 6, z1 + 1, x2 - 1, 6, z2 - 1, "spruce_planks")
     # stone chimney on the west gable
     d.hearth(x1 + 1, 2, 9, "east", 6, "cobblestone", "campfire")
@@ -344,11 +389,15 @@ def gt_cascadia(rel, L):
         d.window(cx1, yc + 2, z, cx1, yc + 3, z)
         d.window(cx2, yc + 2, z, cx2, yc + 3, z)
     d.door(cx1 + 1, yc + 1, cz1, "south", "spruce")
-    hipcap(d, cx1, cz1, cx2, cz2, yc + 4, "dark_oak_stairs", "dark_oak_slab", "spruce_planks")
+    hipcap(d, cx1, cz1, cx2, cz2, yc + 4, "deepslate_tile_stairs", "deepslate_tile_slab", "spruce_planks")
     d.set(mx + 1, yc + 1, tz1 + 2, "cartography_table")             # fire finder
     d.set(mx, yc + 1, tz1 + 3, "spruce_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]")
     d.lamp(mx, yc + 3, tz1 + 2)
-    d.set(tx2 + 1, yc + 2, tz1 - 1, "bell[attachment=floor,facing=north,powered=false]") if False else None
+    cs_trim(d, x1, z1, x2, z2, 2, 5)
+    d.sign(8, 4, z1 - 1, "north", ["RANGER", "STATION"], "spruce")
+    for x in range(x1 + 1, x2):                                   # window boxes
+        if d.get(x, 3, z1) == "minecraft:glass_pane":
+            d.set(x, 2, z1 - 1, "spruce_trapdoor[facing=north,half=top,open=true,powered=false,waterlogged=false]") if False else None
     if L >= 3:
         # woodshed lean-to behind the cabin with a woodpile
         for x in range(x1 + 1, x2):
@@ -652,7 +701,11 @@ def ar_cascadia(rel, L):
     Z2 = {1: 13, 2: 13, 3: 15, 4: 15, 5: 17}[L]
     cs_walls(d, x1, z1, x2, Z2, 2, 6)
     d.fill(x1 + 1, 1, z1 + 1, x2 - 1, 1, Z2 - 1, "spruce_planks")
-    ridge = soft(d, d.gable, x1, z1, x2, Z2, 7, "z", "dark_oak_stairs", "dark_oak_slab", "spruce_planks", 1)
+    ridge = cs_roof(d, x1, z1, x2, Z2, 7, "z")
+    for x in range(x1 + 1, x2):                                   # board-and-batten front gable
+        for y in range(7, ridge):
+            if d.get(x, y, z1) == "minecraft:spruce_planks" and x % 2 == 0:
+                d.set(x, y, z1, LOG("stripped_spruce_log"))
     d.door(6, 2, z1, "south", "spruce")
     d.window(4, 3, z1, 4, 5, z1)
     d.window(8, 3, z1, 8, 5, z1)
@@ -661,6 +714,8 @@ def ar_cascadia(rel, L):
         d.window(x1, 3, z, x1, 4, z)
     d.door(x2, 2, z1 + 3, "east", "spruce")
     d.window(x2, 3, z1 + 1, x2, 4, z1 + 1)
+    cs_trim(d, x1, z1, x2, Z2, 2, 6)
+    d.set(5, 4, z1 - 1, "wall_torch[facing=north]") if False else None
     # elk antlers over the door: dead bushes on a bracket
     d.set(6, 5, z1 - 1, "spruce_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
     d.sign(6, 4, z1 - 1, "north", ["HUNTERS'", "LODGE"], "spruce")
@@ -1029,7 +1084,11 @@ def ca_cascadia(rel, L):
     Z2 = 16 if L == 1 else 25
     cs_walls(d, x1, z1, x2, Z2, 2, 7)
     d.fill(x1 + 1, 1, z1 + 1, x2 - 1, 1, Z2 - 1, "spruce_planks")
-    soft(d, d.gable, x1, z1, x2, Z2, 8, "z", "dark_oak_stairs", "dark_oak_slab", "spruce_planks", 1)
+    cs_roof(d, x1, z1, x2, Z2, 8, "z")
+    for z in range(z1 + 4, Z2 - 1, 5):                            # stripped posts breaking up the long walls
+        for x in (x1, x2):
+            for y in range(3, 8):
+                d.set(x, y, z, LOG("stripped_spruce_log"))
     for x in range(x1, x2 + 1):                                   # board-and-batten gables over the logs
         for y in range(8, 18):
             for z in (z1, Z2):
@@ -1045,11 +1104,43 @@ def ca_cascadia(rel, L):
         d.set(x, 4, z1, LOG("stripped_spruce_log", "x"))
     d.window(mid - 4, 3, z1, mid - 4, 5, z1)
     d.window(mid + 4, 3, z1, mid + 4, 5, z1)
-    d.window(mid, 9, z1, mid, 11, z1)
+    d.window(mid - 1, 9, z1, mid + 1, 11, z1)                      # hay-loft window
+    d.set(mid, 9, z1, LOG("stripped_spruce_log"))
+    d.set(mid, 10, z1, LOG("stripped_spruce_log"))
+    d.set(mid, 11, z1, LOG("stripped_spruce_log"))
+    for x in range(mid - 2, mid + 3):
+        d.set(x, 12, z1, LOG("stripped_spruce_log", "x"))
+        d.set(x, 8, z1, LOG("stripped_spruce_log", "x"))
+    d.set(mid, 13, z1 - 1, LOG("stripped_spruce_log", "z"))        # hoist beam
+    d.set(mid, 12, z1 - 1, "chain[axis=y,waterlogged=false]") if d.air(mid, 12, z1 - 1) else None
     d.sign(mid, 6, z1 - 1, "north", ["FIGHT BARN", "est. 1902"], "spruce")
-    for z in range(z1 + 3, Z2 - 1, 3):
-        d.window(x1, 4, z, x1, 5, z)
-        d.window(x2, 4, z, x2, 5, z)
+    for x in (mid - 3, mid + 3):
+        d.set(x, 5, z1 - 1, LANT) if False else None
+    d.set(mid - 3, 4, z1 - 1, "wall_torch[facing=north]")
+    d.set(mid + 3, 4, z1 - 1, "wall_torch[facing=north]")
+    for z in range(z1 + 2, Z2 - 2, 5):                            # grouped windows, three wide
+        for x in (x1, x2):
+            d.window(x, 4, z, x, 5, z + 2)
+    cs_trim(d, x1, z1, x2, Z2, 2, 7)
+    # lean-to woodshed porch along the west wall
+    for z in range(z1 + 2, Z2 - 1):
+        for x in (0, 1, 2):
+            d.set(x, 1, z, "spruce_planks")
+        d.set(0, 5, z, ST("deepslate_tile", "east"))
+        d.set(1, 6, z, SL("deepslate_tile"))
+        d.set(2, 6, z, SL("deepslate_tile"))
+        d.set(0, 4, z, LOG("stripped_spruce_log", "z")) if (z - z1) % 4 else None
+        if (z - z1 - 2) % 4 == 0 or z == Z2 - 2:
+            for y in range(2, 5):
+                d.set(0, y, z, LOG("spruce_log"))
+        elif z > z1 + 6:
+            d.set(0, 2, z, LOG("spruce_log", "z") if z % 2 else LOG("birch_log", "z"))
+            d.set(0, 3, z, LOG("oak_log", "z") if z % 3 else LOG("spruce_log", "z"))
+    d.door(x1, 2, z1 + 5, "west", "spruce")
+    d.set(x1 - 1, 4, z1 + 5, LANT) if False else None
+    d.set(1, 5, z1 + 5, LANT)
+    d.chair(1, 2, z1 + 3, "west", "spruce", sit=False)
+    d.keg(1, 2, z1 + 2, "north") if False else None
     # front: armoury, hut and gear
     d.hut(x1 + 1, 2, z1 + 1)
     d.item(x1 + 1, 2, z1 + 3, "furnace", "east")
@@ -1423,7 +1514,7 @@ def en_cascadia(rel, L):
     Z2 = {1: 12, 2: 15, 3: 18, 4: 23, 5: 28}[L]
     cs_walls(d, x1, z1, x2, Z2, 2, 4)
     d.fill(x1 + 1, 1, z1 + 1, x2 - 1, 1, Z2 - 1, "spruce_planks")
-    ridge = soft(d, d.gable, x1, z1, x2, Z2, 5, "z", "dark_oak_stairs", "dark_oak_slab", "spruce_planks", 1)
+    ridge = cs_roof(d, x1, z1, x2, Z2, 5, "z")
     # glazed front gable with log mullions; solid back gable
     for x in range(x1 + 1, x2):
         for y in range(2, ridge):
@@ -1468,6 +1559,8 @@ def en_cascadia(rel, L):
         d.lamp(8, 8, z) if d.air(8, 9, z) or True else None
         d.set(8, 9, z, "chain[axis=y,waterlogged=false]") if d.air(8, 9, z) else None
     d.set(8, 4, Z2, "glass_pane")
+    cs_trim(d, x1, z1 + 1, x2, Z2, 2, 4)
+    d.sign(8, 4, z1 - 1, "north", ["MOUNTAIN", "LIBRARY"], "spruce") if False else None
     d.set(8, 5, Z2, "glass_pane") if d.get(8, 5, Z2) == "minecraft:spruce_planks" else None
     # stone chimney stove on the east wall at the front
     d.set(x2 + 1, 1, z1 + 5, "cobblestone")
@@ -1731,7 +1824,7 @@ def al_cascadia(rel, L):
     X2 = {1: 11, 2: 13, 3: 15, 4: 15, 5: 15}[L]
     cs_walls(d, x1, z1, X2, z2, 2, 5)
     d.fill(x1 + 1, 1, z1 + 1, X2 - 1, 1, z2 - 1, "spruce_planks")
-    ridge = soft(d, d.gable, x1, z1, X2, z2, 6, "x", "spruce_stairs", "spruce_slab", "spruce_planks", 1)
+    ridge = cs_roof(d, x1, z1, X2, z2, 6, "x")
     d.fill(x1 + 1, 6, z1 + 1, X2 - 1, 6, z2 - 1, "spruce_planks")
     for x in range(x1 - 1, X2 + 2):                               # moss on the eaves
         d.set(x, 5, z2 + 1, "moss_carpet") if False else None
@@ -1760,6 +1853,8 @@ def al_cascadia(rel, L):
             d.window(x, 3, z1, x + 1 if x + 1 != door else x, 4, z1)
     d.window(x1, 3, 9, x1, 4, 9)
     d.sign(door + 1, 4, z1 - 1, "north", ["HERBS &", "TONICS"], "spruce")
+    cs_trim(d, x1, z1, X2, z2, 2, 5)
+    d.set(door - 1, 4, z1 - 1, LANT) if False else None
     # hearth with the cauldron over the fire, chimney through the roof
     hx = X2 - 2
     for x in (hx - 1, hx + 1):
@@ -2071,7 +2166,7 @@ def gy_cascadia(rel, L):
     x1, z1, x2, z2 = 3, 6, 10, 13
     cs_walls(d, x1, z1, x2, z2, 2, 5)
     d.fill(x1 + 1, 1, z1 + 1, x2 - 1, 1, z2 - 1, "spruce_planks")
-    soft(d, d.gable, x1, z1, x2, z2, 6, "z", "dark_oak_stairs", "dark_oak_slab", "spruce_planks", 1)
+    cs_roof(d, x1, z1, x2, z2, 6, "z")
     for y in range(9, 12):
         d.set(6, y, z1 - 1, "spruce_fence" if y < 11 else "spruce_fence")
     d.set(7, 9, z1 - 1, "spruce_fence")
@@ -2080,6 +2175,7 @@ def gy_cascadia(rel, L):
     d.window(8, 3, z1, 8, 4, z1)
     d.window(x2, 3, 9, x2, 4, 10)
     d.window(6, 3, z2, 7, 4, z2, "yellow_stained_glass_pane")
+    cs_trim(d, x1, z1, x2, z2, 2, 5)
     # porch with bench
     for x in range(x1, x2 + 1):
         for z in (z1 - 2, z1 - 1):
@@ -2347,7 +2443,7 @@ def ms_cascadia(rel, L):
     for z in range(pz1, pz2 + 1):
         for x in (px1, px2):
             d.set(x, 5, z, LOG("stripped_spruce_log", "z"))
-    soft(d, d.hip, px1, pz1, px2, pz2, 6, "dark_oak_stairs", "dark_oak_slab", 1)
+    soft(d, d.hip, px1, pz1, px2, pz2, 6, "deepslate_tile_stairs", "deepslate_tile_slab", 1)
     d.set(19, 5, 8, LANT)
     d.set(19, 2, 10, "spruce_planks")
     d.candle(19, 3, 10, 4)

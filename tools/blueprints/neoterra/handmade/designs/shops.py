@@ -2106,3 +2106,235 @@ def glassblower_neo(rel, L):
 @design("glassblower")
 def glassblower(pack, rel, L):
     return {"Hearthwood": glassblower_hw, "Cascadia": glassblower_cas, "Neoterra": glassblower_neo}[pack](rel, L)
+
+
+def silo(d, cx, cz, y0, h, wall="white_concrete", band="cyan_concrete", r=2.3, cap="smooth_quartz_slab"):
+    """Round silo (about 5 across) standing on the ground, banded, with a cap and a ladder on the north side."""
+    for y in range(y0, y0 + h):
+        for x in range(cx - 3, cx + 4):
+            for z in range(cz - 3, cz + 4):
+                dd = ((x - cx) ** 2 + (z - cz) ** 2) ** 0.5
+                if dd <= r:
+                    edge = dd > r - 1.2
+                    if edge:
+                        d.set(x, y, z, band if (y - y0) % 5 == 4 else wall)
+    for x in range(cx - 3, cx + 4):
+        for z in range(cz - 3, cz + 4):
+            if ((x - cx) ** 2 + (z - cz) ** 2) ** 0.5 <= r:
+                d.set(x, y0 + h, z, f"{cap}[type=bottom,waterlogged=false]")
+
+
+# ============================================================================================ CONCRETE MIXER
+# All three are built around the required mixing basin (a 19x4 water channel pasted with d.cluster).
+# Hearthwood "Thatcham Lime & Mortar Works": stone-brick workshop with a tall square lime kiln, sand and
+#   gravel bays walled in cobblestone, and an open timber shed roofing the basin (L2+). L4 a second kiln
+#   stack and wheelbarrow yard, L5 sign + lamps.
+# Cascadia "Cascade Aggregate Co.": a log office shack, a tall timber hopper tower with a plank chute running
+#   down to the basin, open log-walled sand/gravel bins; tower grows with level, L5 a second chute.
+# Neoterra "NEOCRETE PLANT": glass control office with cyan trim, a row of white banded silos (1 at L1, 2 at
+#   L2, 3 at L3+) with chutes down to the basin, L4 conveyor bridge, L5 roof sign.
+def concretemixer_hw(rel, L):
+    d = Design("Hearthwood", rel, (25, 20, 23))
+    y0 = 2
+    cw, ch, cd = d.cluster_size()
+    d.cluster(3, 17)                                             # basin x3..21, z17..20
+    # workshop
+    x1, z1, x2, z2 = 3, 4, 12, 11
+    hw_body(d, x1, z1, x2, z2, y0, 5, wall="stone_bricks", base="cobblestone", beam="stripped_spruce_log")
+    for x, z in perim(x1, z1, x2, z2):
+        if (x + z) % 5 == 0 and "stone_bricks" in d.get(x, 3, z):
+            d.set(x, 3, z, "mossy_stone_bricks")
+    ridge = roof(d, x1, z1, x2, z2, 6, "x", "deepslate_tile", "deepslate_tile_slab", "stone_bricks")
+    d.door(6, y0, z1, "south", "spruce")
+    d.door(9, y0, z2, "north", "spruce")
+    for x in (4, 8, 10):
+        d.window(x, 3, z1, x, 4, z1)
+    d.window(x1, 3, 7, x1, 4, 8)
+    d.hut(4, y0, 5)
+    d.item(4, y0, 10, "crafting_table")
+    for i in range(L):
+        x, z, f = [(5, 10, "north"), (6, 10, "north"), (7, 10, "north"), (11, 5, "west"), (11, 6, "west")][i]
+        d.rack(x, y0, z, f)
+    for x, z, b in ((11, 8, "white_concrete_powder"), (11, 9, "light_gray_concrete_powder"),
+                    (10, 10, "gray_concrete_powder")):
+        d.set(x, y0, z, b)
+    d.set(11, 3, 9, "white_concrete_powder")
+    d.set(8, y0, 7, sl("spruce", "top"))
+    d.set(8, 3, 7, "flower_pot")
+    d.lamp(7, 5, 7)
+    # lime kiln: tall square stone tower with a fire arch
+    kx1, kz1 = 14, 5
+    for y in range(y0, ridge + 6 if L >= 3 else ridge + 3):
+        for x in range(kx1, kx1 + 3):
+            for z in range(kz1, kz1 + 3):
+                if x in (kx1, kx1 + 2) or z in (kz1, kz1 + 2) or y < 5:
+                    d.set(x, y, z, "stone_bricks" if (x + y + z) % 4 else "mossy_stone_bricks")
+    d.set(kx1 + 1, y0, kz1, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+    d.set(kx1 + 1, 3, kz1, AIR)
+    d.set(kx1 + 1, 4, kz1, st("stone_brick", "north", "top"))
+    # sand & gravel bays (cobblestone walls)
+    for x in range(18, 24):
+        for z in (5, 6, 7, 8, 9):
+            if x in (18, 20, 23):
+                d.set(x, y0, z, "cobblestone_wall")
+    for z in (5, 6, 7, 8):
+        d.set(19, y0, z, "sand")
+        d.set(21, y0, z, "gravel")
+        d.set(22, y0, z, "gravel")
+        if z < 7:
+            d.set(19, 3, z, "sand")
+            d.set(21, 3, z, "gravel")
+    # basin shed (L2+): timber posts, gable roof over the channel
+    if L >= 2:
+        for x in range(3, 22, 3):
+            for z in (16, 21):
+                for y in range(y0, 6):
+                    d.set(x, y, z, lg("stripped_spruce_log"))
+        for x in (21,):
+            for z in (16, 21):
+                for y in range(y0, 6):
+                    d.set(x, y, z, lg("stripped_spruce_log"))
+        roof(d, 3, 16, 21, 21, 6, "x", "deepslate_tile", "deepslate_tile_slab", None, ends=(1, 1))
+        for x in range(3, 22):
+            d.set(x, 5, 16, lg("stripped_spruce_log", "x"))
+            d.set(x, 5, 21, lg("stripped_spruce_log", "x"))
+    for x in range(3, 22):
+        d.set(x, 1, 15, "gravel")
+    if L >= 4:
+        for x, z in ((15, 12), (16, 12)):
+            d.set(x, y0, z, "white_concrete_powder")
+        d.set(17, y0, 12, "gray_concrete_powder")
+        d.set(15, 3, 12, "white_concrete_powder")
+        d.set(19, y0, 12, "cauldron")
+        d.set(20, y0, 12, "composter[level=0]")
+    if L >= 5:
+        d.sign(6, 5, z1 - 1, "north", ["Lime &", "Mortar", "Works"], "spruce")
+        for x in (2, 13):
+            d.set(x, y0, 3, "spruce_fence")
+            d.set(x, 3, 3, "lantern[hanging=false,waterlogged=false]")
+    return d
+
+
+def concretemixer_cas(rel, L):
+    d = Design("Cascadia", rel, (23, 20, 27), paving="coarse_dirt")
+    y0 = 2
+    d.cluster(2, 21)                                             # basin x2..20, z21..24
+    # office shack
+    x1, z1, x2, z2 = 3, 5, 10, 11
+    cas_body(d, x1, z1, x2, z2, y0, 4, ceiling=None)
+    roof(d, x1, z1, x2, z2, 5, "z", "dark_oak", "dark_oak_slab", "spruce_planks", ends=(1, 1))
+    d.door(6, y0, z1, "south", "spruce")
+    d.window(8, 3, z1, 9, 3, z1)
+    d.window(x1, 3, 8, x1, 3, 8)
+    d.sign(6, 4, z1 - 1, "north", ["CASCADE", "AGGREGATE", "CO."], "spruce")
+    d.hut(4, y0, 6)
+    d.item(9, y0, 10, "crafting_table")
+    for i in range(L):
+        x, z, f = [(4, 10, "north"), (5, 10, "north"), (6, 10, "north"), (9, 7, "west"), (9, 8, "west")][i]
+        d.rack(x, y0, z, f)
+    d.set(8, y0, 10, "barrel[facing=up,open=false]")
+    d.set(7, 4, 8, lant())
+    # hopper tower: log frame, plank bin on top, chute to the basin
+    h = {1: 8, 2: 9}.get(L, 11)
+    tx1, tz1 = 14, 9
+    for x in (tx1, tx1 + 3):
+        for z in (tz1, tz1 + 3):
+            for y in range(y0, h + 4):
+                d.set(x, y, z, lg("spruce_log"))
+    for x in range(tx1, tx1 + 4):
+        for z in range(tz1, tz1 + 4):
+            for y in (h, h + 1, h + 2, h + 3):
+                if x in (tx1, tx1 + 3) or z in (tz1, tz1 + 3):
+                    if not "log" in d.get(x, y, z):
+                        d.set(x, y, z, "spruce_planks" if y < h + 3 else lg("stripped_spruce_log", "x"))
+                elif y == h:
+                    d.set(x, y, z, "spruce_planks")
+                else:
+                    d.set(x, y, z, "gravel")
+    for x in range(tx1 - 1, tx1 + 5):
+        for z in range(tz1 - 1, tz1 + 5):
+            d.set(x, h + 4, z, sl("dark_oak"))
+    d.set(tx1 + 1, h - 1, tz1 + 1, "hopper[enabled=true,facing=down]")
+    d.set(tx1 + 2, h - 1, tz1 + 2, "hopper[enabled=true,facing=down]")
+    # chute: plank slide from the tower down to the basin
+    cz = tz1 + 4
+    for i in range(h - 3):
+        y = h - 1 - i
+        z = cz + i
+        if z >= 21 or y < 3:
+            break
+        d.set(tx1 + 1, y, z, st("spruce", "north"))
+        d.set(tx1 + 2, y, z, st("spruce", "north"))
+        if i % 3 == 0:
+            for yy in range(y0, y):
+                d.set(tx1 + 3, yy, z, "spruce_fence")
+    # open bins of sand and gravel
+    for i, (m, bx) in enumerate((("sand", 3), ("gravel", 7), ("sand", 11))):
+        for x in range(bx, bx + 3):
+            for z in (14, 15, 16, 17):
+                if x == bx or z == 17 or x == bx + 2 and bx == 11:
+                    d.set(x, y0, z, lg("spruce_log", "z" if x in (bx,) else "x"))
+                else:
+                    d.set(x, y0, z, m)
+                    if z > 15:
+                        d.set(x, 3, z, m)
+    if L >= 3:
+        for x in range(2, 21):
+            d.set(x, 1, 19, "gravel")
+            d.set(x, 1, 20, "gravel")
+    if L >= 5:
+        for i in range(5):
+            d.set(19, 6 - i, 16 + i, st("spruce", "north")) if 16 + i < 21 else None
+        for x in (2, 12):
+            d.set(x, y0, 3, lg("spruce_log"))
+            d.set(x, 3, 3, lant(False))
+    return d
+
+
+def concretemixer_neo(rel, L):
+    d = Design("Neoterra", rel, (23, 20, 24), paving="smooth_stone")
+    y0 = 2
+    d.cluster(2, 18)                                             # basin x2..20, z18..21
+    # glass control office (two storeys at L3+)
+    x1, z1, x2, z2 = 3, 3, 10, 9
+    neo_body(d, x1, z1, x2, z2, y0, 5)
+    glass_front(d, x1 + 1, x2 - 1, z1, y0, 5, every=0)
+    d.fill(x1, 6, z1, x2, 6, z1, "cyan_terracotta")
+    d.double_door(5, y0, z1, "x", "south", "birch")
+    d.window(x2, 3, 5, x2, 4, 7)
+    d.hut(x2 - 1, y0, z1 + 1)
+    d.item(x1 + 1, y0, z2 - 1, "crafting_table")
+    for i in range(L):
+        d.rack(x1 + 2 + i, y0, z2 - 1, "north")
+    d.set(x1 + 1, y0, z1 + 2, "smooth_quartz")
+    for x in (5, 8):
+        d.set(x, 6, 6, "sea_lantern")
+    d.sign(8, 6, z1 - 1, "north", ["NEOCRETE"], "birch", glow=True, color="cyan")
+    # silos with chutes down to the basin
+    n = min(L, 3)
+    sil = [(15, 6), (15, 12), (6, 13)][:n]
+    for cx, cz in sil:
+        silo(d, cx, cz, y0, 9 + (2 if L >= 4 else 0))
+    for cx, cz in sil:                                           # chute from the silo foot to the basin
+        z = cz + 3
+        while z < 18:
+            d.set(cx, 3, z, "smooth_stone_slab[type=bottom,waterlogged=false]")
+            d.set(cx, y0, z, "light_gray_concrete")
+            z += 1
+    if L >= 4:                                                   # conveyor bridge office -> silos
+        for x in range(x2 + 1, 13):
+            d.set(x, 7, 5, "smooth_stone_slab[type=top,waterlogged=false]")
+            d.set(x, 8, 4, "iron_bars")
+            d.set(x, 8, 6, "iron_bars")
+    if L >= 5:
+        for x in range(x1, x2 + 1):
+            d.set(x, 8, z2, "cyan_concrete")
+        d.set(x1 + 1, 8, z1 + 1, "azalea")
+        d.set(x2 - 1, 8, z1 + 1, "azalea")
+    return d
+
+
+@design("concretemixer")
+def concretemixer(pack, rel, L):
+    return {"Hearthwood": concretemixer_hw, "Cascadia": concretemixer_cas,
+            "Neoterra": concretemixer_neo}[pack](rel, L)

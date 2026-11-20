@@ -2003,7 +2003,18 @@ def university_hearthwood(rel, L):
     d.set(8, 6, 7, "lantern[hanging=true,waterlogged=false]")
     # ---- quad, cloisters, lecture hall (L3+)
     if L >= 3:
-        crenel(d, 4, 20, 26, 26, 7)
+        d.box(4, Y0, 20, 26, 7, 26, S, floor="oak_planks")       # great hall: steep roof with a louvre
+        for x in range(4, 27):
+            for z in (20, 26):
+                d.set(x, Y0, z, "polished_andesite")
+        hr = d.gable(4, 20, 26, 26, 8, "x", "deepslate_tile_stairs", "deepslate_tile_slab", S, overhang=1)
+        for x in (14, 15, 16):
+            for z in (22, 23, 24):
+                d.set(x, hr, z, "dark_oak_planks")
+        for x, z in ((14, 22), (16, 22), (14, 24), (16, 24)):
+            d.set(x, hr + 1, z, "dark_oak_fence")
+        d.hip(14, 22, 16, 24, hr + 2, "deepslate_tile_stairs", "deepslate_tile_slab", overhang=0)
+        d.set(15, hr + 1, 23, "lantern[hanging=false,waterlogged=false]")
         for x in range(6, 26, 3):
             d.window(x, 3, 26, x, 6, 26)
         for x in range(6, 26, 4):
@@ -2056,11 +2067,11 @@ def university_hearthwood(rel, L):
             d.set(x, Y0 + 1, z, "rose_bush[half=upper]")
     # ---- library range (L4+) on the west side of the quad
     if L >= 4:
-        crenel(d, 4, 10, 9, 20, 6)
+        crenel(d, 4, 10, 9, 19, 6)
         d.set(9, Y0, 15, AIR)
         d.door(9, Y0, 15, "east", "dark_oak")
         d.set(9, 4, 15, S)
-        runs += [(5, 11, 5, 19, Y0, 3), (6, 11, 8, 11, Y0, 3), (6, 19, 8, 19, Y0, 3)]
+        runs += [(5, 11, 5, 18, Y0, 3), (6, 11, 8, 11, Y0, 3), (6, 18, 8, 18, Y0, 3)]
         d.set(7, 6, 15, "lantern[hanging=true,waterlogged=false]")
         d.set(7, Y0, 15, "dark_oak_slab[type=top,waterlogged=false]")
         d.set(7, Y0 + 1, 15, "candle[candles=3,lit=false,waterlogged=false]")
@@ -2071,7 +2082,7 @@ def university_hearthwood(rel, L):
         d.set(15, Y0 + 1, 15, "water[level=0]") if False else d.set(15, Y0 + 1, 15, "lantern[hanging=false,waterlogged=false]")
         for x, z in ((14, 14), (16, 14), (14, 16), (16, 16)):
             d.set(x, Y0, z, "water[level=0]") if False else d.set(x, 1, z, "water[level=0]")
-        crenel(d, 21, 10, 26, 20, 6)
+        crenel(d, 21, 10, 26, 19, 6)
         d.set(21, Y0, 15, AIR)
         d.door(21, Y0, 15, "west", "dark_oak")
         d.set(21, 4, 15, S)
