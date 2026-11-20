@@ -3397,7 +3397,7 @@ def cp_neo(rel, L):
         neo_roof(d, e, "garden")
     # ---- biogas digesters (L5)
     if L >= 5:
-        for cx, cz in ((29, 6), (29, 13)):
+        for cx, cz in ((29, 6), (29, 13), (29, 20) if False else (22, 6)) if False else ((29, 6), (29, 13)):
             for y in range(y0, 9):
                 rr = 2 if y < 6 else 1 if y < 8 else 0
                 for dx in range(-2, 3):
@@ -3430,6 +3430,24 @@ def cp_neo(rel, L):
             x = 18 + i
             d.set(x, y0, 1, f"{c}_concrete")
             d.set(x, y0 + 1, 1, f"{c}_carpet")
+        # solar carport for the collection vans
+        for x in (3, 8, 13):
+            for z in (28, 29):
+                pass
+        for x, z in ((2, 27), (14, 27), (2, 29), (14, 29)):
+            d.fill(x, y0, z, x, 4, z, "light_gray_concrete")
+        for x in range(1, 16):
+            for z in range(27, 30):
+                d.set(x, 5, z, "smooth_quartz")
+                d.set(x, 6, z, "daylight_detector[inverted=false,power=0]")
+        for x in (5, 11):
+            d.set(x, y0, 28, "orange_concrete")
+            d.set(x + 1, y0, 28, "orange_concrete")
+            d.set(x, y0 + 1, 28, "glass")
+            d.set(x + 1, y0 + 1, 28, "white_concrete")
+        for z in range(18, 27, 4):
+            d.set(15, y0, z, "moss_block")
+            tree(d, 15, z, y0 + 1, "birch", 3, 1)
     return d
 
 
@@ -3475,6 +3493,7 @@ def cp_hw(rel, L):
         bench(d, 4, 2, y0, "north", 2, "oak", sit=False)
         for x in (1, 25):
             lamp_post(d, x, 2, y0, P)
+        flower_bed(d, 12, 1, 16, 2, y0, seed=3)
     # ---- lean-to glasshouse (L3+)
     if L >= 3:
         for x in range(3, 10):
@@ -3489,9 +3508,10 @@ def cp_hw(rel, L):
             d.set(3, y0, z, "bricks")
             d.set(9, y0, z, "bricks")
         r0.keep.add((0, 0))
-    # ---- head gardener's cottage (L4+)
-    if L >= 4:
-        c = build(d, 3, 22, 13, 29, 2, roof="gable", axis="x", core=(11, 23), chimney=(4, 26, "east"))
+    # ---- head gardener's cottage (L3, upper floor from L4)
+    if L >= 3:
+        c = build(d, 3, 22, 13, 29, 2 if L >= 4 else 1, roof="gable", axis="x", core=(11, 23) if L >= 4 else None,
+                  chimney=(4, 26, "east"))
         c.door(8, 22, "north")
         d.set(8, y0, 21, AIR) if False else None
         for x in (8,):
@@ -3502,27 +3522,31 @@ def cp_hw(rel, L):
         rc.table_group("oak", 4, "post", rug="green_carpet", sit=False)
         rc.fill(["shelf_dark", "plant", "keg"])
         rc.lights()
-        rc2 = c.room(1)
-        rc2.bed("oak", sides=("south", "west"))
-        rc2.fill(["wardrobe", "plant", "shelf_dark"])
-        rc2.lights()
-    # ---- orchard and leaf-mould barn (L5)
+        if L >= 4:
+            rc2 = c.room(1)
+            rc2.bed("oak", sides=("south", "west"))
+            rc2.fill(["wardrobe", "plant", "shelf_dark"])
+            rc2.lights()
+    # ---- leaf-mould barn (L4, loft L5) and orchard (L5)
     if L >= 5:
         for x in (17, 21, 25, 29):
             for z in (23, 28):
                 tree(d, x, z, y0, "oak", 3, 1)
                 d.set(x + 1, y0 + 4, z, "flowering_azalea_leaves[distance=1,persistent=true,waterlogged=false]") \
                     if d.air(x + 1, y0 + 4, z) else None
-        b = build(d, 26, 3, 33, 18, 2, roof="gable", axis="z", core=(31, 5))
+    if L >= 4:
+        b = build(d, 26, 3, 33, 18, 2 if L >= 5 else 1, roof="gable", axis="z", core=(31, 5) if L >= 5 else None)
         b.opening(26, 9, 26, 11, 3, lg("stripped_oak_log", "z"))
         rb = b.room(0)
         rb.fill(["sack", "keg", "hay", "sack"])
         rb.center_line(["podzol[snowy=false]", "rooted_dirt", "podzol[snowy=false]", "rooted_dirt"], "z")
         rb.lights()
-        rb2 = b.room(1)
-        rb2.fill(["hay", "sack"])
-        rb2.lights()
-        hedge(d, [(x, 32) for x in range(0, 34)], y0, "oak")
+        if L >= 5:
+            rb2 = b.room(1)
+            rb2.fill(["hay", "sack"])
+            rb2.lights()
+            hedge(d, [(x, 32) for x in range(0, 34)], y0, "oak")
+            hedge(d, [(0, z) for z in range(4, 32)], y0, "oak")
     return d
 
 
