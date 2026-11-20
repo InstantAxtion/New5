@@ -329,11 +329,11 @@ def bld(d, x1, z1, x2, z2, n=1, axis="x", doors=(), style=None, roof=True, sh=4,
                     else:                                   # shutters on the upper storeys
                         sx_, sz_ = (1, 0) if out in ("north", "south") else (0, 1)
                         for sgn in (-1, 1):
-                            put(d, x + ox_ + sx_ * sgn, y + 1, z + oz_ + sz_ * sgn, TD(shut, out, "bottom", "true"))
+                            put(d, x + ox_ + sx_ * sgn, y + 2, z + oz_ + sz_ * sgn, TD(shut, out, "bottom", "true"))
                 else:                                       # Cascadia shutters
                     sx_, sz_ = (1, 0) if out in ("north", "south") else (0, 1)
                     for sgn in (-1, 1):
-                        put(d, x + ox_ + sx_ * sgn, y + 1, z + oz_ + sz_ * sgn, TD(shut, out, "bottom", "true"))
+                        put(d, x + ox_ + sx_ * sgn, y + 2, z + oz_ + sz_ * sgn, TD(shut, out, "bottom", "true"))
     for x, z in doors:
         f = "south" if z == z1 else "north" if z == z2 else "east" if x == x1 else "west"
         d.door(x, y0, z, f, w)
@@ -1648,15 +1648,15 @@ def cs_bar_outer(d, L):
             for x in range(15, 18):
                 d.set(x, 1, z, "dirt_path")
         for x in range(24, 30):                                 # woodshed: log stack under a slab roof
-            for z in (-5, -4):
+            for z in (-1, 0):
                 put(d, x, 2, z, LOG("spruce_log", "x"))
                 put(d, x, 3, z, LOG("spruce_log", "x"))
-            for z in (-6, -5, -4, -3):
+            for z in (-2, -1, 0):
                 d.set(x, 5, z, SL("spruce"))
             if x in (24, 29):
                 for y in (2, 3, 4):
-                    d.set(x, y, -6, LOG("spruce_log"))
-                    d.set(x, y, -3, LOG("spruce_log"))
+                    d.set(x, y, -2, LOG("spruce_log"))
+            d.set(x, 4, 0, LOG("spruce_log", "x"))
         for x in range(9, 14):
             put(d, x, 2, -1, "spruce_fence")
         put(d, 9, 3, -1, LANT_S)
@@ -1671,7 +1671,7 @@ def cs_bar_outer(d, L):
             d.set(x, 3, z, "spruce_fence")
             d.set(x, 4, z, "spruce_fence")
         d.fill(20, 5, -3, 22, 5, -1, SL("spruce"))
-        flowerbed(d, 24, -2, 28, -1)
+        flowerbed(d, 25, -5, 29, -5)
         cart(d, 9, -3, "x")
     if L >= 4:
         ys, top, ridge = bld(d, 1, -16, 12, -7, 2, "z", doors=[(12, -11)], lad=(2, -15, "east"),
@@ -1692,6 +1692,22 @@ def cs_bar_outer(d, L):
             for y in (2, 3, 4):
                 d.set(0, y, z, LOG("spruce_log"))
         cart(d, 19, -10, "z")
+        for x in (1, 6, 12):
+            lamp_post(d, x, -4) if x != 6 else None
+        for z in range(-6, -4):
+            put(d, 13, 2, z, "spruce_fence")
+        for x in (19, 20):                                       # hay stack by the barn
+            for z in (-14, -13):
+                for y in (2, 3):
+                    put(d, x, y, z, "hay_block[axis=y]")
+        put(d, 13, 2, -13, "barrel[facing=up,open=false]")
+        put(d, 13, 2, -9, "barrel[facing=up,open=false]")
+        put(d, 13, 3, -9, "barrel[facing=north,open=false]")
+        put(d, 13, 2, -10, "hay_block[axis=x]")
+        put(d, 13, 2, -14, "hay_block[axis=x]")
+        put(d, 13, 3, -13, "decorated_pot[cracked=false,facing=east,waterlogged=false]")
+        for x in range(1, 13):                                  # second corral rail
+            put(d, x, 3, -5, "spruce_fence")
         for x in range(19, 22):
             put(d, x, 2, -16, "hay_block[axis=x]")
             put(d, x, 3, -16, "hay_block[axis=y]") if x != 21 else None
@@ -1744,7 +1760,8 @@ def cs_bar_outer(d, L):
                 if k == 0 else None
         d.set(25, ridge + 5, -18, "dark_oak_fence")
         d.set(25, ridge + 6, -18, "lightning_rod[facing=up,powered=false,waterlogged=false]")
-        flowerbed(d, 21, -16, 23, -16) if False else None
+        flowerbed(d, 19, -25, 20, -19)
+        lamp_post(d, 19, -18)
         bench(d, 20, -14 + 0, "west", along="z") if False else None
 
 
