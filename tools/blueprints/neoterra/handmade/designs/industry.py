@@ -3639,6 +3639,7 @@ def complex_(base, fns):
                         layer[j] = snap[k]
                         k += 1
         return d
+    return fn
 
 
 def _outside(d, x, y, z):
@@ -3675,8 +3676,9 @@ def eaves(d, accent):
                 if bp.get(x, y - 1, z) != AIR or bp.get(x, y - 2, z) != AIR:
                     continue
                 f = s_.split("facing=")[1].split(",")[0]
+                if any(bp.get(x, yy, z) != AIR for yy in range(2, y)):
+                    continue
                 d.set(x, y - 1, z, td(f"{accent}_trapdoor", OPP[f], "top"))
-    return fn
 
 
 for _b, _f in (("blacksmith", (bs_hearthwood, bs_cascadia, bs_neoterra)),

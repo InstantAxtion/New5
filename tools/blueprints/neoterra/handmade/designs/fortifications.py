@@ -2526,6 +2526,12 @@ def gh_complex(d, L, xa, xb, r1, r2, tz, yw):
             if L == 2:                                         # guard hut and a trader's stall (replaced at L3)
                 sentry_box(d, xb + 5, tz + 4, "west")
                 stall(d, xa - 6, tz + 6, "red", ("pumpkin", "barrel[facing=up,open=false]", "melon"))
+                cart(d, xa - 6, tz + 9, "x")
+                lamp_post(d, xa - 8, tz + 6)
+                lamp_post(d, xb + 4, tz + 8)
+                for x in (xb + 8, xb + 9):
+                    put(d, x, 2, tz + 5, "barrel[facing=up,open=false]")
+                put(d, xb + 8, 3, tz + 5, "barrel[facing=north,open=false]")
         bench(d, r1 - 2, tz + 4, "west", along="z")
         bench(d, r2 + 2, tz + 4, "east", along="z")
         if L == 2:
@@ -2608,6 +2614,16 @@ def wt_complex(d, L, cx, tz, yw, mirror=False):
         lamp_post(d, cx - 6, tz + 6)
         if pk == "Cascadia" and L < 4:                       # outhouse / tool hut (smithy takes the spot at L4)
             sentry_box(d, cx - 12, 9, "east")
+        if pk == "Cascadia" and L >= 3:                      # firepit with log benches and a porch roof
+            put(d, 2, 2, 21, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+            for x, z, a in ((1, 21, "z"), (3, 21, "z"), (2, 20, "x"), (2, 22, "x")):
+                put(d, x, 2, z, LOG("stripped_spruce_log", a))
+            for z in range(12, 17):
+                put(d, 9, 6, z, SL("mangrove"))
+                put(d, 10, 6, z, SL("mangrove"))
+            for z in (12, 16):
+                for y in range(2, 6):
+                    put(d, 9, y, z, LOG("spruce_log"))
         if pk == "Cascadia":                                 # hitching rail and water trough by the door
             for x in range(cx + 3, cx + 7):
                 put(d, x, 2, tz + 9, "spruce_fence")

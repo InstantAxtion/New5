@@ -3414,6 +3414,8 @@ def kitchen(d, r, y, h=4):
             put(d, x, y + 1, z, ("flower_pot", "candle[candles=1,lit=false,waterlogged=false]")[i % 2])
     cx, cz = (x1 + x2) // 2, (z1 + z2) // 2 + 1
     for x in range(cx - 1, cx + 2):
+        if z2 - z1 < 4:
+            break
         put(d, x, y, cz, f"{d.S['wood']}_planks" if d.pack != "Neoterra" else "smooth_quartz")
         put(d, x, y + 1, cz, ("cake[bites=0]", "flower_pot", "candle[candles=2,lit=false,waterlogged=false]")[x % 3])
     lights(d, r, y, h)
@@ -5119,10 +5121,15 @@ def lib_hearthwood(rel, L):
     flowerbed(d, 16, 3, 20, 4)
     flowerbed(d, 26, 3, 30, 4)
     if L >= 2:
-        sw = bldg(d, 30, 9, 42, 19, 1, "gable", "z", win="nse")
+        swnf = 2 if L >= 4 else 1
+        sw = bldg(d, 30, 9, 42, 19, swnf, "gable", "z", win="nse")
         link(d, 30, Y0, 14, "east")
         for z in range(10, 19, 3):
             stall_row(d, 32, 40, z, Y0, 3)
+        if swnf > 1:
+            stair_up(d, 41, 10, Y0, 7, "south")
+            office(d, (31, 10, 40, 18), 7)
+            tables(d, (31, 10, 40, 18), 7, sit=False)
         d.sign(36, 5, 8, "north", ["STACKS"], "dark_oak")
         chimney(d, 42, 14, Y0, sw["ridge"] + 1)
     if L >= 4:
@@ -5147,10 +5154,14 @@ def lib_hearthwood(rel, L):
                     if (r - 0.6) ** 2 <= dd <= (r + 0.6) ** 2 or (r <= 0 and dd == 0):
                         d.set(x, y, z, "mud_bricks" if k < R - 1 else "cut_sandstone")
         d.set(cx, 11 + R + 1, cz, "lantern[hanging=false,waterlogged=false]")
+        d.fill(cx - 1, Y0, cz + R, cx + 1, 4, cz + R, AIR)
+        for x in range(cx - 1, cx + 2):
+            for z in range(cz + 2, cz + R + 2):
+                keep(d, x, Y0, z, 3)
         d.fill(cx - 1, Y0, cz - R, cx + 1, 4, cz - R, AIR)
         d.fill(cx - 1, Y0, h["z2"], cx + 1, 4, h["z2"], AIR)
         for x in range(cx - 1, cx + 2):
-            for z in range(h["z2"], cz - R + 1):
+            for z in range(h["z2"], cz - 1):
                 d.set(x, 1, z, "polished_andesite")
                 keep(d, x, Y0, z, 3)
         for z in range(h["z2"] + 1, cz - R):
@@ -5276,15 +5287,19 @@ def lib_neoterra(rel, L):
         roof_garden(d, tw, "garden")
         d.sign(22, 6, 33, "south", ["MEDIA", "TOWER"], "birch", glow=True, color="orange")
     if L >= 5:
-        au = bldg(d, 30, 20, 46, 32, 1, "flat", wh=7, win="e")
+        au = bldg(d, 30, 20, 46, 32, 2, "flat", wh=6, win="e")
+        stair_up(d, 45, 22, Y0, 8, "south")
+        tables(d, (31, 21, 45, 31), 8, sit=False)
         link(d, 28, Y0, 26, "east") if False else ext_door(d, 38, Y0, 32, "north", double=True)
-        lecture(d, (31, 21, 45, 31), Y0, "n", h=7)
+        lecture(d, (31, 21, 44, 31), Y0, "n", h=6)
         roof_garden(d, au, "garden")
         lawn(d, 2, 34, 48, 49)
         path(d, 2, 40, 48, 41, "polished_diorite")
         for x in range(4, 48, 7):
             plant_tree(d, x, 37)
             park_bench(d, x + 2, 43, "x", "south")
+            flowerbed(d, x, 46, x + 3, 47, ("allium", "azure_bluet", "white_tulip", "orange_tulip"))
+            post_lamp(d, x + 5, 39)
         # café kiosk
         ck = bldg(d, 4, 8, 12, 16, 1, "flat", glassy=True, win="nse")
         ext_door(d, 8, Y0, 8, "south")
@@ -5368,6 +5383,10 @@ def lib_cascadia(rel, L):
         for x in (42, 46):
             d.chair(x, Y0, 15, "south", "spruce", sit=False)
         d.sign(44, 7, 7, "north", ["STORY", "CORNER"], "spruce")
+        for x in (37, 51):
+            post_lamp(d, x, 6)
+        flowerbed(d, 38, 5, 41, 6, ("fern", "blue_orchid", "allium", "dandelion"))
+        flowerbed(d, 47, 5, 50, 6, ("fern", "blue_orchid", "allium", "dandelion"))
         for x in range(35, 38):
             for z in range(10, 14):
                 d.set(x, 1, z, "spruce_planks")
@@ -5376,7 +5395,14 @@ def lib_cascadia(rel, L):
             for z in (10, 13):
                 for y in range(Y0, 6):
                     d.set(x, y, z, log("spruce_log"))
-        d.set(34, Y0, 12, AIR) if False else None
+        cx, cz = 44, 3                                              # story fire circle
+        d.set(cx, Y0, cz, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+        for (x, z, ax) in ((cx - 2, cz, "z"), (cx + 2, cz, "z"), (cx, cz - 2, "x")):
+            d.set(x, Y0, z, log("stripped_spruce_log", ax))
+        for x in range(cx - 2, cx + 3):
+            for z in range(cz - 2, cz + 3):
+                if d.get(x, 1, z) == "minecraft:coarse_dirt":
+                    d.set(x, 1, z, "gravel")
     if L >= 3:
         ar = bldg(d, 2, 6, 12, 18, 2, "gable", "z")
         ext_door(d, 7, Y0, 6, "south")
@@ -5409,11 +5435,26 @@ def lib_cascadia(rel, L):
         d.sign(26, 6, 23, "north", ["THE STACKS"], "spruce")
     if L >= 5:
         # librarian's cabin, a lookout deck and a reading garden
-        cb = bldg(d, 44, 40, 52, 50, 1, "gable", "z", mat="mangrove_planks", up="mangrove_planks")
+        cb = bldg(d, 44, 40, 52, 50, 2, "gable", "z", mat="mangrove_planks", up="mangrove_planks")
         ext_door(d, 48, Y0, 40, "south")
         lounge(d, (45, 41, 51, 45), Y0)
-        dorm(d, (45, 46, 51, 49), Y0, 1, head="s")
-        chimney(d, 52, 45, Y0, 12)
+        kitchen(d, (45, 46, 51, 49), Y0)
+        stair_up(d, 51, 42, Y0, 7, "south")
+        dorm(d, (45, 41, 51, 49), 7, 2, head="w")
+        chimney(d, 52, 45, Y0, 17)
+        # bookbindery & print shop
+        bb = bldg(d, 2, 38, 16, 52, 2, "gable", "z", mat="stripped_dark_oak_log", up="stripped_dark_oak_log")
+        ext_door(d, 9, Y0, 38, "south", double=True)
+        d.sign(9, 5, 37, "north", ["BINDERY"], "spruce")
+        workshop(d, (3, 39, 15, 45), Y0)
+        for z in (48, 50):
+            stall_row(d, 4, 11, z, Y0, 2)
+        stair_up(d, 15, 40, Y0, 7, "south") if False else stair_up(d, 3, 46, Y0, 7, "north") if False else None
+        stair_up(d, 14, 47, Y0, 7, "north")
+        tables(d, (3, 39, 15, 51), 7, sit=False)
+        for z in range(40, 52, 3):
+            stall_row(d, 4, 8, z, 7, 2)
+        chimney(d, 16, 45, Y0, 18)
         for x in range(4, 42):
             for z in range(38, 52):
                 if (x * 3 + z) % 9 == 0:

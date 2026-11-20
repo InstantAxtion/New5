@@ -2794,6 +2794,11 @@ def grow_twin_hw(d, L):
             pallet_stack(d, x, 33, 2, "oak_planks" if x % 4 == 1 else "spruce_planks", 5,
                          "oak_slab[type=bottom,waterlogged=false]")
         lamp_post(d, 33, 33, 2, P, 3)
+        for x in range(36, 52, 3):                     # sawhorses with a plank across
+            d.set(x, 2, 35, fence("oak"))
+            d.set(x + 1, 2, 35, fence("oak"))
+            d.set(x, 3, 35, slab("oak"))
+            d.set(x + 1, 3, 35, slab("oak"))
         for x in range(31, 33):
             for z in range(14, 33):
                 d.set(x, 1, z, "gravel")

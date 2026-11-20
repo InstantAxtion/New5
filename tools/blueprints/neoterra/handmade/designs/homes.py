@@ -287,6 +287,12 @@ def fireplace(d, wx, wz, y, inward, top, frame="bricks", stack=None, fire="campf
                           "polished_blackstone_brick", "deepslate_bricks": "deepslate_brick"}[stack]
                 d.set(cx, y + 3, cz, stair(sb, OPP[f]))
         d.set(wx + ox, top, wz + oz, stack)
+        cap = {"bricks": "brick_wall", "cobblestone": "cobblestone_wall", "mossy_cobblestone": "mossy_cobblestone_wall",
+               "stone_bricks": "stone_brick_wall", "polished_blackstone_bricks": "polished_blackstone_brick_wall",
+               "deepslate_bricks": "deepslate_brick_wall"}.get(stack)
+        if cap and d.bp.inside(wx + ox, top + 1, wz + oz):
+            d.set(wx + ox, top + 1, wz + oz, f"{cap}[east=none,north=none,south=none,up=true,waterlogged=false,"
+                                             f"west=none]")
 
 
 def shed_roof(d, x1, z1, x2, z2, y, down, block, under=None, overhang=1):
@@ -3684,6 +3690,11 @@ def cottage_retreat_ca(rel, L):
         lamp_post(d, 46, 18, 1, "ca")
         lamp_post(d, 34, 18, 1, "ca")
         bench(d, 38, 18, 2, "east", "north", "spruce")
+        for x in range(44, 48):                              # firewood stack between the huts
+            d.set(x, 2, 1, log("spruce_log", "x"))
+            d.set(x, 3, 1, log("spruce_log", "x"))
+        lamp_post(d, 58, 18, 1, "ca")
+        bench(d, 50, 18, 2, "east", "north", "spruce")
     if L >= 4:
         orchard(d, 3, 30, 19, 38, "spruce", 5)
         pond(d, 26, 24, 40, 34)

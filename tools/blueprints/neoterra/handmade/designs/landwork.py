@@ -800,6 +800,8 @@ def miner_hearthwood(rel, L):
         lamp_post(d, 35, 20)
         cart(d, 37, 15, "x", "raw_iron_block")
         bench(d, 16, 9, "east", 2)
+        woodpile(d, 19, 25, 4)
+        lamp_post(d, 6, 18)
     # ---- L4: miners' dry (changing house) and powder magazine ----
     if L >= 4:
         dr = bld(d, 26, 2, 37, 9, floors=2, axis="x", doors=[(31, 9, "s")], chimney=(37, 5),

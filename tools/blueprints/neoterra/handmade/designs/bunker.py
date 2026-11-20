@@ -2258,6 +2258,14 @@ def hearthwood(rel, L):
         building(d, pal, 44, 46, 56, 53, 1, (50, 46, "north"), ["smithy"], L, "tudor", "gable", chimney=(57, 49))
         d.set(42, SW, 47, "anvil[facing=north]")
         d.set(42, SW, 49, "water_cauldron[level=3]")
+        for z in range(19, 54):                            # dry-stone wall along the lane, lamps and benches
+            if z in (23, 24, 33, 34, 45, 46):
+                continue
+            d.set(34, SW, z, "mossy_cobblestone" if H(34, 1, z) < 40 else "cobblestone")
+            d.set(34, SW + 1, z, "mossy_cobblestone_wall" if z % 3 else "cobblestone_wall")
+        for z in (22, 32, 44):
+            lamp_post(d, 35, z, "dark_oak_fence", "lantern[hanging=false,waterlogged=false]", 3)
+            d.chair(38, SW, z, "east", "dark_oak", sit=False)
     if L >= 5:              # vicarage: light-blue colour-washed walls, rose granite roof, red door
         pal = dict(wall="light_blue_terracotta", wall2="white_terracotta", plinth="stone_bricks",
                    trim="stripped_dark_oak_log", floor="oak_planks", roof="granite", gable="white_terracotta",
@@ -2273,6 +2281,14 @@ def hearthwood(rel, L):
                  chimney=(60, 7))
         flowerbed(d, 52, 13, 54, 14, 7)
         flowerbed(d, 57, 13, 59, 14, 8)
+        for x in range(1, 20):                             # churchyard hedge and yews round the vicarage garden
+            if x not in (9, 10):
+                d.set(x, SW, 53, "oak_leaves[distance=7,persistent=true,waterlogged=false]")
+                d.set(x, SW + 1, 53, "oak_leaves[distance=7,persistent=true,waterlogged=false]")
+        for z in range(40, 53):
+            d.set(18, SW, z, "oak_leaves[distance=7,persistent=true,waterlogged=false]")
+        for (tx, tz) in ((17, 37), (1, 37)):
+            tree(d, tx, tz, SW, "spruce", 5)
         flowerbed(d, 3, 39, 7, 39, 5)
         flowerbed(d, 11, 39, 15, 39, 6)
     if L >= 5:              # tithe barn (mud brick and oak frame, brown tile roof) and the bell tower
@@ -2452,6 +2468,24 @@ def cascadia(rel, L):
             lamp_post(d, lx, lz, "spruce_fence", "lantern[hanging=false,waterlogged=false]", 3)
         for x in range(2, 10):                             # split-rail fence round the magazine yard
             d.set(x, SW, 37, "spruce_fence")
+        for z in range(26, 38):                            # rail spur to the magazine
+            d.set(10, SW, z, "rail[shape=north_south,waterlogged=false]")
+            d.set(10, GY, z, "gravel")
+        d.set(11, SW, 36, "barrel[facing=up,open=false]")
+        for x in range(10, 18):
+            d.set(x, SW, 38, "spruce_fence")
+        for (ax, az) in ((36, 3), (38, 3), (36, 5), (38, 5)):  # water tank on timber stilts by the cookhouse
+            for y in range(SW, SW + 4):
+                d.set(ax, y, az, "spruce_log[axis=y]")
+        for y in (SW + 4, SW + 5):
+            for ax in range(36, 39):
+                for az in range(3, 6):
+                    d.set(ax, y, az, "spruce_planks" if y == SW + 4 else "barrel[facing=up,open=false]")
+        d.set(37, SW + 6, 4, "spruce_slab[type=bottom,waterlogged=false]")
+        for x in range(11, 14):                            # cordwood stack by the magazine
+            for z in (29, 30, 31):
+                for y in range(SW, SW + 2):
+                    d.set(x, y, z, "spruce_log[axis=z]" if (x + y) % 2 else "stripped_spruce_log[axis=z]")
     if L >= 4:              # hoist house by the headframe: dark oak, slate roof, mustard trim
         pal = dict(wall="dark_oak_planks", wall2="dark_oak_planks", plinth="andesite", trim="stripped_spruce_log",
                    floor="spruce_planks", roof="deepslate_tile", gable="dark_oak_planks", accent="yellow_terracotta",

@@ -469,8 +469,8 @@ def build(d, x1, z1, x2, z2, storeys=1, H=4, axis="x", roof="gable", core=None, 
                         if not d.bp.inside(out[0], fy + 1, out[1]):
                             continue
                         far = (out[0] + ox, out[1] + oz)
-                        roomy = s > 0 or (d.bp.inside(far[0], fy + 1, far[1]) and d.air(far[0], fy + 1, far[1])
-                                          and d.air(far[0], fy + 2, far[1]))
+                        roomy = s > 0 or (side == "north" and d.bp.inside(far[0], fy + 1, far[1])
+                                          and d.air(far[0], fy + 1, far[1]) and d.air(far[0], fy + 2, far[1]))
                         if pk == "Cascadia" and roomy:
                             for sd in (CW[side], OPP[CW[side]]):
                                 sx_, sz_ = D4[sd]
@@ -1350,6 +1350,8 @@ def builder_cas(rel, L):
         ru.fill(["wardrobe", "shelf_spruce", "plant"])
         ru.lights()
         bench(d, 5, 19, y0, "south", 2, "spruce", sit=False)
+        for z in (20, 26, 31):
+            lamp_post(d, 18, z, y0, P)
     # ---- smithy lean-to and log yard (L5)
     if L >= 5:
         sm = build(d, 20, 21, 30, 29, 2, roof="gable", axis="z", core=(28, 23), chimney=(21, 26, "east"))
@@ -2337,6 +2339,8 @@ def fl_neo(rel, L):
                 rt.books(8, sides=("west", "south"))
             rt.fill(["shelf_quartz", "bamboo", "banner_cyan", "crate"])
         neo_roof(d, t, "garden")
+        for z in (14, 26, 30):
+            lamp_post(d, 34, z, y0, P)
         for x in range(23, 34, 2):
             d.set(x, t.yr + 3, 16, "magenta_stained_glass") if False else None
     return d
@@ -2509,6 +2513,12 @@ def fl_cas(rel, L):
         rs.center_line(["spruce_fence"] * 4, "x")
         rs.fill(["sack", "keg", "logs"])
         rs.lights()
+        wagon(d, 14, 17, y0, "spruce", "hay_block[axis=z]", "z")
+        for x in (1, 13):
+            lamp_post(d, x, 23, y0, P)
+        log_pile(d, 0, 16, 1, 22, y0, 2, "stripped_spruce_log", "z")
+        tree(d, 2, 26, y0, "spruce", 5, 1) if L < 5 else None
+        tree(d, 14, 26, y0, "spruce", 5, 1) if L < 5 else tree(d, 34, 24, y0, "spruce", 5, 1)
     # ---- range clubhouse (L4+)
     if L >= 4:
         c = build(d, 16, 15, 26, 23, 2, roof="gable", axis="x", core=(24, 16), chimney=(17, 19, "east"))
@@ -2537,6 +2547,7 @@ def fl_cas(rel, L):
         re2 = e.room(1)
         for _ in range(4):
             re2.bed("spruce", sides=("south", "north"))
+        racks += re2.racks(FRACKS[L] - racks, 1, sides=("south", "north"))
         re2.fill(["wardrobe", "plant"])
         re2.lights()
         tree(d, 33, 30, y0, "spruce", 6, 2)

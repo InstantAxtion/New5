@@ -2217,7 +2217,7 @@ def ca_cascadia(rel, L):
         building(d, 2, 36, 20, 43, nf=2, axis="x", doors=(("north", 11), ("east", 40)), chimney=(1, 40),
                  kinds=["mess", "lounge"])
         building(d, 23, 36, 37, 43, nf=2, axis="x", doors=(("north", 30),), kinds=["gym", "office"])
-        for z in range(3, 40, 6):
+        for z in range(3, 44, 5):
             tree(d, 43, 2, z, "dark_oak_log", "spruce_leaves", 7, 2, cone=True)
         for x in (8, 14):                                         # log gate arch to the timbersports yard
             for y in range(2, 7):

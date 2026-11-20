@@ -2821,7 +2821,9 @@ def extra(d, pack, kind, x1, z1):
     elif kind == "sheep":                                              # dye house + drying racks
         ridge = bldg(d, pack, x1 + 1, z1 + 1, x1 + 8, z1 + 5, 5)
         d.door(x1 + 4, 2, z1 + 1, "south", w)
-        cols = ("red", "yellow", "blue", "green", "orange", "purple", "cyan", "lime")
+        cols = {"Hearthwood": ("red", "yellow", "blue", "brown", "white", "red", "blue", "yellow"),
+                "Cascadia": ("orange", "green", "lime", "cyan", "purple", "magenta", "pink", "light_blue"),
+                "Neoterra": ("cyan", "light_blue", "magenta", "lime", "pink", "orange", "cyan", "white")}[pack]
         for i, x in enumerate(range(x1 + 2, x1 + 8)):
             d.set(x, 2, z1 + 4, "water_cauldron[level=3]")
             d.set(x, 2, z1 + 2, f"{cols[i % 8]}_wool" if x != x1 + 4 else AIR)
@@ -2990,8 +2992,7 @@ RECOLOR = {
     ("Hearthwood", "pig"): {"deepslate_tile_stairs": "granite_stairs", "deepslate_tile_slab": "granite_slab",
                             "deepslate_tiles": "polished_granite", "calcite": "pink_terracotta",
                             "bricks": "mud_bricks", "brick_slab": "mud_brick_slab"},
-    ("Hearthwood", "rabbit"): {"deepslate_tile_stairs": "spruce_stairs", "deepslate_tile_slab": "spruce_slab",
-                               "deepslate_tiles": "spruce_planks", "calcite": "light_blue_terracotta"},
+    ("Hearthwood", "rabbit"): {"calcite": "light_blue_terracotta", "stone_bricks": "andesite"},
     ("Hearthwood", "bees"): {"stripped_dark_oak_log": "stripped_oak_log", "dark_oak_planks": "oak_planks",
                              "stone_bricks": "mossy_stone_bricks"},
     ("Hearthwood", "horse"): {"deepslate_tile_stairs": "dark_oak_stairs", "deepslate_tile_slab": "dark_oak_slab",
@@ -3001,11 +3002,11 @@ RECOLOR = {
                               "spruce_planks": "birch_planks"},
     ("Cascadia", "cattle"): {"dark_oak_stairs": "dark_prismarine_stairs", "dark_oak_slab": "dark_prismarine_slab",
                              "dark_oak_planks": "dark_prismarine"},
-    ("Cascadia", "sheep"): {"stripped_spruce_log": "stripped_birch_log", "spruce_log": "dark_oak_log",
-                            "dark_oak_stairs": "deepslate_tile_stairs", "dark_oak_slab": "deepslate_tile_slab"},
+    ("Cascadia", "sheep"): {"stripped_spruce_log": "stripped_birch_log", "spruce_log": "dark_oak_log"},
     ("Cascadia", "pig"): {"stripped_spruce_log": "spruce_log", "spruce_log": "stripped_spruce_log",
                           "cobblestone": "tuff", "cobblestone_slab": "tuff_slab"},
-    ("Cascadia", "rabbit"): {"stripped_spruce_log": "dark_oak_log", "spruce_log": "stripped_spruce_log",
+    ("Cascadia", "rabbit"): {"stripped_spruce_log": "stripped_mangrove_log", "spruce_log": "stripped_spruce_log",
+                             "cobblestone": "tuff",
                              "dark_oak_stairs": "warped_stairs", "dark_oak_slab": "warped_slab"},
     ("Cascadia", "bees"): {"dark_oak_stairs": "cherry_stairs", "dark_oak_slab": "cherry_slab",
                            "spruce_planks": "birch_planks", "cobblestone": "andesite"},
@@ -3055,7 +3056,10 @@ def street_front(d, pack, paving):
             lamp_post(d, x, 1, pack)
         elif k in (1, 2, 3):
             d.set(x, 1, 1, GRASS if pack != "Neoterra" else "moss_block")
-            d.set(x, 2, 1, ("poppy", "cornflower", "oxeye_daisy", "allium", "azure_bluet")[(x * 7) % 5])
+            fl = {"Hearthwood": ("poppy", "cornflower", "oxeye_daisy", "allium", "azure_bluet"),
+                  "Cascadia": ("fern", "dandelion", "fern", "red_tulip", "short_grass"),
+                  "Neoterra": ("azalea", "azalea", "flowering_azalea", "azalea", "flowering_azalea")}[pack]
+            d.set(x, 2, 1, fl[(x * 7) % 5])
         elif k in (4, 5, 6):
             if pack == "Hearthwood":
                 d.set(x, 2, 1, "oak_leaves" + LEAVES)
