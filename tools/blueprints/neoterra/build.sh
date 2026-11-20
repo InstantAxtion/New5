@@ -52,6 +52,8 @@ python3 $T/neoterra/wonders.py "$PACK" Neoterra
 # Domum Ornamentum: Neoterra's own set (framed lights, quartz pillars), more at higher levels
 python3 $T/neoterra/furnish.py "$PACK" Neoterra
 python3 $T/neoterra/domumize.py "$PACK" Neoterra
+# level 1 already reserves the plot of level 5
+python3 $T/neoterra/plotmax.py "$PACK"
 
 for l in 1 2 3 4 5; do
   for f in fundamentals/townhall fundamentals/builder fundamentals/cottage fundamentals/house \
@@ -126,6 +128,8 @@ for STY in Hearthwood Cascadia; do
   # furniture in the pack's own style, then its Domum set
   python3 $T/neoterra/furnish.py "$OUT" $STY
   python3 $T/neoterra/domumize.py "$OUT" $STY
+  python3 $T/neoterra/fields_styles.py "$OUT" $STY
+  python3 $T/neoterra/plotmax.py "$OUT"
   mkdir -p "$SP"
   for f in fundamentals/townhall5 craftsmanship/storage/deliveryman5 decorations/housing/playerhouse5 \
            education/university5 military/barracks5 agriculture/horticulture/farmer5 fundamentals/miner5 \
@@ -146,6 +150,7 @@ FP=docs/previews/farmworks
 rm -rf "$FW"
 python3 $T/neoterra/farms.py "$FW"
 python3 $T/neoterra/tradepost.py "$FW"
+python3 $T/neoterra/plotmax.py "$FW"
 mkdir -p "$FP"
 for f in $(find "$FW" -name "*.blueprint"); do
   python3 $T/render.py "$f" "$FP/$(basename "$f" .blueprint)" >/dev/null

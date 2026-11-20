@@ -661,30 +661,32 @@ def casc_granary_wing(style, L):
 
 # ====================================================================================================== HEARTHWOOD
 def hearth_granary_wing(style, L):
-    """Square brick dovecote with a pyramid roof and pigeon holes."""
-    size = (5, 29, 5)
+    """Square brick dovecote with a pyramid roof and pigeon holes, on a paved 7 x 7 yard."""
+    size = (7, 29, 7)
     H = (4, 6, 8, 9, 10)[L - 1]
 
     def draw(w):
-        for x in range(5):
-            for z in range(5):
-                w.S(x, 0, z, "bricks")
-                edge = x in (0, 4) or z in (0, 4)
+        for x in range(7):
+            for z in range(7):
+                w.S(x, 0, z, "bricks" if x in (0, 6) or z in (0, 6) else "stone_bricks")
+        for x in range(1, 6):
+            for z in range(1, 6):
+                edge = x in (1, 5) or z in (1, 5)
                 for y in range(1, H + 1):
                     if not edge:
                         w.S(x, y, z, "air")
                     else:
-                        hole = y >= H - 2 and (x == 2 or z == 2) and y % 2 == 0
+                        hole = y >= H - 2 and (x == 3 or z == 3) and y % 2 == 0
                         w.S(x, y, z, "air" if hole else ("white_terracotta" if y == H - 3 else "bricks"))
-        w.S(2, 1, 0, "dark_oak_door[facing=south,half=lower,hinge=left,open=false,powered=false]")
-        w.S(2, 2, 0, "dark_oak_door[facing=south,half=upper,hinge=left,open=false,powered=false]")
+        w.S(3, 1, 1, "dark_oak_door[facing=south,half=lower,hinge=left,open=false,powered=false]")
+        w.S(3, 2, 1, "dark_oak_door[facing=south,half=upper,hinge=left,open=false,powered=false]")
         for k in range(3):
-            for x in range(k, 5 - k):
-                for z in range(k, 5 - k):
-                    if x in (k, 4 - k) or z in (k, 4 - k) or k == 2:
+            for x in range(1 + k, 6 - k):
+                for z in range(1 + k, 6 - k):
+                    if x in (1 + k, 5 - k) or z in (1 + k, 5 - k) or k == 2:
                         w.S(x, H + 1 + k, z, "dark_oak_planks" if k == 2 else "deepslate_tiles")
 
-    return wing_bp(style, L, f"royalgranarywing{L}.blueprint", size, (2, 1, 2), f"wonders/royalgranarywing{L}.blueprint", draw)
+    return wing_bp(style, L, f"royalgranarywing{L}.blueprint", size, (3, 1, 3), f"wonders/royalgranarywing{L}.blueprint", draw)
 
 
 def wonder_set(style, base):
