@@ -2145,7 +2145,7 @@ def ca_hearthwood(rel, L):
         d.set(38, 2, 13, "water_cauldron[level=3]")
         lamp_post(d, 29, 1)
     if L >= 3:                                                    # armourer's forge with a loft
-        building(d, 31, 18, 41, 24, nf=2, axis="z", doors=(("north", 36), ("west", 21)), chimney=(42, 21),
+        building(d, 31, 18, 42, 24, nf=2, axis="z", doors=(("north", 36), ("west", 21)), chimney=(43, 21),
                  kinds=["workshop", "store"])
         d.set(30, 2, 18, "anvil[facing=north]")
         d.set(30, 2, 19, "water_cauldron[level=3]") if False else None
@@ -2358,7 +2358,7 @@ def ca_cascadia(rel, L):
         building(d, 23, 24, 41, 34, nf=2, axis="x", doors=(("north", 29), ("west", 29)), chimney=(42, 29),
                  kinds=["gym", "bunks"])
     if L >= 5:                                                    # trophy lodge and boathouse-style gym
-        building(d, 2, 36, 20, 43, nf=2, axis="x", doors=(("north", 11), ("east", 40)), chimney=(1, 40),
+        building(d, 2, 36, 20, 44, nf=2, axis="x", doors=(("north", 11), ("east", 40)), chimney=(1, 40),
                  kinds=["mess", "lounge"])
         building(d, 23, 36, 37, 43, nf=2, axis="x", doors=(("north", 30),), kinds=["gym", "office"])
         for z in range(3, 44, 5):
@@ -2499,15 +2499,15 @@ def ca_neoterra(rel, L):
     deco_ring(d, 12, z1 + 6, x2 - 1, z2 - 1, 2, [(SLABTOP("smooth_quartz"), "potted_fern"), CHISEL])
     # ---- growth: a sports campus round the rooftop arena
     if L >= 2:                                                    # locker rooms and physio
-        building(d, 24, 3, 35, 11, nf=1, roof="flat", doors=(("north", 29), ("west", 7)), kinds=["store"])
+        building(d, 24, 3, 37, 11, nf=1, roof="flat", doors=(("north", 29), ("west", 7)), kinds=["store"])
         d.sign(32, 5, 2, "north", ["", "LOCKERS", "PHYSIO"], "birch", glow=True, color="yellow")
         for x in range(25, 35, 2):
             d.set(x, 1, 1, "moss_block")
             d.set(x, 2, 1, "azalea")
         lamp_post(d, 22, 1)
-        lamp_post(d, 37, 1)
+        lamp_post(d, 39, 1)
         lamp_post(d, 22, 12)
-        lamp_post(d, 37, 12)
+        lamp_post(d, 39, 12)
         bench(d, 25, 13, "north", 3)
         bench(d, 31, 13, "north", 3)
         for z in range(13, 24, 2):
@@ -2518,7 +2518,7 @@ def ca_neoterra(rel, L):
         bench(d, 26, 13, "north", 3)
         bench(d, 36, 13, "north", 3)
     if L >= 4:                                                    # athletes' residence tower
-        building(d, 2, 24, 14, 36, nf=3 if L == 4 else 5, roof="flat", doors=(("north", 8), ("east", 30)),
+        building(d, 2, 24, 15, 36, nf=3 if L == 4 else 5, roof="flat", doors=(("north", 8), ("east", 30)),
                  kinds=["lounge", "bunks", "bunks", "bunks", "lounge"])
         path(d, 8, 20, 8, 23)
         for z in range(25, 36, 2):                                # planter strip along the residence
