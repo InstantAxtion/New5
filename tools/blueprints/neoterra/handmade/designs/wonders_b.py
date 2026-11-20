@@ -320,7 +320,6 @@ def gb_hearthwood(rel, L):
             d.set(14, yb + 3, zb2 + 2, "glass_pane")
             d.set(18, yb + 3, zb2 + 2, "glass_pane")
             d.set(15, yb + 2, zb2 + 2, "candle[candles=3,lit=false,waterlogged=false]")
-            d.set(15, yb + 1, zb2 + 2, "dark_oak_slab[type=top,waterlogged=false]") if False else None
         r = d.hip(14, zb2 + 1, 18, zb2 + 3, top, "deepslate_tile_stairs", "deepslate_tile_slab", overhang=0)
         d.set(16, r + 1, zb2 + 2, "stone_brick_wall")
         d.set(16, r + 2, zb2 + 2, "lightning_rod[facing=up,powered=false,waterlogged=false]")
@@ -334,8 +333,6 @@ def gb_hearthwood(rel, L):
             d.set(x, 4, z, lantern() if L >= 2 else swall)
     # river banks: willows, reeds, benches
     if L >= 2:
-        for x, z in ((8, 2), (24, 3), (8, 19), (24, 20)):
-            d.set(x, 2, z, "sugar_cane") if False else None
         for z in list(range(2, 6)) + list(range(17, 21)):
             for x in (9, 23):
                 if z % 2 == 0:
@@ -344,8 +341,6 @@ def gb_hearthwood(rel, L):
     if L >= 3:
         tree(d, 3, 2, h=4, leaves="oak_leaves")
         tree(d, 29, 20, h=4, leaves="oak_leaves")
-        for z in (zr1 - 4, zr2 + 4):
-            lamppost(d, 7, z) if False else None
     if L >= 4:
         tree(d, 29, 2, h=5, leaves="dark_oak_leaves", log="dark_oak_log")
         tree(d, 3, 20, h=5, leaves="dark_oak_leaves", log="dark_oak_log")
@@ -583,7 +578,6 @@ def gb_cascadia(rel, L):
                     for y in range(Y, Y + H - 1):
                         for z in (zw1 - 1, zw2 + 1):
                             d.set(x, y, z, f"{log}[axis=y]")
-                    d.set(x, Y + H - 2, zr1 - 1, lantern()) if False else None
     # hut: toll box against the south wall, middle of the span
     d.hut(16, Y, zr2, "north")
     d.set(15, Y, zr2, "barrel[facing=up,open=false]")
@@ -607,7 +601,6 @@ def gb_cascadia(rel, L):
         for x in range(X1 + 1, X2):
             if d.get(x, Y + 3, zg + 1).endswith("_log[axis=y]"):
                 d.set(x, Y + 3, zg + 1, stair("spruce_stairs", "north"))
-        d.set(X1 + 1, Y, zg, AIR) if False else None
     # banks: firs, boulders, rail fence along the road
     if L >= 2:
         for x, z in ((3, 1), (29, 18), (8, 18)):
@@ -668,16 +661,11 @@ def gbw_cascadia(rel, L):
             d.set(x, 5, z, f"{log}[axis=z]")
         d.set(x, 4, 1, stair("spruce_stairs", "north", "top"))
         d.set(x, 4, D - 2, stair("spruce_stairs", "south", "top"))
-    for x, f in ((0, "west"), (W - 1, "east")):
-        d.sign(x if False else (1 if f == "west" else W - 2) + (-1 if f == "west" else 1), 5, 4, f,
-               ["CASCADIA", "CROSSING"], "spruce") if False else None
     for f, x in (("west", 0), ("east", W - 1)):
         for z in range(3, 6):
             d.set(x, 5, z, "spruce_planks")
-        d.sign(x + (-1 if f == "west" else 1), 5, 4, f, ["CASCADIA", "CROSSING"], "spruce") if False else None
     d.hut(3, 1, 0, "south")
     d.set(2, 1, 0, "barrel[facing=up,open=false]")
-    d.set(4, 1, 0, "spruce_slab[type=bottom,waterlogged=false]") if False else None
     if L == 1:
         for x in (1, W - 2):
             d.set(x, 6, 0, lantern())
@@ -853,7 +841,6 @@ def gb_neoterra(rel, L):
         for x0 in (1, 25):
             for z in (2, 22):
                 d.set(x0 + 2, 1, z, "white_concrete")
-                d.set(x0 + 2, 2, z, "potted_bamboo") if False else None
     if L >= 3:
         for x, z in ((4, 2), (28, 23), (4, 23), (28, 2)):
             tree(d, x, z, h=4, log="birch_log", leaves="birch_leaves", r=2)
@@ -874,7 +861,7 @@ def gb_neoterra(rel, L):
         for x in (1, 31):
             for z in (5, 20):
                 d.set(x, 2, z, "white_concrete")
-                d.set(x, 3, z, "cyan_banner[rotation=0]") if False else d.set(x, 3, z, "end_rod[facing=up]")
+                d.set(x, 3, z, "end_rod[facing=up]")
     gb_place_wings(d, g, wonder_path("grandbridge"))
     connect_walls(d)
     return d
@@ -1107,7 +1094,6 @@ def rg_hearthwood(rel, L):
     # hut in the porch
     d.hut(15, 2, 10, "east")
     d.set(17, 2, 10, "barrel[facing=up,open=false]")
-    d.set(15, 5, 11, lantern(True)) if False else None
     d.set(16, 5, 11, lantern(True))
     # interior: hay mows in the bays, grain bins, sacks
     for x in range(BX1 + 1, BX2):
@@ -1124,9 +1110,6 @@ def rg_hearthwood(rel, L):
             elif z == BZ1 + 1 and far > 3 and x % 3 == 0:
                 d.set(x, 2, z, "barrel[facing=up,open=false]")
                 d.set(x, 3, z, "barrel[facing=up,open=false]") if x % 2 else None
-    for x in range(BX1 + 2, BX2 - 1, 4):
-        if not (14 <= x <= 18):
-            d.set(x, 6, (BZ1 + BZ2) // 2, lantern(True)) if False else None
     for x in (13, 19):
         if BX1 < x < BX2:
             d.set(x, 7, (BZ1 + BZ2) // 2, lantern(True))
@@ -1163,11 +1146,9 @@ def rg_hearthwood(rel, L):
                 d.set(x, ridge + 2, 18, "deepslate_tile_slab[type=bottom,waterlogged=false]")
         for x in (BX1, BX2):
             d.set(x, ridge + 1, 18, "stone_brick_wall")
-        d.set(16, pr + 1, PZ - 1, "stone_brick_wall") if False else None
         # well
         for x, z in ((11, 4), (12, 4), (11, 5), (12, 5)):
             d.set(x, 2, z, "cobblestone_wall")
-        d.set(11, 1, 4, WATER) if False else None
         d.set(11, 3, 4, "oak_fence")
         d.set(12, 3, 5, "oak_fence")
         d.set(11, 4, 4, "oak_slab[type=bottom,waterlogged=false]")
@@ -1244,10 +1225,8 @@ def rgw_hearthwood(rel, L):
     d.door(cx, 1, cz - 3, "north", "dark_oak")
     d.set(cx, 3, cz - 3, "dark_oak_planks") if H >= 3 else None
     d.hut(*g["whut"], facing="east")
-    d.set(cx, H, cz - 2, lantern(True)) if False else None
     # flight holes (pigeon entrances) under the eaves
     for x, z in ((cx, cz + 3), (cx - 3, cz), (cx + 3, cz)):
-        d.set(x, H - 1, z, "dark_oak_trapdoor[facing=north,half=bottom,open=true,powered=false,waterlogged=false]") if False else None
         d.set(x, H - 1, z, AIR)
     # eaves ring + conical roof
     top = cone(d, cx, cz, 4.0, H + 1, "deepslate_tile_stairs", "deepslate_tiles", step=0.75 if L < 3 else 0.6,
@@ -1260,8 +1239,6 @@ def rgw_hearthwood(rel, L):
         top += 2
     d.set(cx, top + 1, cz, "dark_oak_fence")
     d.set(cx, top + 2, cz, "lightning_rod[facing=up,powered=false,waterlogged=false]" if L >= 5 else "dark_oak_fence")
-    if L >= 2:
-        d.set(cx - 2, 1, cz - 4, "potted_red_tulip") if False else None
     connect_walls(d)
     return d
 
@@ -1308,7 +1285,6 @@ def rg_cascadia(rel, L):
     for fy in range(7, T, 5):
         d.fill(X1 + 1, fy, Z1 + 1, X2 - 1, fy, Z2 - 1, "spruce_planks")
     for y in range(2, T + 1):
-        d.set(X1 + 1, y, Z2 - 1, "ladder[facing=north,waterlogged=false]") if False else None
         d.set(X2 - 1, y, Z2 - 1, "ladder[facing=north,waterlogged=false]")
     # small windows
     for y in range(9, T - 1, 5):
@@ -1361,7 +1337,6 @@ def rg_cascadia(rel, L):
     d.set(15, 0, 9, "hopper[enabled=true,facing=down]")
     d.hut(SX1 + 1, 2, Z1 - 1, "south")
     d.set(SX2 - 1, 2, Z1 - 1, "composter[level=8]")
-    d.set(SX2 - 1, 3, Z1 - 1, lantern()) if False else None
     d.set(15, 5, 10, lantern(True)) if d.air(15, 5, 10) else None
     # inside the workfloor: grain cleaner (composter), sacks, scale
     d.set(X1 + 1, 2, Z1 + 1, "barrel[facing=up,open=false]")
@@ -1379,7 +1354,7 @@ def rg_cascadia(rel, L):
             z = Z1 - 1 - i
             if z < 3 or y < 5:
                 break
-            d.set(15, y, z, "chain[axis=y,waterlogged=false]") if False else d.set(15, y, z, "spruce_fence")
+            d.set(15, y, z, "spruce_fence")
         # a grain boxcar on the siding
         for x in range(3, 9):
             d.set(x, 3, 2, "mangrove_planks" if x not in (3, 8) else "dark_oak_planks")
@@ -1391,9 +1366,6 @@ def rg_cascadia(rel, L):
                 d.set(x, 5, z, "dark_oak_slab[type=bottom,waterlogged=false]")
         for x in range(3, 9):
             d.set(x, 2, 2, "rail[shape=east_west,waterlogged=false]")
-        for x in (4, 7):
-            for z in (1, 3):
-                d.set(x, 2, z, "polished_blackstone_button[face=floor,facing=north,powered=false]") if False else None
     if L >= 4:                                             # conveyor galleries to the silos
         gy = SILO_H[L] + 1
         for x in (10, 20):
@@ -1458,14 +1430,12 @@ def rgw_cascadia(rel, L):
     d.hut(*g["whut"], facing="east")
     # chute door strip up the front (the classic column of little doors)
     for y in range(3, H, 2):
-        d.set(cx, y, cz - 3, "spruce_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]") if False else None
         d.set(cx, y, cz - 3, "spruce_planks")
     for y in range(3, H + 1):
         d.set(cx - 1, y, cz - 4, "ladder[facing=north,waterlogged=false]")
     # interior: a grain heap and a lantern
     d.set(cx, 1, cz + 1, "hay_block[axis=y]")
     d.set(cx + 1, 1, cz + 1, "hay_block[axis=y]")
-    d.set(cx, 4, cz, lantern(True)) if False else None
     d.set(cx, H, cz, "spruce_planks")
     d.set(cx, H - 1, cz, lantern(True))
     top = cone(d, cx, cz, 3.6, H + 1, "deepslate_tile_stairs", "deepslate_tiles", step=0.9, solid="deepslate_tiles")
@@ -1551,7 +1521,7 @@ def rg_neoterra(rel, L):
             if not edge and z > 13:
                 pass
         if z % 3 == 0:
-            d.set(16, 4, z, "end_rod[facing=down]") if False else d.set(16, 5, z, "sea_lantern")
+            d.set(16, 5, z, "sea_lantern")
     for y in range(2, 4):
         d.set(16, y, VZ1, AIR)
     d.set(16, 2, VZ1, "iron_door[facing=south,half=lower,hinge=left,open=false,powered=false]")
@@ -1568,7 +1538,6 @@ def rg_neoterra(rel, L):
                 if 15 <= x <= 17 and 2 <= y <= 4:
                     continue
                 d.set(x, y, z, "light_gray_concrete" if x in (PX1, PX2) or z == PZ1 or y == ytop else SOLIDB)
-            d.set(x, ytop + 1, z, "smooth_stone_slab[type=bottom,waterlogged=false]") if False else None
     for z in range(PZ1, PZ2 + 1):                         # smooth sloping top
         ytop = 12 - (z - PZ1)
         for x in range(PX1, PX2 + 1):
@@ -1596,9 +1565,7 @@ def rg_neoterra(rel, L):
     d.set(16, 3, PZ1, "iron_door[facing=north,half=upper,hinge=left,open=false,powered=false]")
     d.set(16, 4, PZ1, "glass_pane")
     d.hut(15, 2, PZ1 + 2, "east")
-    d.sign(17, 4, PZ1 - 1, "north", ["NEOTERRA", "SEED VAULT"], "birch", glow=True, color="cyan") if False else None
     d.sign(13, 3, PZ1 - 1, "north", ["NEOTERRA", "SEED VAULT"], "birch", glow=True, color="cyan")
-    d.set(17, 2, PZ1 + 2, "light_gray_concrete") if False else None
     # ---- research pavilion (L3+) and greenhouse (L4+)
     if L >= 3:
         x1, x2, z1, z2 = 23, 31, 9, 16
@@ -1622,13 +1589,12 @@ def rg_neoterra(rel, L):
         for x in range(x1 + 1, x2):
             d.set(x, 2, z2 - 1, "smooth_quartz_slab[type=top,waterlogged=false]") if x % 3 else None
         d.set(x1 + 2, 2, z2 - 2, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]")
-        d.set(x1 + 3, 2, z2 - 1, "birch_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]") if False else None
         d.set(x2 - 1, 2, z1 + 1, "potted_bamboo")
         for x in range(x1 + 2, x2 - 1, 3):
             d.set(x, 5, (z1 + z2) // 2, "sea_lantern")
         for x in range(x1 + 1, x2):
             if x % 3 == 0:
-                d.set(x, 3, z2 - 1, "flower_pot") if False else d.set(x, 3, z2 - 1, "potted_fern")
+                d.set(x, 3, z2 - 1, "potted_fern")
     if L >= 4:
         x1, x2, z1, z2 = 1, 9, 9, 16
         for x in range(x1, x2 + 1):
@@ -1659,9 +1625,8 @@ def rg_neoterra(rel, L):
                 d.set(x, 1, 9, "white_concrete")
         for x in (11, 21):
             for y in range(2, 9):
-                d.set(x, y, 2, "white_concrete_wall") if False else d.set(x, y, 2, "iron_bars")
+                d.set(x, y, 2, "iron_bars")
             d.set(x, 9, 2, "sea_lantern")
-            d.banner(x, 7, 3, "south", "cyan") if False else None
         for x in range(10, 23, 3):
             d.set(x, 1, 0, "sea_lantern")
     gr_place_wings(d, g, wonder_path("royalgranary"))

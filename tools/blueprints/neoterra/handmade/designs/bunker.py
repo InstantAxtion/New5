@@ -46,7 +46,7 @@ def H(x, y, z, salt=0):
 # door:  (x, z, deck, minL, kind)  kind: 'door' (wooden door) / 'open' (plain opening) / 'vault' (framed opening)
 PLANS = {
     "Neoterra": dict(
-        size=(33, 36, 33),
+        size=(33, 40, 33),
         ramp=(15, 3, 5),                     # x0, width, first step z  (descends south, 6 steps)
         hut=(13, 19, 14),
         well=(15, 27),
@@ -70,7 +70,7 @@ PLANS = {
         vent=(31, 13),
     ),
     "Hearthwood": dict(
-        size=(29, 36, 33),
+        size=(29, 40, 33),
         ramp=(2, 2, 4),
         hut=(4, 19, 12),
         well=(16, 14),
@@ -95,7 +95,7 @@ PLANS = {
         vent=None,
     ),
     "Cascadia": dict(
-        size=(33, 36, 29),
+        size=(33, 40, 29),
         ramp=(15, 3, 9),
         hut=(19, 19, 15),
         well=(15, 19),
@@ -1433,7 +1433,7 @@ def neoterra(rel, L):
         dxs = min(x - x1, x2 - x)
         for z in range(z1, z2 + 1):
             if dxs == 0:
-                d.set(x, top, z, st("smooth_stone_stairs", "east" if x == x1 else "west"))
+                d.set(x, top, z, st("stone_stairs", "east" if x == x1 else "west"))
                 d.set(x, top - 1, z, "light_gray_concrete")
     # portal opening at the front with hazard stripes
     for y in range(SW, SW + 3):
@@ -1485,13 +1485,13 @@ def neoterra(rel, L):
     # bollards and planters along the approach
     for x in (10, 22):
         for z in (0, 4):
-            d.set(x, SW, z, "polished_andesite_wall")
+            d.set(x, SW, z, "andesite_wall")
     for z in (6, 9):
         d.set(9, SW, z, "potted_bamboo")
         d.set(23, SW, z, "potted_bamboo")
     if L >= 2:              # periscope / air intake mushroom heads on the lawn
         for (px, pz) in ((5, 20), (27, 26)):
-            d.set(px, SW, pz, "polished_andesite_wall")
+            d.set(px, SW, pz, "andesite_wall")
             d.set(px, SW + 1, pz, "iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
     if L >= 3:              # solar field on frames
         for z in range(18, 30, 3):
@@ -1521,11 +1521,11 @@ def neoterra(rel, L):
         mx, mz = 6, 12
         d.set(mx, SW, mz, "polished_andesite")
         for y in range(SW + 1, SW + 10):
-            d.set(mx, y, mz, "iron_bars" if y % 3 else "polished_andesite_wall")
+            d.set(mx, y, mz, "iron_bars" if y % 3 else "andesite_wall")
         d.set(mx, SW + 10, mz, "redstone_lamp[lit=true]")
         d.set(mx, SW + 11, mz, "lightning_rod[facing=up,powered=false,waterlogged=false]")
         for dx, dz in D4.values():
-            d.set(mx + dx, SW, mz + dz, "polished_andesite_wall")
+            d.set(mx + dx, SW, mz + dz, "andesite_wall")
     return d
 
 
