@@ -1875,7 +1875,7 @@ def al_cascadia(rel, L):
     for i, (x, y, z) in enumerate(stands):
         if i < L:
             d.item(x, y, z, "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]")
-        elif d.get(x, y - 1, z) != AIR:
+        elif "slab" in d.get(x, y - 1, z) and d.air(x, y, z):
             d.set(x, y, z, "flower_pot" if i % 2 else "potted_red_mushroom")
     racks = [(x1 + 1, 2, z1 + 3, "east"), (x1 + 1, 2, z1 + 4, "east"), (x1 + 2, 2, z1 + 1, "south"),
              (x1 + 3, 2, z1 + 1, "south"), (x1 + 1, 2, z1 + 2, "east")]

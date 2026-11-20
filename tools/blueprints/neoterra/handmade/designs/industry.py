@@ -1160,7 +1160,7 @@ def mc_cascadia(rel, L):
     d.set(11, 2, z2 - 1, slab("spruce_slab", "top"))
     hooks(d, [(x, z2 - 1) for x in range(7, X2)], 4, "north")
     loft = L >= 3
-    gr = [(12, 2, z2 - 1, "north"), (X2 - 1, 2, z2 - 1, "west"), (X2 - 1, 2, z2 - 2, "west")]
+    gr = [(12, 2, z2 - 1, "north"), (X2 - 1, 2, z2 - 2, "west"), (X2 - 1, 2, z2 - 3, "west")]
     lr = [(x, 6, z2 - 1, "north") for x in range(x1 + 2, x1 + 6)]
     racks(d, gr + lr)
     for x in range(7, X2, 4):
@@ -1383,7 +1383,7 @@ def sn_cascadia(rel, L):
     cells = [(x, 2, 11, "north") for x in range(5, 17, 2)] + [(6, 2, 13, "south"), (10, 2, 13, "south")]
     rest = place(d, "stonecutter", cells)
     d.hut(x1 + 1, 2, z1 + 1)
-    racks(d, [(x, 2, z2 - 1, "north") for x in (12, 13, 14, 15, 16, 4)])
+    racks(d, [(x, 2, z2 - 1, "north") for x in (12, 13, 14, 15, 16, 11)])
     if need(d, "grindstone"):
         d.item(x2 - 1, 2, 13, "grindstone", "west")
     for x in range(5, 17, 4):
@@ -1447,7 +1447,7 @@ def sn_neoterra(rel, L):
         d.set(x, 3, z1 + 2, ["polished_granite", "polished_diorite", "polished_andesite", "polished_deepslate",
                              "polished_tuff"][i % 5])
     d.hut(x1 + 1, 2, z1 + 1)
-    d.item(x2 - 2, 2, z1 + 4, "crafting_table")
+    d.item(x2 - 2, 2, z1 + 3, "crafting_table")
     # glass screen between showroom and cutting hall
     for x in range(x1 + 1, x2):
         if x not in (8, 9, 10):

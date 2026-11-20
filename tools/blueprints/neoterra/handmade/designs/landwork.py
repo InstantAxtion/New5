@@ -887,7 +887,7 @@ def fisherman_neoterra(rel, L):
     d.chair(8, 2, 6, "north", "birch", sit=False)
     for x in (6, 9):
         d.set(x, 5, 8, "sea_lantern")
-    d.plant(x1 + 1, 2, z2 - 1, "potted_bamboo")
+    d.plant(x2 - 1, 2, z1 + 1, "potted_bamboo")
     # ---- L2: south deck with benches and bollards ----
     if L >= 2:
         d.fill(x1, 1, z2 + 1, x2, 1, z2 + 4, "mangrove_planks")

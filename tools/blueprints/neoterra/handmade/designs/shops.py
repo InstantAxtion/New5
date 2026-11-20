@@ -926,7 +926,7 @@ def cookery_hw(rel, L):
     for x, z in perim(x1, z1, x2, z2):
         if (x * 3 + z * 5) % 7 == 0:
             d.set(x, 3, z, "mossy_stone_bricks")
-        d.set(x, y0, z, "cobblestone" if (x + z) % 3 else "mossy_cobblestone")
+        d.set(x, y0, z, "stone_bricks" if (x + z) % 3 else "mossy_stone_bricks")
         d.set(x, y1, z, "stone_bricks")
     for x, z in ((x1, z1), (x2, z1), (x1, z2), (x2, z2)):     # corner buttresses
         dx = -1 if x == x1 else 1
@@ -974,7 +974,7 @@ def cookery_hw(rel, L):
     # central work table with produce
     for x in range(9, 12):
         for z in (9, 10):
-            d.set(x, y0, z, sl("spruce", "top"))
+            d.set(x, y0, z, sl("dark_oak", "top"))
     d.set(9, 3, 9, CAKE)
     d.set(11, 3, 10, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
     d.set(10, 3, 9, "pumpkin")
@@ -983,11 +983,11 @@ def cookery_hw(rel, L):
     for i, z in enumerate((7, 8, 9, 11, 12)):
         if i < L:
             d.rack(x2 - 1, y0, z, "west")
-        d.set(x2 - 1, 4, z, sl("spruce", "top"))
+        d.set(x2 - 1, 4, z, sl("dark_oak", "top"))
         d.set(x2 - 1, 5, z, "decorated_pot[cracked=false,facing=west,waterlogged=false]" if z % 2 else "carved_pumpkin[facing=west]")
     d.hut(x1 + 1, y0, z1 + 1)
     d.set(x2 - 1, y0, z1 + 1, "barrel[facing=up,open=false]")
-    d.set(x2 - 2, y0, z1 + 1, "hay_block[axis=y]")
+    d.set(x2 - 2, y0, z1 + 1, "white_wool")
     for x, z in ((8, 8), (12, 8), (8, 12), (12, 12)):
         d.set(x, y1, z, "chain[axis=y,waterlogged=false]")
         d.set(x, y1 - 1, z, lant())
@@ -996,7 +996,7 @@ def cookery_hw(rel, L):
     # L2+: larder lean-to on the east with hanging hams (hay) and casks
     if L >= 2:
         lx1, lx2 = x2, x2 + 5
-        d.box(lx1, y0, 7, lx2, 4, 13, "stone_bricks", floor="cobblestone")
+        d.box(lx1, y0, 7, lx2, 4, 13, "stone_bricks", floor="stone_bricks")
         roof(d, lx1, 7, lx2, 13, 5, "x", "deepslate_tile", "deepslate_tile_slab", "stone_bricks", keep=True,
              ends=(0, 1))
         d.set(x2, y0, 10, AIR)
@@ -1006,7 +1006,7 @@ def cookery_hw(rel, L):
             d.keg(lx2 - 1, y0, z, "west")
             d.keg(lx2 - 1, 3, z, "west")
         d.set(lx1 + 2, 4, 11, lant())
-        d.set(lx1 + 1, y0, 12, "hay_block[axis=y]")
+        d.set(lx1 + 1, y0, 12, "white_wool")
         d.set(lx1 + 1, y0, 8, "pumpkin")
         d.window(lx2, 3, 10, lx2, 3, 10)
     # L3+: scullery / well-house on the west (open timber shed with a well)
@@ -1017,12 +1017,12 @@ def cookery_hw(rel, L):
         roof(d, 1, 6, 4, 14, 5, "z", "deepslate_tile", "deepslate_tile_slab", None, keep=True, ends=(1, 1), oh=1)
         for x in range(1, 5):
             for z in range(6, 15):
-                d.set(x, 1, z, "cobblestone")
+                d.set(x, 1, z, "stone_bricks")
         for x in (2, 3):
             for z in (9, 10):
                 d.set(x, 1, z, "water")
         for x, z in perim(1, 8, 4, 11):
-            d.set(x, 2, z, "cobblestone_wall")
+            d.set(x, 2, z, "stone_brick_wall")
         for x in (2, 3):
             for z in (9, 10):
                 d.set(x, 2, z, AIR)
@@ -1070,7 +1070,7 @@ def cookery_cas(rel, L):
     for y in range(6, ridge):
         for x in range(x1 + 1, x2):
             if d.get(x, y, z1) == "minecraft:spruce_planks" and x % 2 == 0:
-                d.set(x, y, z1, lg("stripped_dark_oak_log"))
+                d.set(x, y, z1, lg("dark_oak_log"))
     d.door(8, y0, z1, "south", "spruce")
     d.sign(8, 5, z1 - 1, "north", ["CAMP", "COOKHOUSE"], "spruce")
     for x in (6, 10):
@@ -1099,12 +1099,12 @@ def cookery_cas(rel, L):
             d.keg(x1 + 1, y0, z, "east")
     for z in range(7, 13):
         d.set(x2 - 1, y0, z, sl("spruce", "top"))
-    d.set(x2 - 1, 3, 8, "pumpkin")
-    d.set(x2 - 1, 3, 10, "melon")
-    d.set(x2 - 1, 3, 12, "decorated_pot[cracked=false,facing=west,waterlogged=false]")
+    d.set(x2 - 1, 3, 8, "dried_kelp_block")
+    d.set(x2 - 1, 3, 10, "brown_mushroom_block[down=true,east=true,north=true,south=true,up=true,west=true]")
+    d.set(x2 - 1, 3, 12, "potted_brown_mushroom")
     for z in (10, 11):
         d.set(8, y0, z, "stripped_spruce_wood[axis=y]")
-    d.set(8, 3, 10, CAKE)
+    d.set(8, 3, 10, "lantern[hanging=false,waterlogged=false]")
     d.hut(x1 + 1, y0, z1 + 1)
     d.set(x1 + 1, y0, 12, "hay_block[axis=y]")
     for z in (8, 12):

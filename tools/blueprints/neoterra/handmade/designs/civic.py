@@ -780,8 +780,9 @@ def townhall_cascadia(rel, L):
     if L >= 2:
         d.fill(X1 + 1, Y0, 18, X2 - 1, 6, 18, log(lg, "x"))
         d.door(X1 + 3, Y0, 18, "south", "spruce")
-        col = ["furnace", "blast_furnace", "smoker", "water_cauldron", "brewing_stand", "anvil", "grindstone",
-               "anvil" if need(d, "anvil") > 1 else None]
+        col = ["furnace", "blast_furnace", "smoker", "water_cauldron", "brewing_stand", "anvil", "grindstone"]
+        if need(d, "anvil") > 1:                                    # second anvil free-standing mid-floor
+            d.item(mid, Y0, 23, "anvil", "east")
         for i, it in enumerate(col):
             z = 20 + i
             if it == "water_cauldron":
