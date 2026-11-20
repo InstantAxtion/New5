@@ -73,9 +73,9 @@ BASE = dict(
         ("ops", "A", 42, 28, 52, 34, 3),
         ("laundry", "A", 2, 36, 12, 40, 3),
         ("lab", "A", 14, 36, 24, 40, 3),
-        ("gym", "A", 30, 36, 40, 40, 4),
+        ("gym", "A", 30, 36, 40, 40, 3),
         ("office", "A", 42, 36, 52, 40, 4),
-        ("chapel", "A", 2, 46, 12, 52, 4),
+        ("chapel", "A", 2, 46, 12, 52, 3),
         ("bunks", "A", 14, 46, 24, 52, 5),
         ("store", "A", 30, 46, 40, 52, 4),
         ("canteen", "A", 42, 46, 52, 52, 4),
@@ -95,10 +95,10 @@ BASE = dict(
         ("store", "B", 14, 28, 24, 34, 4),
         ("cistern", "B", 34, 28, 40, 34, 5),
         ("server", "B", 42, 28, 52, 34, 5),
-        ("reactor", "B", 2, 36, 12, 44, 5),
-        ("turbine", "B", 14, 36, 24, 44, 5),
-        ("hydro", "B", 30, 36, 40, 44, 5),
-        ("bunks", "B", 42, 36, 52, 44, 5),
+        ("reactor", "B", 2, 36, 12, 44, 4),
+        ("turbine", "B", 14, 36, 24, 44, 4),
+        ("hydro", "B", 30, 36, 40, 44, 4),
+        ("bunks", "B", 42, 36, 52, 44, 4),
         ("fabrication", "B", 2, 46, 12, 52, 5),
         ("records", "B", 14, 46, 24, 52, 5),
         ("mess", "B", 33, 46, 40, 52, 5),
@@ -115,7 +115,7 @@ BASE = dict(
         ("power", "B", 42, 46, 52, 52, 5),
     ],
     doors=[(45, 5, "A", 4, "door"), (13, 49, "B", 5, "door"), (41, 49, "B", 5, "door"), (7, 15, "B", 4, "door"), (47, 15, "B", 4, "door"),
-           (13, 40, "B", 5, "door"), (41, 40, "B", 5, "door"), (29, 46, "B", 5, "open"), (31, 45, "C", 5, "open"),
+           (13, 40, "B", 4, "door"), (41, 40, "B", 4, "door"), (36, 45, "B", 5, "door"), (29, 46, "B", 5, "open"), (31, 45, "C", 5, "open"),
            (29, 28, "A", 2, "open"), (31, 27, "B", 2, "open")],
     child_huts={"kitchen": (24, 16), "clinic": (12, 16), "school": (2, 34), "farm": (30, 16)},
 )
@@ -1583,7 +1583,10 @@ def f_generic(d, R, M, L, pack, kind):
         for j, (x, z) in enumerate(cells):
             if (x, z) in protect or not d.air(x, R.y, z) or j % 4 == 3 or j in (0, len(cells) - 1):
                 continue
-            w_recipe(walls[i % len(walls)], d, x, R.y, z, INTO[side], pack, M, i, R.top)
+            rec = walls[i % len(walls)]
+            if rec == "bed" and (j <= 1 or j >= len(cells) - 2):
+                rec = "shelf"
+            w_recipe(rec, d, x, R.y, z, INTO[side], pack, M, i, R.top)
             i += 1
     if not center:
         return
@@ -2071,7 +2074,8 @@ def neoterra(rel, L):
                     glass="glass_pane", door="cherry", stairs="birch_stairs", rail="birch_fence", shutter="cherry")
         building(d, pal3, 3, 45, 17, 53, 2, (10, 45, "north"), ["bunkhouse", "canteen"], L, "modern")
         for x in range(4, 17, 3):
-            d.set(x, SW, 44, "potted_bamboo" if x % 2 else "andesite_wall")
+            if x != 10:
+                d.set(x, SW, 44, "potted_bamboo" if x % 2 else "andesite_wall")
         # water tower
         wx, wz = 24, 47
         for y in range(SW, SW + 7):
@@ -2248,8 +2252,16 @@ def hearthwood(rel, L):
                    trim="stripped_dark_oak_log", floor="oak_planks", roof="granite", gable="white_terracotta",
                    accent="dark_oak_planks", glass="glass_pane", door="crimson", stairs="dark_oak_stairs",
                    rail="dark_oak_fence", shutter="warped", chimney="bricks")
-        building(d, pal, 3, 41, 15, 51, 2, (9, 41, "north"), ["parlour", "bedroom"], L, "tudor", "gable",
+        building(d, pal, 3, 41, 15, 51, 3, (9, 41, "north"), ["parlour", "office", "bedroom"], L, "tudor", "gable",
                  chimney=(2, 46))
+        pal = dict(wall="yellow_terracotta", wall2="yellow_terracotta", plinth="stone_bricks", trim="stripped_oak_log",
+                   floor="oak_planks", roof="dark_prismarine", gable="yellow_terracotta", accent="oak_planks",
+                   glass="glass_pane", door="warped", stairs="oak_stairs", rail="oak_fence", shutter="mangrove",
+                   chimney="bricks")
+        building(d, pal, 52, 3, 59, 12, 2, (55, 12, "south"), ["parlour", "bedroom"], L, "tudor", "gable",
+                 chimney=(60, 7))
+        flowerbed(d, 52, 13, 54, 14, 7)
+        flowerbed(d, 57, 13, 59, 14, 8)
         flowerbed(d, 3, 39, 7, 39, 5)
         flowerbed(d, 11, 39, 15, 39, 6)
     if L >= 5:              # tithe barn (mud brick and oak frame, brown tile roof) and the bell tower
@@ -2257,7 +2269,9 @@ def hearthwood(rel, L):
                    floor="spruce_planks", roof="mud_brick", gable="white_terracotta", accent="oak_planks",
                    glass="glass_pane", door="crimson", stairs="spruce_stairs", rail="spruce_fence",
                    shutter="crimson", chimney="cobblestone")
-        building(d, pal, 40, 32, 56, 42, 2, (48, 32, "north"), ["store", "bunkhouse"], L, "tudor", "gable")
+        building(d, pal, 40, 32, 56, 42, 3, (48, 32, "north"), ["store", "bunkhouse", "store"], L, "tudor", "gable")
+        for (tx, tz) in ((44, 15), (50, 15), (56, 18), (20, 47), (24, 52)):
+            tree(d, tx, tz, SW, "oak", 4)
         tx, tz = 6, 34
         for y in range(SW, SW + 16):
             for ax in range(0, 5):
@@ -2360,6 +2374,11 @@ def cascadia(rel, L):
     for x in range(0, 14):
         d.set(x, SW, 0, "spruce_fence") if x % 6 else None
     d.set(24, SW, 1, "water_cauldron[level=3]")
+    if L >= 2:              # tool shed: weathered stripped spruce, spruce roof
+        pal = dict(wall="stripped_spruce_log", wall2="stripped_spruce_log", plinth="cobblestone", trim="spruce_log",
+                   floor="spruce_planks", roof="spruce", gable="spruce_planks", accent="spruce_planks",
+                   glass="glass_pane", door="spruce", stairs="spruce_stairs", rail="spruce_fence", shutter="spruce")
+        building(d, pal, 2, 18, 9, 25, 1, (5, 18, "north"), ["smithy"], L, "timber", "gable")
     if L >= 2:              # ore carts, lamp posts, a split-rail fence
         for (cx, cz) in ((x0 + 1, 0),):
             d.set(cx + 2, SW, cz, "barrel[facing=up,open=false]")
@@ -2391,7 +2410,8 @@ def cascadia(rel, L):
                    floor="spruce_planks", roof="dark_prismarine", gable="mangrove_planks", accent="green_terracotta",
                    glass="glass_pane", door="spruce", stairs="spruce_stairs", rail="spruce_fence", shutter="spruce",
                    chimney="cobblestone")
-        building(d, pal, 42, 2, 53, 12, 1, (47, 2, "north"), ["cookhouse"], L, "timber", "gable", chimney=(54, 7))
+        building(d, pal, 42, 2, 53, 12, 2, (47, 2, "north"), ["cookhouse", "bunkhouse"], L, "timber", "gable",
+                 chimney=(54, 7))
         # headframe over the old shaft: timber A-frame with sheave
         hx, hz = 47, 22
         for y in range(SW, SW + 12):
@@ -2407,18 +2427,28 @@ def cascadia(rel, L):
         for y in range(SW, SW + 12):
             d.set(hx, y, hz, "chain[axis=y,waterlogged=false]")
         d.set(hx, GY, hz, "cobblestone")
+    if L >= 4:              # powder magazine: river-rock walls, stone-brick roof, red barn-paint door trim
+        pal = dict(wall="mossy_cobblestone", wall2="cobblestone", plinth="tuff", trim="cobblestone",
+                   floor="stone", roof="stone_brick", gable="cobblestone", accent="red_terracotta",
+                   glass="iron_bars", door="mangrove", stairs="stone_stairs", rail="spruce_fence", shutter="mangrove")
+        building(d, pal, 2, 28, 9, 35, 1, (5, 28, "north"), ["store"], L, "timber", "gable")
+        for (bx, bz) in ((41, 19), (41, 25)):              # ore bins by the headframe
+            for ax in range(3):
+                for y in range(SW, SW + 3):
+                    d.set(bx - ax, y, bz, "spruce_planks" if y < SW + 2 else "spruce_slab[type=bottom,waterlogged=false]")
+            d.set(bx - 1, SW + 2, bz, "gravel")
     if L >= 4:              # hoist house by the headframe: dark oak, slate roof, mustard trim
         pal = dict(wall="dark_oak_planks", wall2="dark_oak_planks", plinth="andesite", trim="stripped_spruce_log",
                    floor="spruce_planks", roof="deepslate_tile", gable="dark_oak_planks", accent="yellow_terracotta",
                    glass="glass_pane", door="spruce", stairs="spruce_stairs", rail="spruce_fence", shutter="spruce",
                    chimney="cobblestone")
-        building(d, pal, 42, 27, 52, 35, 1, (47, 27, "north"), ["hoist"], L, "timber", "gable")
+        building(d, pal, 42, 27, 52, 35, 2, (47, 27, "north"), ["hoist", "office"], L, "timber", "gable")
     if L >= 5:              # general store & assay office: rose cherry siding, red cedar roof, green trim
         pal = dict(wall="cherry_planks", wall2="stripped_spruce_log", plinth="mossy_cobblestone",
                    trim="spruce_log", floor="spruce_planks", roof="mangrove", gable="cherry_planks",
                    accent="green_terracotta", glass="glass_pane", door="spruce", stairs="spruce_stairs",
                    rail="spruce_fence", shutter="spruce", chimney="cobblestone")
-        building(d, pal, 38, 44, 52, 56, 2, (45, 44, "north"), ["store", "office"], L, "timber", "gable",
+        building(d, pal, 38, 44, 52, 56, 3, (45, 44, "north"), ["store", "office", "bunkhouse"], L, "timber", "gable",
                  chimney=(53, 50))
         for x in range(38, 53):
             d.set(x, GY, 42, "spruce_planks")
@@ -2430,7 +2460,19 @@ def cascadia(rel, L):
                    floor="spruce_planks", roof="spruce", gable="birch_planks", accent="yellow_terracotta",
                    glass="glass_pane", door="spruce", stairs="spruce_stairs", rail="spruce_fence",
                    shutter="bamboo", chimney="cobblestone")
-        building(d, pal, 2, 42, 16, 54, 2, (9, 42, "north"), ["mill", "hoist"], L, "timber", "gable")
+        building(d, pal, 2, 42, 16, 54, 3, (9, 42, "north"), ["mill", "hoist", "store"], L, "timber", "gable")
+        # meeting hall: stripped logs with dark-oak trim under a teal (weathered copper look) roof
+        pal = dict(wall="stripped_spruce_log", wall2="dark_oak_planks", plinth="tuff", trim="dark_oak_log",
+                   floor="spruce_planks", roof="warped", gable="stripped_spruce_log", accent="dark_oak_planks",
+                   glass="glass_pane", door="dark_oak", stairs="dark_oak_stairs", rail="dark_oak_fence",
+                   shutter="dark_oak", chimney="cobblestone")
+        building(d, pal, 19, 40, 35, 54, 2, (27, 40, "north"), ["lobby", "bunkhouse"], L, "timber", "gable",
+                 chimney=(36, 47))
+        for x in range(19, 36):
+            d.set(x, GY, 38, "spruce_planks")
+            d.set(x, GY, 39, "spruce_planks")
+        for x in (19, 35):
+            lamp_post(d, x, 37, "spruce_fence", "lantern[hanging=false,waterlogged=false]", 3)
         top = max(knoll.values())
         tx, tz = 27, 21
         base = SW + knoll.get((tx, tz), top)

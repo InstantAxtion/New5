@@ -2766,7 +2766,7 @@ def grow_twin_hw(d, L):
                    doors=[(43, 17, "north"), (33, 24, "west")], st=HW_YARD_JOINERY)
         d.sign(43, 5, 16, "north", ["Joinery"], "dark_oak")
         for x in range(35, 52, 2):                     # seasoned boards stacked on bearers by the shop
-            pallet_stack(d, x, 33, 2, "oak_planks" if x % 4 == 1 else "spruce_planks", 4,
+            pallet_stack(d, x, 33, 2, "oak_planks" if x % 4 == 1 else "spruce_planks", 5,
                          "oak_slab[type=bottom,waterlogged=false]")
         lamp_post(d, 33, 33, 2, P, 3)
         for x in range(31, 33):

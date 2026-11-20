@@ -2466,14 +2466,14 @@ def hall(d, pack, kind, x1, z1, size):
         deck = "light_gray_concrete" if pack == "Neoterra" else "spruce_planks"
         d.fill(x1 + 1, 6, z1 + 1, x2 - 1, 6, z2 - 1, deck)
         for x in range(x1 + 2, x2 - 1):
-            for z in (z1 + 1, z2 - 1):
+            for z in ((z1 + 1, z2 - 1) if pack == "Neoterra" else (z1 + 2, z2 - 2)):
                 if pack == "Neoterra":
                     d.set(x, 7, z, "barrel[facing=up,open=false]" if x % 3 else "white_concrete")
                     d.set(x, 8, z, "potted_bamboo" if x % 3 == 0 else AIR)
                 else:
                     hay(d, x, 7, z, "x")
-                    if x % 2 and pack == "Cascadia":
-                        hay(d, x, 8, z, "x")
+                    if x % 2:
+                        hay(d, x, 7, z + (1 if z < zc else -1), "x")
         for x in range(x1 + 3, x2 - 2, 4):
             if pack == "Neoterra":
                 d.set(x, 7, zc - 1, "white_concrete")
@@ -3134,7 +3134,8 @@ def farmstead(core, pack, rel, L, kind):
     if L >= 4:
         path(d, 0, ez + 1, ex, ez + 1, lane)
         wr = range(11, ex - 3, 2)
-        ws = [(w, False, 9) for w in wr] + [(w, True, 9) for w in wr] + [(w, True, 11) for w in wr]
+        ws = [(w, False, 9) for w in wr] + [(w, True, 9) for w in wr] + [(w, True, 11) for w in wr] + \
+            [(wr[-1], True, 13)]
         if L == 4:
             _SIZES[(core.__name__, pack, 4)] = _grow(d, target, ws, lambda w: hall(d, pack, kind, 2, ez + 2, w))
         else:

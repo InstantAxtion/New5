@@ -468,6 +468,7 @@ KITS = {
     "office": ["books", "candleshelf", "lectern", "carto", "plant", "books", "chest"],
     "dorm": ["chest", "candleshelf", "plant", "chest", "books"],
     "gym": ["rack", "hay", "target", "barrel", "rack", "plant"],
+    "deco": ["potshelf", "plant", "chest", "candleshelf", "books", "rack"],
 }
 
 
@@ -712,6 +713,24 @@ def bt_hearthwood(rel, L):
             d.candle(7, y + 1, 4, 2)
         d.rug(3, 3, 5, 5, y, ("red_carpet",), "plain")
         d.lamp(4, y + 2, 4)
+        # footlockers, shelves, banners
+        for x, z in ((4, 1), (4, 7), (1, 5)):
+            if d.air(x, y, z):
+                d.set(x, y, z, "chest[facing=%s,type=single,waterlogged=false]" % ("south" if z == 1 else "north" if z == 7 else "east"))
+        for x, z in ((6, 2), (2, 2)):
+            if d.air(x, y, z):
+                d.set(x, y, z, SL("spruce", "top"))
+                d.set(x, y + 1, z, "decorated_pot[cracked=false,facing=south,waterlogged=false]" if x == 6 else "potted_red_tulip")
+        put(d, 2, y, 6, "barrel[facing=north,open=false]")
+        for z in (3, 5):
+            put(d, 1, y + 2, z, f"{'red' if z == 3 else 'white'}_wall_banner[facing=east]")
+    # ground floor: rug and a small table
+    d.rug(3, 3, 5, 4, 1, ("red_carpet", "orange_carpet"))
+    d.table(4, 1, 6, "spruce")
+    d.chair(4, 1, 7, "south", "spruce", sit=False) if d.air(4, 1, 7) else None
+    # parapet lanterns
+    for x, z in ((0, 3), (8, 5), (3, 0), (5, 8)):
+        d.set(x, top + 2, z, LANT_S)
     # roof: battlements, brazier, flag at L5
     d.set(6, top + 1, 6, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
     if L >= 4:
@@ -800,6 +819,11 @@ def bt_cascadia(rel, L):
     d.set(2, 1, 6, "spruce_log[axis=z]")
     d.set(2, 2, 6, "spruce_log[axis=z]")
     d.set(3, 3, 3, LANT)
+    d.rug(3, 3, 3, 3, 1, ("brown_carpet",), "plain")
+    put(d, 6, 1, 4, SL("spruce", "top"))
+    put(d, 6, 2, 4, "decorated_pot[cracked=false,facing=west,waterlogged=false]")
+    put(d, 5, 3, 6, "green_wall_banner[facing=north]") if False else None
+    weapon_rack(d, [(2, 4)], 1, "spruce") if d.air(2, 1, 4) else None
     # bunk rooms
     per = split(4 * L, nu, 8)
     for k in range(1, nu + 1):
@@ -811,6 +835,14 @@ def bt_cascadia(rel, L):
                 d.set(x, y, z, "chest[facing=%s,type=single,waterlogged=false]" % ("east" if x == 1 else "west"))
         d.set(3, y + 2, 4, LANT)
         d.set(5, y + 2, 6, LANT)
+        for x in (3, 5):
+            for z in (1, 2, 3, 6, 7):
+                put(d, x, y, z, "brown_carpet" if z % 2 else "green_carpet")
+        put(d, 4, y, 1, "green_carpet")
+        put(d, 4, y + 2, 7, "green_wall_banner[facing=north]")
+        put(d, 4, y + 2, 1, "white_wall_banner[facing=south]")
+        put(d, 4, y + 1, 6, "spruce_trapdoor[facing=south,half=top,open=true,powered=false,waterlogged=false]") \
+            if False else None
     return d
 
 
@@ -870,6 +902,10 @@ def bt_neoterra(rel, L):
         d.set(1, y + 1, 3, "potted_bamboo" if k % 2 else "potted_cactus")
         d.set(5, y, 3, "light_gray_shulker_box[facing=up]")
         d.set(3, y + 2, 4, "sea_lantern")
+        for x, z in ((3, 1), (3, 4), (3, 5), (2, 2), (4, 2), (2, 4), (4, 4)):
+            put(d, x, y, z, "cyan_carpet" if (x + z) % 2 else "light_gray_carpet")
+        put(d, 5, y + 1, 3, "potted_bamboo") if d.get(5, y, 3).endswith("shulker_box[facing=up]") else None
+        put(d, 3, y + 2, 1, "cyan_wall_banner[facing=south]")
     # roof watch post: glass rail, searchlight, antenna
     for x in range(7):
         for z in range(7):
@@ -1818,10 +1854,123 @@ def nt_bar_east(d, L):
         tree(d, 28, 17, 4)
 
 
+
+# ================================================================================================ DECOR PASS
+def shutters(d, cells, y, wood, out):
+    """Open shutters either side of single window columns on a wall (cells = window (x, z))."""
+    ox_, oz_ = OUT[out]
+    sx_, sz_ = (1, 0) if out in ("north", "south") else (0, 1)
+    for x, z in cells:
+        for sgn in (-1, 1):
+            put(d, x + ox_ + sx_ * sgn, y, z + oz_ + sz_ * sgn, TD(wood, out, "bottom", "true"))
+
+
+def dress_barracks(d, L):
+    pk = d.pack
+    if pk == "Hearthwood":
+        furnish(d, "deco", 11, 20, 21, 28, 2, free=[(16, 20), (12, 20), (21, 20), (11, 21), (13, 27), (12, 27)],
+                center=False, lamps=False)
+        for x in range(11, 22):                               # flower border along the hall front
+            if x not in (15, 16, 17):
+                flowerbed(d, x, 18, x, 18)
+        for x in (12, 13, 19, 20):                            # window sills
+            put(d, x, 2, 18, ST("stone_brick", "south", "top")) if False else None
+        bench(d, 6, 17, "west", along="z") if L >= 2 else None
+        cart(d, 22, 16, "x") if L >= 3 else None
+        for x, z in ((24, 17), (25, 17)):
+            put(d, x, 2, z, "barrel[facing=up,open=false]")
+        put(d, 24, 3, 17, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
+        weapon_rack(d, [(6, 6), (6, 7)], 2, "spruce") if d.air(6, 2, 6) and d.air(6, 2, 7) else None
+        lamp_post(d, 13, 17)
+        lamp_post(d, 19, 17)
+    elif pk == "Cascadia":
+        furnish(d, "deco", 12, 14, 20, 20, 2, free=[(16, 14), (13, 14), (12, 15)], center=False, lamps=False)
+        shutters(d, [(13, 13), (19, 13)], 4, "dark_oak", "north")
+        shutters(d, [(13, 21), (19, 21)], 4, "dark_oak", "south")
+        shutters(d, [(11, 15), (11, 19)], 4, "dark_oak", "west")
+        for x in (12, 20):                                    # flower barrels on the porch corners
+            put(d, x, 2, 11, "barrel[facing=up,open=false]") if False else None
+        flowerbed(d, 22, 13, 22, 20)
+        lamp_post(d, 14, 9)
+        lamp_post(d, 18, 9)
+        bench(d, 9, 20, "west", along="z") if L >= 2 else None
+        cart(d, 23, 21, "z") if L >= 2 else None
+    else:
+        for x, z, b in ((10, 22, "potted_bamboo"), (12, 21, "potted_azalea_bush"), (15, 21, "potted_bamboo")):
+            put(d, x, 2, z, b)
+        d.chair(10, 2, 23, "west", "birch", sit=False) if d.air(10, 2, 23) else None
+        for x in range(9, 14):                                # lockers along the armoury back wall upstairs
+            pass
+        for x in range(14, 17):
+            put(d, x, 2, 29, "light_gray_shulker_box[facing=up]")
+        flowerbed(d, 8, 18, 11, 18)
+        flowerbed(d, 15, 18, 18, 18)
+        for x in (7, 19):
+            lamp_post(d, x, 19)
+        bench(d, 4, 21, "west", along="z")
+        bench(d, 22, 21, "east", along="z")
+
+
+def dress_gatehouse(d, L):
+    pk = d.pack
+    if pk == "Hearthwood":
+        furnish(d, "deco", 2, 3, 6, 9, 2, free=[(6, 7), (2, 9), (3, 3), (4, 8), (5, 8)], center=False, lamps=False)
+        furnish(d, "deco", 13, 3, 17, 9, 2, free=[(13, 7), (17, 9), (15, 3), (15, 8), (16, 8)], center=False,
+                lamps=False)
+        for X0, dx in ((1, 6), (12, 13)):
+            furnish(d, "deco", X0 + 1, 3, X0 + 5, 9, 8, free=[(dx, 6), (X0 + 1 if X0 == 1 else X0 + 5, 9)],
+                    center=False, lamps=False)
+        for z in (5, 8):                                      # chained lanterns in the passage
+            d.set(9, 6, z, LANT)
+            d.set(10, 6, z, LANT)
+        d.banner(8, 4, 7, "east", "red") if d.air(8, 4, 7) else None
+        d.banner(11, 4, 7, "west", "red") if d.air(11, 4, 7) else None
+    elif pk == "Cascadia":
+        furnish(d, "deco", 2, 3, 5, 6, 2, free=[(5, 5), (5, 6), (2, 3), (2, 6), (5, 3)], center=False, lamps=False)
+        furnish(d, "deco", 12, 3, 15, 6, 2, free=[(12, 5), (12, 6), (15, 3), (15, 6), (12, 3)], center=False,
+                lamps=False)
+        for X0 in (1, 11):
+            shutters(d, [(X0 + 2, 2)], 9, "dark_oak", "north")
+        for z in (4, 6):
+            d.set(8, 6, z, LANT) if d.air(8, 6, z) else None
+        d.banner(7, 4, 6, "east", "green") if d.air(7, 4, 6) else None
+    else:
+        furnish(d, "deco", 2, 3, 6, 7, 2, free=[(6, 5), (4, 7), (2, 3), (2, 7), (5, 4), (6, 3), (6, 4)],
+                center=False, lamps=False)
+        furnish(d, "deco", 15, 3, 19, 7, 2, free=[(15, 5), (17, 7), (19, 7), (16, 4), (15, 3), (15, 4)],
+                center=False, lamps=False)
+        for X0, dx, lx in ((1, 6, 4), (14, 15, 17)):
+            furnish(d, "deco", X0 + 1, 3, X0 + 5, 7, 7, free=[(dx, 5), (lx, 7)], center=True, lamps=False)
+        for x in (9, 12):
+            d.set(x, 5, 6, "sea_lantern") if False else None
+
+
+def dress_wallguard(d, L):
+    pk = d.pack
+    if pk == "Hearthwood":
+        furnish(d, "deco", 5, 3, 9, 7, 2, free=[(7, 7), (9, 3), (5, 3), (9, 4), (9, 5), (9, 6), (5, 7)],
+                center=True, lamps=False)
+        furnish(d, "deco", 5, 3, 9, 7, 8, free=[(5, 5), (9, 5), (9, 3)], center=True, lamps=False)
+        if L >= 2:
+            furnish(d, "deco", 5, 3, 9, 7, 13, free=[(9, 3)], center=False, lamps=False)
+        put(d, 6, 4, 9, "red_wall_banner[facing=south]")
+        put(d, 8, 4, 9, "white_wall_banner[facing=south]")
+    elif pk == "Cascadia":
+        furnish(d, "deco", 4, 4, 8, 8, 2, free=[(6, 8), (6, 4), (6, 5), (4, 4), (8, 4), (4, 6), (4, 7), (8, 8)],
+                center=False, lamps=False)
+        furnish(d, "deco", 3, 3, 9, 9, 8, free=[(3, 5), (9, 5), (6, 4)], center=True, lamps=False)
+        shutters(d, [(4, 2), (8, 2), (6, 10)], 10, "dark_oak", "north")
+    else:
+        furnish(d, "deco", 3, 3, 7, 7, 2, free=[(5, 7), (5, 4), (3, 3), (7, 3), (3, 5), (3, 6), (3, 7)],
+                center=False, lamps=False)
+        furnish(d, "deco", 3, 3, 7, 7, 9, free=[(3, 5), (7, 5), (5, 4)], center=True, lamps=False)
+
+
 @design("barracks")
 def barracks(pack, rel, L):
     d = {"Hearthwood": hw_bar, "Cascadia": cs_bar, "Neoterra": nt_bar}[pack](rel, L)
     {"Hearthwood": hw_bar_outer, "Cascadia": cs_bar_outer, "Neoterra": nt_bar_east}[pack](d, L)
+    dress_barracks(d, L)
     return d
 
 
@@ -2285,7 +2434,9 @@ def gh_complex(d, L, xa, xb, r1, r2, tz, yw):
 
 @design("gatehouse")
 def gatehouse(pack, rel, L):
-    return {"Hearthwood": gh_hearthwood, "Cascadia": gh_cascadia, "Neoterra": gh_neoterra}[pack](rel, L)
+    d = {"Hearthwood": gh_hearthwood, "Cascadia": gh_cascadia, "Neoterra": gh_neoterra}[pack](rel, L)
+    dress_gatehouse(d, L)
+    return d
 
 
 # ================================================================================================ WALL GUARD TOWER
@@ -2744,4 +2895,6 @@ def wt_neoterra(rel, L):
 
 @design("wallguardtower")
 def wallguardtower(pack, rel, L):
-    return {"Hearthwood": wt_hearthwood, "Cascadia": wt_cascadia, "Neoterra": wt_neoterra}[pack](rel, L)
+    d = {"Hearthwood": wt_hearthwood, "Cascadia": wt_cascadia, "Neoterra": wt_neoterra}[pack](rel, L)
+    dress_wallguard(d, L)
+    return d

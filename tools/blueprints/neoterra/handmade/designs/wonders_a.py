@@ -553,7 +553,7 @@ def hc_cathedral(rel, L):
     if L >= 5:
         hc_chapter_house(d, L)
         hc_palace(d, L)
-        stamp(d, hc_palace, 21, 1, L)
+        stamp(d, hc_palace, 21, 1, L, "dark_prismarine", "yellow_terracotta", "warped")    # deanery
         hc_library(d, L)          # the deanery: same hall-house plan south-east of the choir
         hc_close(d, L)
     # reserve the west towers last so nothing drawn above leaks into them
@@ -694,9 +694,6 @@ def hc_lady_chapel(d, L):
         lancet(d, x, 41, 4, 10 if x in (14, 15, 16) else 8)
     d.set(15, 11, 41, sglass(15, 11, 41))
     d.gable(11, 32, 19, 41, 13, "z", "deepslate_tile_stairs", "deepslate_tile_slab", S, 1)
-    for z in range(33, 42, 2):
-        for x, f in ((10, "east"), (20, "west")):
-            pass
     for z in (33, 36, 39):
         hc_buttress(d, 10, z, "west", 10)
         hc_buttress(d, 20, z, "east", 10)
@@ -736,7 +733,7 @@ def hc_chapter_house(d, L):
                 d.set(cx + dx, y, cz + dz, S if edge else AIR)
             if edge:
                 d.set(cx + dx, 2, cz + dz, "polished_andesite")
-                d.set(cx + dx, 11, cz + dz, stair("stone_brick_stairs", "north", "top") if False else S)
+                d.set(cx + dx, 11, cz + dz, S)
             elif not _oct(dx, dz, r - 2):                           # bench ring
                 ex = [s2 for s2, (ox, oz) in D4.items() if not _oct(dx + ox, dz + oz, r - 1)]
                 if ex and abs(dx) + abs(dz) != 0:
@@ -748,8 +745,7 @@ def hc_chapter_house(d, L):
     for y in range(2, 12):                                          # central pier
         d.set(cx, y, cz, "polished_andesite" if y < 11 else "chiseled_stone_bricks")
     for ox, oz in D4.values():
-        d.set(cx + ox, 8, cz + oz, lantern(True) if False else "lantern[hanging=false,waterlogged=false]") \
-            if False else d.set(cx + ox, 7, cz + oz, lantern(True))
+        d.set(cx + ox, 7, cz + oz, lantern(True))
         d.set(cx + ox, 8, cz + oz, stair("stone_brick_stairs", {(1, 0): "west", (-1, 0): "east", (0, 1): "north",
                                                                  (0, -1): "south"}[(ox, oz)], "top"))
     d.set(cx, 2, cz - 2, "lectern[facing=north,has_book=true,powered=false]")
@@ -780,7 +776,7 @@ def hc_chapter_house(d, L):
         d.set(40, 4, z, "glass_pane")
 
 
-def hc_palace(d, L):
+def hc_palace(d, L, roof="brick", upper="calcite", shutter="spruce"):
     """Bishop's palace: stone ground floor (hall + kitchen), timber-framed jettied upper floor (study and
     chamber), tiled gable with a brick chimney."""
     S = "stone_bricks"
@@ -791,7 +787,7 @@ def hc_palace(d, L):
         for x in (x1, x2):
             d.set(x, 2, z, "polished_andesite")
     d.fill(x1, 6, z1, x2, 6, z2, "dark_oak_planks")
-    d.box(x1, 7, z1, x2, 10, z2, "calcite")
+    d.box(x1, 7, z1, x2, 10, z2, upper)
     for x in range(x1, x2 + 1, 2):
         for z in (z1, z2):
             d.fill(x, 7, z, x, 10, z, log("dark_oak_log"))
@@ -811,16 +807,14 @@ def hc_palace(d, L):
             d.window(x, 8, z, x, 9, z)
             ox, oz = D4[f]
             if d.bp.inside(x + ox, 2, z + oz) and x + ox >= 0:
-                d.set(x + ox, 8, z + oz, trap("spruce_trapdoor", f, "top"))
-                if x + ox != 9:
-                    d.set(x + ox, 7, z + oz, "potted_red_tulip") if False else None
-    rd = d.gable(x1, z1, x2, z2, 11, "z", "deepslate_tile_stairs", "deepslate_tile_slab", "calcite", 1)
+                d.set(x + ox, 8, z + oz, trap(f"{shutter}_trapdoor", f, "top"))
+    rd = d.gable(x1, z1, x2, z2, 11, "z", f"{roof}_stairs", f"{roof}_slab", upper, 1)
     # door on the north gable with a hood
     d.door(4, 2, z1, "south", "dark_oak")
     d.set(4, 4, z1, S)
-    d.set(3, 5, z1 - 1, stair("deepslate_tile_stairs", "east"))
-    d.set(4, 5, z1 - 1, slab("deepslate_tile_slab"))
-    d.set(5, 5, z1 - 1, stair("deepslate_tile_stairs", "west"))
+    d.set(3, 5, z1 - 1, stair(f"{roof}_stairs", "east"))
+    d.set(4, 5, z1 - 1, slab(f"{roof}_slab"))
+    d.set(5, 5, z1 - 1, stair(f"{roof}_stairs", "west"))
     d.set(4, 4, z1 - 1, lantern(True))
     d.sign(5, 3, z1 - 1, "north", ["Bishop's", "Palace"], "dark_oak")
     # chimney + hearth in the hall
@@ -838,7 +832,6 @@ def hc_palace(d, L):
     d.set(7, 2, 38, "barrel[facing=up,open=false]")
     d.set(2, 2, 40, "crafting_table")
     d.set(3, 2, 40, "cauldron")
-    d.set(2, 4, 40, "decorated_pot[cracked=false,facing=north,waterlogged=false]") if False else None
     d.set(7, 3, 40, "decorated_pot[cracked=false,facing=west,waterlogged=false]")
     # stair up along the east wall
     for i, y in enumerate(range(2, 6)):
@@ -913,7 +906,7 @@ def hc_library(d, L):
     d.set(47, 9, 10, wallb("stone_brick_wall"))
     d.fill(47, 2, 10, 47, 8, 11, S)
     d.door(45, 9, 11, "west", "dark_oak")
-    d.set(46, 11, 11, lantern(True)) if False else d.set(46, 9, 12, "lantern[hanging=false,waterlogged=false]")
+    d.set(46, 9, 12, "lantern[hanging=false,waterlogged=false]")
 
 
 def stamp(d, draw, ox, oz, *args):
@@ -964,7 +957,7 @@ def hc_close(d, L):
     for x in (34, 38):
         d.fill(x, 2, 0, x, 4, 0, log("dark_oak_log"))
     for x in range(33, 40):
-        d.set(x, 5, 0, stair("deepslate_tile_stairs", "south") if False else slab("deepslate_tile_slab"))
+        d.set(x, 5, 0, slab("deepslate_tile_slab"))
     d.fill(34, 5, 0, 38, 5, 0, log("dark_oak_log", "x"))
     for x in range(33, 40):
         d.set(x, 6, 0, slab("deepslate_tile_slab"))
@@ -1489,8 +1482,7 @@ def cc_cathedral(rel, L):
                 ox = -1 if x == 9 else 1
                 if L == 1:
                     d.set(x, 5, z, "glass_pane")
-                    d.set(x + ox, 6, z, stair("spruce_stairs", OPP[f], "top") if False else
-                          trap("spruce_trapdoor", f, "top"))
+                    d.set(x + ox, 6, z, trap("spruce_trapdoor", f, "top"))
     for x in (11, 15):
         d.set(x, WT - 2, 11, "glass_pane")
     nr = steep_gable(d, 9, 11, 17, zE, WT + 1, R, RB, W, "z", 1)
@@ -1648,7 +1640,7 @@ def cc_cathedral(rel, L):
     if L >= 3:
         cc_log_house(d, 30, 4, 8, 11, "parsonage")
         for x in range(15, 30):
-            d.set(x, 1, 3 if x < 34 else 3, "gravel") if False else d.set(x, 1, 2, "gravel")
+            d.set(x, 1, 2, "gravel")
     if L >= 4:
         cc_log_house(d, 29, 19, 15, 13, "hall", H=7)
         for z in range(2, 18):
@@ -1673,7 +1665,7 @@ def cc_cathedral(rel, L):
         for x1, z1 in ((2, 31), (16, 32)):                                  # front gardens and lamp posts
             for x in range(x1, x1 + 9):
                 if x != x1 + 4 and d.air(x, 2, z1 - 3):
-                    d.set(x, 1, z1 - 3, "podzol" if False else "coarse_dirt")
+                    d.set(x, 1, z1 - 3, "coarse_dirt")
                     d.set(x, 2, z1 - 3, ("poppy", "cornflower", "oxeye_daisy", "allium")[x % 4])
             d.set(x1 + 4, 1, z1 - 3, "gravel")
             for x in (x1 - 1, x1 + 9):
@@ -1907,8 +1899,6 @@ def nc_baptistery(d, L):
             for z in (cz - 4, cz - 1):
                 if d.air(x, 2, z):
                     d.fill(x, 2, z, x, 5, z, "white_concrete")
-    for x in range(cx - 1, cx + 1):
-        pass
 
 
 def nc_cathedral(rel, L):
@@ -2616,8 +2606,6 @@ def cg_sawmill(d, x1, z1, x2, z2):
     zc = (z1 + z2) // 2
     for x in range(x1 + 1, x2):
         d.set(x, 2, zc, "rail[shape=east_west,waterlogged=false]")
-    for x in range(x1 + 2, x1 + 6):
-        d.set(x, 3, zc, log("stripped_spruce_log", "x")) if False else None
     d.item(x1 + 6, 2, zc - 1, "stonecutter", "north")
     d.item(x1 + 2, 2, z1 + 1, "grindstone", "north")
     for x in range(x2 - 3, x2):
@@ -2701,7 +2689,7 @@ def cg_colossus(rel, L):
                 d.set(x1 - 4, y, z, log("spruce_log", "x"))
         for x, z in ((cx - 7, z1 - 5), (cx + 7, z1 - 6), (cx + 8, z2)):
             d.set(x, 2, z, log("spruce_log"))
-            d.set(x, 3, z, "brown_carpet") if False else d.set(x, 3, z, "moss_carpet")
+            d.set(x, 3, z, "moss_carpet")
     if L >= 3:                                                       # split-rail fence and lamp posts
         for z in range(0, z1 - 1):
             for x in (cx - 3, cx + 3):
@@ -2825,7 +2813,6 @@ def nb_visitor_centre(d, x1, z1, x2, z2, two=False):
     d.item(x1 + 2, 2, z2 - 1, "smoker", "north")
     for x in range(x1 + 2, x2 - 3, 4):
         d.dining(x, 2, z1 + 3, 1, "x", "cherry", chairs=("n", "s"))
-    d.set(x2 - 1, 3, z1 + 2, "black_stained_glass_pane") if False else None
     d.set(x2 - 2, 2, z1 + 1, "lectern[facing=west,has_book=true,powered=false]")
     d.set(x1 + 1, 2, z1 + 1, "potted_bamboo")
     d.set(x2 - 1, 2, z1 + 1, "potted_bamboo")

@@ -1669,7 +1669,7 @@ def saw_hw(rel, L):
         c.opening(24, 15, 26, 15, 3, lg("stripped_oak_log", "x"))
         rc = c.room(0)
         rc.item("domum_ornamentum:architectscutter", sides=("west",))
-        for z in (16, 20, 24):
+        for z in (16, 20, 24, 28):
             lamp_post(d, 32, z, y0, P)
         rc.fill(["planks", "planks", "logs"])
         rc.center_line([lg("stripped_oak_log", "z")] * 6, "z")
@@ -1829,3 +1829,346 @@ def saw_cas(rel, L):
 @design("sawmill")
 def sawmill(pack, rel, L):
     return {"Neoterra": saw_neo, "Hearthwood": saw_hw, "Cascadia": saw_cas}[pack](rel, L)
+
+
+# =============================================================================================== LUMBERJACK
+"""
+Lumberjack
+  Neoterra   "Urban forestry station" (birch cladding, white fins, lime bands, green roofs): forestry pavilion
+             (rangers' office upstairs from L2), sapling nursery planters, covered log store; glass nursery
+             greenhouse with a seating corner (L3); two-storey equipment depot (L4); ranger watch tower (L5).
+  Hearthwood "Woodcutter's cottage" (white-washed walls on a rubble plinth, spruce shingle roofs): cottage with a
+             big chimney (bedroom upstairs from L2), log store lean-to, chopping block and saw horse; log barn
+             (L3); charcoal-burner's hut with a smouldering clamp and fenced garden (L4); timber storehouse (L5).
+  Cascadia   "Forester's lodge" (dark spruce logs, red-cedar roofs, forest-green trim): steep log lodge with a
+             front deck (loft from L2), woodshed and rockers (L3), fire lookout tower (L4), crew bunkhouse (L5).
+"""
+JACK_RACKS = {1: 2, 2: 3, 3: 4, 4: 5, 5: 6}
+
+
+def jack_neo(rel, L):
+    d = Design("Neoterra", rel, (30, 26, 30), paving="smooth_stone")
+    P, y0 = "Neoterra", 2
+    sto = 1 if L == 1 else 2
+    a = build(d, 3, 4, 13, 11, sto, roof="flat", core=(11, 6) if sto > 1 else None, street_glass=True)
+    a.door(6, 4, "north", double=True)
+    d.hut(4, y0, 5)
+    d.sign(9, 5, 3, "north", ["FORESTRY", "STATION"], "birch", glow=True, color="lime")
+    r0 = a.room(0)
+    r0.item("crafting_table", sides=("west",))
+    racks = r0.racks(min(JACK_RACKS[L], 3), 1, sides=("south",))
+    d.set(r0.x2, y0, r0.z1 + 1, "grindstone[face=floor,facing=west]") if False else None
+    r0.fill(["shelf_birch", "logs", "bamboo"], sides=("south", "west", "north"))
+    if sto >= 2:
+        r1 = a.room(1)
+        racks += r1.racks(JACK_RACKS[L] - racks, 1, sides=("south",))
+        r1.chairs_desk(2, "birch", top=sl("smooth_quartz", "top"), sit=False)
+        r1.fill(["shelf_quartz", "bamboo", "banner_green"])
+        neo_roof(d, a, "garden")
+    else:
+        neo_roof(d, a, "garden")
+    # covered log store (west), nursery planters (east)
+    for z in (4, 11):
+        d.fill(1, y0, z, 1, 4, z, "light_gray_concrete")
+    d.fill(0, 5, 4, 2, 5, 11, sl("smooth_quartz"))
+    log_pile(d, 1, 5, 2, 10, y0, 3, "birch_log", "z")
+    for x in range(15, 21):
+        for z in (4, 5, 7, 8):
+            d.set(x, 1, z, "moss_block")
+            d.set(x, y0, z, "birch_sapling[stage=0]" if (x + z) % 2 else "oak_sapling[stage=0]")
+    for x in range(14, 22):
+        d.set(x, y0, 3, sl("smooth_quartz"))
+    lamp_post(d, 14, 1, y0, P)
+    seats = 0
+    if L >= 2:
+        sawhorse(d, 15, 12, y0, "birch")
+        log_pile(d, 15, 14, 21, 15, y0, 2, "oak_log", "x")
+    # ---- nursery greenhouse (L3+)
+    if L >= 3:
+        gx1, gz1, gx2, gz2 = 3, 15, 13, 22
+        d.box(gx1, y0, gz1, gx2, 5, gz2, "glass", floor="smooth_stone")
+        d.fill(gx1, 6, gz1, gx2, 6, gz2, "glass")
+        for x, z in ring(gx1, gz1, gx2, gz2):
+            if (x - gx1) % 5 == 0 and z in (gz1, gz2) or x in (gx1, gx2) and (z - gz1) % 7 == 0:
+                d.fill(x, y0, z, x, 6, z, "white_concrete")
+        d.door(8, y0, gz1, "north", "birch")
+        d.door(8, y0, 11, "south", "birch")
+        for x in range(gx1 + 1, gx2):
+            for z in (gz2 - 1, gz2 - 2):
+                d.set(x, 1, z, "moss_block")
+                d.set(x, y0, z, ["spruce_sapling[stage=0]", "birch_sapling[stage=0]", "fern", "azalea"][(x + z) % 4])
+        d.chair(gx1 + 1, y0, gz1 + 2, "west", "birch")
+        d.chair(gx1 + 1, y0, gz1 + 4, "west", "birch")
+        d.table(gx1 + 1, y0, gz1 + 3, "birch", "slab")
+        seats = 2
+        for x in (5, 11):
+            d.set(x, 5, 18, "end_rod[facing=down]")
+        for z in (14, 18, 22):                                       # avenue of young birches
+            d.set(0, y0, z, "moss_block")
+            tree(d, 0, z, y0 + 1, "birch", 3, 1)
+        for x in (15, 19):
+            lamp_post(d, x, 24, y0, P) if L < 5 else None
+        bench(d, 15, 10, y0, "south", 2, "birch", sit=False)
+        if L >= 4:
+            d.item(gx2 - 1, y0, gz1 + 2, "composter")
+            d.item(gx2 - 1, y0, gz1 + 3, "barrel", "west")
+    # ---- equipment depot (L4+)
+    if L >= 4:
+        c = build(d, 16, 12, 26, 20, 2, roof="flat", core=(24, 14))
+        c.opening(19, 12, 21, 12, 3, "lime_concrete")
+        rc = c.room(0)
+        racks += rc.racks(JACK_RACKS[L] - racks, 1, sides=("west", "south"))
+        rc.center_line(["grindstone[face=floor,facing=north]", sl("smooth_quartz", "top"), "anvil[facing=north]"])
+        rc.fill(["logs", "crate", "planks"])
+        rc2 = c.room(1)
+        rc2.table_group("birch", 4, "slab", rug="lime_carpet", sit=False)
+        rc2.fill(["shelf_quartz", "bamboo", "crate"])
+        neo_roof(d, c, "solar")
+        wagon(d, 22, 23, y0, "birch", lg("birch_log", "x"))
+    # ---- ranger watch tower (L5)
+    if L >= 5:
+        t = build(d, 18, 22, 24, 27, 5, roof="flat", core=(19, 23))
+        t.door(21, 22, "north")
+        for s in range(5):
+            rt = t.room(s)
+            rt.fill(["shelf_quartz", "bamboo", "crate"] if s < 4 else ["bamboo", "shelf_quartz"])
+        # glazed lookout on top
+        for x, z in ring(17, 21, 25, 28):
+            d.set(x, t.yr + 1, z, "glass_pane" if (x + z) % 2 else "white_concrete")
+        d.set(21, t.yr + 3, 24, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        for x in (27, 28):
+            for z in (22, 26):
+                d.set(x, y0, z, "moss_block")
+                tree(d, x, z, y0 + 1, "spruce", 4, 1)
+    return d
+
+
+def jack_hw(rel, L):
+    d = Design("Hearthwood", rel, (32, 20, 30), paving="gravel")
+    P, y0 = "Hearthwood", 2
+    sto = 1 if L == 1 else 2
+    a = build(d, 6, 4, 15, 10, sto, roof="gable", axis="x", core=(13, 5) if False else None,
+              chimney=(14, 7, "west"))
+    a.door(9, 4, "north")
+    d.hut(7, y0, 5)
+    r0 = a.room(0)
+    r0.item("crafting_table", sides=("west", "south"))
+    racks = r0.racks(min(JACK_RACKS[L], 2), 1, sides=("south",))
+    seats = 0
+    if L >= 3:
+        seats += r0.chairs_desk(2, "spruce")
+    r0.rug(("brown_carpet", "red_carpet"))
+    r0.fill(["shelf_dark", "keg", "plant"])
+    r0.lights()
+    if sto >= 2:
+        # outside stair to the bedroom loft (cottage style): ladder in the corner
+        for y in range(y0, 7):
+            d.set(6 + 1, y, 9, "ladder[facing=east,waterlogged=false]") if False else None
+        d.fill(7, 5, 8, 7, 5, 9, AIR)
+        for y in range(y0, 7):
+            d.set(7, y, 9, "ladder[facing=north,waterlogged=false]")
+        d.set(7, 7, 9, AIR)
+        d.set(7, 8, 9, AIR)
+        r1 = a.room(1)
+        r1.keep |= {(7, 8), (7, 9), (8, 9), (8, 8)}
+        r1.bed("spruce", sides=("south", "north", "east"))
+        racks += r1.racks(JACK_RACKS[L] - racks if L < 3 else 1, 1, sides=("north", "east"))
+        r1.fill(["wardrobe", "shelf_dark", "plant"])
+        r1.lights()
+    # log store lean-to on the west wall
+    for z in range(4, 11):
+        for x in range(3, 6):
+            d.set(x, 5, z, sl("spruce", "top" if x == 5 else "bottom"))
+    for z in (4, 10):
+        d.fill(3, y0, z, 3, 4, z, lg("stripped_dark_oak_log", "y"))
+    log_pile(d, 3, 5, 5, 9, y0, 3, "oak_log", "z")
+    chopping_block(d, 6, 13, y0)
+    sawhorse(d, 9, 13, y0)
+    flower_bed(d, 10, 2, 14, 2, y0, seed=1)
+    for x in range(6, 16):
+        if x != 9:
+            d.set(x, y0, 1, "oak_fence")
+    lamp_post(d, 16, 2, y0, P)
+    # ---- log barn (L3+)
+    if L >= 3:
+        d.sty_over = dict(wall="spruce_planks", wall0="cobblestone", end="spruce_planks")
+        b = build(d, 19, 4, 29, 14, 1, H=5, roof="gable", axis="z")
+        d.sty_over = {}
+        b.opening(23, 4, 25, 4, 4, lg("stripped_dark_oak_log", "x"))
+        rb = b.room(0)
+        racks += rb.racks(JACK_RACKS[L] - racks, 1, sides=("west",))
+        rb.fill(["logs", "logs", "keg"])
+        log_pile(d, 22, 8, 26, 10, y0, 2, "oak_log", "x")
+        rb.lights()
+        wagon(d, 22, 16, y0, "oak", lg("oak_log", "x"))
+    # ---- charcoal burner's hut with clamp + garden (L4+)
+    if L >= 4:
+        d.sty_over = dict(wall="mud_bricks", wall0="mud_bricks", end="mud_bricks")
+        c = build(d, 3, 17, 11, 25, 2, roof="gable", axis="z", core=(9, 19), chimney=(4, 22, "east"))
+        d.sty_over = {}
+        c.door(8, 17, "north")
+        rc = c.room(0)
+        rc.item("barrel", sides=("south", "east"))
+        rc.item("composter", sides=("south", "east"))
+        rc.fill(["sack", "keg"])
+        rc.lights()
+        rc2 = c.room(1)
+        rc2.bed("spruce", sides=("west", "south"))
+        rc2.fill(["sack", "wardrobe", "plant"])
+        rc2.lights()
+        # charcoal clamp: earth mound with smoke
+        cx, cz = 16, 21
+        for dx in range(-2, 3):
+            for dz in range(-2, 3):
+                h = 2 - max(abs(dx), abs(dz)) + 1
+                for k in range(h):
+                    d.set(cx + dx, y0 + k, cz + dz, "coarse_dirt" if k < h - 1 else "podzol[snowy=false]")
+        d.set(cx, y0 + 3, cz, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+        for x, z in ring(13, 24, 29, 28):
+            d.set(x, y0, z, "oak_fence")
+        d.set(21, y0, 24, AIR)
+        for x in range(14, 29):
+            for z in (26, 27):
+                d.set(x, 1, z, "farmland[moisture=7]")
+                d.set(x, y0, z, "oak_sapling[stage=0]" if x % 2 else "birch_sapling[stage=0]")
+    # ---- timber storehouse (L5)
+    if L >= 5:
+        e = build(d, 19, 15, 29, 22, 3, roof="gable", axis="x", core=(20, 16))
+        e.door(22, 16, "north", double=True)
+        re = e.room(0)
+        re.fill(["logs", "planks", "keg", "logs"])
+        re.center_line([lg("stripped_oak_log", "x")] * 5)
+        re.lights()
+        for s_ in (1, 2):
+            re2 = e.room(s_)
+            re2.fill(["planks", "sack", "logs"])
+            re2.center_line([lg("stripped_oak_log", "x")] * 4)
+            re2.lights()
+        # hoist beam on the gable
+        d.set(30, e.yr - 1, 18, lg("dark_oak_log", "x"))
+        d.set(31, e.yr - 1, 18, lg("dark_oak_log", "x"))
+        for y in range(e.yr - 4, e.yr - 1):
+            d.set(31, y, 18, CHAIN)
+        d.set(31, e.yr - 5, 18, lg("oak_log", "x"))
+    return d
+
+
+def jack_cas(rel, L):
+    d = Design("Cascadia", rel, (30, 30, 32), paving="coarse_dirt")
+    P, y0 = "Cascadia", 2
+    sto = 1 if L == 1 else 2
+    z2 = {1: 12, 2: 14}.get(L, 16)
+    a = build(d, 5, 7, 15, z2, sto, roof="gable", axis="z", core=(13, 9) if sto > 1 else None,
+              chimney=(10, z2 - 1, "north"))
+    a.door(8, 7, "north")
+    d.hut(6, y0, 8)
+    r0 = a.room(0)
+    r0.item("crafting_table", sides=("west",))
+    racks = r0.racks(min(JACK_RACKS[L], 3), 1, sides=("west", "south"))
+    r0.rug(RUG[P])
+    r0.fill(["shelf_spruce", "keg", "banner_green", "plant"])
+    r0.lights()
+    if sto >= 2:
+        r1 = a.room(1)
+        racks += r1.racks(JACK_RACKS[L] - racks if L < 5 else 1, 1, sides=("west",))
+        r1.bed("spruce", sides=("west", "south"))
+        r1.fill(["wardrobe", "shelf_spruce", "plant"])
+        r1.lights()
+    # front deck with railing
+    for x in range(4, 17):
+        for z in (3, 4, 5, 6):
+            d.set(x, 1, z, "spruce_planks")
+        if x not in (8,):
+            d.set(x, y0, 3, "spruce_fence")
+    for x in (4, 16):
+        d.set(x, y0 + 1, 3, LANT_S)
+    seats = 0
+    if L >= 3:
+        d.chair(11, y0, 5, "south", "spruce", arms=True)
+        d.chair(13, y0, 5, "south", "spruce", arms=True)
+        for x in range(4, 17):
+            for z in (3, 4, 5, 6):
+                d.set(x, 6, z, sl("mangrove"))
+        for x in (4, 16):
+            d.fill(x, y0, 3, x, 5, 3, lg("spruce_log", "y"))
+        d.set(x, y0 + 1, 3, "spruce_fence")
+    log_pile(d, 0, 9, 2, 17, y0, 3, "spruce_log", "z")
+    chopping_block(d, 18, 9, y0, "spruce_log")
+    sawhorse(d, 18, 12, y0, "spruce", "z")
+    # ---- woodshed (L3+)
+    if L >= 3:
+        wx1, wx2, wz1, wz2 = 19, 25, 15, 21
+        for x, z in ((wx1, wz1), (wx2, wz1), (wx1, wz2), (wx2, wz2)):
+            d.fill(x, y0, z, x, 4, z, lg("spruce_log", "y"))
+        for z in range(wz1 - 1, wz2 + 2):
+            for x in range(wx1 - 1, wx2 + 2):
+                d.set(x, 5, z, sl("mangrove"))
+        log_pile(d, wx1 + 1, wz2, wx2 - 1, wz2, y0, 2, "spruce_log", "x")
+        rack_line(d, [(wx2, wz1 + 2), (wx2, wz1 + 3)], y0, JACK_RACKS[L] - racks, 1, "west")
+        racks = JACK_RACKS[L]
+        if L >= 4:
+            d.item(wx1 + 1, y0, wz1 + 1, "composter")
+            d.item(wx1 + 2, y0, wz1 + 1, "barrel", "north")
+            for x in range(wx1 + 4, wx2):
+                d.set(x, 1, wz1 + 1, "podzol[snowy=false]")
+                d.set(x, y0, wz1 + 1, "spruce_sapling[stage=0]")
+    # ---- saw filer's shop (L4+)
+    if L >= 4:
+        f = build(d, 19, 23, 27, 29, 1, roof="gable", axis="x", chimney=(26, 26, "west"))
+        f.door(22, 23, "north")
+        rf = f.room(0)
+        rf.center_line(["grindstone[face=floor,facing=north]", sl("spruce", "top"), "anvil[facing=north]"])
+        rf.fill(["shelf_spruce", "keg", "logs"])
+        rf.lights()
+        bench(d, 24, 22, y0, "south", 2, "spruce", sit=False)
+    # ---- fire lookout tower (L4+)
+    if L >= 4:
+        tx, tz = 23, 4
+        top = 16
+        for x in (tx, tx + 4):
+            for z in (tz, tz + 4):
+                d.fill(x, y0, z, x, top, z, lg("spruce_log", "y"))
+        for y in range(y0 + 3, top, 4):
+            for k in range(5):
+                d.set(tx + k, y, tz, lg("stripped_spruce_log", "x"))
+                d.set(tx + k, y, tz + 4, lg("stripped_spruce_log", "x"))
+                d.set(tx, y, tz + k, lg("stripped_spruce_log", "z"))
+                d.set(tx + 4, y, tz + k, lg("stripped_spruce_log", "z"))
+        for y in range(y0, top + 1):
+            d.set(tx + 2, y, tz + 1, "ladder[facing=south,waterlogged=false]")
+        d.fill(tx + 2, y0, tz, tx + 2, top, tz, "spruce_planks")
+        # cab
+        cy = top + 1
+        d.fill(tx - 1, top, tz - 1, tx + 5, top, tz + 5, "spruce_planks")
+        d.set(tx + 2, top, tz + 1, "ladder[facing=south,waterlogged=false]")
+        for x, z in ring(tx - 1, tz - 1, tx + 5, tz + 5):
+            d.set(x, cy, z, "spruce_planks")
+            d.set(x, cy + 1, z, "glass_pane")
+            d.set(x, cy + 2, z, "glass_pane")
+        d.hip(tx - 1, tz - 1, tx + 5, tz + 5, cy + 3, "mangrove_stairs", "mangrove_slab")
+        d.set(tx + 2, cy + 2, tz + 2, LANT)
+        d.set(tx + 2, cy, tz + 3, sl("spruce", "top"))
+        d.set(tx + 2, cy + 1, tz + 3, "cartography_table") if False else None
+        d.chair(tx + 3, cy, tz + 3, "east", "spruce", sit=False)
+    # ---- crew bunkhouse (L5)
+    if L >= 5:
+        e = build(d, 4, 21, 16, 29, 2, roof="gable", axis="x", core=(14, 23), chimney=(5, 25, "east"))
+        e.door(9, 21, "north")
+        re = e.room(0)
+        re.table_group("spruce", 4, "post", rug="green_carpet", sit=False)
+        re.racks(1, 1, sides=("south",))
+        re.fill(["keg", "shelf_spruce", "plant", "banner_green"])
+        re.lights()
+        re2 = e.room(1)
+        for _ in range(4):
+            re2.bed("spruce", sides=("south", "north", "west"))
+        re2.fill(["wardrobe", "plant"])
+        re2.lights()
+    tree(d, 27, 28, y0, "spruce", 6, 2)
+    tree(d, 1, 26, y0, "spruce", 5, 2) if L < 5 else None
+    return d
+
+
+@design("lumberjack")
+def lumberjack(pack, rel, L):
+    return {"Neoterra": jack_neo, "Hearthwood": jack_hw, "Cascadia": jack_cas}[pack](rel, L)

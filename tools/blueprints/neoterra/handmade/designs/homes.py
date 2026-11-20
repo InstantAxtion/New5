@@ -1687,56 +1687,6 @@ def cabin(d, x1, z1, out, mirror, Y, bedc, extra_barrel=True, double=False, porc
     return Wf
 
 
-def quadplex_ca(rel, L):
-    """Cabin camp: cabins round a courtyard with a fire ring, growing into a camp of eight cabins with the
-    common lodge, a bathhouse and a wood yard."""
-    d = Design("Cascadia", rel, (62, 22, 60), paving="grass_block[snowy=false]")
-    N = {1: 1, 2: 2, 3: 4, 4: 6, 5: 8}[L]
-    # (x1, z1, window side, mirror, colour): inner ring round the court, then an outer row
-    spec = [(17, 2, "north", False, "brown"), (33, 2, "north", True, "green"),
-            (17, 19, "south", True, "orange"), (33, 19, "south", False, "cyan"),
-            (1, 2, "north", False, "red"), (49, 2, "north", True, "yellow"),
-            (1, 19, "south", True, "purple"), (49, 19, "south", False, "lime")]
-    for k in range(N):
-        x1, z1, out, mir, c = spec[k]
-        Wf = cabin(d, x1, z1, out, mir, 2, c, True, double=(k == 0 and L >= 5))
-        if k == 0:
-            hx, hz = Wf(4, 0)
-            d.hut(hx, 2, hz)
-    # court: fire ring with log benches, paths
-    for x, z in cells(3, 12, 57, 16):
-        d.set(x, 1, z, "coarse_dirt" if (x * 3 + z) % 4 else "gravel")
-    for z in range(0, 60):
-        d.set(29, 1, z, "gravel")
-        d.set(30, 1, z, "gravel")
-    d.set(29, 1, 14, "cobblestone")
-    d.set(29, 2, 14, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
-    for x in (28, 29, 30):
-        d.set(x, 2, 12, log("spruce_log", "x"))
-        d.set(x, 2, 16, log("spruce_log", "x"))
-    for x in (13, 46):
-        lamp_post(d, x, 14, 1, "ca")
-    if L >= 4:
-        # common lodge (the family log house of the camp warden) behind the court
-        stamp(d, house_ca(rel, 3), 0, 33, hut_to="barrel[facing=up,open=false]")
-        outbuilding(d, 30, 36, 40, 43, "bakehouse", h=3)
-    if L >= 5:
-        px1, px2, pz1, pz2 = 44, 56, 35, 44                     # bathhouse / common pavilion
-        outbuilding(d, px1, pz1, px2, pz2, "workshop", h=4)
-        d.item(px1 + 1, 2, pz1 + 3, "jukebox")
-        d.item(px2 - 1, 2, pz1 + 3, "ender_chest", "west")
-        for x, z in cells(30, 48, 43, 59):
-            d.set(x, 1, z, "coarse_dirt" if (x + z) % 3 else "packed_mud")
-        for z in (50, 53, 56):
-            for x in range(32, 42):
-                d.set(x, 2, z, log("spruce_log", "x"))
-                if x % 3:
-                    d.set(x, 3, z, log("spruce_log", "x"))
-        wagon(d, 33, 58, 2, "spruce", log("spruce_log", "x"))
-        outbuilding(d, 45, 47, 58, 56, "garage", h=4)            # camp store and tack room
-        lamp_post(d, 31, 47, 1, "ca")
-    return d
-
 
 def quadplex_nt(rel, L, U=None):
     d = Design("Neoterra", rel, (31, 20, 19), paving="smooth_stone")
@@ -2782,160 +2732,7 @@ def pond(d, x1, z1, x2, z2, edge="grass_block[snowy=false]"):
 
 
 # ============================================================================================ compositions: HOUSE
-def house_estate_hw(rel, L):
-    """Tudor farmstead: the family house, then a well and kitchen garden, a barn and stable round a farmyard,
-    a dower cottage and greenhouse, finally a workshop, bakehouse, orchard and duck pond."""
-    d = Design("Hearthwood", rel, (56, 40, 62), paving="grass_block[snowy=false]")
-    stamp(d, house_hw(rel, 1 if L == 1 else 5), 0, 0, primary=True)
-    if L >= 2:
-        lane(d, 22, 0, 24, 30, "gravel")
-        well(d, 27, 3, "Hearthwood")
-        garden(d, 26, 7, 33, 13, 2, "spruce", ((26, 10, "west"),), beds=False)
-        for x, z in cells(27, 8, 32, 12):
-            if z != 10:
-                d.set(x, 1, z, "farmland[moisture=7]")
-                d.set(x, 2, z, ("carrots[age=7]", "potatoes[age=7]", "beetroots[age=3]")[(x + z) % 3])
-            else:
-                d.set(x, 1, z, "dirt_path")
-        lamp_post(d, 21, 1, 1)
-        bench(d, 29, 1, 2, "east", "north", "dark_oak")
-    if L >= 3:
-        lane(d, 25, 14, 55, 16, "gravel")
-        outbuilding(d, 35, 3, 49, 12, "barn", h=5)
-        for x in range(35, 50):
-            d.set(x, 1, 13, "gravel")
-        outbuilding(d, 26, 18, 36, 25, "stable", door_x=31, h=4) if False else None
-        outbuilding(d, 40, 18, 52, 25, "stable", h=4)
-        for x in range(40, 53):
-            d.set(x, 1, 17, "gravel")
-        lamp_post(d, 34, 14, 1)
-    if L >= 4:
-        stamp(d, cottage_hw(rel, 5), 26, 28)
-        outbuilding(d, 2, 28, 12, 35, "greenhouse", h=3)
-        lane(d, 7, 25, 8, 27, "gravel")
-        lamp_post(d, 24, 26, 1)
-        orchard(d, 15, 30, 21, 38, "oak", 6)
-    if L >= 5:
-        outbuilding(d, 2, 40, 14, 48, "workshop", h=4)
-        outbuilding(d, 16, 42, 23, 48, "bakehouse", h=4)
-        pond(d, 48, 29, 54, 35)
-        orchard(d, 49, 40, 53, 48, "birch", 4)
-        lane(d, 2, 37, 23, 39, "gravel")
-        for x in (6, 19):
-            bench(d, x, 38, 2, "east", "south", "dark_oak")
-        outbuilding(d, 26, 51, 52, 60, "barn", h=6)           # great tithe barn
-        lane(d, 24, 49, 53, 50, "gravel")
-        lane(d, 24, 17, 25, 50, "gravel")
-        for x in (30, 48):
-            lamp_post(d, x, 49, 1)
-    return d
 
-
-def house_estate_ca(rel, L):
-    """Homestead ranch: log cabin home, then woodshed and well, a log barn with a corral, bunk cabins and a
-    smokehouse, finally a stable, a stone silo, pond and spruce stands."""
-    d = Design("Cascadia", rel, (60, 40, 58), paving="grass_block[snowy=false]")
-    stamp(d, house_ca(rel, 1 if L == 1 else 5), 0, 0, primary=True)
-    if L >= 2:
-        outbuilding(d, 28, 3, 35, 8, "shed", h=3)
-        well(d, 26, 12, "Cascadia")
-        lane(d, 24, 0, 26, 9, "coarse_dirt")
-        lamp_post(d, 27, 1, 1, "ca")
-        for x in range(36, 42):
-            d.set(x, 2, 6, log("spruce_log", "x"))
-            d.set(x, 3, 6, log("spruce_log", "x")) if x % 2 else None
-    if L >= 3:
-        lane(d, 24, 14, 46, 15, "coarse_dirt")
-        outbuilding(d, 28, 17, 44, 27, "barn", h=5)
-        for x, z in cells(47, 6, 58, 27):                   # corral
-            if x in (47, 58) or z in (6, 27):
-                d.set(x, 2, z, fence("spruce"))
-            else:
-                d.set(x, 1, z, "coarse_dirt" if (x + z) % 3 else "grass_block[snowy=false]")
-        d.set(47, 2, 15, gate("spruce", "east"))
-        for z in (8, 9):
-            d.set(57, 2, z, "hay_block[axis=y]")
-        d.set(57, 2, 11, "water_cauldron[level=3]")
-        d.set(57, 2, 12, "water_cauldron[level=3]")
-    if L >= 4:
-        lane(d, 0, 26, 26, 27, "coarse_dirt")
-        cabin(d, 1, 31, "south", True, 2, "lime", extra_barrel=False)
-        cabin(d, 13, 31, "south", False, 2, "orange", extra_barrel=False)
-        outbuilding(d, 30, 31, 37, 37, "bakehouse", h=3)
-        lamp_post(d, 12, 28, 1, "ca")
-        outbuilding(d, 48, 45, 56, 51, "shed", h=3)
-        garden(d, 38, 44, 46, 51, 2, "spruce", ((42, 44, "north"),), beds=False)
-        for x, z in cells(39, 45, 45, 50):
-            if x != 42:
-                d.set(x, 1, z, "farmland[moisture=7]")
-                d.set(x, 2, z, ("carrots[age=7]", "potatoes[age=7]", "beetroots[age=3]")[x % 3])
-    if L >= 5:
-        outbuilding(d, 40, 31, 56, 40, "stable", h=4)
-        # stone silo with a conical cap beside the barn
-        cx, cz = 25, 22
-        for y in range(2, 14):
-            for ax, az in cells(cx - 2, cz - 2, cx + 2, cz + 2):
-                rr = abs(ax - cx) + abs(az - cz)
-                if (abs(ax - cx) == 2 or abs(az - cz) == 2) and not (abs(ax - cx) == 2 and abs(az - cz) == 2):
-                    d.set(ax, y, az, "cobblestone" if y < 4 else ("stripped_spruce_log[axis=y]" if (ax + az) % 2
-                                                               else "spruce_planks"))
-        for ax, az in cells(cx - 1, cz - 1, cx + 1, cz + 1):
-            d.set(ax, 14, az, "dark_oak_planks")
-        d.set(cx, 15, cz, "dark_oak_slab[type=bottom,waterlogged=false]")
-        for ax, az, f in ((cx - 2, cz, "east"), (cx + 2, cz, "west"), (cx, cz - 2, "south"), (cx, cz + 2, "north")):
-            d.set(ax, 14, az, stair("dark_oak", f))
-        pond(d, 2, 44, 10, 50)
-        orchard(d, 14, 44, 30, 54, "spruce", 5)
-        lane(d, 38, 28, 39, 41, "coarse_dirt")
-        bench(d, 4, 41, 2, "east", "north", "spruce")
-        wagon(d, 41, 28, 2, "spruce")
-        lamp_post(d, 27, 40, 1, "ca")
-        lamp_post(d, 37, 41, 1, "ca")
-        bench(d, 20, 41, 2, "east", "north", "spruce")
-        for z in range(44, 56, 3):
-            d.set(57, 2, z, "hay_block[axis=y]")
-        for x in (20, 46):
-            lamp_post(d, x, 29, 1, "ca")
-        for z in range(42, 56):
-            d.set(36, 2, z, fence("spruce"))
-    return d
-
-
-def house_estate_nt(rel, L):
-    """Modern compound: the villa, then landscaped drive, a pool with pool house and a studio, a guest pavilion
-    and garage, finally a fitness pavilion, greenhouse and a roof-garden walk."""
-    d = Design("Neoterra", rel, (56, 40, 62), paving="grass_block[snowy=false]")
-    stamp(d, house_nt(rel, 1 if L == 1 else 5), 0, 0, primary=True)
-    if L >= 2:
-        lane(d, 21, 0, 23, 22, "smooth_stone")
-        for z in (2, 8, 14, 20):
-            lamp_post(d, 24, z, 1, "nt")
-        planter(d, 25, 1, 33, 1, 1)
-    if L >= 3:
-        for x, z in cells(26, 4, 42, 13):                   # pool on a quartz deck
-            d.set(x, 1, z, "smooth_quartz")
-        for x, z in cells(28, 6, 38, 11):
-            d.set(x, 1, z, "water")
-            d.set(x, 0, z, "light_blue_concrete")
-        for x in (29, 32, 35):
-            d.chair(x, 2, 12, "south", "birch", sit=False)
-        outbuilding(d, 44, 3, 52, 12, "poolhouse", h=3)
-        outbuilding(d, 26, 17, 38, 24, "workshop", h=4)
-    if L >= 4:
-        stamp(d, cottage_nt(rel, 5), 0, 25)
-        outbuilding(d, 41, 17, 53, 25, "garage", h=4)
-        lane(d, 41, 26, 53, 27, "smooth_stone")
-    if L >= 5:
-        outbuilding(d, 26, 30, 38, 38, "greenhouse", h=4)
-        outbuilding(d, 41, 30, 53, 40, "workshop", h=4)
-        planter(d, 26, 41, 53, 41, 1)
-        for x in (28, 36, 44, 52):
-            tree(d, x, 45, 2, "birch", 5, 2)
-        lane(d, 22, 28, 55, 29, "smooth_stone")
-        stamp(d, cottage_nt(rel, 1), 0, 48)
-        stamp(d, cottage_nt(rel, 1), 26, 48)
-        lane(d, 0, 46, 55, 47, "smooth_stone")
-    return d
 
 
 @design("house")
@@ -2944,127 +2741,7 @@ def house(pack, rel, L):
 
 
 # ============================================================================================ compositions: COTTAGE
-def cottage_hamlet_hw(rel, L):
-    """Cotswold smallholding: the stone cottage, then a well and bake-oven shed, a stone barn and glasshouse,
-    a stable and orchard, finally the neighbouring cottage, a workshop and a duck pond – a little hamlet."""
-    d = Design("Hearthwood", rel, (58, 40, 52), paving="grass_block[snowy=false]")
-    stamp(d, cottage_hw(rel, L), 0, 0, primary=True)
-    if L >= 2:
-        well(d, 24, 4, "Hearthwood")
-        outbuilding(d, 22, 9, 28, 14, "bakehouse", h=3)
-        lane(d, 20, 0, 21, 16, "gravel")
-        lamp_post(d, 19, 1, 1)
-        bench(d, 26, 2, 2, "east", "north", "dark_oak")
-        outbuilding(d, 47, 3, 56, 10, "greenhouse", h=3)
-    if L >= 3:
-        outbuilding(d, 31, 3, 45, 11, "barn", h=4)
-        outbuilding(d, 1, 24, 9, 30, "shed", h=3)
-        lane(d, 22, 15, 57, 16, "gravel")
-        lamp_post(d, 30, 14, 1)
-    if L >= 4:
-        outbuilding(d, 31, 19, 43, 26, "stable", h=4)
-        orchard(d, 47, 20, 55, 28, "oak", 4)
-        hedge(d, 45, 18, 57, 30, "oak", gaps=((45, 24),))
-        garden(d, 11, 24, 18, 30, 2, "spruce", ((14, 24, "north"),))
-    if L >= 5:
-        stamp(d, cottage_hw(rel, 3), 0, 31)
-        outbuilding(d, 22, 33, 32, 40, "workshop", h=4)
-        pond(d, 36, 32, 44, 38)
-        outbuilding(d, 47, 33, 55, 40, "shed", h=3)
-        lane(d, 20, 17, 21, 50, "gravel")
-        for z in (22, 34, 46):
-            lamp_post(d, 19, z, 1)
-        orchard(d, 25, 45, 53, 49, "oak", 7)
-    return d
 
-
-def cottage_retreat_ca(rel, L):
-    """Mountain retreat: the A-frame, then a woodshed and sauna by the deck, guest cabins, a boathouse pond and
-    a lookout, finally a cookhouse lodge and more cabins in the spruce stand."""
-    d = Design("Cascadia", rel, (60, 40, 58), paving="grass_block[snowy=false]")
-    stamp(d, cottage_ca(rel, L), 0, 0, primary=True)
-    if L >= 2:
-        outbuilding(d, 25, 3, 31, 8, "shed", h=3)
-        outbuilding(d, 25, 11, 32, 17, "bakehouse", h=3)
-        lane(d, 22, 0, 23, 20, "coarse_dirt")
-        lamp_post(d, 24, 1, 1, "ca")
-        for x in range(33, 37):
-            d.set(x, 2, 5, log("spruce_log", "x"))
-            d.set(x, 3, 5, log("spruce_log", "x"))
-    if L >= 3:
-        cabin(d, 36, 3, "north", True, 2, "lime", extra_barrel=False)
-        cabin(d, 48, 3, "north", False, 2, "orange", extra_barrel=False)
-        lane(d, 24, 19, 59, 20, "coarse_dirt")
-        lamp_post(d, 46, 18, 1, "ca")
-    if L >= 4:
-        pond(d, 26, 24, 40, 34)
-        outbuilding(d, 42, 24, 52, 31, "workshop", h=3)
-        orchard(d, 3, 30, 19, 38, "spruce", 5)
-        for x, z in cells(54, 22, 57, 25):                  # lookout tower
-            pass
-        for y in range(2, 11):
-            for x, z in ((54, 22), (57, 22), (54, 25), (57, 25)):
-                d.set(x, y, z, log("spruce_log", "y"))
-        d.fill(54, 11, 22, 57, 11, 25, "spruce_planks")
-        for x, z in cells(54, 22, 57, 25):
-            if x in (54, 57) or z in (22, 25):
-                d.set(x, 12, z, fence("spruce"))
-        d.set(56, 12, 25, AIR)
-        for y in range(2, 12):
-            d.set(56, y, 26, f"ladder[facing=south,waterlogged=false]")
-            d.set(56, y, 25, "spruce_planks") if y < 11 else None
-        for x, z in cells(53, 21, 58, 26):
-            d.set(x, 14, z, "dark_oak_slab[type=bottom,waterlogged=false]")
-        for x, z in ((54, 22), (57, 22), (54, 25), (57, 25)):
-            d.set(x, 13, z, log("spruce_log", "y"))
-    if L >= 5:
-        stamp(d, house_ca(rel, 1), 0, 37, hut_to="barrel[facing=up,open=false]")
-        cabin(d, 30, 40, "north", True, 2, "cyan", extra_barrel=False)
-        cabin(d, 42, 40, "north", False, 2, "pink", extra_barrel=False)
-        lane(d, 24, 36, 59, 37, "coarse_dirt")
-        for x in (29, 41, 53):
-            lamp_post(d, x, 38, 1, "ca")
-        outbuilding(d, 30, 51, 42, 56, "shed", h=3)
-        outbuilding(d, 44, 51, 56, 56, "bakehouse", h=3)
-        lane(d, 28, 50, 58, 50, "coarse_dirt")
-    return d
-
-
-def cottage_pavilions_nt(rel, L):
-    """Garden pavilions: the green-roof pavilion, then a glasshouse on a lit garden walk, a studio and a second
-    pavilion, a reflecting pool court with a third pavilion, finally a fourth pavilion and a tea house."""
-    d = Design("Neoterra", rel, (62, 40, 58), paving="grass_block[snowy=false]")
-    stamp(d, cottage_nt(rel, L), 0, 0, primary=True)
-    if L >= 2:
-        lane(d, 19, 0, 20, 24, "smooth_stone")
-        for z in (3, 11, 19):
-            lamp_post(d, 21, z, 1, "nt")
-        outbuilding(d, 24, 3, 34, 10, "greenhouse", h=4)
-        planter(d, 24, 13, 34, 13, 1)
-    if L >= 3:
-        stamp(d, cottage_nt(rel, 1), 26, 15)
-    if L >= 4:
-        outbuilding(d, 37, 3, 49, 11, "workshop", h=4)
-        planter(d, 37, 13, 49, 13, 1)
-        stamp(d, cottage_nt(rel, 3), 0, 33)
-        for x, z in cells(24, 29, 45, 33):
-            d.set(x, 1, z, "water" if 26 <= x <= 43 and 30 <= z <= 32 else "smooth_quartz")
-        for x in (24, 45):
-            tree(d, x, 35, 2, "birch", 5, 2)
-        lane(d, 19, 25, 20, 57, "smooth_stone")
-        for z in (30, 40, 50):
-            lamp_post(d, 21, z, 1, "nt")
-    if L >= 5:
-        stamp(d, cottage_nt(rel, 1), 26, 38)
-        outbuilding(d, 26, 51, 36, 57, "poolhouse", h=3)
-        outbuilding(d, 39, 51, 50, 57, "greenhouse", h=4)
-        lane(d, 22, 49, 51, 50, "smooth_stone")
-        stamp(d, cottage_nt(rel, 1), 44, 15)
-        for x in (52, 58):
-            tree(d, x, 32, 2, "birch", 5, 2)
-        for x in (24, 38, 50):
-            lamp_post(d, x, 48, 1, "nt")
-    return d
 
 
 @design("cottage")
@@ -3673,3 +3350,424 @@ def aframe_hut(d, x1, z1, bedc):
     rugc(d, x1 + 3, z1 + 2, x1 + 5, z1 + 4, y0, "red")
     for x in range(x1 - 1, x2 + 2):                       # little deck
         d.set(x, d.gy, z1 - 1, "spruce_planks")
+
+
+# ============================================================================================ HOUSE estates
+def house_estate_hw(rel, L):
+    """Tudor farmstead: the family house (red-tile roof) grows a well and kitchen garden, a barn (brown tile)
+    and stable round a farmyard, a dower house (pink wash, blue slate) and greenhouse, finally a workshop,
+    bakehouse, great tithe barn (shingles), orchard and duck pond."""
+    d = Design("Hearthwood", rel, (56, 40, 62), paving="grass_block[snowy=false]")
+    main = house_hw(rel, 1 if L == 1 else 5)
+    recolor(main, [("deepslate_tile", "brick")], parts=("full", "stairs", "slab"))
+    stamp(d, main, 0, 0, primary=True)
+    if L >= 2:
+        lane(d, 22, 0, 24, 30, "gravel", "cobblestone")
+        well(d, 27, 3, "Hearthwood")
+        garden(d, 26, 7, 33, 13, 2, "spruce", ((26, 10, "west"),), beds=False)
+        for x, z in cells(27, 8, 32, 12):
+            if z != 10:
+                d.set(x, 1, z, "farmland[moisture=7]")
+                d.set(x, 2, z, ("carrots[age=7]", "potatoes[age=7]", "beetroots[age=3]")[(x + z) % 3])
+            else:
+                d.set(x, 1, z, "dirt_path")
+        lamp_post(d, 21, 1, 1)
+        bench(d, 29, 1, 2, "east", "north", "dark_oak")
+    if L >= 3:
+        lane(d, 25, 14, 55, 16, "gravel")
+        outbuilding(d, 35, 3, 49, 12, "barn", h=5)
+        recolor(d, [("deepslate_tile", "mud_brick")], (34, 2, 50, 13))
+        for x in range(35, 50):
+            d.set(x, 1, 13, "gravel")
+        outbuilding(d, 40, 18, 52, 25, "stable", h=4)
+        for x in range(40, 53):
+            d.set(x, 1, 17, "gravel")
+        lamp_post(d, 34, 14, 1)
+        wagon(d, 29, 15, 2, "dark_oak")
+    if L >= 4:
+        dower = house_hw(rel, 1)
+        recolor(dower, [("deepslate_tile", "dark_prismarine"), ("calcite", "pink_terracotta")],
+                parts=("full", "stairs", "slab"))
+        stamp(d, dower, 26, 27)
+        outbuilding(d, 2, 28, 12, 35, "greenhouse", h=3)
+        lane(d, 7, 25, 8, 27, "gravel")
+        lamp_post(d, 24, 26, 1)
+        orchard(d, 15, 30, 21, 38, "oak", 6)
+    if L >= 5:
+        outbuilding(d, 2, 40, 14, 48, "workshop", h=4)
+        recolor(d, [("deepslate_tile", "granite"), ("calcite", "yellow_terracotta")], (1, 39, 15, 49))
+        outbuilding(d, 16, 42, 23, 48, "bakehouse", h=4)
+        pond(d, 48, 29, 54, 35)
+        orchard(d, 49, 40, 53, 48, "birch", 4)
+        lane(d, 2, 37, 23, 39, "gravel")
+        for x in (6, 19):
+            bench(d, x, 38, 2, "east", "south", "dark_oak")
+        outbuilding(d, 26, 51, 52, 60, "barn", h=6)
+        recolor(d, [("deepslate_tile", "dark_oak")], (25, 50, 53, 61))
+        lane(d, 24, 49, 53, 50, "gravel")
+        lane(d, 24, 17, 25, 50, "gravel")
+        for x in (30, 48):
+            lamp_post(d, x, 49, 1)
+    return d
+
+
+def house_estate_ca(rel, L):
+    """Homestead ranch: the log home (dark shake roof), then woodshed and well, a red log barn (slate roof) with
+    a corral, birch-sided bunk cabins and a smokehouse, finally a stable (blue-green metal roof), a stone silo,
+    pond, garden and spruce stands."""
+    d = Design("Cascadia", rel, (60, 40, 58), paving="grass_block[snowy=false]")
+    main = house_ca(rel, 1 if L == 1 else 5)
+    recolor(main, [("dark_oak", "cobbled_deepslate")])
+    stamp(d, main, 0, 0, primary=True)
+    if L >= 2:
+        outbuilding(d, 28, 3, 35, 8, "shed", h=3)
+        well(d, 26, 12, "Cascadia")
+        lane(d, 24, 0, 26, 9, "coarse_dirt")
+        lamp_post(d, 27, 1, 1, "ca")
+        for x in range(36, 42):
+            d.set(x, 2, 6, log("spruce_log", "x"))
+            if x % 2:
+                d.set(x, 3, 6, log("spruce_log", "x"))
+    if L >= 3:
+        lane(d, 24, 14, 46, 15, "coarse_dirt")
+        outbuilding(d, 28, 17, 44, 27, "barn", h=5)
+        recolor(d, [("spruce_planks", "mangrove_planks"), ("dark_oak", "deepslate_tile")], (27, 16, 45, 28, 3),
+                parts=("stairs", "slab"))
+        for x, z in cells(47, 6, 58, 27):
+            if x in (47, 58) or z in (6, 27):
+                d.set(x, 2, z, fence("spruce"))
+            else:
+                d.set(x, 1, z, "coarse_dirt" if (x + z) % 3 else "grass_block[snowy=false]")
+        d.set(47, 2, 15, gate("spruce", "east"))
+        for z in (8, 9):
+            d.set(57, 2, z, "hay_block[axis=y]")
+        d.set(57, 2, 11, "water_cauldron[level=3]")
+        d.set(57, 2, 12, "water_cauldron[level=3]")
+    if L >= 4:
+        lane(d, 0, 26, 26, 27, "coarse_dirt")
+        cabin(d, 1, 31, "south", True, 2, "lime", extra_barrel=False)
+        cabin(d, 13, 31, "south", False, 2, "orange", extra_barrel=False)
+        recolor(d, [("stripped_spruce_log", "stripped_birch_log"), ("dark_oak", "mangrove")], (0, 28, 24, 42))
+        outbuilding(d, 30, 31, 37, 37, "bakehouse", h=3)
+        lamp_post(d, 12, 28, 1, "ca")
+        outbuilding(d, 48, 45, 56, 51, "shed", h=3)
+        garden(d, 38, 44, 46, 51, 2, "spruce", ((42, 44, "north"),), beds=False)
+        for x, z in cells(39, 45, 45, 50):
+            if x != 42:
+                d.set(x, 1, z, "farmland[moisture=7]")
+                d.set(x, 2, z, ("carrots[age=7]", "potatoes[age=7]", "beetroots[age=3]")[x % 3])
+    if L >= 5:
+        outbuilding(d, 40, 31, 56, 40, "stable", h=4)
+        recolor(d, [("dark_oak", "dark_prismarine")], (39, 30, 57, 41))
+        cx, cz = 25, 22
+        for y in range(2, 14):
+            for ax, az in cells(cx - 2, cz - 2, cx + 2, cz + 2):
+                if (abs(ax - cx) == 2 or abs(az - cz) == 2) and not (abs(ax - cx) == 2 and abs(az - cz) == 2):
+                    d.set(ax, y, az, "cobblestone" if y < 4 else ("stripped_spruce_log[axis=y]" if (ax + az) % 2
+                                                               else "spruce_planks"))
+        for ax, az in cells(cx - 1, cz - 1, cx + 1, cz + 1):
+            d.set(ax, 14, az, "dark_oak_planks")
+        d.set(cx, 15, cz, "dark_oak_slab[type=bottom,waterlogged=false]")
+        for ax, az, f in ((cx - 2, cz, "east"), (cx + 2, cz, "west"), (cx, cz - 2, "south"), (cx, cz + 2, "north")):
+            d.set(ax, 14, az, stair("dark_oak", f))
+        pond(d, 2, 44, 10, 50)
+        orchard(d, 14, 44, 30, 54, "spruce", 5)
+        lane(d, 38, 28, 39, 41, "coarse_dirt")
+        bench(d, 4, 41, 2, "east", "north", "spruce")
+        wagon(d, 41, 28, 2, "spruce")
+        for x, z in ((27, 40), (37, 41), (20, 29), (46, 29)):
+            lamp_post(d, x, z, 1, "ca")
+        bench(d, 20, 41, 2, "east", "north", "spruce")
+        for z in range(44, 56, 3):
+            d.set(57, 2, z, "hay_block[axis=y]")
+        for z in range(42, 56):
+            d.set(36, 2, z, fence("spruce"))
+    return d
+
+
+def house_estate_nt(rel, L):
+    """Modern compound: the villa (orange accents), then a lit drive, a pool with pool house and a studio,
+    guest villas in grey and terracotta with a garage, finally a greenhouse, fitness pavilion and two more
+    guest villas on a birch-lined walk."""
+    d = Design("Neoterra", rel, (56, 40, 64), paving="grass_block[snowy=false]")
+    main = house_nt(rel, 1 if L == 1 else 5)
+    recolor(main, [("cyan_terracotta", "orange_terracotta")])
+    stamp(d, main, 0, 0, primary=True)
+    if L >= 2:
+        lane(d, 21, 0, 23, 22, "smooth_stone", "polished_andesite")
+        for z in (2, 8, 14, 20):
+            lamp_post(d, 24, z, 1, "nt")
+        planter(d, 25, 1, 33, 1, 1)
+    if L >= 3:
+        for x, z in cells(26, 4, 42, 13):
+            d.set(x, 1, z, "smooth_quartz")
+        for x, z in cells(28, 6, 38, 11):
+            d.set(x, 1, z, "water")
+            d.set(x, 0, z, "light_blue_concrete")
+        for x in (29, 32, 35):
+            d.chair(x, 2, 12, "south", "birch", sit=False)
+        outbuilding(d, 44, 3, 52, 12, "poolhouse", h=3)
+        outbuilding(d, 26, 17, 38, 24, "workshop", h=4)
+        recolor(d, [("white_concrete", "orange_terracotta")], (26, 17, 38, 24, 2))
+    if L >= 4:
+        g = house_nt(rel, 1)
+        recolor(g, [("white_concrete", "light_gray_concrete"), ("cyan_terracotta", "yellow_terracotta"),
+                    ("stripped_birch_log", "stripped_mangrove_log")])
+        stamp(d, g, 0, 25)
+        outbuilding(d, 41, 17, 53, 25, "garage", h=4)
+        lane(d, 41, 26, 53, 27, "smooth_stone")
+    if L >= 5:
+        outbuilding(d, 26, 30, 38, 38, "greenhouse", h=4)
+        outbuilding(d, 41, 30, 53, 40, "workshop", h=4)
+        recolor(d, [("white_concrete", "polished_deepslate")], (41, 30, 53, 40, 2))
+        planter(d, 26, 42, 53, 42, 1)
+        for x in (28, 36, 44, 52):
+            tree(d, x, 45, 2, "birch", 5, 2)
+        lane(d, 22, 28, 55, 29, "smooth_stone")
+        for gx, pal in ((0, [("white_concrete", "white_terracotta"), ("cyan_terracotta", "lime_terracotta")]),
+                        (26, [("white_concrete", "light_gray_concrete"), ("cyan_terracotta", "magenta_terracotta"),
+                              ("stripped_birch_log", "stripped_cherry_log")])):
+            g = house_nt(rel, 1)
+            recolor(g, pal)
+            stamp(d, g, gx, 48)
+        lane(d, 0, 46, 55, 47, "smooth_stone")
+    return d
+
+
+# ============================================================================================ COTTAGE hamlets
+def cottage_hamlet_hw(rel, L):
+    """Cotswold smallholding (honey stone, brown-tile roof): the cottage, then a well, potting shed and bee
+    garden, a cart shed and pigsty, a dovecote and orchard, finally the neighbour's cottage (slate), a cider
+    barn and duck pond – a little hamlet."""
+    d = Design("Hearthwood", rel, (58, 40, 54), paving="grass_block[snowy=false]")
+    main = cottage_hw(rel, L)
+    recolor(main, [("deepslate_tile", "mud_brick")], parts=("full", "stairs", "slab"))
+    stamp(d, main, 0, 0, primary=True)
+    if L >= 2:
+        well(d, 24, 4, "Hearthwood")
+        addon(d, 22, 9, 29, 14, "potting")
+        recolor(d, [("deepslate_tile", "brick"), ("calcite", "smooth_sandstone")], (21, 8, 30, 15))
+        lane(d, 20, 0, 21, 16, "gravel")
+        lamp_post(d, 19, 1, 1)
+        bench(d, 26, 2, 2, "east", "north", "dark_oak")
+        # bee garden: hives on posts among lavender-ish flowers
+        garden(d, 46, 2, 57, 11, 2, "spruce", ((51, 11, "south"),), beds=False)
+        for x, z in cells(47, 3, 56, 10):
+            d.set(x, 2, z, ("allium", "lilac[half=lower]", "cornflower", "oxeye_daisy")[(x + z) % 4]
+                  if (x + z) % 2 else AIR)
+            if d.get(x, 2, z).endswith("lilac[half=lower]"):
+                d.set(x, 3, z, "lilac[half=upper]")
+        for x in (48, 51, 54):
+            for z in (5, 8):
+                d.set(x, 2, z, fence("spruce"))
+                d.set(x, 3, z, "beehive[facing=south,honey_level=3]")
+                d.set(x, 4, z, AIR)
+    if L >= 3:
+        addon(d, 31, 3, 44, 11, "cartshed", h=4)
+        recolor(d, [("deepslate_tile", "dark_oak"), ("calcite", "smooth_sandstone")], (30, 2, 45, 12))
+        # pigsty: low stone walls, a mud yard, a trough and a lean-to
+        for x, z in cells(1, 24, 10, 30):
+            if x in (1, 10) or z in (24, 30):
+                d.set(x, 2, z, "cobblestone_wall[east=low,north=low,south=low,up=true,waterlogged=false,west=low]")
+            else:
+                d.set(x, 1, z, "mud" if (x + z) % 3 else "coarse_dirt")
+        d.set(5, 2, 24, gate("spruce", "north"))
+        d.set(8, 2, 28, "water_cauldron[level=3]")
+        for x in range(2, 10):
+            d.set(x, 4, 29, stair("mud_brick", "south"))
+            d.set(x, 4, 30, stair("mud_brick", "south")) if False else None
+        for x in (2, 9):
+            d.set(x, 2, 29, fence("spruce"))
+            d.set(x, 3, 29, fence("spruce"))
+        d.set(4, 2, 29, "hay_block[axis=x]")
+        lane(d, 22, 15, 57, 16, "gravel")
+        lamp_post(d, 30, 14, 1)
+        garden(d, 11, 24, 18, 30, 2, "spruce", ((14, 24, "north"),))
+        bench(d, 33, 13, 2, "east", "north", "dark_oak")
+    if L >= 4:
+        dovecote(d, 34, 19, "Hearthwood")
+        orchard(d, 47, 20, 55, 28, "oak", 4)
+        hedge(d, 45, 18, 57, 30, "oak", gaps=((45, 24),))
+        addon(d, 22, 19, 30, 26, "potting")
+        recolor(d, [("deepslate_tile", "granite")], (21, 18, 31, 27))
+    if L >= 5:
+        nb = cottage_hw(rel, 3)
+        recolor(nb, [("smooth_sandstone", "calcite"), ("cut_sandstone", "stone_bricks")])
+        stamp(d, nb, 0, 32)
+        addon(d, 22, 33, 33, 40, "cartshed", h=4)
+        recolor(d, [("deepslate_tile", "brick")], (21, 32, 34, 41))
+        pond(d, 36, 32, 44, 38)
+        dovecote(d, 48, 34, "Hearthwood")
+        lane(d, 20, 17, 21, 52, "gravel")
+        for z in (22, 34, 46):
+            lamp_post(d, 19, z, 1)
+        orchard(d, 25, 45, 53, 51, "oak", 7)
+    return d
+
+
+def cottage_retreat_ca(rel, L):
+    """Mountain retreat (red-cedar A-frame): a sauna and wood store by the deck, then guest A-frames, a pond with a
+    plank dock and a lookout tower, finally a second lodge A-frame, more huts and a bee garden."""
+    d = Design("Cascadia", rel, (60, 40, 62), paving="grass_block[snowy=false]")
+    main = cottage_ca(rel, L)
+    recolor(main, [("dark_oak", "mangrove")], parts=("full", "stairs", "slab"))
+    stamp(d, main, 0, 0, primary=True)
+    if L >= 2:
+        addon(d, 25, 3, 32, 8, "cartshed", h=3)
+        addon(d, 25, 11, 32, 17, "sauna")
+        recolor(d, [("dark_oak", "cobbled_deepslate")], (24, 2, 33, 18))
+        lane(d, 22, 0, 23, 20, "coarse_dirt")
+        lamp_post(d, 24, 1, 1, "ca")
+        for x in range(33, 37):
+            d.set(x, 2, 5, log("spruce_log", "x"))
+            d.set(x, 3, 5, log("spruce_log", "x"))
+    if L >= 3:
+        aframe_hut(d, 36, 3, "lime")
+        aframe_hut(d, 48, 3, "orange")
+        lane(d, 24, 19, 59, 20, "coarse_dirt")
+        lamp_post(d, 46, 18, 1, "ca")
+        lamp_post(d, 34, 18, 1, "ca")
+        bench(d, 38, 18, 2, "east", "north", "spruce")
+    if L >= 4:
+        orchard(d, 3, 30, 19, 38, "spruce", 5)
+        pond(d, 26, 24, 40, 34)
+        for z in range(25, 30):                            # plank dock into the pond
+            d.set(33, 1, z, "spruce_planks")
+            d.set(34, 1, z, "spruce_planks")
+        d.set(33, 2, 29, fence("spruce"))
+        addon(d, 42, 24, 52, 31, "sauna")
+        for y in range(2, 11):
+            for x, z in ((54, 22), (57, 22), (54, 25), (57, 25)):
+                d.set(x, y, z, log("spruce_log", "y"))
+        d.fill(54, 11, 22, 57, 11, 25, "spruce_planks")
+        for x, z in cells(54, 22, 57, 25):
+            if x in (54, 57) or z in (22, 25):
+                d.set(x, 12, z, fence("spruce"))
+        d.set(56, 12, 25, AIR)
+        for y in range(2, 12):
+            d.set(56, y, 26, "ladder[facing=south,waterlogged=false]")
+            if y < 11:
+                d.set(56, y, 25, "spruce_planks")
+        for x, z in cells(53, 21, 58, 26):
+            d.set(x, 14, z, "mangrove_slab[type=bottom,waterlogged=false]")
+        for x, z in ((54, 22), (57, 22), (54, 25), (57, 25)):
+            d.set(x, 13, z, log("spruce_log", "y"))
+    if L >= 5:
+        lodge = cottage_ca(rel, 5)
+        recolor(lodge, [("dark_oak", "dark_prismarine")], parts=("full", "stairs", "slab"))
+        stamp(d, lodge, 0, 35, hut_to="barrel[facing=up,open=false]")
+        aframe_hut(d, 30, 40, "cyan")
+        aframe_hut(d, 42, 40, "pink")
+        lane(d, 24, 37, 59, 38, "coarse_dirt")
+        for x in (29, 41, 53):
+            lamp_post(d, x, 36, 1, "ca")
+        addon(d, 30, 51, 42, 57, "cartshed", h=3)
+        garden(d, 44, 51, 57, 58, 2, "spruce", ((50, 51, "north"),), beds=False)
+        for x in (46, 49, 52, 55):
+            d.set(x, 2, 55, fence("spruce"))
+            d.set(x, 3, 55, "beehive[facing=north,honey_level=2]")
+        lane(d, 28, 49, 58, 50, "coarse_dirt")
+    return d
+
+
+def cottage_pavilions_nt(rel, L):
+    """Garden pavilions: the green-roof pavilion, then a glasshouse on a lit garden walk, a second pavilion in
+    cherry, a studio (terracotta) and reflecting pool with a third pavilion, finally two more pavilions and
+    a tea house."""
+    d = Design("Neoterra", rel, (62, 40, 58), paving="grass_block[snowy=false]")
+    stamp(d, cottage_nt(rel, L), 0, 0, primary=True)
+    if L >= 2:
+        lane(d, 19, 0, 20, 24, "smooth_stone")
+        for z in (3, 11, 19):
+            lamp_post(d, 21, z, 1, "nt")
+        addon(d, 24, 3, 34, 10, "teahouse", h=4)
+        recolor(d, [("white_concrete", "glass")], (24, 3, 34, 10, 3))
+        planter(d, 24, 13, 34, 13, 1)
+    if L >= 3:
+        p2 = cottage_nt(rel, 1)
+        recolor(p2, [("stripped_birch_log", "stripped_cherry_log"), ("white_concrete", "light_gray_concrete")])
+        stamp(d, p2, 26, 15)
+    if L >= 4:
+        addon(d, 37, 3, 49, 11, "potting", h=4)
+        recolor(d, [("white_concrete", "orange_terracotta")], (37, 3, 49, 11, 2))
+        planter(d, 37, 13, 49, 13, 1)
+        p3 = cottage_nt(rel, 3)
+        recolor(p3, [("stripped_birch_log", "stripped_mangrove_log")])
+        stamp(d, p3, 0, 33)
+        for x, z in cells(24, 29, 45, 33):
+            d.set(x, 1, z, "water" if 26 <= x <= 43 and 30 <= z <= 32 else "smooth_quartz")
+        for x in (24, 45):
+            tree(d, x, 35, 2, "birch", 5, 2)
+        lane(d, 19, 25, 20, 57, "smooth_stone")
+        for z in (30, 40, 50):
+            lamp_post(d, 21, z, 1, "nt")
+    if L >= 5:
+        stamp(d, cottage_nt(rel, 1), 26, 38)
+        p5 = cottage_nt(rel, 1)
+        recolor(p5, [("stripped_birch_log", "stripped_dark_oak_log"), ("white_concrete", "white_terracotta")])
+        stamp(d, p5, 44, 15)
+        addon(d, 26, 51, 36, 57, "teahouse", h=3)
+        addon(d, 39, 51, 50, 57, "potting", h=4)
+        recolor(d, [("white_concrete", "cyan_terracotta")], (39, 51, 50, 57, 2))
+        lane(d, 22, 49, 51, 50, "smooth_stone")
+        for x in (52, 58):
+            tree(d, x, 32, 2, "birch", 5, 2)
+        for x in (24, 38, 50):
+            lamp_post(d, x, 48, 1, "nt")
+    return d
+
+
+# ============================================================================================ QUADPLEX cabin camp
+def quadplex_ca(rel, L):
+    """Cabin camp: cabins (green-metal roofs, alternating birch and log walls) round a court with a fire ring,
+    growing into eight cabins with a cookhouse, bathhouse, camp store and wood yard."""
+    d = Design("Cascadia", rel, (62, 22, 60), paving="grass_block[snowy=false]")
+    N = {1: 1, 2: 2, 3: 4, 4: 6, 5: 8}[L]
+    spec = [(17, 2, "north", False, "brown"), (33, 2, "north", True, "green"),
+            (17, 19, "south", True, "orange"), (33, 19, "south", False, "cyan"),
+            (1, 2, "north", False, "red"), (49, 2, "north", True, "yellow"),
+            (1, 19, "south", True, "purple"), (49, 19, "south", False, "lime")]
+    for k in range(N):
+        x1, z1, out, mir, c = spec[k]
+        Wf = cabin(d, x1, z1, out, mir, 2, c, True, double=(k == 0 and L >= 5))
+        if k == 0:
+            hx, hz = Wf(4, 0)
+            d.hut(hx, 2, hz)
+        pal = [("dark_oak", "dark_prismarine")] + ([("stripped_spruce_log", "stripped_birch_log")] if k % 2 else [])
+        recolor(d, pal, (x1 - 1, z1 - 3, x1 + 9, z1 + 10))
+    for x, z in cells(3, 12, 57, 16):
+        d.set(x, 1, z, "coarse_dirt" if (x * 3 + z) % 4 else "gravel")
+    for z in range(0, 60):
+        d.set(29, 1, z, "gravel")
+        d.set(30, 1, z, "gravel")
+    d.set(29, 1, 14, "cobblestone")
+    d.set(29, 2, 14, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+    for x in (28, 29, 30):
+        d.set(x, 2, 12, log("spruce_log", "x"))
+        d.set(x, 2, 16, log("spruce_log", "x"))
+    for x in (13, 46):
+        lamp_post(d, x, 14, 1, "ca")
+    if L >= 4:
+        addon(d, 1, 33, 26, 45, "cookhouse", h=5)
+        recolor(d, [("dark_oak", "mangrove")], (0, 32, 27, 46))
+        addon(d, 32, 36, 42, 43, "bathhouse", h=3)
+        lamp_post(d, 28, 32, 1, "ca")
+    if L >= 5:
+        px1, px2, pz1, pz2 = 44, 56, 35, 44
+        addon(d, px1, pz1, px2, pz2, "store", h=4)
+        recolor(d, [("dark_oak", "cobbled_deepslate"), ("stripped_spruce_log", "stripped_mangrove_log")],
+                (px1 - 1, pz1 - 1, px2 + 1, pz2 + 1))
+        d.item(px1 + 1, 2, pz1 + 3, "jukebox")
+        d.item(px2 - 1, 2, pz1 + 3, "ender_chest", "west")
+        for x, z in cells(30, 48, 43, 59):
+            d.set(x, 1, z, "coarse_dirt" if (x + z) % 3 else "packed_mud")
+        for z in (50, 53, 56):
+            for x in range(32, 42):
+                d.set(x, 2, z, log("spruce_log", "x"))
+                if x % 3:
+                    d.set(x, 3, z, log("spruce_log", "x"))
+        wagon(d, 33, 58, 2, "spruce", log("spruce_log", "x"))
+        addon(d, 45, 47, 58, 56, "cartshed", h=4)
+        addon(d, 2, 48, 26, 57, "cookhouse", h=4)
+        lamp_post(d, 31, 47, 1, "ca")
+    return d
