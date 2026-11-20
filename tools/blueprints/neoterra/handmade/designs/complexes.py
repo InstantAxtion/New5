@@ -285,9 +285,9 @@ def flat_hw(rel, L):
             d.item(10, y, z, k, "west" if k != "crafting_table" else None)
         d.set(10, y + 2, z, slab("dark_oak", "top"))
     d.set(10, y + 3, 1, "bricks")                        # range hood
-    d.item(9, y, 0, "barrel", "south")
-    d.set(9, y + 2, 0, slab("dark_oak", "top"))
-    d.set(9, y + 3, 0, "decorated_pot[cracked=false,facing=south,waterlogged=false]")
+    d.item(8, y, 0, "barrel", "south")
+    d.set(8, y + 2, 0, slab("dark_oak", "top"))
+    d.set(8, y + 3, 0, "decorated_pot[cracked=false,facing=south,waterlogged=false]")
     d.table(7, y, 1, "dark_oak")
     d.table(7, y, 2, "dark_oak") if L >= 2 else None
     d.chair(6, y, 1, "west", "dark_oak")
@@ -978,7 +978,7 @@ def win_ca(d, x, y, z, out, h=2, w=1):
 
 def skytower_ca(rel, L):
     G = CA
-    d = Design("Cascadia", rel, (29, 30, 31), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (29, 34, 31), paving="coarse_dirt")
     X1, X2, Z1, Z2 = G["X1"], G["X2"], G["Z1"], G["Z2"]
     S = G["SLABS"]
     for x, z in cells(0, 0, 28, 30):

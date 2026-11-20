@@ -1175,8 +1175,8 @@ def gh_cascadia(rel, L):
     d.door(6, 2, 5, "west", "spruce")
     d.door(11, 2, 5, "east", "spruce")
     for x in (6, 11):
-        d.set(x, 8, 4, AIR)
-        d.set(x, 9, 4, AIR)
+        d.set(x, 8, 5, AIR)
+        d.set(x, 9, 5, AIR)
     ladder(d, 5, 6, 2, 7, "north")
     ladder(d, 12, 6, 2, 7, "north")
     d.hut(2, 2, 3)
@@ -1188,11 +1188,12 @@ def gh_cascadia(rel, L):
     d.set(3, 5, 4, LANT)
     d.set(14, 5, 4, LANT)
     # bunks (4 per tower)
-    for bx in ((2, 3), (14, 15)):
-        for x in bx:
-            d.bed(x, 8, 3, "north", "brown")
-            d.bed(x, 8, 6, "south", "brown")
-        d.set(bx[0] + (2 if bx[0] == 2 else -1), 10, 5, LANT)
+    for wx, ex, side in ((2, 5, "east"), (15, 12, "west")):
+        d.bed(wx, 8, 3, "north", "brown")
+        d.bed(wx, 8, 6, "south", "brown")
+        d.bed(ex, 8, 3, side, "brown")
+        d.bed(ex, 8, 4, side, "brown")
+        d.set((wx + ex) // 2, 10, 5, LANT)
     # palisade stubs on both sides
     for x in (0, 17):
         for z in (4, 5):
