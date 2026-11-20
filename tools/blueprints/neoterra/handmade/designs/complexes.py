@@ -159,15 +159,26 @@ def add_child(d, x0, y0, z0, w, h, dpt, hut, path):
     d.child_hut(x0 + hx, y0 + hy - 1, z0 + hz, path)
 
 
-def rail_openings(d, rail):
+def rail_openings(d, rail, levels):
     """Guard every opening in a walkable floor (stair wells, deck holes over outside stairs, lofts): any open cell
     next to a reachable standing cell with a drop of 2+ below it, under a roof/ceiling, gets a railing. Over a
     flight the railing sits high enough to keep 3 blocks of headroom above the steps; the top steps (a drop of
-    0-1, the stair's own entry) stay open. Returns the cells railed."""
+    0-1, the stair's own entry) stay open. `levels` = the walking levels of the floors/decks/lofts to guard.
+    Repeats until nothing changes. Returns the cells railed."""
     import walkcheck
-    _, _, seen = walkcheck.analyse(d.bp, True)
     done = []
+    for _ in range(4):
+        n = len(done)
+        _rail_pass(d, rail, levels, walkcheck.analyse(d.bp, True)[2], done)
+        if len(done) == n:
+            break
+    return done
+
+
+def _rail_pass(d, rail, levels, seen, done):
     for (x, y, z) in sorted(seen):
+        if y not in levels:
+            continue
         for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
             nx, nz = x + dx, z + dz
             if not d.bp.inside(nx, y + 1, nz) or (nx, y, nz) in seen:
@@ -184,7 +195,6 @@ def rail_openings(d, rail):
             if yr <= y + 1 and d.air(nx, yr, nz):
                 d.set(nx, yr, nz, rail)
                 done.append((nx, yr, nz))
-    return done
 
 
 # ============================================================================================ SKY TOWER
@@ -667,7 +677,7 @@ def skytower_nt(rel, L):
     for x in (7, 15):
         d.set(x, 2, 1, "sea_lantern")
         d.set(x, 3, 1, endrod("up"))
-    rail_openings(d, "glass_pane")
+    rail_openings(d, "glass_pane", (8, 13, 18, 23, 28))
     return d
 
 
@@ -981,7 +991,7 @@ def skytower_hw(rel, L):
             d.set(x, cy + 3, z, "weathered_cut_copper")
         d.set(15, cy + 4, 11, "weathered_cut_copper")
         d.set(15, cy + 5, 11, "lightning_rod[facing=up,powered=false,waterlogged=false]")
-    rail_openings(d, "dark_oak_fence")
+    rail_openings(d, "dark_oak_fence", (7, 12, 17))
     return d
 
 
@@ -1260,7 +1270,7 @@ def skytower_ca(rel, L):
         for y in range(cy + 5, cy + 8):
             d.set(14, y, 15, "spruce_fence")
         d.set(14, cy + 6, 16, "green_wall_banner[facing=south]")
-    rail_openings(d, "spruce_fence")
+    rail_openings(d, "spruce_fence", (7, 12))
     return d
 
 
@@ -1509,7 +1519,7 @@ def twin_nt(rel, L):
                 d.set(x, y, z, "light_gray_concrete")
             d.set(x, 7, z, "sea_lantern")
             d.set(x, 8, z, slab("smooth_stone"))
-    rail_openings(d, "iron_bars")
+    rail_openings(d, "iron_bars", (2,))
     return d
 
 
@@ -1688,7 +1698,7 @@ def twin_hw(rel, L):
         d.set(16, 3, 2, "bricks")
         for x in (17, 21):
             d.set(x, 2, 1, "potted_red_tulip")
-    rail_openings(d, "dark_oak_fence")
+    rail_openings(d, "dark_oak_fence", (7,))
     return d
 
 
@@ -1876,7 +1886,7 @@ def twin_ca(rel, L):
                 d.set(x, y, 14, fence("spruce"))
             d.set(x, 5, 14, lantern(False))
         d.set(26, 1, 29, "gravel")
-    rail_openings(d, "spruce_fence")
+    rail_openings(d, "spruce_fence", (2,))
     return d
 
 
