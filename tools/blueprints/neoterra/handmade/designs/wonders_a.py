@@ -83,37 +83,67 @@ def pews(d, x1, x2, zs, y, wood, back="north"):
             d.chair(x, y, z, back, wood, sit=True)
 
 
-def spire(d, cx, cz, y0, half, height, block, edge=None, octagon=True, top=None):
-    """Tapering spire: per layer a ring of `block`; where the next layer steps in, the ring is made of `edge`
-    stairs (facing up-slope) so the taper reads smooth. Octagonal corners are chamfered."""
-    edge = edge or block.replace("_tiles", "_tile").replace("_planks", "") + "_stairs"
-    rs = [int(round(half * (1 - k / height) + 0.25)) for k in range(height)] + [-1]
-    for k in range(height):
-        r, rn, y = rs[k], rs[k + 1], y0 + k
-        for dx in range(-r, r + 1):
-            for dz in range(-r, r + 1):
-                cut = octagon and r >= 2 and abs(dx) == r and abs(dz) == r
-                if cut:
-                    continue
-                ring = max(abs(dx), abs(dz)) == r or (octagon and r >= 2 and abs(dx) + abs(dz) == 2 * r - 1)
-                if not ring:
-                    d.set(cx + dx, y, cz + dz, AIR)
-                    continue
-                if rn < r and r > 0:
-                    if abs(dz) >= abs(dx):
-                        f = "south" if dz < 0 else "north"
+def _oct(dx, dz, r):
+    """Cell inside the octagon of 'radius' r (r <= 1: plain square)."""
+    if r < 0:
+        return False
+    m = max(abs(dx), abs(dz))
+    return m <= r and (r < 2 or abs(dx) + abs(dz) <= r + r // 2)
+
+
+def _stair_at(stairs, exposed):
+    """Roof stair for a cell whose open sides are `exposed` (set of directions): straight facing up-slope, or an
+    outer corner where two adjacent sides are open."""
+    n, s_, w, e = ("north" in exposed), ("south" in exposed), ("west" in exposed), ("east" in exposed)
+    if (n or s_) and (w or e) and not (n and s_) and not (w and e):
+        return stair(stairs, "south" if n else "north", "bottom", "outer_left" if w == n else "outer_right")
+    for side in ("north", "south", "west", "east"):
+        if side in exposed:
+            return stair(stairs, OPP[side])
+    return None
+
+
+def spire(d, cx, cz, y0, R, block, stairs, step=3, needle=4, needle_block=None, top=None, cross=False,
+          broach=True, slab_block=None):
+    """Slender octagonal spire: bands `step` high that narrow by one each, every face of a band ends in stairs
+    (straight on the faces, outer-corner shapes on the chamfers), broaches fill the square corners at the foot,
+    then a thin needle of `needle_block`, optional cross and a top finial. Returns the y above the finial."""
+    nb = needle_block or wallb("stone_brick_wall")
+    y = y0
+    if broach and R >= 2:                                   # broaches: corner pyramids at the foot
+        for dx in range(-R, R + 1):
+            for dz in range(-R, R + 1):
+                if not _oct(dx, dz, R):
+                    ex = {s2 for s2, (ox, oz) in D4.items()
+                          if max(abs(dx + ox), abs(dz + oz)) > R}
+                    st = _stair_at(stairs, ex)
+                    d.set(cx + dx, y, cz + dz, st or (slab(slab_block) if slab_block else block))
+    for r in range(R, 0, -1):
+        for k in range(step):
+            last = k == step - 1
+            for dx in range(-r, r + 1):
+                for dz in range(-r, r + 1):
+                    if not _oct(dx, dz, r):
+                        continue
+                    ex = {s2 for s2, (ox, oz) in D4.items() if not _oct(dx + ox, dz + oz, r)}
+                    if last and not _oct(dx, dz, r - 1):
+                        d.set(cx + dx, y, cz + dz, _stair_at(stairs, ex) or block)
+                    elif ex or (last and r - 1 >= 0 and any(not _oct(dx + ox, dz + oz, r - 1)
+                                                            for ox, oz in D4.values())):
+                        d.set(cx + dx, y, cz + dz, block)
                     else:
-                        f = "east" if dx < 0 else "west"
-                    shape = "straight"
-                    if abs(dx) == abs(dz) or (octagon and r >= 2 and abs(dx) + abs(dz) == 2 * r - 1
-                                              and abs(dx) != r and abs(dz) != r):
-                        shape = "outer_left" if (dx < 0) == (dz < 0) else "outer_right"
-                        f = "south" if dz < 0 else "north"
-                    d.set(cx + dx, y, cz + dz, stair(edge, f, "bottom", shape))
-                else:
-                    d.set(cx + dx, y, cz + dz, block)
-    if top:
-        d.set(cx, y0 + height, cz, top)
+                        d.set(cx + dx, y, cz + dz, AIR)
+            y += 1
+    d.set(cx, y, cz, block)                                 # needle
+    y += 1
+    for k in range(needle):
+        d.set(cx, y, cz, nb)
+        if cross and k == needle - 2:
+            for ox, oz in ((1, 0), (-1, 0)):
+                d.set(cx + ox, y, cz + oz, nb)
+        y += 1
+    d.set(cx, y, cz, top or "lightning_rod[facing=up,powered=false,waterlogged=false]")
+    return y + 1
 
 
 def lancet(d, x, z, y1, y2, cols=SG_GOTHIC, pane=True):
@@ -213,8 +243,8 @@ def hc_wing(rel, L):
             d.set(x, T + 1 + h, z, "lightning_rod[facing=up,powered=false,waterlogged=false]" if L == 5
                   else slab("stone_brick_slab"))
         if L == 5:                                 # lead-clad spirelet
-            spire(d, 3, 3, T + 1, 2, 10, "deepslate_tiles", octagon=False, top=wallb("stone_brick_wall"))
-            d.set(3, T + 12, 3, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+            spire(d, 3, 3, T + 1, 2, "deepslate_tiles", "deepslate_tile_stairs", step=3, needle=3,
+                  broach=False)
     return d
 
 
@@ -386,17 +416,11 @@ def hc_cathedral(rel, L):
                 d.set(x, ct + 6, z, "lightning_rod[facing=up,powered=false,waterlogged=false]")
             d.fill(12, ct, 19, 18, ct, 25, S)
             if L == 5:
-                spire(d, 15, 22, ct + 1, 3.5, 22, "deepslate_tiles", top=wallb("stone_brick_wall"))
-                for y in range(ct + 23, ct + 26):
-                    d.set(15, y, 22, wallb("stone_brick_wall"))
-                d.set(14, ct + 24, 22, wallb("stone_brick_wall"))
-                d.set(16, ct + 24, 22, wallb("stone_brick_wall"))
-                # spire lucarnes (gabled dormers) on the four faces
-                for x, z, f in ((15, 18, "north"), (15, 26, "south"), (11, 22, "west"), (19, 22, "east")):
-                    ox, oz = D4[f]
-                    bx, bz = 15 + ox * 2, 22 + oz * 2
-                    d.set(bx, ct + 3, bz, "dark_oak_trapdoor[facing=%s,half=bottom,open=true,powered=false,"
-                          "waterlogged=false]" % f)
+                spire(d, 15, 22, ct + 1, 3, "deepslate_tiles", "deepslate_tile_stairs", step=3, needle=6,
+                      cross=True, top="end_rod[facing=up]")
+                for x, z in ((12, 19), (18, 19), (12, 25), (18, 25)):         # pinnacles on the broaches
+                    d.set(x, ct + 2, z, wallb("stone_brick_wall"))
+                    d.set(x, ct + 3, z, "lightning_rod[facing=up,powered=false,waterlogged=false]")
         # interior: choir stalls, altar, lectern, organ pipes
         for z in range(27, 30):
             d.chair(12, 2, z, "west", "dark_oak")
@@ -645,10 +669,10 @@ def cc_wing(rel, L):
     d.item(3, T + 2, 3, "bell[attachment=ceiling,facing=north,powered=false]")
     d.fill(1, T + 4, 1, 5, T + 4, 5, "dark_oak_planks")
     ring(T + 4, 3)
-    h = {1: 3, 2: 4, 3: 6, 4: 9, 5: 12}[L]
-    spire(d, 3, 3, T + 5, 1.6, h, "dark_oak_planks", octagon=False)
-    d.set(3, T + 5 + h, 3, "lightning_rod[facing=up,powered=false,waterlogged=false]" if L >= 3
-          else fence("dark_oak_fence"))
+    R, st, nd = {1: (1, 2, 1), 2: (1, 2, 2), 3: (2, 2, 2), 4: (2, 3, 3), 5: (2, 3, 4)}[L]
+    spire(d, 3, 3, T + 5, R, "dark_oak_planks", "dark_oak_stairs", step=st, needle=nd,
+          needle_block=fence("dark_oak_fence"), cross=L == 5, broach=False,
+          top="lightning_rod[facing=up,powered=false,waterlogged=false]" if L >= 3 else fence("dark_oak_fence"))
     return d
 
 
@@ -889,13 +913,8 @@ def cc_cathedral(rel, L):
         d.set(13, th + 4, cz, RB)
         top = th + 5
     if L == 5:
-        for y in range(top, top + 10):
-            d.set(13, y, cz, RB)
-            if y < top + 4:
-                for x, z, f in ((12, cz, "east"), (14, cz, "west"), (13, cz - 1, "south"), (13, cz + 1, "north")):
-                    d.set(x, y, z, stair(R, f))
-        d.set(13, top + 10, cz, "lightning_rod[facing=up,powered=false,waterlogged=false]")
-        top += 10
+        top = spire(d, 13, cz, top - 1, 1, RB, R, step=3, needle=6, needle_block=fence("dark_oak_fence"),
+                    cross=True, broach=False)
     else:
         d.set(13, top, cz, fence("dark_oak_fence"))
     # dragon heads on the gables (L5), crosses on ridges
