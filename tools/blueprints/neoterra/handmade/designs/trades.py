@@ -2974,3 +2974,307 @@ def wh_cas(rel, L):
 @design("warehouse")
 def warehouse(pack, rel, L):
     return {"Neoterra": wh_neo, "Hearthwood": wh_hw, "Cascadia": wh_cas}[pack](rel, L)
+
+
+# =============================================================================================== DELIVERYMAN
+"""
+Deliveryman
+  Neoterra   "Courier depot" (white terracotta panels, orange bands): glass-fronted parcel shop with a counter and
+             a wall of parcel barrels (sorting floor upstairs from L2), loading canopy; parcel hub hall with a
+             conveyor (L3, crew floor with bunks from L4); van garage with a roof-top drone pad (L5).
+  Hearthwood "Post house & coaching stables" (calcite & brick, rose granite roofs, teal shutters): post office
+             with a pigeonhole barrel wall, counter and pillar box (sorting loft from L2); coaching stables (L2,
+             loft from L3); postmaster's house with the ledgers (L3, guest rooms L4); mail-coach house (L5).
+  Cascadia   "Express & freight office" (stripped logs, teal metal roofs, forest-green trim): false-front office
+             on a deep porch with a hitching rail (upper floor from L2), stable lean-to (L2); records room annex
+             (L3); telegraph & bunk house (L4); freight barn (L5).
+"""
+DLV = {1: 8, 2: 31, 3: 41, 4: 41, 5: 41}
+DSEAT = {1: 0, 2: 3, 3: 6, 4: 6, 5: 6}
+
+
+def dl_reqs(rooms, L, wood, barrels_done=0):
+    """Place deliveryman requirements across rooms (in order). Returns barrels placed."""
+    want = ["crafting_table", "cartography_table"] + (["lectern"] if L >= 2 else []) + \
+        (["cartography_table", "lectern"] if L >= 3 else []) + (["ender_chest"] if L >= 5 else [])
+    for it in want:
+        for r in rooms:
+            if r.item(it):
+                break
+    n = barrels_done
+    for r in rooms:
+        if n >= DLV[L]:
+            break
+        n += r.barrels(DLV[L] - n, 3, sides=("south", "west", "east"))
+    books = 12 if L >= 3 else 0
+    for r in rooms:
+        if books <= 0:
+            break
+        books -= r.books(books, 2, sides=("west", "north", "east", "south"))
+    seats = DSEAT[L]
+    for r in rooms:
+        if seats <= 0:
+            break
+        seats -= r.chairs_desk(seats, wood)
+    if L >= 4:
+        for r in rooms[::-1]:
+            if r.bed(wood):
+                break
+    return n
+
+
+def dl_neo(rel, L):
+    d = Design("Neoterra", rel, (36, 26, 30), paving="smooth_stone")
+    P, y0 = "Neoterra", 2
+    sto = 1 if L == 1 else 2
+    a = build(d, 3, 4, 15, 13, sto, roof="flat", core=(13, 6) if sto > 1 else None, street_glass=True)
+    a.door(7, 4, "north", double=True)
+    for x in range(3, 16):
+        d.set(x, 5, 3, "orange_concrete")
+    d.sign(10, 6, 3, "north", ["NEO", "COURIER"], "birch", glow=True, color="orange") if sto > 1 else \
+        d.sign(10, 5, 2, "north", ["NEO", "COURIER"], "birch", glow=True, color="orange")
+    d.hut(4, y0, 5)
+    r0 = a.room(0)
+    for x in range(5, 11):                                           # customer counter
+        d.set(x, y0, 8, sl("smooth_quartz", "top") if x != 5 else "quartz_block")
+        r0.used.add((x, 8))
+    rooms = [r0]
+    if sto > 1:
+        rooms.append(a.room(1))
+    b = None
+    if L >= 3:
+        b = build(d, 18, 4, 32, 14, 3 if L >= 4 else 1, H=4, roof="flat", core=(30, 6) if L >= 4 else None)
+        b.opening(22, 4, 24, 4, 3, "orange_concrete")
+        rb = b.room(0)
+        for x in range(20, 29):                                      # parcel conveyor
+            d.set(x, y0, 9, sl("smooth_stone", "top") if x % 3 else "hopper[enabled=true,facing=down]")
+            rb.used.add((x, 9))
+        rooms.append(rb)
+        if L >= 4:
+            rooms += [b.room(1), b.room(2)]
+    dl_reqs(rooms, L, "birch")
+    for r in rooms:
+        r.fill(["crate", "bamboo", "shelf_quartz"])
+    neo_roof(d, a, "solar")
+    if b:
+        neo_roof(d, b, "hvac")
+    # forecourt
+    for x in (1, 17):
+        d.set(x, y0, 3, "moss_block")
+        tree(d, x, 3, y0 + 1, "birch", 3, 1)
+    lamp_post(d, 12, 1, y0, P)
+    if L >= 2:
+        for x in range(3, 16):                                       # loading canopy at the back
+            for z in range(15, 19):
+                d.set(x, 5, z, sl("smooth_quartz", "top"))
+        for x in (3, 9, 15):
+            d.fill(x, y0, 18, x, 4, 18, "light_gray_concrete")
+        a_back = d.door(9, y0, 13, "south", "birch")
+        for x in (5, 6, 11, 12):
+            crate_stack(d, x, 16, y0, 2)
+        bench(d, 4, 1, y0, "north", 2, "birch", sit=False)
+    # ---- van garage + drone pad (L5)
+    if L >= 5:
+        g = build(d, 18, 17, 32, 27, 3, roof="flat", core=(30, 19))
+        g.opening(21, 17, 25, 17, 3, "orange_concrete")
+        rg = g.room(0)
+        for x in (21, 25):
+            for z in range(20, 25):
+                d.set(x, y0, z, "white_concrete" if z % 2 else "orange_concrete")
+                d.set(x, y0 + 1, z, "glass" if z in (21, 22, 23) else sl("smooth_quartz"))
+                rg.used.add((x, z))
+        rg.fill(["crate", "shelf_quartz"])
+        rg2 = g.room(1)
+        rg2.table_group("birch", 4, "slab", rug="orange_carpet", sit=False)
+        rg2.fill(["crate", "bamboo"])
+        rg3 = g.room(2)
+        rg3.chairs_desk(3, "birch", top=sl("smooth_quartz", "top"), sit=False)
+        rg3.fill(["shelf_quartz", "bamboo"])
+        yy = g.yr + 1
+        for x in range(21, 30):
+            for z in range(19, 26):
+                d.set(x, yy, z, "orange_concrete" if x in (21, 29) or z in (19, 25) else "light_gray_concrete")
+        for x, z in ((23, 21), (27, 21), (23, 23), (27, 23)):
+            d.set(x, yy + 1, z, "end_rod[facing=up]")
+    return d
+
+
+def dl_hw(rel, L):
+    d = Design("Hearthwood", rel, (36, 22, 40), paving="gravel")
+    P, y0 = "Hearthwood", 2
+    sto = 1 if L == 1 else 2
+    a = build(d, 3, 4, 15, 11, sto, roof="gable", axis="x", core=(13, 5) if sto > 1 else None,
+              chimney=(4, 8, "east"))
+    a.door(8, 4, "north")
+    d.sign(9, 4, 3, "north", ["Royal Mail", "Post House"], "dark_oak")
+    d.set(6, y0, 2, "red_concrete")                                     # pillar box
+    d.set(6, y0 + 1, 2, "red_terracotta")
+    d.set(6, y0 + 2, 2, sl("red_nether_brick"))
+    d.hut(5, y0, 5)
+    r0 = a.room(0)
+    for x in range(7, 12):
+        d.set(x, y0, 7, sl("dark_oak", "top"))
+        r0.used.add((x, 7))
+    rooms = [r0] + ([a.room(1)] if sto > 1 else [])
+    flower_bed(d, 10, 2, 14, 2, y0, seed=3)
+    lamp_post(d, 2, 2, y0, P)
+    # ---- coaching stables (L2+), loft from L3
+    if L >= 2:
+        s_ = 2 if L >= 3 else 1
+        d.sty_over = dict(wall="bricks", wall0="bricks", end="bricks")
+        st_ = build(d, 20, 4, 30, 14, s_, roof="gable", axis="z", core=(28, 8) if s_ > 1 else None)
+        d.sty_over = {}
+        st_.opening(20, 6, 20, 8, 3, lg("stripped_dark_oak_log", "z"))
+        for zz in (6, 9, 12):
+            for x in range(22, 26):
+                d.set(x, y0, zz, "dark_oak_fence")
+            d.set(21, y0, zz + 1, "hay_block[axis=x]") if zz < 12 else None
+        rs = st_.room(0)
+        rs.keep |= {(x, z) for x in range(21, 26) for z in range(5, 14)}
+        rooms.append(rs)
+        if s_ > 1:
+            rooms.append(st_.room(1))
+    # ---- postmaster's house (L3+), guest rooms (L4)
+    if L >= 3:
+        h = build(d, 3, 15, 15, 23, 2 if L == 3 else 3, roof="gable", axis="x", core=(13, 16), chimney=(4, 19, "east"))
+        h.door(8, 15, "north")
+        rooms += [h.room(s_) for s_ in range(h.storeys)]
+    dl_reqs(rooms, L, "dark_oak")
+    for r in rooms:
+        r.fill(PACK_DECOR[P])
+        r.lights()
+    if L >= 2:
+        d.set(17, y0, 7, "stone_bricks")                              # mounting block & trough
+        d.set(17, y0, 8, st("stone_brick", "north"))
+        for x in (17,):
+            d.set(x, y0, 11, "water_cauldron[level=3]")
+    # ---- mail-coach house (L4+), sorting office (L5)
+    if L >= 5:
+        so = build(d, 3, 28, 19, 37, 2, roof="gable", axis="x", core=(17, 30), chimney=(4, 32, "east"))
+        so.door(10, 28, "north", double=True)
+        r_ = so.room(0)
+        for x in range(7, 14):
+            d.set(x, r_.y, 33, sl("dark_oak", "top"))
+            d.chair(x, r_.y, 32, "north", "dark_oak", sit=False)
+            r_.used.update({(x, 32), (x, 33)})
+        r_.fill(["keg", "shelf_dark", "banner_red", "crate"])
+        r_.lights()
+        r2_ = so.room(1)
+        r2_.fill(["crate", "keg", "chisel"])
+        r2_.table_group("dark_oak", 4, "post", rug="red_carpet", sit=False)
+        r2_.lights()
+        d.sign(12, 5, 27, "north", ["Sorting", "Office"], "dark_oak")
+    if L >= 4:
+        c = build(d, 20, 18, 33, 26, 2, roof="gable", axis="x", core=(31, 19))
+        c.opening(23, 18, 26, 18, 3, lg("stripped_dark_oak_log", "x"))
+        rc = c.room(0)
+        wagon(d, 24, 22, y0, "dark_oak", "barrel[facing=up,open=false]")
+        rc.used.update({(x, 22) for x in range(23, 27)})
+        rc.fill(["keg", "hay", "sack"])
+        rc.lights()
+        rc2 = c.room(1)
+        rc2.table_group("dark_oak", 4, "post", rug="red_carpet", sit=False)
+        rc2.fill(["shelf_dark", "plant", "wardrobe"])
+        rc2.lights()
+        hedge(d, [(x, 27) for x in range(21, 34)], y0, "oak") if L >= 5 else None
+    return d
+
+
+def dl_cas(rel, L):
+    d = Design("Cascadia", rel, (36, 22, 36), paving="coarse_dirt")
+    P, y0 = "Cascadia", 2
+    sto = 1 if L == 1 else 2
+    a = build(d, 3, 7, 13, 14, sto, roof="gable", axis="z", core=(11, 9) if sto > 1 else None)
+    mid = 8
+    for x in range(2, 15):                                            # false front
+        for y in range(a.yr, a.ridge + 2):
+            d.set(x, y, 6, "spruce_planks" if x not in (2, 14) else lg("spruce_log", "y"))
+        d.set(x, a.ridge + 2, 6, sl("spruce"))
+        d.set(x, a.yr, 6, "green_terracotta")
+    a.door(mid, 7, "north")
+    d.sign(mid, a.ridge, 5, "north", ["EXPRESS", "& FREIGHT"], "spruce")
+    # porch with hitching rail
+    for x in range(2, 15):
+        for z in range(3, 7):
+            d.set(x, 1, z, "spruce_planks")
+            d.set(x, 6 if sto == 1 else 6, z, sl("warped") if z < 6 else AIR) if z < 6 else None
+    for x in (2, 6, 10, 14):
+        d.fill(x, y0, 3, x, 5, 3, lg("spruce_log", "y"))
+    for x in range(3, 14):
+        if abs(x - mid) > 1 and x not in (6, 10):
+            d.set(x, y0, 1, "spruce_fence")
+    d.hut(4, y0, 8)
+    r0 = a.room(0)
+    for x in range(4, 9):
+        d.set(x, y0, 10, sl("spruce", "top"))
+        r0.used.add((x, 10))
+    rooms = [r0] + ([a.room(1)] if sto > 1 else [])
+    lamp_post(d, 1, 2, y0, P)
+    barrels = 0
+    for x in (12, 13):                                                # freight barrels on the porch
+        for k in range(2):
+            d.item(x, y0 + k, 4, "barrel", "up")
+            barrels += 1
+    # ---- stable lean-to (L2+)
+    if L >= 2:
+        for z in range(7, 16):
+            for x in range(14, 21):
+                d.set(x, 1, z, "spruce_planks")
+                d.set(x, 5, z, sl("warped", "top" if x < 16 else "bottom"))
+            d.set(20, y0, z, lg("stripped_spruce_log", "z"))
+            d.set(20, y0 + 1, z, lg("stripped_spruce_log", "z"))
+        for z in (7, 15):
+            d.fill(20, y0, z, 20, 4, z, lg("spruce_log", "y"))
+        for zz in (9, 12):
+            for x in range(17, 20):
+                d.set(x, y0, zz, "spruce_fence")
+            d.set(19, y0, zz + 1, "hay_block[axis=x]")
+        d.set(19, y0, 8, "water_cauldron[level=3]")
+        barrels += rack_line(d, [], y0, 0)
+        for z in range(10, 15, 1):
+            if z in (10, 11, 13, 14):
+                for k in range(3):
+                    if barrels < DLV[L]:
+                        d.item(15, y0 + k, z, "barrel", "east")
+                        barrels += 1
+    # ---- records room annex (L3+)
+    if L >= 3:
+        rr = build(d, 3, 16, 13, 23, 2, roof="gable", axis="x", core=(11, 17),
+                   chimney=(4, 20, "east"))
+        rr.door(8, 16, "north")
+        d.set(8, y0, 15, AIR)
+        rooms += [rr.room(s_) for s_ in range(rr.storeys)]
+    # ---- telegraph & bunk house (L4+)
+    if L >= 4:
+        t = build(d, 23, 4, 33, 12, 2, roof="gable", axis="x", core=(31, 5), chimney=(24, 8, "east"))
+        t.door(28, 4, "north")
+        rooms += [t.room(0), t.room(1)]
+        for y in range(y0, t.ridge + 4):                              # telegraph pole
+            d.set(34, y, 2, lg("spruce_log", "y") if y < t.ridge + 3 else "spruce_fence")
+        d.set(34, t.ridge + 2, 1, "spruce_fence")
+        d.set(34, t.ridge + 2, 3, "spruce_fence")
+    dl_reqs(rooms, L, "spruce", barrels)
+    for r in rooms:
+        r.fill(PACK_DECOR[P])
+        r.lights()
+    # ---- freight barn (L5)
+    if L >= 5:
+        f = build(d, 16, 19, 33, 33, 2, roof="gable", axis="z", core=(31, 21))
+        f.opening(22, 19, 25, 19, 3, lg("spruce_log", "x"))
+        rf = f.room(0)
+        wagon(d, 23, 25, y0, "spruce", "barrel[facing=up,open=false]", "z") if False else None
+        wagon(d, 22, 26, y0, "spruce", "hay_block[axis=x]")
+        rf.used.update({(x, 26) for x in range(21, 25)})
+        rf.fill(["keg", "crate", "sack", "hay"])
+        rf.lights()
+        rf2 = f.room(1)
+        rf2.fill(["sack", "hay", "crate"])
+        rf2.center_line(["hay_block[axis=z]"] * 6, "z")
+        rf2.lights()
+    tree(d, 1, 30, y0, "spruce", 5, 2)
+    return d
+
+
+@design("deliveryman")
+def deliveryman(pack, rel, L):
+    return {"Neoterra": dl_neo, "Hearthwood": dl_hw, "Cascadia": dl_cas}[pack](rel, L)

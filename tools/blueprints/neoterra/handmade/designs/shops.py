@@ -1033,7 +1033,7 @@ def cook(pack, rel, L):
 #   (andesite/iron) cooking line, walk-in cold room of packed ice with the racks, loading bay with a roller
 #   door, extract ducts and condensers on the roof growing with each level.
 def cookery_hw(rel, L):
-    d = Design("Hearthwood", rel, (48, 42, 46))
+    d = Design("Hearthwood", rel, (50, 42, 46))
     x1, z1, x2, z2, y0, y1 = 5, 5, 15, 15, 2, 6
     d.box(x1, y0, z1, x2, y1, z2, "stone_bricks", floor="stone_bricks")
     for x, z in perim(x1, z1, x2, z2):
@@ -3237,7 +3237,7 @@ GROW = {
         (3, B(3, 20, 21, 26, ["office", "living"], ("north", 5), sign=["STAFF"], **SP["cook3"])),
         (4, B(25, 13, 33, 21, ["dining", "dining", "bedroom", "bedroom", "living"], ("west", 4), sign=["SKY", "DINING"],
               **SP["cook4"])),
-        (5, B(36, 4, 45, 13, ["dining", "dining", "bedroom", "bedroom", "bedroom", "living"], ("west", 4),
+        (5, B(36, 4, 46, 14, ["dining", "dining", "bedroom", "bedroom", "bedroom", "living"], ("west", 4),
               sign=["ORBIT", "HOTEL"], **SP["cook5"])),
     ],
     # COOKERY - kitchen court: store, rear range, side range, gate tower
@@ -3247,7 +3247,7 @@ GROW = {
         (4, B(26, 14, 34, 36, ["store", "office"], ("west", 8), "z", sign=["Stores"], **SP["cookery4"])),
         (5, B(37, 2, 45, 10, ["kitchen", "dining", "dorm", "bedroom"], ("west", 4), "x", roofkind="hip",
               sign=["Servants'", "Hall"], **SP["cookery5"])),
-        (5, B(37, 14, 45, 24, ["store", "dorm"], ("west", 4), "z", sign=["Bake", "House"])),
+        (5, B(38, 14, 46, 25, ["store", "dorm"], ("west", 4), "z", sign=["Bake", "House"])),
     ],
     ("cookery", "Cascadia"): [
         (2, B(24, 4, 32, 10, ["store"], ("west", 3), "z", sign=["Larder"], **SP["cookery2"])),
@@ -3340,7 +3340,7 @@ GROW = {
         (3, B(24, 3, 44, 9, ["shop", "workshop"], ("north", 10), "x", sign=["Glass", "Shop"], **SP["glassblower3"])),
         (4, B(36, 12, 44, 28, ["workshop", "store", "bedroom"], ("west", 8), "z", sign=["Cutting", "Room"],
               **SP["glassblower4"])),
-        (5, B(15, 30, 25, 40, ["shop", "office", "living", "bedroom", "bedroom"], ("north", 5), "x", roofkind="hip",
+        (5, B(14, 30, 26, 41, ["shop", "office", "living", "bedroom", "bedroom"], ("north", 5), "x", roofkind="hip",
               sign=["Master's", "House"], **SP["glassblower5"])),
     ],
     ("glassblower", "Cascadia"): [

@@ -2481,11 +2481,13 @@ def ca_neoterra(rel, L):
     if L >= 2:                                                    # locker rooms and physio
         building(d, 24, 3, 35, 11, nf=1, roof="flat", doors=(("north", 29), ("west", 7)), kinds=["store"])
         d.sign(32, 5, 2, "north", ["", "LOCKERS", "PHYSIO"], "birch", glow=True, color="yellow")
-        for x in range(25, 35, 3):
+        for x in range(25, 35, 2):
             d.set(x, 1, 1, "moss_block")
             d.set(x, 2, 1, "azalea")
         lamp_post(d, 22, 1)
         lamp_post(d, 37, 1)
+        lamp_post(d, 22, 12)
+        lamp_post(d, 37, 12)
     if L >= 3:                                                    # dojo hall with sparring mats
         building(d, 24, 15, 44, 27, nf=2, roof="flat", doors=(("north", 33), ("west", 21)), kinds=["gym", "gym"])
         bench(d, 26, 13, "north", 3)
@@ -2494,6 +2496,10 @@ def ca_neoterra(rel, L):
         building(d, 2, 24, 14, 36, nf=3 if L == 4 else 5, roof="flat", doors=(("north", 8), ("east", 30)),
                  kinds=["lounge", "bunks", "bunks", "bunks", "lounge"])
         path(d, 8, 20, 8, 23)
+        for z in range(25, 36, 2):                                # planter strip along the residence
+            d.set(16, 1, z, "moss_block")
+            d.set(16, 2, z, "azalea" if z % 4 == 1 else "flowering_azalea")
+        bench(d, 17, 22, "north", 3)
     if L >= 5:                                                    # conditioning centre with a pool
         b = building(d, 17, 31, 44, 44, nf=2, roof="flat", doors=(("north", 22), ("north", 39), ("west", 38)),
                      kinds=["gym", "mess"])
@@ -3627,7 +3633,7 @@ def gy_cascadia(rel, L):
         for x in (28, 38):
             lamp_post(d, x, 22)
             lamp_post(d, x, 32)
-        for z in range(12, 20):                                   # woodpile behind the workshop
+        for z in range(11, 21):                                   # woodpile behind the workshop
             for y in (2, 3):
                 d.set(43, y, z, LOG("spruce_log" if (y + z) % 2 else "birch_log", "z"))
     if L >= 5:                                                    # meeting hall for wakes and gatherings
