@@ -1247,6 +1247,11 @@ def flat(d, ox, oz, y, out, mirror=False, wood=None, top=None, bedc=None, ceil=N
     if extra_barrel:
         x, z = W(5, 0)
         d.item(x, y, z, "barrel", S)
+    x, z = W(3, 0)
+    d.set(x, y, z, f"chiseled_bookshelf[facing={S},slot_0_occupied=true,slot_1_occupied=false,slot_2_occupied=true,"
+                   f"slot_3_occupied=true,slot_4_occupied=true,slot_5_occupied=false]")
+    if ceil and ceil - y >= 3:
+        d.set(x, y + 1, z, "potted_fern")
     for lz, k in enumerate(("furnace", "sink", "smoker", "crafting_table", "barrel")):
         x, z = W(6, lz)
         if k == "sink":
@@ -2563,7 +2568,7 @@ def outbuilding(d, x1, z1, x2, z2, kind, door_x=None, h=4, roof_axis=None):
     else:
         rb = S["roof"]
         if glass:
-            ridge = d.gable(x1, z1, x2, z2, yt + 1, axis, "glass" if False else f"{rb}_stairs", f"{rb}_slab",
+            ridge = d.gable(x1, z1, x2, z2, yt + 1, axis, f"{rb}_stairs", f"{rb}_slab",
                             "glass", overhang=1)
         else:
             end = "spruce_planks" if pack == "Cascadia" else ("spruce_planks" if kind in ("barn", "stable")
@@ -2622,7 +2627,6 @@ def outbuilding(d, x1, z1, x2, z2, kind, door_x=None, h=4, roof_axis=None):
             d.set(x, y0, iz2 - 2, gate(W, "north"))
         for z in range(iz1, iz2 - 3):
             d.set(ix1, y0, z, "barrel[facing=east,open=false]" if z % 2 else "hay_block[axis=y]")
-        d.banner(ix2, y0 + 2, iz1, "west", "brown") if False else None
     elif kind == "workshop":
         for x in range(ix1, ix2 + 1):
             if (x, iz2) in keep:
@@ -2650,7 +2654,6 @@ def outbuilding(d, x1, z1, x2, z2, kind, door_x=None, h=4, roof_axis=None):
                     continue
                 d.set(x, d.gy, z, "farmland[moisture=7]")
                 d.set(x, y0, z, ("carrots[age=7]", "potatoes[age=7]", "beetroots[age=3]", "wheat[age=7]")[x % 4])
-        d.set(door_x, d.gy, iz2, "water") if False else None
         d.set(door_x, y0, iz2, "water_cauldron[level=3]")
         for x in (ix1, ix2):
             d.set(x, y0, iz1, "potted_fern")
@@ -3637,7 +3640,6 @@ def cottage_hamlet_hw(rel, L):
         d.set(8, 2, 28, "water_cauldron[level=3]")
         for x in range(2, 10):
             d.set(x, 4, 29, stair("mud_brick", "south"))
-            d.set(x, 4, 30, stair("mud_brick", "south")) if False else None
         for x in (2, 9):
             d.set(x, 2, 29, fence("spruce"))
             d.set(x, 3, 29, fence("spruce"))

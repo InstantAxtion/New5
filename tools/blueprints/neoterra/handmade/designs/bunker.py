@@ -2480,7 +2480,7 @@ def cascadia(rel, L):
         for y in (SW + 4, SW + 5):
             for ax in range(36, 39):
                 for az in range(3, 6):
-                    d.set(ax, y, az, "spruce_planks" if y == SW + 4 else "barrel[facing=up,open=false]")
+                    d.set(ax, y, az, "spruce_planks" if y == SW + 4 else "stripped_spruce_wood[axis=y]")
         d.set(37, SW + 6, 4, "spruce_slab[type=bottom,waterlogged=false]")
         for x in range(11, 14):                            # cordwood stack by the magazine
             for z in (29, 30, 31):

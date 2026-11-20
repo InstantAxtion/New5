@@ -1305,7 +1305,6 @@ def gt_neoterra(rel, L):
                 if (x in (6, 10) and 9 <= z <= 13) or (z == 11 and 6 <= x <= 10):
                     d.set(x, yp + 4, z, "yellow_concrete")
         d.set(8, yp + 4, 11, "white_concrete")
-    dress(d, x1, z1, x2, z2, 2, 6)
     # ---- growth: a security campus
     if L >= 2:                                                    # vehicle bay / checkpoint
         building(d, 23, 3, 33, 10, nf=1, roof="flat", doors=(("north", 26), ("west", 7)), kinds=["workshop"])

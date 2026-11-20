@@ -2559,3 +2559,104 @@ def fl_cas(rel, L):
 @design("fletcher")
 def fletcher(pack, rel, L):
     return {"Neoterra": fl_neo, "Hearthwood": fl_hw, "Cascadia": fl_cas}[pack](rel, L)
+
+
+# =============================================================================================== WAREHOUSE
+"""
+Warehouse
+  Neoterra   "Logistics hub" (light-grey concrete over deepslate cladding, yellow bands): racked storage hall that
+             lengthens (L2), gains racked upper floors (L3, L5) with a stair core and front office strip; a
+             two-storey dispatch & cold-store block with loading canopy (L4, 3 storeys at L5); truck bay, solar roofs.
+  Hearthwood "Tithe barn" (Cotswold sandstone, stone plinth, blue-slate roofs): long stone barn with buttresses,
+             gable to the street with a cart porch and nave + cross-aisle rack bays, lengthening each level;
+             steward's house (L3), granary loft barn (L4), second barn closing the yard (L5).
+  Cascadia   "Freight depot" (red mangrove siding, dark shake roofs, mustard trim): depot on a raised dock with rail
+             siding that grows along the track; freight agent's office (L3); upper rack loft (L4); second depot
+             shed and team stable (L5).
+"""
+WH = {1: 36, 2: 72, 3: 144, 4: 216, 5: 324}
+
+
+def wh_items(room, L, sides=("north", "west", "east", "south")):
+    room.item("crafting_table", sides=sides)
+    if L >= 3:
+        room.item("crafting_table", sides=sides)
+        room.item("cartography_table", sides=sides)
+        room.item("lectern", sides=sides)
+        room.item("barrel", 4, sides=sides)
+    if L >= 5:
+        room.item("ender_chest", sides=sides)
+
+
+def wh_racks(d, room, x1, z1, x2, z2, need, along="z"):
+    """Rack aisles filling x1..x2/z1..z2 at the room's floor; the area is reserved for walking."""
+    n = aisles(d, x1, z1, x2, z2, room.y, need, 3, along)
+    room.keep |= {(x, z) for x in range(x1 - 1, x2 + 2) for z in range(z1 - 1, z2 + 2)}
+    return n
+
+
+def wh_neo(rel, L):
+    d = Design("Neoterra", rel, (36, 22, 26), paving="smooth_stone")
+    P, y0 = "Neoterra", 2
+    sto = {1: 1, 2: 1, 3: 2, 4: 2, 5: 3}[L]
+    z2 = 12 if L == 1 else 18
+    a = build(d, 3, 4, 17, z2, sto, H=5 if sto == 1 else 4, roof="flat", core=(15, 9) if sto > 1 else None,
+              street_glass=True)
+    a.door(6, 4, "north", double=True)
+    a.opening(10, 4, 12, 4, 3, "yellow_concrete")
+    d.hut(4, y0, 5)
+    d.sign(10, a.yr, 3, "north", ["NEOTERRA", "LOGISTICS"], "birch", glow=True, color="yellow")
+    r0 = a.room(0)
+    racks = wh_racks(d, r0, 4, 9, 13, z2 - 1, WH[L])
+    wh_items(r0, L, ("north", "west", "east"))
+    r0.chairs_desk(2 if L >= 3 else 0, "birch", top=sl("smooth_quartz", "top"))
+    r0.fill(["crate", "bamboo", "shelf_quartz"], sides=("north", "east"))
+    for s_ in range(1, sto):
+        rs = a.room(s_)
+        racks += wh_racks(d, rs, 4, 9, 13, z2 - 1, WH[L] - racks)
+        rs.chairs_desk(1, "birch", top=sl("smooth_quartz", "top"), sit=False)
+        rs.fill(["crate", "bamboo"], sides=("north", "east"))
+    neo_roof(d, a, "solar")
+    # truck bay with markings and pallets
+    for x in range(10, 13):
+        for z in range(0, 4):
+            d.set(x, 1, z, "yellow_concrete" if z % 2 else "black_concrete")
+    for x in (1, 19):
+        d.set(x, y0, 3, "moss_block")
+        tree(d, x, 3, y0 + 1, "birch", 3, 1)
+    lamp_post(d, 8, 1, y0, P)
+    for z in range(5, z2, 3):
+        crate_stack(d, 19, z, y0, 2)
+    # ---- dispatch & cold store block (L4+)
+    if L >= 4:
+        bs = 2 if L == 4 else 3
+        b = build(d, 21, 4, 33, 14, bs, roof="flat", core=(31, 6), street_glass=True)
+        b.door(24, 4, "north", double=True)
+        rb = b.room(0)
+        for x in range(23, 29):
+            d.set(x, rb.y, 7, sl("smooth_quartz", "top"))
+            rb.used.add((x, 7))
+        racks += wh_racks(d, rb, 22, 9, 28, 13, WH[L] - racks)
+        rb.fill(["crate", "bamboo"])
+        for s_ in range(1, bs):
+            rr = b.room(s_)
+            if s_ == 1:
+                rr.table_group("birch", 4, "slab", rug="yellow_carpet", sit=False)
+                for blk in ("smoker[facing=north,lit=false]", "water_cauldron[level=3]"):
+                    t = rr.take(("south",))
+                    if t:
+                        d.set(t[0][0], rr.y, t[0][1], blk)
+            else:
+                racks += wh_racks(d, rr, 22, 9, 28, 13, WH[L] - racks)
+                rr.chairs_desk(2, "birch", top=sl("smooth_quartz", "top"), sit=False)
+            rr.fill(["crate", "shelf_quartz", "bamboo"])
+        neo_roof(d, b, "garden")
+        # loading canopy
+        for x in range(21, 34):
+            for z in range(16, 22):
+                d.set(x, 6, z, sl("smooth_quartz", "top") if z < 21 else "yellow_concrete")
+        for x in (21, 27, 33):
+            d.fill(x, y0, 21, x, 5, 21, "polished_deepslate")
+        for x in range(22, 33, 3):
+            crate_stack(d, x, 18, y0, 2)
+    return d

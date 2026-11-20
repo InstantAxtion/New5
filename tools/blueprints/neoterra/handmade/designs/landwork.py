@@ -1114,279 +1114,177 @@ def miner(pack, rel, L):
 
 
 # ============================================================================================ NETHER WORKER
-NW_STYLE = {
-    "Neoterra": dict(size=(25, 16, 19), X=2, Z=3, wall="white_concrete", base="polished_blackstone_bricks",
-                     floor="polished_blackstone", trim="cyan_terracotta", wood="crimson", glass="gray_stained_glass_pane",
-                     light="sea_lantern", fire="soul_campfire", paving="smooth_stone"),
-    "Hearthwood": dict(size=(27, 24, 19), X=3, Z=3, wall="stone_bricks", base="polished_blackstone_bricks",
-                       floor="deepslate_tiles", trim="chiseled_stone_bricks", wood="dark_oak",
-                       glass="red_stained_glass_pane", light="lantern", fire="campfire", paving=None),
-    "Cascadia": dict(size=(25, 22, 21), X=4, Z=5, wall="spruce_log", base="blackstone",
-                     floor="spruce_planks", trim="stripped_spruce_log", wood="spruce", glass="glass_pane",
-                     light="lantern", fire="campfire", paving="coarse_dirt"),
+NW_PAL = {
+    "Neoterra": dict(wall="polished_blackstone", post="smooth_quartz", band="magenta_concrete", accent="magenta_concrete",
+                     plinth="polished_blackstone_bricks", doorwood="crimson", floor="polished_blackstone",
+                     glass="magenta_stained_glass_pane", deck="smooth_quartz"),
+    "Hearthwood": dict(wall="tuff_bricks", end="tuff_bricks", framing=False, frame="stripped_dark_oak_log",
+                       plinth="polished_blackstone_bricks", roof="spruce", shutter="crimson", doorwood="crimson",
+                       floor="deepslate_tiles", glass="red_stained_glass_pane", chimney="tuff_bricks"),
+    "Cascadia": dict(wall="dark_oak_log", siding="dark_oak_planks", batten="stripped_dark_oak_log", end="dark_oak_planks",
+                     trim="red_terracotta", roof="mangrove", shutter="crimson", doorwood="crimson", plinth="blackstone",
+                     floor="spruce_planks", glass="orange_stained_glass_pane", chimney="blackstone"),
 }
 
 
-def nw_wall(d, pack, x, y, z, st, along):
-    """One wall cell in the pack's wall material (Cascadia: horizontal logs)."""
-    if pack == "Cascadia":
-        d.set(x, y, z, logb("spruce_log", along) if y > 2 else ("blackstone" if (x + z) % 3 else "basalt[axis=y]"))
-    elif pack == "Hearthwood":
-        r = (x * 5 + y * 7 + z * 3) % 11
-        d.set(x, y, z, "polished_blackstone_bricks" if y == 2 else
-              ("andesite" if r == 0 else ("mossy_stone_bricks" if r == 5 else "stone_bricks")))
-    else:
-        d.set(x, y, z, st["base"] if y == 2 else st["wall"])
+def nw_brazier(d, x, z, pack):
+    fire = "soul_campfire" if pack == "Neoterra" else "campfire"
+    d.set(x, 2, z, "polished_blackstone_bricks")
+    d.set(x, 3, z, f"{fire}[facing=north,lit=true,signal_fire=false,waterlogged=false]")
 
 
 def netherworker_design(pack, rel, L):
-    st = NW_STYLE[pack]
-    d = Design(pack, rel, st["size"], gy=1, paving=st["paving"])
-    X, Z = st["X"], st["Z"]
+    size = {"Neoterra": (40, 34, 32), "Hearthwood": (42, 34, 34), "Cascadia": (44, 34, 36)}[pack]
+    d = Design(pack, rel, size, gy=1, paving={"Neoterra": "smooth_stone", "Cascadia": "coarse_dirt"}.get(pack))
+    P.d = d
+    d.palette = NW_PAL[pack]
+    S = sty(d)
+    X, Z = {"Neoterra": (6, 6), "Hearthwood": (7, 7), "Cascadia": (8, 9)}[pack]
+    roof = {"Neoterra": "flat", "Hearthwood": "gable", "Cascadia": "gable"}[pack]
+    axis = "z" if pack == "Hearthwood" else "x"
+    W = "crimson" if pack != "Cascadia" else "dark_oak"
     big = L >= 3
-    if big:
-        x1, x2, z1, z2 = X, X + 16, Z + 3, Z + 12
-    else:
-        x1, x2, z1, z2 = X + 1, X + 14, Z + 4, Z + 12
-    skin = big and pack != "Neoterra"
-    zf = Z - 1 if skin else (Z if big else z1)                        # street face of the building
-    # ---- hall shell: walls y2..9, ceiling/eave course y10 ----
-    d.fill(x1, 1, zf, x2, 1, z2, st["floor"])
-    for y in range(2, 11):
-        for x in range(x1, x2 + 1):
-            for z in range(zf, z2 + 1):
-                edge = x in (x1, x2) or z in (zf, z2)
-                if big and Z <= z <= Z + 2 and not (skin and z == zf):
-                    continue                                          # the cluster's gallery
-                if edge:
-                    nw_wall(d, pack, x, y, z, st, "x" if z in (zf, z2) else "z")
-                else:
-                    d.set(x, y, z, AIR)
-    for x in range(x1, x2 + 1):
-        for z in range(zf, z2 + 1):
-            if not (big and Z <= z <= Z + 2 and not (skin and z == zf)):
-                d.set(x, 10, z, st["trim"] if pack != "Cascadia" else "spruce_planks")
-    if pack == "Cascadia":
-        for x, z in ((x1, zf), (x2, zf), (x1, z2), (x2, z2)):
-            posts(d, [(x, z)], 2, 10, "stripped_spruce_log[axis=y]")
-    if pack == "Hearthwood":                                          # buttresses
-        for z in range(zf + 2, z2, 3):
-            for x, f in ((x1 - 1, "east"), (x2 + 1, "west")):
-                for y in range(2, 7):
-                    d.set(x, y, z, "stone_bricks")
-                d.set(x, 7, z, stair("stone_brick", f))
-    # ---- roof ----
-    if pack == "Neoterra":
-        d.flat(x1, zf, x2, z2, 10, "smooth_quartz", "white_concrete", "smooth_quartz_slab")
-        for x in range(x1, x2 + 1):
-            d.set(x, 9, z2, st["trim"])
-            if not big:
-                d.set(x, 9, zf, st["trim"])
-        if big:                                                       # keep the gallery's own roof edge
-            for x in range(x1, x2 + 1):
-                for z in range(Z, Z + 3):
-                    for y in (11, 12):
-                        d.set(x, y, z, AIR)
-            for z in range(Z, Z + 3):
-                for x in (x1, x2):
-                    d.set(x, 11, z, "white_concrete")
-        ridge = 11
-    elif pack == "Hearthwood":
-        ridge = d.gable(x1, zf, x2, z2, 11, "z", "deepslate_tile_stairs", "deepslate_tile_slab", "stone_bricks",
-                        overhang=1)
-        # bell-cote on the street gable
-        mx = (x1 + x2) // 2
-        for y in range(ridge - 2, ridge + 3):
-            d.set(mx - 1, y, zf, "stone_bricks")
-            d.set(mx + 1, y, zf, "stone_bricks")
-        d.set(mx, ridge + 2, zf, "stone_bricks")
-        d.set(mx, ridge + 3, zf, slab("stone_brick"))
-        d.set(mx - 1, ridge + 3, zf, stair("stone_brick", "east"))
-        d.set(mx + 1, ridge + 3, zf, stair("stone_brick", "west"))
-        d.set(mx, ridge, zf, AIR)
-        d.set(mx, ridge + 1, zf, "bell[attachment=ceiling,facing=north,powered=false]")
-        # rose window
-        for y in (12, 13):
-            for x in (mx - 1, mx, mx + 1):
-                d.set(x, y, zf, st["glass"])
-    else:
-        ridge = d.gable(x1, zf, x2, z2, 11, "x", "dark_oak_stairs", "dark_oak_slab", "spruce_planks", overhang=1)
-        for x in (x1, x2):                                            # carved ridge posts (crossed gable ends)
-            d.set(x, ridge + 1, (zf + z2) // 2, "stripped_spruce_log[axis=y]")
-            d.set(x, ridge + 2, (zf + z2) // 2, "spruce_fence")
-    # ---- openings ----
-    mx = (x1 + x2) // 2
+    names = {"Neoterra": ["PORTAL", "LAB"], "Hearthwood": ["Shrine of the", "Ember Gate"], "Cascadia": ["EMBER", "LODGE"]}
     if not big:
-        d.door(X + 7, 2, z1, "south", st["wood"] if pack != "Neoterra" else "iron")
-        d.door(X + 8, 2, z1, "south", st["wood"] if pack != "Neoterra" else "iron", "right")
-        wins = [X + 3, X + 12]
+        # ---- the shrine around the portal chamber (L1), narthex and vestry (L2) ----
+        sh = bld(d, X + 2, Z + 6, X + 13, Z + 13, floors=1, fh=9, roof=roof, axis=axis, doors=[(X + 7, Z + 6, "n")],
+                 win=3)
+        d.hut(X + 3, 2, Z + 7)
+        run(d, sh, "w", 2, [P.item("furnace"), P.rack()], skip=2)
+        run(d, sh, "e", 2, [P.item("crafting_table"), P.b("brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]"),
+                            P.books(), P.b("lectern[facing={f},has_book=true,powered=false]")], skip=1)
+        rest_racks(d, sh, "e", 2, skip=1)
+        run(d, sh, "s", 2, [P.books(), P.shelf("polished_blackstone_brick", "candle[candles=3,lit=false,waterlogged=false]"),
+                            P.b("magma_block")], skip=2)
+        nw_brazier(d, X + 4, Z + 12, pack)
+        nw_brazier(d, X + 11, Z + 12, pack)
+        d.sign(X + 9, 4, Z + 5, "north", names[pack], W, glow=pack == "Neoterra", color="red" if pack == "Neoterra" else "black")
+        for x in (X + 2, X + 13):
+            lamp_post(d, x, Z + 4)
+        if L >= 2:
+            nx = bld(d, X + 4, Z + 1, X + 11, Z + 6, floors=2, roof=roof, axis="z" if pack != "Neoterra" else "x",
+                     doors=[(X + 7, Z + 1, "n")], win=3)
+            d.door(X + 7, 2, Z + 6, "south", S["doorwood"])
+            door_cells(d).update({(X + 7, 2, Z + 5), (X + 7, 2, Z + 7)})
+            stairs_up(d, X + 10, Z + 2, "south", 2, rail=False)
+            run(d, nx, "w", 2, [P.b("chest[facing={f},type=single,waterlogged=false]"), P.books(), P.chair(W)], skip=1)
+            run(d, nx, "w", 6, [P.books(), P.books(), P.b("lectern[facing={f},has_book=true,powered=false]")], skip=0)
+            run(d, nx, "n", 6, [P.chair(W), P.shelf("polished_blackstone_brick", "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]")], skip=1)
+            room_rug(d, nx, 2, ("red_carpet", "black_carpet"), inset=2)
+            room_rug(d, nx, 6, ("red_carpet", "black_carpet"), inset=2)
+            vs = bld(d, X + 15, Z + 8, X + 20, Z + 13, floors=1, roof=roof, axis="x", doors=[(X + 15, Z + 10, "w")])
+            d.door(X + 13, 2, Z + 10, "east", S["doorwood"])
+            door_cells(d).update({(X + 12, 2, Z + 10), (X + 14, 2, Z + 10)})
+            run(d, vs, "e", 2, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]"),
+                                P.b("chest[facing={f},type=single,waterlogged=false]"), P.b("crying_obsidian")], skip=0)
+            run(d, vs, "s", 2, [P.shelf("polished_blackstone_brick", "potted_crimson_fungus"), P.b("smithing_table")], skip=1)
+            flowerbed(d, X + 2, Z + 15, X + 13, Z + 16, ("crimson_roots", "warped_roots", "poppy", "wither_rose"))
     else:
-        if skin:
-            d.door(X + 8, 2, zf, "south", st["wood"])
-            d.set(X + 8, 4, zf, st["trim"] if pack == "Hearthwood" else "stripped_spruce_log[axis=x]")
-        wins = [X + 3, X + 13]
-    for x in wins:
-        if not big or skin:
-            d.window(x, 4, zf, x, 7, zf, st["glass"])
-    for z in range(z1 + 1, z2, 3):                                    # tall side windows
-        for x in (x1, x2):
-            d.window(x, 4, z, x, 7, z, st["glass"])
-    if pack == "Hearthwood":
-        for z in range(z1 + 1, z2, 3):
-            for x in (x1, x2):
-                d.set(x, 8, z, "chiseled_stone_bricks")
-    # name sign
-    names = {"Neoterra": ["PORTAL", "LAB"], "Hearthwood": ["Shrine of the", "Ember Gate"],
-             "Cascadia": ["EMBER", "LODGE"]}
-    if pack == "Neoterra":
-        d.sign(X + 7 if not big else X + 6, 9 if not big else 9, zf - 1 if not big else Z - 1, "north", names[pack],
-               "crimson", glow=True, color="red")
-    else:
-        d.sign(X + 6, 4, zf - 1, "north", names[pack], st["wood"])
-    # ---- the functional cluster (portal chamber; from L3 with the glazed gallery) ----
-    if big:
-        d.cluster(X, Z)
-    else:
-        d.cluster(X + 5, Z + 8)
-    if skin:                                                          # clad the gallery's glazed side ends
-        for z in range(Z, Z + 3):
-            for x in (x1 - 1, x2 + 1):
-                for y in range(2, 11):
-                    nw_wall(d, pack, x, y, z, st, "z")
-                d.set(x, 1, z, st["floor"])
-    if pack == "Neoterra":                                            # roof lantern over the portal chamber
-        for x in range(X + 4, X + 12):
-            for z in range(Z + 7, Z + 13):
-                edge = x in (X + 4, X + 11) or z in (Z + 7, Z + 12)
-                d.set(x, 11, z, "polished_blackstone_bricks" if edge else "tinted_glass")
-        for x, z in ((X + 4, Z + 7), (X + 11, Z + 7), (X + 4, Z + 12), (X + 11, Z + 12)):
-            d.set(x, 12, z, "end_rod[facing=up]")
-    # ---- furnishing ----
-    d.hut(X + 3, 2, Z + 9)
-    if big:
+        # ---- the great hall that takes the cluster's glazed gallery as its front ----
+        skin = pack != "Neoterra"
+        x1, x2 = (X - 1, X + 17) if skin else (X, X + 16)
+        z1 = Z - 1 if skin else Z
+        hl = bld(d, x1, z1, x2, Z + 13, floors=1, fh=9, roof=roof, axis=axis,
+                 doors=[(X + 8, z1, "n")] if skin else [], win=3)
+        d.hut(X + 3, 2, Z + 7)
         d.item(X + 2, 2, Z + 11, "blast_furnace", "east")
         d.item(X + 14, 2, Z + 11, "crafting_table")
-        d.item(X + 13, 2, Z + 11, "crafting_table")
-        rk = [(X + 15, 2, z) for z in range(Z + 4, Z + 10)] + [(X + 1, 2, z) for z in range(Z + 4, Z + 7)]
-        racks(d, rk, d.req["racks"], "west")
-        # braziers flanking the portal approach and benches facing it
+        d.item(X + 13, 2, Z + 12, "crafting_table")
+        for z in range(Z + 4, Z + 11):
+            if need_racks(d):
+                d.rack(X + 15, 2, z, "west")
+        rest_racks(d, hl, "w", 2, skip=6)
         for x in (X + 5, X + 10):
-            d.set(x, 2, Z + 6, f"{st['fire']}[facing=south,lit=true,signal_fire=false,waterlogged=false]")
+            nw_brazier(d, x, Z + 6, pack)
         for x in range(X + 6, X + 10):
-            d.set(x, 2, Z + 5, stair(st["wood"], "north"))
-        d.rug(X + 6, Z + 6, X + 9, Z + 7, 2, ("red_carpet",), "plain")
+            d.set(x, 2, Z + 4, stair(W, "north"))
+        d.rug(X + 6, Z + 5, X + 9, Z + 7, 2, ("red_carpet",), "plain")
         d.set(X + 2, 2, Z + 4, "lectern[facing=east,has_book=true,powered=false]")
         d.set(X + 12, 2, Z + 11, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]")
-        d.set(X + 14, 2, Z + 10, "cauldron")
-        d.set(X + 2, 2, Z + 10, "magma_block")
+        d.set(X + 14, 2, Z + 12, "cauldron")
+        for z in range(Z + 4, Z + 13, 2):
+            d.set(X + 1, 2, z, "chiseled_bookshelf[facing=east,slot_0_occupied=true,slot_1_occupied=false,"
+                               "slot_2_occupied=true,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
+        for x in (X + 4, X + 11):
+            nw_brazier(d, x, Z + 12, pack)
         for x in range(X + 2, X + 15, 4):
-            d.lamp(x, 9, Z + 6, "soul_lantern" if pack == "Neoterra" else "lantern")
-    else:
-        d.item(X + 2, 2, Z + 11, "furnace", "east")
-        d.item(X + 13, 2, Z + 11, "crafting_table")
-        rk = [(X + 13, 2, z) for z in range(Z + 5, Z + 9)]
-        racks(d, rk, d.req["racks"], "west")
-        for x in (X + 5, X + 10):
-            d.set(x, 2, Z + 6, f"{st['fire']}[facing=south,lit=true,signal_fire=false,waterlogged=false]")
-        d.set(X + 2, 2, Z + 5, "lectern[facing=east,has_book=true,powered=false]")
-        d.set(X + 12, 2, Z + 11, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]")
-        d.rug(X + 6, Z + 5, X + 9, Z + 7, 2, ("red_carpet",), "plain")
-        for x in (X + 3, X + 12):
-            d.lamp(x, 9, Z + 7, "soul_lantern" if pack == "Neoterra" else "lantern")
-    # candles on the portal sill corners
-    d.set(X + 4 if not big else X + 4, 2, Z + 10, "polished_blackstone_bricks")
-    d.candle(X + 4, 3, Z + 10, 3, "red")
-    d.set(X + 11, 2, Z + 10, "polished_blackstone_bricks")
-    d.candle(X + 11, 3, Z + 10, 3, "red")
-    # ---- pack extras ----
-    if pack == "Neoterra":
-        if L >= 4:                                                    # east annex: sample lab
-            ax1, ax2 = x2, x2 + 5
-            d.box(ax1, 2, Z + 5, ax2, 5, Z + 12, "white_concrete", floor="polished_blackstone")
-            d.flat(ax1, Z + 5, ax2, Z + 12, 6, "smooth_quartz", "white_concrete", "smooth_quartz_slab")
-            for z in range(Z + 6, Z + 12, 2):
-                d.window(ax2, 3, z, ax2, 4, z, "gray_stained_glass_pane")
-            d.set(ax1, 2, Z + 10, AIR)
-            d.set(ax1, 3, Z + 10, AIR)
-            for z in range(Z + 6, Z + 12):
-                d.set(ax2 - 1, 2, z, "smooth_quartz_slab[type=top,waterlogged=false]" if z % 2 else "crying_obsidian")
-            d.set(ax2 - 1, 3, Z + 7, "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]")
-            d.set(ax1 + 2, 5, Z + 8, "sea_lantern")
-        if L >= 5:                                                    # roof terrace with soul lights
-            for x in range(x1 + 2, x2 - 1, 3):
-                d.set(x, 11, Z + 4, "soul_lantern[hanging=false,waterlogged=false]")
-                d.set(x + 1, 11, Z + 4, "potted_crimson_fungus")
-            for x in (x1 + 1, x2 - 1):
-                for z in range(Z + 7, z2):
-                    d.set(x, 11, z, "polished_blackstone_slab[type=bottom,waterlogged=false]")
-    if pack == "Hearthwood":
-        if L >= 4:                                                    # sacristy lean-to on the east
-            ax1, ax2 = x2 + 1, x2 + 5
-            walls(d, ax1, z2 - 6, ax2, z2, 2, 5, "stone_bricks")
-            d.fill(ax1 + 1, 1, z2 - 5, ax2 - 1, 1, z2 - 1, "deepslate_tiles")
-            for i, x in enumerate(range(ax2 + 1, ax1 - 1, -1)):
-                for z in range(z2 - 7, z2 + 2):
-                    d.set(x, 6 + i, z, stair("deepslate_tile", "west"))
-                if x <= ax2:
-                    for z in (z2 - 6, z2):
-                        for y in range(6, 6 + i):
-                            d.set(x, y, z, "stone_bricks")
-            d.set(x2, 2, z2 - 3, AIR)
-            d.set(x2, 3, z2 - 3, AIR)
-            d.set(x2 + 1, 2, z2 - 3, AIR)
-            d.set(x2 + 1, 3, z2 - 3, AIR)
-            for z in (z2 - 5, z2 - 1):
-                d.set(ax2 - 1, 2, z, "chiseled_bookshelf[facing=west,slot_0_occupied=true,slot_1_occupied=true,"
-                                     "slot_2_occupied=false,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
-            d.set(ax2 - 1, 2, z2 - 3, "dark_oak_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]")
-            d.window(ax2, 3, z2 - 3, ax2, 4, z2 - 3, "red_stained_glass_pane")
-            d.lamp(ax1 + 2, 5, z2 - 3)
-        if L >= 5:                                                    # walled herb garden with lanterns
-            for z in range(zf, z2 + 1):
-                if z % 3 == 0:
-                    d.set(x1 - 2, 2, z, "stone_brick_wall")
-                    d.set(x1 - 2, 3, z, "lantern[hanging=false,waterlogged=false]")
-            d.set(x2 + 2, 2, zf, "stone_brick_wall")
-            d.set(x2 + 2, 3, zf, "lantern[hanging=false,waterlogged=false]")
-            d.set(x1 - 1, 2, zf - 1, "potted_crimson_roots")
-    if pack == "Cascadia":
-        if big:                                                       # deep porch across the front
-            pz = zf - 3
-            d.fill(x1, 1, pz, x2, 1, zf - 1, "spruce_planks")
-            for x in (x1, X + 5, X + 11, x2):
-                posts(d, [(x, pz)], 2, 6, "spruce_log[axis=y]")
-            for x in range(x1 - 1, x2 + 2):
-                d.set(x, 7, pz - 1, stair("dark_oak", "south"))
-                for z in range(pz, zf):
-                    d.set(x, 7, z, slab("dark_oak"))
-            for x in range(x1 + 1, x2):
-                if x not in (X + 5, X + 11, X + 8):
-                    d.set(x, 2, pz, "spruce_fence")
-            d.set(X + 2, 2, zf - 1, stair("spruce", "north"))
-            d.set(X + 14, 2, zf - 1, "barrel[facing=up,open=false]")
-            d.lamp(X + 8, 6, zf - 2)
-        if L >= 4:                                                    # wood & coal lean-to on the west
-            for z in range(z1 + 2, z2 + 1):
-                for y in range(2, 5):
-                    if z in (z1 + 2, z2):
-                        d.set(x1 - 4, y, z, "spruce_log[axis=y]")
-                d.set(x1 - 4, 5, z, slab("spruce"))
-                for x in range(x1 - 3, x1):
-                    d.set(x, 6 if x == x1 - 1 else 5, z, slab("spruce"))
-                    if z % 2:
-                        d.set(x, 2, z, "spruce_log[axis=x]" if x != x1 - 1 else "coal_block")
-            d.set(x1 - 2, 3, z1 + 3, "spruce_log[axis=x]")
-        if L >= 5:                                                    # fire pit ring out front
-            fx, fz = x2 + 2, z1 + 2
-            for dx, dz in ((0, -1), (0, 1), (-1, 0), (1, 0)):
-                d.set(fx + dx, 2, fz + dz, "mossy_cobblestone_slab[type=bottom,waterlogged=false]")
-            d.set(fx, 2, fz, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+            for z in (Z + 5, Z + 9):
+                d.set(x, 9, z, "soul_lantern[hanging=true,waterlogged=false]" if pack == "Neoterra" else
+                      "lantern[hanging=true,waterlogged=false]")
+        if skin:
+            d.sign(X + 6, 4, z1 - 1, "north", names[pack], W)
+            if pack == "Cascadia":
+                porch(d, X + 3, X + 13, z1, 3, "n", gaps=(X + 8,), ylevel=6)
+        else:
+            d.sign(X + 6, 9, Z - 1, "north", names[pack], W, glow=True, color="red")
+        for x in (x1 - 1, x2 + 1):
+            if 0 <= x < d.sx:
+                lamp_post(d, x, z1 - 2 if z1 >= 2 else z1)
+        # ---- L4: east wing: library & sample laboratory over a vaulted store ----
+        if L >= 4:
+            ex1 = x2 + 2
+            ew = bld(d, ex1, Z + 2, ex1 + 10, Z + 12, floors=2, roof=roof, axis="z" if pack == "Cascadia" else "x",
+                     doors=[(ex1, Z + 7, "w"), (ex1 + 5, Z + 12, "s")],
+                     pal={"Neoterra": dict(wall="white_concrete", post="polished_blackstone", band="magenta_terracotta"),
+                          "Hearthwood": dict(wall="stone_bricks", end="stone_bricks", roof="deepslate_tile"),
+                          "Cascadia": dict(wall="spruce_log", siding="spruce_planks", end="spruce_planks",
+                                           roof="cobbled_deepslate")}[pack])
+            for z in (Z + 7,):                                       # covered link to the hall
+                for x in range(x2 + 1, ex1):
+                    d.set(x, 1, z, S["floor"])
+                    d.set(x, 4, z, slab("polished_blackstone_brick", "top"))
+            d.door(x2, 2, Z + 7, "east", S["doorwood"])
+            door_cells(d).update({(x2 - 1, 2, Z + 7), (x2 + 1, 2, Z + 7)})
+            stairs_up(d, ex1 + 1, Z + 3, "south", 2, rail=False)
+            run(d, ew, "e", 2, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]")] * 4, skip=1)
+            run(d, ew, "n", 2, [P.b("crying_obsidian"), P.b("magma_block"), P.b("chest[facing={f},type=single,waterlogged=false]"),
+                                P.b("netherrack"), P.b("soul_sand")], skip=2)
+            run(d, ew, "e", 6, [P.books()] * 6, skip=1)
+            run(d, ew, "n", 6, [P.b("lectern[facing={f},has_book=true,powered=false]"), P.chair(W),
+                                P.shelf("polished_blackstone_brick", "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=true]")], skip=3)
+            d.dining(ex1 + 5, 6, Z + 8, 2, "x", W, chairs=("n", "s"), sit=False)
+            room_rug(d, ew, 2, ("black_carpet", "red_carpet"), inset=3)
+            room_rug(d, ew, 6, ("red_carpet", "black_carpet"), inset=2)
+        # ---- L5: watch tower over the gate and an ember garden ----
+        if L >= 5:
+            tx = x2 + 2
+            tw = bld(d, tx, Z + 15, tx + 5, Z + 20, floors=5, roof="hip" if pack != "Neoterra" else "flat", axis="x",
+                     doors=[(tx, Z + 17, "w")], win=2,
+                     pal={"Neoterra": dict(wall="polished_blackstone_bricks", post="smooth_quartz", band="magenta_concrete"),
+                          "Hearthwood": dict(roof="deepslate_tile"), "Cascadia": dict(roof="cobbled_deepslate")}[pack])
+            ladder(d, tx + 4, Z + 19, 2, 21, "west")
+            for k in range(5):
+                y = 2 + 4 * k
+                d.set(tx + 1, y, Z + 16, "lectern[facing=south,has_book=true,powered=false]" if k % 2 else "chiseled_bookshelf[facing=south,slot_0_occupied=true,slot_1_occupied=true,slot_2_occupied=false,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
+                d.set(tx + 2, y, Z + 16, "barrel[facing=up,open=false]")
+                d.set(tx + 1, y + 2, Z + 18, "soul_lantern[hanging=true,waterlogged=false]")
+            gx1, gz1 = X, Z + 15
+            for x in range(gx1, gx1 + 15):
+                for z in range(gz1, gz1 + 5):
+                    edge = x in (gx1, gx1 + 14) or z in (gz1, gz1 + 4)
+                    if edge:
+                        d.set(x, 2, z, "polished_blackstone_brick_wall" if (x + z) % 4 else "polished_blackstone_bricks")
+                    else:
+                        d.set(x, 1, z, ("crimson_nylium", "warped_nylium", "soul_soil")[(x + z) % 3])
+                        if (x + z) % 3 == 0:
+                            d.set(x, 2, z, ("crimson_fungus", "warped_fungus", "crimson_roots", "warped_roots")[(x * 7 + z) % 4])
+            for x in (gx1 + 3, gx1 + 11):
+                nw_brazier(d, x, gz1 + 2, pack)
+            d.set(gx1 + 7, 2, gz1 + 2, "lodestone")
+            d.set(gx1 + 7, 2, gz1, AIR)
+            for x in (gx1 - 2, gx1 + 16):
+                if 0 <= x < d.sx:
+                    lamp_post(d, x, gz1 + 2)
+        d.cluster(X, Z)
+        return d
+    d.cluster(X + 5, Z + 8)
     return d
 
 
 @design("netherworker")
 def netherworker(pack, rel, L):
     return netherworker_design(pack, rel, L)
+
 
 
 # ================================================================================================ FISHERMAN
