@@ -1136,12 +1136,12 @@ def nw_brazier(d, x, z, pack):
 
 
 def netherworker_design(pack, rel, L):
-    size = {"Neoterra": (40, 38, 36), "Hearthwood": (42, 38, 38), "Cascadia": (44, 38, 40)}[pack]
+    size = {"Neoterra": (52, 38, 36), "Hearthwood": (54, 38, 38), "Cascadia": (56, 38, 40)}[pack]
     d = Design(pack, rel, size, gy=1, paving={"Neoterra": "smooth_stone", "Cascadia": "coarse_dirt"}.get(pack))
     P.d = d
     d.palette = NW_PAL[pack]
     S = sty(d)
-    X, Z = {"Neoterra": (6, 6), "Hearthwood": (7, 7), "Cascadia": (8, 9)}[pack]
+    X, Z = {"Neoterra": (16, 6), "Hearthwood": (17, 7), "Cascadia": (18, 9)}[pack]
     roof = {"Neoterra": "flat", "Hearthwood": "gable", "Cascadia": "gable"}[pack]
     axis = "z" if pack == "Hearthwood" else "x"
     W = "crimson" if pack != "Cascadia" else "dark_oak"
@@ -1174,10 +1174,8 @@ def netherworker_design(pack, rel, L):
             run(d, nx, "n", 6, [P.chair(W), P.shelf("polished_blackstone_brick", "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]")], skip=1)
             room_rug(d, nx, 2, ("red_carpet", "black_carpet"), inset=2)
             room_rug(d, nx, 6, ("red_carpet", "black_carpet"), inset=2)
-            vs = bld(d, X + 15, Z + 8, X + 20, Z + 13, floors=1, roof=roof, axis="x", doors=[(X + 15, Z + 10, "w")],
+            vs = bld(d, X + 13, Z + 8, X + 18, Z + 13, floors=1, roof=roof, axis="x", doors=[(X + 13, Z + 10, "w")],
                      blind=("w",))
-            d.door(X + 13, 2, Z + 10, "east", S["doorwood"])
-            door_cells(d).update({(X + 12, 2, Z + 10), (X + 14, 2, Z + 10)})
             run(d, vs, "e", 2, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]"),
                                 P.b("chest[facing={f},type=single,waterlogged=false]"), P.b("crying_obsidian")], skip=0)
             run(d, vs, "s", 2, [P.shelf("polished_blackstone_brick", "potted_crimson_fungus"), P.b("smithing_table")], skip=1)
@@ -1224,14 +1222,11 @@ def netherworker_design(pack, rel, L):
             if 0 <= x < d.sx:
                 lamp_post(d, x, z1 - 2 if z1 >= 2 else z1)
         # ---- L3: south annex - sacristy below, scriptorium above ----
-        sa = bld(d, X + 2, Z + 15, X + 14, Z + 20, floors=2, roof=roof, axis="x", doors=[(X + 8, Z + 15, "n")],
+        sa = bld(d, X + 2, Z + 13, X + 14, Z + 20, floors=2, roof=roof, axis="x", doors=[(X + 8, Z + 13, "n")],
                  blind=("n",),
                  pal={"Neoterra": dict(wall="white_concrete", post="polished_blackstone", band="magenta_terracotta"),
                       "Hearthwood": dict(wall="calcite", end="calcite", roof="dark_prismarine", framing=True),
                       "Cascadia": dict(siding="birch_planks", end="birch_planks", roof="dark_prismarine")}[pack])
-        d.door(X + 8, 2, Z + 13, "south", S["doorwood"])
-        door_cells(d).update({(X + 8, 2, Z + 12), (X + 8, 2, Z + 14)})
-        d.set(X + 8, 1, Z + 14, S["floor"])
         stairs_up(d, X + 3, Z + 19, "east", 2, rail=False)
         run(d, sa, "n", 2, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]"),
                             P.b("chest[facing={f},type=single,waterlogged=false]"), P.b("crying_obsidian"),
@@ -1246,7 +1241,7 @@ def netherworker_design(pack, rel, L):
         # ---- L4: east wing: library & sample laboratory over a vaulted store ----
         if L >= 4:
             ex1 = x2 + 2
-            ew = bld(d, ex1, Z + 2, ex1 + 10, Z + 12, floors=2, roof=roof, axis="z" if pack == "Cascadia" else "x",
+            ew = bld(d, ex1, Z + 2, ex1 + 10, Z + 12, floors=3, roof=roof, axis="z" if pack == "Cascadia" else "x",
                      doors=[(ex1, Z + 7, "w"), (ex1 + 5, Z + 12, "s")],
                      pal={"Neoterra": dict(wall="white_concrete", post="polished_blackstone", band="magenta_terracotta"),
                           "Hearthwood": dict(wall="stone_bricks", end="stone_bricks", roof="deepslate_tile"),
@@ -1266,10 +1261,39 @@ def netherworker_design(pack, rel, L):
             run(d, ew, "n", 6, [P.b("lectern[facing={f},has_book=true,powered=false]"), P.chair(W),
                                 P.shelf("polished_blackstone_brick", "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=true]")], skip=3)
             d.dining(ex1 + 5, 6, Z + 8, 2, "x", W, chairs=("n", "s"), sit=False)
+            stairs_up(d, ex1 + 9, Z + 3, "south", 6, rail=False)
+            for x in range(ex1 + 2, ex1 + 9, 3):                          # observatory dormitory on the top floor
+                d.bed(x, 10, Z + 11, "south")
+                d.set(x + 1, 10, Z + 11, "polished_blackstone_slab[type=top,waterlogged=false]")
+            run(d, ew, "n", 10, [P.b("chest[facing={f},type=single,waterlogged=false]")] * 3, skip=1)
+            room_rug(d, ew, 10, ("magenta_carpet" if pack == "Neoterra" else "red_carpet",), inset=3)
             room_rug(d, ew, 2, ("black_carpet", "red_carpet"), inset=3)
             room_rug(d, ew, 6, ("red_carpet", "black_carpet"), inset=2)
         # ---- L5: watch tower over the gate and an ember garden ----
         if L >= 5:
+            # west wing: guest cells and refectory around a small court
+            wx1 = X - 13
+            ww = bld(d, wx1, Z + 1, X - 3, Z + 12, floors=2, roof=roof, axis="z" if pack != "Hearthwood" else "x",
+                     doors=[(X - 3, Z + 7, "e"), (wx1 + 5, Z + 1, "n")], chimney=(wx1, Z + 6),
+                     pal={"Neoterra": dict(wall="white_terracotta", post="polished_blackstone", band="magenta_concrete"),
+                          "Hearthwood": dict(wall="pink_terracotta", end="pink_terracotta", framing=True, roof="brick"),
+                          "Cascadia": dict(siding="mangrove_planks", end="mangrove_planks", roof="deepslate_tile")}[pack])
+            d.door(x1, 2, Z + 7, "west", S["doorwood"])
+            for x in range(X - 2, x1):
+                d.set(x, 1, Z + 7, S["floor"])
+            door_cells(d).update({(x1 + 1, 2, Z + 7), (x1 - 1, 2, Z + 7), (X - 2, 2, Z + 7)})
+            d.hearth(wx1 + 1, 2, Z + 6, "east", 5, S["chimney"], "campfire")
+            d.dining(wx1 + 4, 2, Z + 8, 4, "z", W, chairs=("e", "w"), sit=False)
+            run(d, ww, "n", 2, [P.b("smoker[facing={f},lit=true]"), P.b("water_cauldron[level=3]"),
+                                P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]")], skip=2)
+            stairs_up(d, X - 4, Z + 11, "north", 2, rail=False)
+            for z in (Z + 2, Z + 5, Z + 8, Z + 11):
+                d.bed(wx1 + 1, 6, z, "west")
+                if z < Z + 11:
+                    d.set(wx1 + 1, 6, z + 1, "polished_blackstone_slab[type=top,waterlogged=false]")
+            room_rug(d, ww, 6, ("red_carpet", "black_carpet"), inset=3)
+            for x in range(wx1, X - 2, 3):
+                lamp_post(d, x, Z + 15)
             tx = x2 + 2
             tw = bld(d, tx, Z + 15, tx + 5, Z + 20, floors=6, roof="hip" if pack != "Neoterra" else "flat", axis="x",
                      doors=[(tx, Z + 17, "w")], win=2,

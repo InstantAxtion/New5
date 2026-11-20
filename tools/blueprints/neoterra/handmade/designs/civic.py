@@ -5571,10 +5571,15 @@ def sch_hearthwood(rel, L):
         d.sign(34, 5, 7, "north", ["INFANTS"], "oak")
         playground(d, 30, 18, 46, 30)
     if L >= 3:
-        ar = bldg(d, 18, 16, 26, 24, 1, "gable", "z", mat="bricks", up="bricks")
+        ar = bldg(d, 18, 16, 26, 25, 2, "gable", "z", mat="bricks", up="yellow_terracotta")
         link(d, 22, Y0, 16, "south")
-        art_room(d, (19, 17, 25, 23), Y0)
-        chimney(d, 26, 20, Y0, 12)
+        art_room(d, (19, 17, 25, 24), Y0)
+        stair_up(d, 25, 19, Y0, 7, "south") if False else stair_up(d, 19, 20, Y0, 7, "south")
+        tables(d, (20, 17, 25, 24), 7, sit=False)
+        for z in range(17, 25, 2):
+            put(d, 25, 7, z, "loom[facing=west]") if False else put(d, 25, 7, z, "white_wool" if z % 4 == 1 else "pink_wool")
+        lights(d, (19, 17, 25, 24), 7)
+        chimney(d, 26, 20, Y0, 17)
     if L >= 4:
         mh = bldg(d, 2, 6, 14, 18, 2, "gable", "z", mat="bricks", up="yellow_terracotta")
         ext_door(d, 8, Y0, 6, "south")
@@ -5660,6 +5665,7 @@ def sch_neoterra(rel, L):
         for x in range(25, 36, 3):
             for y in range(Y0, 7):
                 d.set(x, y, 5, fins[(x + 1) % 3])
+        ext_door(d, 30, Y0, 6, "south")
         d.box(20, Y0, 9, 24, 5, 13, "glass", floor="polished_diorite")
         d.fill(20, 6, 9, 24, 6, 13, "smooth_quartz")
         d.clear(21, Y0, 10, 23, 5, 12)
@@ -5687,7 +5693,10 @@ def sch_neoterra(rel, L):
             for z in (23, 29):
                 d.set(x, 9, z, "sea_lantern")
         d.sign(20, 7, 19, "north", ["SPORTS", "HALL"], "birch", glow=True, color="yellow")
+    if L >= 3:
         playground(d, 38, 28, 50, 44)
+        for x in range(38, 51):
+            put(d, x, 6, 27, slab("smooth_quartz_slab", "top"))
     if L >= 5:
         sc = bldg(d, 38, 6, 50, 24, 3, "flat", glassy=True, win="nsew")
         ext_door(d, 44, Y0, 6, "south", double=True)
@@ -5799,6 +5808,17 @@ def sch_cascadia(rel, L):
         ws = bldg(d, 44, 42, 52, 48, 1, "gable", "x", mat="stripped_spruce_log", win="")
         ext_door(d, 48, Y0, 42, "south", double=True)
         workshop(d, (45, 43, 51, 47), Y0)
+        bn = bldg(d, 2, 42, 10, 50, 1, "gable", "z", mat="mangrove_planks", up="mangrove_planks", wh=5)
+        ext_door(d, 6, Y0, 42, "south", double=True)
+        for z in range(44, 50, 2):
+            put(d, 3, Y0, z, "hay_block[axis=y]")
+            put(d, 9, Y0, z, "hay_block[axis=y]")
+        cart(d, 6, 46, "z")
+        d.sign(6, 5, 41, "north", ["WAGON", "SHED"], "spruce")
+        for y in range(Y0, 14):
+            d.set(16, y, 4, "spruce_fence")
+        d.set(16, 14, 4, "red_wool")
+        d.set(16, 13, 4, "white_wool")
     return d
 
 

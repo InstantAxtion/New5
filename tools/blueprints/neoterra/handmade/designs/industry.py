@@ -2430,6 +2430,9 @@ def hall(d, x1, z1, x2, z2, storeys=1, axis=None, title=None, sh=5, clerestory=F
     P = d.pack
     M = MAT[P]
     wood = WOOD[P]
+    want = storeys
+    if storeys > 1 and (z2 - z1) < sh + 4 and (x2 - x1) < sh + 4:
+        storeys = 1
     top = sh * storeys
     if P == "Hearthwood":
         ridge = hw_house(d, x1, z1, x2, z2, top, axis or "x", floor=M["floor"])
@@ -2511,6 +2514,7 @@ def hall(d, x1, z1, x2, z2, storeys=1, axis=None, title=None, sh=5, clerestory=F
         else:
             res = [(x1 + 1, z2 - storeys - 1, x1 + sh + 2, z2 - 1)]
         rooms.append((x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2 + sh * k, res, keep if k == 0 else set()))
+    rooms += [None] * (want - storeys)
     door_path(d, mx, z1)
     return dict(ridge=ridge, top=top, mx=mx, rooms=rooms)
 
@@ -2588,6 +2592,8 @@ def token(d, tok, x, y, z, f, i, base):
 
 
 def room(d, rm, ring, centre=None, base="blacksmith", rug=False, lights=True, extra_res=()):
+    if rm is None:
+        return
     fx1, fz1, fx2, fz2, y, reserved, keep = rm
     reserved = list(reserved) + list(extra_res)
     P = d.pack
@@ -3241,6 +3247,13 @@ def cr_orebins(d, sl):
                 d.set(x, 9, z, MAT[d.pack]["board"])
     d.rack(x1 + 1, 2, z2, "north")
     post_sign(d, x1 + 1, z1, ["ORE BINS"])
+    for x in range(x1, x2 + 1):
+        d.set(x, 9, zb1 - 1, MAT[d.pack]["deck"])
+        d.set(x, 10, zb1 - 2, MAT[d.pack]["fence"])
+        if (x - x1) % 3 == 0:
+            col(d, x, zb1 - 1, 2, 8, MAT[d.pack]["post"])
+    for x in range(x1, x2 + 1):
+        d.set(x, 10, zb1 - 1, "rail[shape=east_west,waterlogged=false]")
 
 
 def cr_tipple(d, sl):
@@ -3248,6 +3261,7 @@ def cr_tipple(d, sl):
     x1, z1, x2, z2, s, ax = sl
     M = MAT[d.pack]
     tx1, tx2, tz1, tz2 = x1 + 1, x1 + 5, z1 + 1, z1 + 5
+    wide = (x2 - x1) >= 14
     for x, z in ((tx1, tz1), (tx2, tz1), (tx1, tz2), (tx2, tz2)):
         col(d, x, z, 2, 16, M["post"])
     for y in (6, 11, 16):
@@ -3272,7 +3286,8 @@ def cr_tipple(d, sl):
         d.set((tx1 + tx2) // 2, y, (tz1 + tz2) // 2, "chain[axis=y,waterlogged=false]")
     d.set((tx1 + tx2) // 2, 2, (tz1 + tz2) // 2, "minecart" if False else "iron_block")
     rails(d, [(x, tz2 + 1) for x in range(x1, x2 + 1)], "east_west")
-    hh = hall(d, x1 + 8, z1 + 2, x2, z2, 2, "x", "HOIST HOUSE")
+    hh = hall(d, x1 + 8, z1 + 2, x2, z2, 2, "x", "HOIST HOUSE") if wide else \
+        hall(d, x1, z1 + 8, x2, z2, 2, "z", "HOIST HOUSE")
     room(d, hh["rooms"][0], ["dispenser", "pot", "craft", "rack", "lamp"], "island", "crusher")
     room(d, hh["rooms"][1], ["book", "pot", "lectern", "rack"], "desks", "crusher", rug=True)
 
@@ -3560,7 +3575,7 @@ def street(d, L):
             d.set(x, 1, 0, "moss_block" if P == "Neoterra" else "grass_block[snowy=false]")
             d.set(x, 2, 0, flowers[x % len(flowers)])
     for x in range(6, sx - 6, 12):
-        if area_free(d, x - 1, 3, x + 2, 3, 2, 5):
+        if area_free(d, x - 2, 3, x + 4, 6, 2, 5):
             bench(d, x, 3, "south")
             lamp_post(d, x + 3, 3)
 
@@ -3611,6 +3626,29 @@ LAYOUTS = {
 }
 
 
+def boundary(d, L):
+    """Garden / yard boundary that closes in as the works grow: east side at L3, south at L4, west at L5."""
+    P = d.pack
+    base, top = {"Hearthwood": (WALLST("stone_brick_wall"), "oak_leaves[distance=1,persistent=true,waterlogged=false]"),
+                 "Cascadia": (WALLST("cobblestone_wall"), "spruce_fence"),
+                 "Neoterra": ("polished_andesite", "light_gray_stained_glass_pane")}[P]
+    segs = []
+    if L >= 3:
+        segs.append([(d.sx - 1, z) for z in range(5, d.sz)])
+    if L >= 4:
+        segs.append([(x, d.sz - 1) for x in range(d.sx)])
+    if L >= 5:
+        segs.append([(0, z) for z in range(5, d.sz)])
+    for seg in segs:
+        for i, (x, z) in enumerate(seg):
+            if i % 12 in (5, 6):
+                continue
+            if not (d.air(x, 2, z) and d.air(x, 3, z)) or "water" in d.get(x, 1, z):
+                continue
+            d.set(x, 2, z, base)
+            d.set(x, 3, z, top if i % 12 not in (4, 7) else "lantern[hanging=false,waterlogged=false]")
+
+
 def complex_(base, fns):
     t = TYPES.index(base)
 
@@ -3624,6 +3662,7 @@ def complex_(base, fns):
                 x1, z1, x2, z2 = slot[:4]
                 regions.append((x1 - 2, z1 - 2, x2 + 3, z2 + 3, i + 1))
         street(d, L)
+        boundary(d, L)
         landscape(d, L)
         core_rugs(d, regions)
         apply_palette(d, t, regions)

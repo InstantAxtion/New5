@@ -2577,15 +2577,21 @@ Warehouse
 WH = {1: 36, 2: 72, 3: 144, 4: 216, 5: 324}
 
 
-def wh_items(room, L, sides=("north", "west", "east", "south")):
-    room.item("crafting_table", sides=sides)
+def wh_items(room, L, sides=("north", "west", "east", "south"), first=True):
+    """Warehouse work blocks; `room` may be a list of rooms tried in order. Also the two office seats."""
+    rooms = room if isinstance(room, list) else [room]
+    want = (["crafting_table"] if first else []) + (["crafting_table", "cartography_table", "lectern"] +
+                                                    ["barrel"] * 4 if L >= 3 else []) + (["ender_chest"] if L >= 5 else [])
+    for it in want:
+        for r in rooms:
+            if r.item(it, sides=sides):
+                break
     if L >= 3:
-        room.item("crafting_table", sides=sides)
-        room.item("cartography_table", sides=sides)
-        room.item("lectern", sides=sides)
-        room.item("barrel", 4, sides=sides)
-    if L >= 5:
-        room.item("ender_chest", sides=sides)
+        need = 2
+        for r in rooms:
+            need -= r.chairs_desk(need, WOOD[r.d.pack])
+            if need <= 0:
+                break
 
 
 def wh_racks(d, room, x1, z1, x2, z2, need, along="z"):
@@ -2600,22 +2606,25 @@ def wh_neo(rel, L):
     P, y0 = "Neoterra", 2
     sto = {1: 1, 2: 1, 3: 2, 4: 2, 5: 3}[L]
     z2 = 12 if L == 1 else 18
-    a = build(d, 3, 4, 17, z2, sto, H=5 if sto == 1 else 4, roof="flat", core=(15, 9) if sto > 1 else None,
+    a = build(d, 3, 4, 17, z2, sto, H=5 if sto == 1 else 4, roof="flat", core=(15, 10) if sto > 1 else None,
               street_glass=True)
     a.door(6, 4, "north", double=True)
     a.opening(10, 4, 12, 4, 3, "yellow_concrete")
     d.hut(4, y0, 5)
     d.sign(10, a.yr, 3, "north", ["NEOTERRA", "LOGISTICS"], "birch", glow=True, color="yellow")
     r0 = a.room(0)
-    racks = wh_racks(d, r0, 4, 9, 13, z2 - 1, WH[L])
-    wh_items(r0, L, ("north", "west", "east"))
-    r0.chairs_desk(2 if L >= 3 else 0, "birch", top=sl("smooth_quartz", "top"))
-    r0.fill(["crate", "bamboo", "shelf_quartz"], sides=("north", "east"))
+    racks = wh_racks(d, r0, 4, 10, 13, z2 - 1, WH[L])
+    r0.item("crafting_table", sides=("west", "north", "east"))
+    ups = []
     for s_ in range(1, sto):
         rs = a.room(s_)
-        racks += wh_racks(d, rs, 4, 9, 13, z2 - 1, WH[L] - racks)
-        rs.chairs_desk(1, "birch", top=sl("smooth_quartz", "top"), sit=False)
+        racks += wh_racks(d, rs, 4, 10, 13, z2 - 1, WH[L] - racks)
+        ups.append(rs)
+    if L >= 3:
+        wh_items(ups + [r0], L, ("north", "west", "east"), first=False)
+    for rs in ups:
         rs.fill(["crate", "bamboo"], sides=("north", "east"))
+    r0.fill(["crate", "bamboo", "shelf_quartz"], sides=("north", "east"))
     neo_roof(d, a, "solar")
     # truck bay with markings and pallets
     for x in range(10, 13):
@@ -2726,11 +2735,10 @@ def wh_hw(rel, L):
         d.sty_over = {}
         b.door(25, 4, "north")
         rb = b.room(0)
-        wh_items(rb, L, ("south", "east", "west", "north"))
-        rb.chairs_desk(2, "spruce")
+        rb1 = b.room(1)
+        wh_items([rb, rb1], L, ("south", "east", "west", "north"), first=False)
         rb.fill(["shelf_dark", "plant", "keg"])
         rb.lights()
-        rb1 = b.room(1)
         rb1.bed("spruce", sides=("south", "west"))
         rb1.books(6, sides=("south",))
         rb1.fill(["wardrobe", "plant", "shelf_dark"])
@@ -2828,11 +2836,10 @@ def wh_cas(rel, L):
         d.set(28, 3, 1, AIR)
         d.sign(30, b.ridge, 0, "north", ["FREIGHT", "AGENT"], "spruce")
         rb = b.room(0)
-        wh_items(rb, L, ("south", "east", "west"))
-        rb.chairs_desk(2, "spruce")
+        rb1 = b.room(1)
+        wh_items([rb, rb1], L, ("south", "east", "west", "north"), first=False)
         rb.fill(["shelf_spruce", "keg", "plant"])
         rb.lights()
-        rb1 = b.room(1)
         rb1.bed("spruce", sides=("south", "east"))
         rb1.fill(["wardrobe", "shelf_spruce", "plant"])
         rb1.lights()
