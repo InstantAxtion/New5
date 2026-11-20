@@ -997,20 +997,8 @@ def cookery_hw(rel, L):
     if L >= 2:
         lx1, lx2 = x2, x2 + 5
         d.box(lx1, y0, 7, lx2, 4, 13, "stone_bricks", floor="cobblestone")
-        for z in range(6, 15):
-            for i, x in enumerate(range(lx1, lx2 + 2)):
-                yy = 7 - (i + 1) // 2
-                d.set(x, yy, z, st("deepslate_tile", "west") if i % 2 == 1 else sl("deepslate_tile", "top"))
-        for x in range(lx1 + 1, lx2):
-            for z in range(8, 13):
-                d.set(x, 5, z, "spruce_planks")
-                for yy in range(6, 8):
-                    if d.air(x, yy, z) and yy < 7 - (x - lx1 + 1) // 2:
-                        d.set(x, yy, z, "stone_bricks")
-        for z in range(8, 13):
-            for x in (lx1 + 1, lx1 + 2, lx1 + 3, lx1 + 4):
-                if d.air(x, 6, z):
-                    d.set(x, 6, z, "stone_bricks")
+        roof(d, lx1, 7, lx2, 13, 5, "x", "deepslate_tile", "deepslate_tile_slab", "stone_bricks", keep=True,
+             ends=(0, 1))
         d.set(x2, y0, 10, AIR)
         d.set(x2, 3, 10, AIR)
         d.set(x2 - 1, y0, 10, AIR)
@@ -1181,6 +1169,12 @@ def cookery_neo(rel, L):
         if x % 4 != 3:
             d.set(x, 4, z1, "glass_pane")
     d.double_door(6, y0, z1, "x", "south", "iron")
+    for y in range(y0, 10):                                      # vertical sign fin on the corner
+        d.set(x1, y, z1 - 1, "cyan_terracotta" if y < 9 else "smooth_quartz")
+    d.set(x1, 10, z1 - 1, "end_rod[facing=up]")
+    for x in range(5, 10):                                       # entrance canopy
+        for z in (z1 - 1, z1 - 2):
+            d.set(x, 5, z, sl("smooth_quartz", "top"))
     d.sign(9, 4, z1 - 1, "north", ["CENTRAL", "KITCHEN"], "birch", glow=True, color="cyan")
     # cooking line in brushed steel (andesite) on the back wall, hood, extract
     seq = range_seq(min(L, 4), 6, 2) + "C"

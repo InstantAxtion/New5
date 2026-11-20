@@ -114,6 +114,9 @@ def guess_color(name):
 GLASS = {"light_blue_stained_glass", "glass_pane", "glass", "tinted_glass", "blockpaperwall", "water"}
 HALF = {"smooth_quartz_slab", "smooth_stone_slab", "rail", "daylight_detector"}
 COLORS.update({
+    "brick_slab": (150, 97, 83), "mossy_stone_bricks": (115, 121, 105), "mossy_stone_brick_stairs": (115, 121, 105),
+    "blockminecoloniesrack": (150, 115, 70), "rooted_dirt": (144, 103, 76), "peony": (200, 150, 200),
+    "mossy_stone_brick_slab": (115, 121, 105), "mud_brick_slab": (137, 104, 79),
     "deepslate_tile_slab": (54, 54, 55), "hopper": (70, 70, 72), "chest": (160, 110, 40), "observer": (100, 100, 100),
     "smoker": (90, 80, 70), "oak_sign": (160, 130, 80), "lava": (220, 100, 20),
     "deepslate_tile_stairs": (54, 54, 55), "deepslate_tiles": (54, 54, 55), "mud_brick_stairs": (137, 104, 79),
