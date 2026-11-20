@@ -94,3 +94,33 @@ with `python3 ../../render.py <file.blueprint> <out prefix>`. Inspiration only �
 * Don't commit or push; the coordinator integrates.
 * Done = every type in your group builds for all 3 packs and all levels with no errors, no bad states, nothing
   unreachable, and you have looked at the renders and are happy a player would recognise each building.
+
+## Round 2: compound structures (barracks, gatehouse, wall guard tower, sky tower, bunker, twin builder, grand projects)
+
+Same rules as above, plus:
+
+* **Child huts.** Some structures contain child huts that MineColonies builds from their own blueprint:
+  barracks → `barrackstower`, skytower → `skytowerflat`, bunker → `bunkerkitchen` / `bunkerclinic` /
+  `bunkerschool` / `bunkerfarm`, twinbuilder → `twinbuilderannex`, cathedral/colossus/grandbridge/royalgranary →
+  `<name>wing`. requirements.json lists for every parent level the exact number of each child
+  (`children: [{hut, path, count}]`) and every child level has its own requirements (`child: true`).
+  - In the parent: reserve the child's space with `d.reserve(x1,y1,z1,x2,y2,z2)` and place the child hut with
+    `d.child_hut(x, y, z, "military/barrackstower0.blueprint")`.
+  - Write the child as its own design (`@design("barrackstower")`). Parent level L is assembled with child
+    level L: the child blueprint is pasted so that its hut block lands on the parent's child-hut cell. So the
+    child's footprint around its hut must fit the reserved box exactly. Share the geometry as constants between
+    the parent and child functions.
+  - Child designs normally use `gy=0` with the hut at y=1, i.e. the child's y=0 sits on the parent's ground layer.
+  - preview.py shows and walk-checks the ASSEMBLED parent; children are not walk-checked on their own.
+* **Special tags** (`tagreq`): the gatehouse needs `gate`, `knight` and `archer` tags. Read
+  `../military_real.py` and the current `stylepacks/*/military/gatehouse*.blueprint` to see where they go:
+  gate tags on the ground under the gate opening, knight posts on the ground beside it, archers on the wall walk.
+  The bunker kitchen needs `work` tags; use `d.tag(...)` / `d.spot(...)` as appropriate.
+* **Grand projects** use this mod's hut blocks (`neoterra:blockhutcathedral` etc. and `neoterra:blockhutwonderwing`
+  for the wings); the self-test requires exactly 2 wing huts in every grand project level. They are real-world
+  landmarks: big, ornate, a skyline piece – not a box.
+* **Bunker** is underground: its `gy` (ground surface) is high (see requirements `gy`, e.g. 24). Rooms are
+  below ground, with an entrance building / hatch at the surface. Cutaways of underground floors aren't
+  drawn automatically. Render your own slices with `render.iso(preview.cut(bp, y), ...)` to look inside.
+* Look at the current versions (`stylepacks/<pack>/...`) only to understand requirements and child alignment.
+  Your designs replace them completely.

@@ -117,9 +117,19 @@ def main():
                 dst = out / pack / rel
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 bp.save(dst)
-                probs = walkcheck.analyse(bp)[1]
+                req = hm.REQ[rel]
+                if req.get("children"):
+                    try:
+                        bp_show = hm.assemble(d, bp, designs)
+                    except Exception as e:
+                        print(f"{base} {pack} L{L}: ASSEMBLY ERROR {e}")
+                        ok = False
+                        continue
+                else:
+                    bp_show = bp
+                probs = [] if req.get("child") else walkcheck.analyse(bp_show)[1]
                 bad = check_states(bp)
-                status = f"{bp.sx}x{bp.sy}x{bp.sz}"
+                status = f"{bp.sx}x{bp.sy}x{bp.sz}" + (" (assembled with child huts)" if bp_show is not bp else "")
                 if probs:
                     status += f"  UNREACHABLE: {probs[:4]}"
                     ok = False
@@ -131,6 +141,7 @@ def main():
                     continue
                 pre = out / "img" / f"{pack}_{Path(rel).stem}"
                 pre.parent.mkdir(parents=True, exist_ok=True)
+                bp = bp_show
                 render.iso(bp, 2, f"{pre}_front.png", scale=10)
                 render.iso(bp, 0, f"{pre}_back.png", scale=10)
                 imgs = [Image.open(f"{pre}_front.png"), Image.open(f"{pre}_back.png")]

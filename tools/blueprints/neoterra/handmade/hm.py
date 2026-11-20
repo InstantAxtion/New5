@@ -130,10 +130,13 @@ class Design:
         self.gy = gy
         self.tags: dict[tuple[int, int, int], list[str]] = {}
         self.hut_pos = None
+        self.child_positions = []
+        self.is_child = bool(self.req.get("child"))
         self.placed = {"beds": 0, "racks": 0, "items": {}, "floor_items": 0, "yard": {}, "seats": 0, "spots": {},
                        "bookshelves": 0, "cluster": False}
         pave = paving or self.P["path"]
-        self.fill(0, 0, 0, sx - 1, gy - 1, sz - 1, ground or SOLID)
+        if gy >= 1:
+            self.fill(0, 0, 0, sx - 1, gy - 1, sz - 1, ground or SOLID)
         self.fill(0, gy, 0, sx - 1, gy, sz - 1, pave)
 
     # ------------------------------------------------------------------------------------------- basics
@@ -508,6 +511,35 @@ class Design:
                 i += 1
 
     # ------------------------------------------------------------------------------------------- game bits
+    # ------------------------------------------------------------------------------------------- child huts
+    def reserve(self, x1, y1, z1, x2, y2, z2):
+        """Space a child hut's blueprint will be built into: Structurize keeps these cells as they are."""
+        self.fill(x1, y1, z1, x2, y2, z2, KEEP)
+
+    def child_hut(self, x, y, z, path, facing="north"):
+        """Place a child hut (barracks tower, sky-tower flat, bunker room, twin-builder annex, wonder wing).
+        `path` is the child's level-0 path from requirements (e.g. 'military/barrackstower0.blueprint'); the child
+        blueprint of the same level is pasted so that ITS hut block lands on (x,y,z)."""
+        spec = next((c for c in self.req.get("children", []) if c["path"] == path), None)
+        if spec is None:
+            raise RequirementError(f"{self.rel}: no child '{path}' in requirements")
+
+        def pos(a, b, c):
+            return T.Compound({"x": T.Int(a), "y": T.Int(b), "z": T.Int(c)})
+        name = Path(path).stem
+        te = T.Compound({
+            "id": T.String("minecolonies:colonybuilding"), "mirror": T.Byte(0), "inWarehouse": T.Byte(0),
+            "colony": T.Int(0), "type": T.String("minecraft:"), "version": T.Int(0), "tagSIze": T.Int(0),
+            "Item": T.String(""), "pack": T.String(self.pack), "path": T.String(path),
+            "inventory": T.List[T.Compound]([T.Compound({"empty": T.Byte(1)}) for _ in range(27)]),
+            "blueprintDataProvider": T.Compound({"corner1": pos(0, 0, 0), "corner2": pos(0, 0, 0), "path": T.String(path),
+                                                 "schematicName": T.String(name), "pack": T.String(self.pack),
+                                                 "posTagMap": T.List[T.Compound]([])})})
+        self.set(x, y, z, f"{spec['hut']}[facing={facing}]", te)
+        self.placed.setdefault("children", {})
+        self.placed["children"][path] = self.placed["children"].get(path, 0) + 1
+        self.child_positions.append((x, y, z, path))
+
     def hut(self, x, y, z, facing="north"):
         """The hut block. Must stay at the same place relative to the building on every level."""
         self.set(x, y, z, f"{self.req['hut']}[facing={facing}]")
@@ -596,6 +628,17 @@ class Design:
             miss.append(f"bookshelves {p['bookshelves']}/{r['bookshelves']}")
         if r.get("cluster") and not p["cluster"]:
             miss.append("functional cluster (call cluster())")
+        names = {}
+        for ns in self.tags.values():
+            for n in ns:
+                names[n] = names.get(n, 0) + 1
+        for k, n in r.get("tagreq", {}).items():
+            if names.get(k, 0) < n:
+                miss.append(f"tag '{k}' {names.get(k, 0)}/{n}")
+        for c in r.get("children", []):
+            got = self.placed.get("children", {}).get(c["path"], 0)
+            if got != c["count"]:
+                miss.append(f"child huts {c['path']} {got}/{c['count']}")
         if miss:
             raise RequirementError(f"{self.pack} {self.rel}: missing " + ", ".join(miss))
 
@@ -612,8 +655,11 @@ class Design:
 
         def pos(x, y, z):
             return T.Compound({"x": T.Int(x), "y": T.Int(y), "z": T.Int(z)})
-        tags = {(0, self.gy, 0): ["groundlevel"]}
-        tags.setdefault(self.hut_pos, []).append(self.pack.lower())
+        if self.is_child:
+            tags = {self.hut_pos: ["invisible"]}
+        else:
+            tags = {(0, self.gy, 0): ["groundlevel"]}
+            tags.setdefault(self.hut_pos, []).append(self.pack.lower())
         for q, ns in self.tags.items():
             tags.setdefault(q, []).extend(ns)
         name = Path(self.rel).stem
@@ -708,3 +754,32 @@ def load_designs():
 
 def rels_for(base):
     return sorted((r for r, v in REQ.items() if v["base"] == base), key=lambda r: REQ[r]["level"])
+
+
+def assemble(design: "Design", bp: Blueprint, designs=None) -> Blueprint:
+    """Parent blueprint with every child hut's blueprint (same level) pasted in, for checking and previews."""
+    import copy as _copy
+    designs = designs or DESIGNS
+    out = _copy.deepcopy(bp)
+    L = design.level
+    for (x, y, z, path) in design.child_positions:
+        rel = path.replace("0.blueprint", f"{L}.blueprint")
+        base = REQ[rel]["base"]
+        child = designs[base](design.pack, rel, L).finish()
+        cx, cy, cz = child.primary_offset
+        ox, oy, oz = x - cx, y - cy, z - cz
+        for (a, b, c, st) in child.blocks():
+            tx, ty, tz = a + ox, b + oy, c + oz
+            if not out.inside(tx, ty, tz):
+                if st != AIR:
+                    raise RequirementError(f"{design.pack} {design.rel}: child {rel} sticks out of the parent at "
+                                           f"({tx},{ty},{tz})")
+                continue
+            here = out.get(tx, ty, tz)
+            if here == _mc(KEEP) or (st != AIR and "substitution" not in st):
+                out.set(tx, ty, tz, st, child.tile_entities.get((a, b, c)))
+        # anything still reserved there stays as-is in game; for checks treat it as air
+    for (a, b, c, st) in list(out.blocks()):
+        if st == _mc(KEEP):
+            out.set(a, b, c, AIR)
+    return out

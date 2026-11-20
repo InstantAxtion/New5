@@ -5866,6 +5866,774 @@
   "yard": {},
   "yard_seats": 0
  },
+ "fundamentals/bunker1.blueprint": {
+  "base": "bunker",
+  "beds": 3,
+  "bookshelves": 36,
+  "child": false,
+  "children": [
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutcook",
+    "path": "fundamentals/bunkerkitchen0.blueprint"
+   },
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhuthospital",
+    "path": "fundamentals/bunkerclinic0.blueprint"
+   },
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutschool",
+    "path": "fundamentals/bunkerschool0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 24,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:anvil": 2,
+   "minecraft:barrel": 179,
+   "minecraft:brewing_stand": 2,
+   "minecraft:cartography_table": 2,
+   "minecraft:crafting_table": 3,
+   "minecraft:enchanting_table": 1,
+   "minecraft:fletching_table": 1,
+   "minecraft:furnace": 4,
+   "minecraft:grindstone": 2,
+   "minecraft:jukebox": 2,
+   "minecraft:lectern": 2,
+   "minecraft:loom": 1,
+   "minecraft:smithing_table": 2,
+   "minecraft:stonecutter": 1,
+   "minecraft:water_cauldron": 2
+  },
+  "level": 1,
+  "racks": 0,
+  "seats": 10,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunker2.blueprint": {
+  "base": "bunker",
+  "beds": 4,
+  "bookshelves": 36,
+  "child": false,
+  "children": [
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutfarmer",
+    "path": "fundamentals/bunkerfarm0.blueprint"
+   },
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutcook",
+    "path": "fundamentals/bunkerkitchen0.blueprint"
+   },
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhuthospital",
+    "path": "fundamentals/bunkerclinic0.blueprint"
+   },
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutschool",
+    "path": "fundamentals/bunkerschool0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 24,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:anvil": 2,
+   "minecraft:barrel": 195,
+   "minecraft:blast_furnace": 1,
+   "minecraft:brewing_stand": 2,
+   "minecraft:cartography_table": 2,
+   "minecraft:composter": 3,
+   "minecraft:crafting_table": 3,
+   "minecraft:enchanting_table": 1,
+   "minecraft:fletching_table": 1,
+   "minecraft:furnace": 4,
+   "minecraft:grindstone": 2,
+   "minecraft:jukebox": 2,
+   "minecraft:lectern": 2,
+   "minecraft:loom": 1,
+   "minecraft:smithing_table": 2,
+   "minecraft:stonecutter": 1,
+   "minecraft:water_cauldron": 2
+  },
+  "level": 2,
+  "racks": 0,
+  "seats": 8,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunker3.blueprint": {
+  "base": "bunker",
+  "beds": 5,
+  "bookshelves": 36,
+  "child": false,
+  "children": [
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutfarmer",
+    "path": "fundamentals/bunkerfarm0.blueprint"
+   },
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutcook",
+    "path": "fundamentals/bunkerkitchen0.blueprint"
+   },
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhuthospital",
+    "path": "fundamentals/bunkerclinic0.blueprint"
+   },
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutschool",
+    "path": "fundamentals/bunkerschool0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 24,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:anvil": 2,
+   "minecraft:barrel": 211,
+   "minecraft:blast_furnace": 2,
+   "minecraft:brewing_stand": 2,
+   "minecraft:cartography_table": 2,
+   "minecraft:chiseled_bookshelf": 54,
+   "minecraft:composter": 3,
+   "minecraft:crafting_table": 3,
+   "minecraft:enchanting_table": 1,
+   "minecraft:fletching_table": 1,
+   "minecraft:furnace": 4,
+   "minecraft:grindstone": 2,
+   "minecraft:jukebox": 2,
+   "minecraft:lectern": 2,
+   "minecraft:loom": 1,
+   "minecraft:smithing_table": 2,
+   "minecraft:stonecutter": 1,
+   "minecraft:water_cauldron": 2
+  },
+  "level": 3,
+  "racks": 0,
+  "seats": 8,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunker4.blueprint": {
+  "base": "bunker",
+  "beds": 6,
+  "bookshelves": 36,
+  "child": false,
+  "children": [
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutfarmer",
+    "path": "fundamentals/bunkerfarm0.blueprint"
+   },
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutcook",
+    "path": "fundamentals/bunkerkitchen0.blueprint"
+   },
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhuthospital",
+    "path": "fundamentals/bunkerclinic0.blueprint"
+   },
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutschool",
+    "path": "fundamentals/bunkerschool0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 24,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:anvil": 2,
+   "minecraft:barrel": 211,
+   "minecraft:blast_furnace": 2,
+   "minecraft:brewing_stand": 2,
+   "minecraft:cartography_table": 2,
+   "minecraft:chiseled_bookshelf": 62,
+   "minecraft:composter": 3,
+   "minecraft:crafting_table": 3,
+   "minecraft:enchanting_table": 1,
+   "minecraft:ender_chest": 1,
+   "minecraft:fletching_table": 1,
+   "minecraft:furnace": 4,
+   "minecraft:grindstone": 2,
+   "minecraft:jukebox": 2,
+   "minecraft:lectern": 2,
+   "minecraft:loom": 1,
+   "minecraft:smithing_table": 2,
+   "minecraft:smoker": 1,
+   "minecraft:stonecutter": 1,
+   "minecraft:water_cauldron": 2
+  },
+  "level": 4,
+  "racks": 0,
+  "seats": 8,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunker5.blueprint": {
+  "base": "bunker",
+  "beds": 7,
+  "bookshelves": 36,
+  "child": false,
+  "children": [
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutfarmer",
+    "path": "fundamentals/bunkerfarm0.blueprint"
+   },
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutcook",
+    "path": "fundamentals/bunkerkitchen0.blueprint"
+   },
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhuthospital",
+    "path": "fundamentals/bunkerclinic0.blueprint"
+   },
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutschool",
+    "path": "fundamentals/bunkerschool0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 24,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:anvil": 2,
+   "minecraft:barrel": 211,
+   "minecraft:blast_furnace": 2,
+   "minecraft:brewing_stand": 2,
+   "minecraft:cartography_table": 2,
+   "minecraft:chiseled_bookshelf": 70,
+   "minecraft:composter": 3,
+   "minecraft:crafting_table": 3,
+   "minecraft:enchanting_table": 1,
+   "minecraft:ender_chest": 1,
+   "minecraft:fletching_table": 1,
+   "minecraft:furnace": 4,
+   "minecraft:grindstone": 2,
+   "minecraft:jukebox": 2,
+   "minecraft:lectern": 2,
+   "minecraft:loom": 1,
+   "minecraft:smithing_table": 2,
+   "minecraft:smoker": 2,
+   "minecraft:stonecutter": 1,
+   "minecraft:water_cauldron": 2
+  },
+  "level": 5,
+  "racks": 0,
+  "seats": 8,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerclinic1.blueprint": {
+  "base": "bunkerclinic",
+  "beds": 2,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhuthospital",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:furnace": 1
+  },
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerclinic2.blueprint": {
+  "base": "bunkerclinic",
+  "beds": 4,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhuthospital",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:furnace": 1
+  },
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerclinic3.blueprint": {
+  "base": "bunkerclinic",
+  "beds": 6,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhuthospital",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:brewing_stand": 1,
+   "minecraft:furnace": 1
+  },
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerclinic4.blueprint": {
+  "base": "bunkerclinic",
+  "beds": 8,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhuthospital",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:brewing_stand": 1,
+   "minecraft:furnace": 1
+  },
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerclinic5.blueprint": {
+  "base": "bunkerclinic",
+  "beds": 10,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhuthospital",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:brewing_stand": 1,
+   "minecraft:furnace": 1
+  },
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerfarm1.blueprint": {
+  "base": "bunkerfarm",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutfarmer",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:composter": 1
+  },
+  "level": 1,
+  "racks": 1,
+  "seats": 1,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerfarm2.blueprint": {
+  "base": "bunkerfarm",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutfarmer",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:composter": 1
+  },
+  "level": 2,
+  "racks": 2,
+  "seats": 1,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerfarm3.blueprint": {
+  "base": "bunkerfarm",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutfarmer",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:composter": 1
+  },
+  "level": 3,
+  "racks": 3,
+  "seats": 1,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerfarm4.blueprint": {
+  "base": "bunkerfarm",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutfarmer",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:composter": 1
+  },
+  "level": 4,
+  "racks": 4,
+  "seats": 1,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerfarm5.blueprint": {
+  "base": "bunkerfarm",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutfarmer",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:composter": 1
+  },
+  "level": 5,
+  "racks": 5,
+  "seats": 1,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerkitchen1.blueprint": {
+  "base": "bunkerkitchen",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutcook",
+  "items": {
+   "minecraft:crafting_table": 1,
+   "minecraft:furnace": 1,
+   "minecraft:smoker": 1
+  },
+  "level": 1,
+  "racks": 1,
+  "seats": 4,
+  "spots": {},
+  "tagreq": {
+   "work": 1
+  },
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerkitchen2.blueprint": {
+  "base": "bunkerkitchen",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutcook",
+  "items": {
+   "minecraft:crafting_table": 1,
+   "minecraft:furnace": 2,
+   "minecraft:smoker": 1
+  },
+  "level": 2,
+  "racks": 1,
+  "seats": 4,
+  "spots": {},
+  "tagreq": {
+   "work": 2
+  },
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerkitchen3.blueprint": {
+  "base": "bunkerkitchen",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutcook",
+  "items": {
+   "minecraft:crafting_table": 1,
+   "minecraft:furnace": 3,
+   "minecraft:smoker": 1
+  },
+  "level": 3,
+  "racks": 1,
+  "seats": 6,
+  "spots": {},
+  "tagreq": {
+   "work": 3
+  },
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerkitchen4.blueprint": {
+  "base": "bunkerkitchen",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutcook",
+  "items": {
+   "minecraft:crafting_table": 1,
+   "minecraft:furnace": 4,
+   "minecraft:smoker": 1
+  },
+  "level": 4,
+  "racks": 1,
+  "seats": 6,
+  "spots": {},
+  "tagreq": {
+   "work": 4
+  },
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerkitchen5.blueprint": {
+  "base": "bunkerkitchen",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutcook",
+  "items": {
+   "minecraft:crafting_table": 1,
+   "minecraft:furnace": 5,
+   "minecraft:smoker": 1
+  },
+  "level": 5,
+  "racks": 1,
+  "seats": 6,
+  "spots": {},
+  "tagreq": {
+   "work": 5
+  },
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerschool1.blueprint": {
+  "base": "bunkerschool",
+  "beds": 0,
+  "bookshelves": 2,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutschool",
+  "items": {},
+  "level": 1,
+  "racks": 0,
+  "seats": 10,
+  "spots": {},
+  "tagreq": {
+   "work": 1
+  },
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerschool2.blueprint": {
+  "base": "bunkerschool",
+  "beds": 0,
+  "bookshelves": 4,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutschool",
+  "items": {},
+  "level": 2,
+  "racks": 0,
+  "seats": 10,
+  "spots": {},
+  "tagreq": {
+   "work": 1
+  },
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerschool3.blueprint": {
+  "base": "bunkerschool",
+  "beds": 0,
+  "bookshelves": 6,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutschool",
+  "items": {},
+  "level": 3,
+  "racks": 0,
+  "seats": 10,
+  "spots": {},
+  "tagreq": {
+   "work": 1
+  },
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerschool4.blueprint": {
+  "base": "bunkerschool",
+  "beds": 0,
+  "bookshelves": 8,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutschool",
+  "items": {},
+  "level": 4,
+  "racks": 0,
+  "seats": 10,
+  "spots": {},
+  "tagreq": {
+   "work": 1
+  },
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/bunkerschool5.blueprint": {
+  "base": "bunkerschool",
+  "beds": 0,
+  "bookshelves": 10,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutschool",
+  "items": {},
+  "level": 5,
+  "racks": 0,
+  "seats": 10,
+  "spots": {},
+  "tagreq": {
+   "work": 1
+  },
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
  "fundamentals/cook1.blueprint": {
   "base": "cook",
   "beds": 0,
@@ -6866,6 +7634,301 @@
   "yard": {},
   "yard_seats": 0
  },
+ "fundamentals/skytower1.blueprint": {
+  "base": "skytower",
+  "beds": 1,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 4,
+    "hut": "minecolonies:blockhutcitizen",
+    "path": "fundamentals/skytowerflat0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:barrel": 6,
+   "minecraft:crafting_table": 1,
+   "minecraft:ender_chest": 1,
+   "minecraft:furnace": 1,
+   "minecraft:jukebox": 1,
+   "minecraft:smoker": 1
+  },
+  "level": 1,
+  "racks": 0,
+  "seats": 6,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/skytower2.blueprint": {
+  "base": "skytower",
+  "beds": 2,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 4,
+    "hut": "minecolonies:blockhutcitizen",
+    "path": "fundamentals/skytowerflat0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:barrel": 6,
+   "minecraft:crafting_table": 1,
+   "minecraft:ender_chest": 1,
+   "minecraft:furnace": 1,
+   "minecraft:jukebox": 1,
+   "minecraft:smoker": 1
+  },
+  "level": 2,
+  "racks": 0,
+  "seats": 9,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/skytower3.blueprint": {
+  "base": "skytower",
+  "beds": 3,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 4,
+    "hut": "minecolonies:blockhutcitizen",
+    "path": "fundamentals/skytowerflat0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:barrel": 6,
+   "minecraft:crafting_table": 1,
+   "minecraft:ender_chest": 1,
+   "minecraft:furnace": 1,
+   "minecraft:jukebox": 1,
+   "minecraft:smoker": 1
+  },
+  "level": 3,
+  "racks": 0,
+  "seats": 12,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/skytower4.blueprint": {
+  "base": "skytower",
+  "beds": 4,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 4,
+    "hut": "minecolonies:blockhutcitizen",
+    "path": "fundamentals/skytowerflat0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:barrel": 6,
+   "minecraft:chiseled_bookshelf": 1,
+   "minecraft:crafting_table": 1,
+   "minecraft:ender_chest": 1,
+   "minecraft:furnace": 1,
+   "minecraft:jukebox": 1,
+   "minecraft:smoker": 1
+  },
+  "level": 4,
+  "racks": 0,
+  "seats": 12,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/skytower5.blueprint": {
+  "base": "skytower",
+  "beds": 5,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 4,
+    "hut": "minecolonies:blockhutcitizen",
+    "path": "fundamentals/skytowerflat0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:barrel": 6,
+   "minecraft:chiseled_bookshelf": 2,
+   "minecraft:crafting_table": 1,
+   "minecraft:ender_chest": 1,
+   "minecraft:furnace": 1,
+   "minecraft:jukebox": 1,
+   "minecraft:smoker": 1
+  },
+  "level": 5,
+  "racks": 0,
+  "seats": 12,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/skytowerflat1.blueprint": {
+  "base": "skytowerflat",
+  "beds": 1,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:crafting_table": 1,
+   "minecraft:furnace": 1,
+   "minecraft:smoker": 1
+  },
+  "level": 1,
+  "racks": 0,
+  "seats": 2,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/skytowerflat2.blueprint": {
+  "base": "skytowerflat",
+  "beds": 2,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:crafting_table": 1,
+   "minecraft:furnace": 1,
+   "minecraft:smoker": 1
+  },
+  "level": 2,
+  "racks": 0,
+  "seats": 5,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/skytowerflat3.blueprint": {
+  "base": "skytowerflat",
+  "beds": 3,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:crafting_table": 1,
+   "minecraft:furnace": 1,
+   "minecraft:smoker": 1
+  },
+  "level": 3,
+  "racks": 0,
+  "seats": 5,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/skytowerflat4.blueprint": {
+  "base": "skytowerflat",
+  "beds": 4,
+  "bookshelves": 2,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:crafting_table": 1,
+   "minecraft:furnace": 1,
+   "minecraft:jukebox": 1,
+   "minecraft:smoker": 1
+  },
+  "level": 4,
+  "racks": 0,
+  "seats": 5,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/skytowerflat5.blueprint": {
+  "base": "skytowerflat",
+  "beds": 5,
+  "bookshelves": 2,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutcitizen",
+  "items": {
+   "minecraft:barrel": 1,
+   "minecraft:crafting_table": 1,
+   "minecraft:ender_chest": 1,
+   "minecraft:furnace": 1,
+   "minecraft:jukebox": 1,
+   "minecraft:smoker": 1
+  },
+  "level": 5,
+  "racks": 0,
+  "seats": 5,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
  "fundamentals/tavern1.blueprint": {
   "base": "tavern",
   "beds": 8,
@@ -7107,6 +8170,256 @@
   "yard": {},
   "yard_seats": 0
  },
+ "fundamentals/twinbuilder1.blueprint": {
+  "base": "twinbuilder",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutbuilder",
+    "path": "fundamentals/twinbuilderannex0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutbuilder",
+  "items": {
+   "minecraft:crafting_table": 1
+  },
+  "level": 1,
+  "racks": 4,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/twinbuilder2.blueprint": {
+  "base": "twinbuilder",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutbuilder",
+    "path": "fundamentals/twinbuilderannex0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutbuilder",
+  "items": {
+   "minecraft:crafting_table": 1
+  },
+  "level": 2,
+  "racks": 6,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/twinbuilder3.blueprint": {
+  "base": "twinbuilder",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutbuilder",
+    "path": "fundamentals/twinbuilderannex0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutbuilder",
+  "items": {
+   "minecraft:crafting_table": 1
+  },
+  "level": 3,
+  "racks": 8,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/twinbuilder4.blueprint": {
+  "base": "twinbuilder",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutbuilder",
+    "path": "fundamentals/twinbuilderannex0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutbuilder",
+  "items": {
+   "minecraft:crafting_table": 1
+  },
+  "level": 4,
+  "racks": 10,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/twinbuilder5.blueprint": {
+  "base": "twinbuilder",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutbuilder",
+    "path": "fundamentals/twinbuilderannex0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutbuilder",
+  "items": {
+   "minecraft:crafting_table": 1
+  },
+  "level": 5,
+  "racks": 12,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/twinbuilderannex1.blueprint": {
+  "base": "twinbuilderannex",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutbuilder",
+  "items": {
+   "minecraft:crafting_table": 1
+  },
+  "level": 1,
+  "racks": 4,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/twinbuilderannex2.blueprint": {
+  "base": "twinbuilderannex",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutbuilder",
+  "items": {
+   "minecraft:crafting_table": 1
+  },
+  "level": 2,
+  "racks": 6,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/twinbuilderannex3.blueprint": {
+  "base": "twinbuilderannex",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutbuilder",
+  "items": {
+   "minecraft:crafting_table": 1
+  },
+  "level": 3,
+  "racks": 8,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/twinbuilderannex4.blueprint": {
+  "base": "twinbuilderannex",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutbuilder",
+  "items": {
+   "minecraft:crafting_table": 1
+  },
+  "level": 4,
+  "racks": 10,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "fundamentals/twinbuilderannex5.blueprint": {
+  "base": "twinbuilderannex",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutbuilder",
+  "items": {
+   "minecraft:crafting_table": 1
+  },
+  "level": 5,
+  "racks": 12,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
  "military/archery1.blueprint": {
   "base": "archery",
   "beds": 2,
@@ -7240,6 +8553,264 @@
   },
   "yard_seats": 0
  },
+ "military/barracks1.blueprint": {
+  "base": "barracks",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 1,
+    "hut": "minecolonies:blockhutbarrackstower",
+    "path": "military/barrackstower0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutbarracks",
+  "items": {
+   "minecraft:anvil": 1,
+   "minecraft:barrel": 2
+  },
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {
+   "minecraft:target": 2
+  },
+  "yard_seats": 0
+ },
+ "military/barracks2.blueprint": {
+  "base": "barracks",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "minecolonies:blockhutbarrackstower",
+    "path": "military/barrackstower0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutbarracks",
+  "items": {
+   "minecraft:anvil": 1,
+   "minecraft:barrel": 2
+  },
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {
+   "minecraft:target": 3
+  },
+  "yard_seats": 0
+ },
+ "military/barracks3.blueprint": {
+  "base": "barracks",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 3,
+    "hut": "minecolonies:blockhutbarrackstower",
+    "path": "military/barrackstower0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutbarracks",
+  "items": {
+   "minecraft:anvil": 1,
+   "minecraft:barrel": 2,
+   "minecraft:smithing_table": 1
+  },
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {
+   "minecraft:target": 4
+  },
+  "yard_seats": 0
+ },
+ "military/barracks4.blueprint": {
+  "base": "barracks",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 4,
+    "hut": "minecolonies:blockhutbarrackstower",
+    "path": "military/barrackstower0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutbarracks",
+  "items": {
+   "minecraft:anvil": 1,
+   "minecraft:barrel": 2,
+   "minecraft:smithing_table": 1
+  },
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {
+   "minecraft:target": 5
+  },
+  "yard_seats": 0
+ },
+ "military/barracks5.blueprint": {
+  "base": "barracks",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 4,
+    "hut": "minecolonies:blockhutbarrackstower",
+    "path": "military/barrackstower0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutbarracks",
+  "items": {
+   "minecraft:anvil": 1,
+   "minecraft:barrel": 2,
+   "minecraft:smithing_table": 1
+  },
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {
+   "minecraft:target": 5
+  },
+  "yard_seats": 0
+ },
+ "military/barrackstower1.blueprint": {
+  "base": "barrackstower",
+  "beds": 4,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutbarrackstower",
+  "items": {},
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "military/barrackstower2.blueprint": {
+  "base": "barrackstower",
+  "beds": 8,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutbarrackstower",
+  "items": {},
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "military/barrackstower3.blueprint": {
+  "base": "barrackstower",
+  "beds": 12,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutbarrackstower",
+  "items": {},
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "military/barrackstower4.blueprint": {
+  "base": "barrackstower",
+  "beds": 16,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutbarrackstower",
+  "items": {},
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "military/barrackstower5.blueprint": {
+  "base": "barrackstower",
+  "beds": 20,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "minecolonies:blockhutbarrackstower",
+  "items": {},
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
  "military/combatacademy1.blueprint": {
   "base": "combatacademy",
   "beds": 2,
@@ -7357,6 +8928,84 @@
    "neoterra",
    "sit"
   ],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "military/gatehouse1.blueprint": {
+  "base": "gatehouse",
+  "beds": 8,
+  "bookshelves": 0,
+  "child": false,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutgatehouse",
+  "items": {
+   "minecraft:barrel": 2
+  },
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {
+   "archer": 2,
+   "gate": 4,
+   "knight": 2
+  },
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "military/gatehouse2.blueprint": {
+  "base": "gatehouse",
+  "beds": 8,
+  "bookshelves": 0,
+  "child": false,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutgatehouse",
+  "items": {
+   "minecraft:barrel": 2
+  },
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {
+   "archer": 2,
+   "gate": 4,
+   "knight": 2
+  },
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "military/gatehouse3.blueprint": {
+  "base": "gatehouse",
+  "beds": 8,
+  "bookshelves": 0,
+  "child": false,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutgatehouse",
+  "items": {
+   "minecraft:barrel": 2
+  },
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {
+   "archer": 2,
+   "gate": 4,
+   "knight": 2
+  },
+  "tags": [],
   "yard": {},
   "yard_seats": 0
  },
@@ -7585,6 +9234,116 @@
    "neoterra",
    "stall"
   ],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "military/wallguardtower1.blueprint": {
+  "base": "wallguardtower",
+  "beds": 4,
+  "bookshelves": 0,
+  "child": false,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutguardtower",
+  "items": {
+   "minecraft:barrel": 1
+  },
+  "level": 1,
+  "racks": 1,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "military/wallguardtower2.blueprint": {
+  "base": "wallguardtower",
+  "beds": 4,
+  "bookshelves": 0,
+  "child": false,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutguardtower",
+  "items": {
+   "minecraft:barrel": 1
+  },
+  "level": 2,
+  "racks": 1,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "military/wallguardtower3.blueprint": {
+  "base": "wallguardtower",
+  "beds": 4,
+  "bookshelves": 0,
+  "child": false,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutguardtower",
+  "items": {
+   "minecraft:barrel": 1
+  },
+  "level": 3,
+  "racks": 2,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "military/wallguardtower4.blueprint": {
+  "base": "wallguardtower",
+  "beds": 4,
+  "bookshelves": 0,
+  "child": false,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutguardtower",
+  "items": {
+   "minecraft:barrel": 1
+  },
+  "level": 4,
+  "racks": 2,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "military/wallguardtower5.blueprint": {
+  "base": "wallguardtower",
+  "beds": 4,
+  "bookshelves": 0,
+  "child": false,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "minecolonies:blockhutguardtower",
+  "items": {
+   "minecraft:barrel": 1
+  },
+  "level": 5,
+  "racks": 3,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
   "yard": {},
   "yard_seats": 0
  },
@@ -8134,6 +9893,936 @@
    "portal",
    "vault"
   ],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/cathedral1.blueprint": {
+  "base": "cathedral",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/cathedralwing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutcathedral",
+  "items": {},
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/cathedral2.blueprint": {
+  "base": "cathedral",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/cathedralwing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutcathedral",
+  "items": {},
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/cathedral3.blueprint": {
+  "base": "cathedral",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/cathedralwing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutcathedral",
+  "items": {},
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/cathedral4.blueprint": {
+  "base": "cathedral",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/cathedralwing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutcathedral",
+  "items": {},
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/cathedral5.blueprint": {
+  "base": "cathedral",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/cathedralwing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutcathedral",
+  "items": {},
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/cathedralwing1.blueprint": {
+  "base": "cathedralwing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:bell": 1
+  },
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/cathedralwing2.blueprint": {
+  "base": "cathedralwing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:bell": 1
+  },
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/cathedralwing3.blueprint": {
+  "base": "cathedralwing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:bell": 1
+  },
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/cathedralwing4.blueprint": {
+  "base": "cathedralwing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:bell": 1
+  },
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/cathedralwing5.blueprint": {
+  "base": "cathedralwing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:bell": 1
+  },
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/colossus1.blueprint": {
+  "base": "colossus",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/colossuswing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutcolossus",
+  "items": {},
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/colossus2.blueprint": {
+  "base": "colossus",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/colossuswing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutcolossus",
+  "items": {},
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/colossus3.blueprint": {
+  "base": "colossus",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/colossuswing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutcolossus",
+  "items": {},
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/colossus4.blueprint": {
+  "base": "colossus",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/colossuswing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutcolossus",
+  "items": {},
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/colossus5.blueprint": {
+  "base": "colossus",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/colossuswing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutcolossus",
+  "items": {},
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/colossuswing1.blueprint": {
+  "base": "colossuswing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/colossuswing2.blueprint": {
+  "base": "colossuswing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/colossuswing3.blueprint": {
+  "base": "colossuswing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/colossuswing4.blueprint": {
+  "base": "colossuswing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/colossuswing5.blueprint": {
+  "base": "colossuswing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/grandbridge1.blueprint": {
+  "base": "grandbridge",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/grandbridgewing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgrandbridge",
+  "items": {},
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/grandbridge2.blueprint": {
+  "base": "grandbridge",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/grandbridgewing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgrandbridge",
+  "items": {},
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/grandbridge3.blueprint": {
+  "base": "grandbridge",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/grandbridgewing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgrandbridge",
+  "items": {},
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/grandbridge4.blueprint": {
+  "base": "grandbridge",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/grandbridgewing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgrandbridge",
+  "items": {},
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/grandbridge5.blueprint": {
+  "base": "grandbridge",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/grandbridgewing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgrandbridge",
+  "items": {},
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/grandbridgewing1.blueprint": {
+  "base": "grandbridgewing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/grandbridgewing2.blueprint": {
+  "base": "grandbridgewing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/grandbridgewing3.blueprint": {
+  "base": "grandbridgewing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/grandbridgewing4.blueprint": {
+  "base": "grandbridgewing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/grandbridgewing5.blueprint": {
+  "base": "grandbridgewing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/royalgranary1.blueprint": {
+  "base": "royalgranary",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/royalgranarywing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutroyalgranary",
+  "items": {},
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/royalgranary2.blueprint": {
+  "base": "royalgranary",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/royalgranarywing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutroyalgranary",
+  "items": {},
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/royalgranary3.blueprint": {
+  "base": "royalgranary",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/royalgranarywing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutroyalgranary",
+  "items": {},
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/royalgranary4.blueprint": {
+  "base": "royalgranary",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/royalgranarywing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutroyalgranary",
+  "items": {},
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/royalgranary5.blueprint": {
+  "base": "royalgranary",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "wonders/royalgranarywing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutroyalgranary",
+  "items": {},
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/royalgranarywing1.blueprint": {
+  "base": "royalgranarywing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/royalgranarywing2.blueprint": {
+  "base": "royalgranarywing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/royalgranarywing3.blueprint": {
+  "base": "royalgranarywing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/royalgranarywing4.blueprint": {
+  "base": "royalgranarywing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "wonders/royalgranarywing5.blueprint": {
+  "base": "royalgranarywing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {},
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
   "yard": {},
   "yard_seats": 0
  }
