@@ -1223,7 +1223,6 @@ def fl_neo(rel, L):
             d.item(x2 - 1, y0, z1 + 3 + i, "barrel", "west")
     d.set(7, 5, 7, "sea_lantern")
     d.set(x2 - 3, 5, 7, "sea_lantern")
-    d.banner(x1 + 1, 4, z2 - 1, "north", "cyan") if False else None
     # shooting lane to the east, glazed sides, booth at the street end
     lx1, lx2 = 15, 19
     d.fill(lx1, 1, z1, lx2, 1, 22, "grass_block[snowy=false]")
@@ -1253,9 +1252,6 @@ def fl_neo(rel, L):
         d.set(x, y0 + 1, 23, "hay_block[axis=x]")
     butt(d, lx1, 22, y0, "north")
     butt(d, lx2 - 1, 22, y0, "north", target=False)
-    for z in (9, 14, 19):
-        d.set(lx1 + 2, y0, z, "white_carpet") if False else None
-    d.set(x2 + 1, y0, z1 - 1, "moss_block") if False else None
     return d
 
 
@@ -1287,9 +1283,6 @@ def fl_hw(rel, L):
         d.item(x1 + 1 + i if i < 3 else x2 - 1, y0, z2 - 1 if i < 3 else z2 - 1 - (i - 3) - 1, "fletching_table")
     d.chair(x1 + 2, y0, z2 - 2, "south", "dark_oak", sit=False)
     rack_line(d, [(x2 - 1, z) for z in range(z1 + 1, z1 + 4)], y0, min(FRACKS[L], 3), 1, "west")
-    d.set(x2 - 1, y0 + 1, z1 + 1, "dark_oak_planks") if False else None
-    for z in range(z1 + 1, z1 + 4):
-        d.set(x2 - 1, y0 + 2, z, sl("dark_oak", "top")) if False else None
     d.set(8, 5, 7, LANT)
     d.rug(6, 6, 9, 7, y0, ("green_carpet", "brown_carpet"))
     # back garden: archery lane with straw butts
@@ -1313,15 +1306,9 @@ def fl_hw(rel, L):
         for y in (y0, y0 + 1):
             d.set(sx1, y, sz1 + 2, AIR)
         d.set(sx1, y0, sz1 + 2, AIR)
-        for z in range(sz1 + 2, sz2 - 1):
-            d.set(sx1, y0 + 2, z, AIR) if False else None
         for i in range(5):
             d.item(sx2 - 1, y0, sz1 + 1 + i, "barrel", "west")
         rack_line(d, [(sx1 + 1, z) for z in range(sz2 - 1, sz1 + 3, -1)], y0, FRACKS[L] - 3, 1, "east")
-        if FLETCH[L] > 3:
-            pass
-        for z in range(sz1 + 2, sz2 - 1, 2):
-            d.set(sx1 + 2, y0 + 2, z, lg("stripped_oak_log", "x")) if False else None
         d.set(sx1 + 3, 4, sz1 + 4, LANT)
         d.fill(sx1 - 1, 1, sz1 + 2, sx1 - 1, 1, sz1 + 2, "spruce_planks")
         d.fill(x2 + 1, y0, 11, x2 + 2, y0, 11, AIR)
@@ -1355,9 +1342,6 @@ def fl_cas(rel, L):
     d.chair(x1 + 2, y0, z1 + 5, "west", "spruce", sit=False)
     rack_line(d, [(x, z2 - 1) for x in range(x1 + 1, x2)], y0, FRACKS[L], 1)
     if L >= 3:
-        for i in range(5):
-            d.item(x2 - 1 if i < 3 else x2 - 2, y0 if i < 3 else y0, z2 - 3 - i if i < 3 else z2 - 3 - (i - 3), "barrel",
-                   "west") if False else None
         for i, (x, z) in enumerate([(x2 - 1, z1 + 1), (x2 - 2, z1 + 1), (x2 - 3, z1 + 1), (x2 - 1, z1 + 2),
                                     (x2 - 1, z1 + 6)]):
             d.item(x, y0, z, "barrel", "up")
@@ -1369,7 +1353,6 @@ def fl_cas(rel, L):
         for z in range(z1, z2 + 1):
             d.set(x, 1, z, "spruce_planks")
     for z in range(z1, z2 + 1):
-        d.set(px2 + 1, 5, z, st("spruce", "west")) if False else None
         for x in range(px1, px2 + 2):
             d.set(x, 5, z, sl("spruce", "top") if x == px1 else sl("spruce", "bottom"))
     for z in (z1, z2):
@@ -1554,9 +1537,7 @@ def wh_hw(rel, L):
             d.set(x, y, z1 - 3, AIR)
         d.set(x, 5, z1 - 3, lg("stripped_dark_oak_log", "x"))
         d.set(x, 5, z1, lg("stripped_dark_oak_log", "x"))
-    d.door(9, y0, z1 - 3, "south", "dark_oak") if False else None
     d.set(10, ridge - 3, z1, "glass_pane")
-    d.sign(10, 5, z1 - 4, "north", ["Guild", "Granary"], "dark_oak", hanging=False) if False else None
     d.sign(9, 4, z1 - 4, "north", ["Tithe Barn", "Stores"], "dark_oak")
     d.set(7, y0 + 2, z1 - 1, "wall_torch[facing=north]")
     d.set(13, y0 + 2, z1 - 1, "wall_torch[facing=north]")
@@ -1616,7 +1597,6 @@ def wh_cas(rel, L):
         ax = 11 + 3 * u
         for y in range(y0, 6):
             d.set(ax, y, z1, AIR)
-        d.set(ax - 1, y0, z1 - 1, "barrel[facing=up,open=false]") if False else None
     for u in range(U):
         ax = 11 + 3 * u
         d.set(ax, 6, z1 - 1, LANT)
@@ -1636,7 +1616,6 @@ def wh_cas(rel, L):
         for z in range(z1 + 3, z2, 4):
             d.set(ax, 7, z, LANT) if d.air(ax, 7, z) and not d.air(ax, 8, z) else None
     for z in range(z1 + 1, z2):                                       # tie beams carry the lamps
-        pass
     for x in range(8, x2, 3):
         for z in range(z1 + 1, z2):
             d.set(x, 8, z, lg("stripped_spruce_log", "z"))
@@ -1725,7 +1704,6 @@ def dl_neo(rel, L):
         d.item(x1 + 3, y0, z1 + 5, "lectern", "north")
     if L >= 5:
         d.item(x1 + 4, y0, z1 + 5, "ender_chest", "north")
-    d.set(x1 + 3, y0 + 1, z1 + 3, "white_candle[candles=1,lit=false,waterlogged=false]") if False else None
     # waiting bench at the window
     seats = 0
     for x in range(x1 + 7, x1 + 7 + min(DSEAT[L], 3)):
@@ -1794,8 +1772,6 @@ def dl_hw(rel, L):
     d.sign(9, 4, z1 - 1, "north", ["Royal Mail", "Post House"], "dark_oak")
     d.set(7, y0, z1 - 1, "red_concrete")                               # pillar box
     d.set(7, y0 + 1, z1 - 1, "red_terracotta")
-    d.set(7, y0 + 2, z1 - 1, sl("red_nether_brick")) if False else None
-    d.banner(x1, 4, z1 - 1, "north", "red") if False else None
     d.hearth(x1 + 1, y0, 8, "east", ridge + 2, "bricks", "campfire")
     d.fill(x1, y0, 8, x1, ridge + 2, 8, "bricks")
     d.hut(x1 + 1, y0, z1 + 1)
@@ -1809,15 +1785,12 @@ def dl_hw(rel, L):
     if L >= 2:
         d.item(x2 - 1, y0, z1 + 6, "lectern", "west")
     if L >= 5:
-        d.item(x1 + 4, y0, z1 + 5, "ender_chest", "north") if False else None
         d.item(x1 + 5, y0, z1 + 4, "ender_chest", "north")
     seats = 0
     for x in range(x1 + 6, x1 + 6 + min(DSEAT[L], 3)):
         d.chair(x, y0, z1 + 1, "north", "dark_oak")
     d.set(8, 5, 7, LANT)
-    d.rug(x1 + 1, z1 + 1, x1 + 2, z2 - 2, y0, ("red_carpet",), "plain") if False else None
     if up:
-        run_stairs(d, x1 + 1, z2 - 1 - 3, y0, 4, "south", "dark_oak") if False else None
         run_stairs(d, x1 + 2, z1 + 1, y0, 4, "south", "dark_oak", fill="dark_oak_planks")
         for z in range(z1 + 1, z1 + 4):
             d.set(x1 + 3, 7, z, "dark_oak_fence")
@@ -1855,8 +1828,6 @@ def dl_hw(rel, L):
                 d.set(x, y0, zz, "dark_oak_fence")
             d.set(sx2 - 1, y0, zz + 1, "hay_block[axis=x]")
             d.set(sx2 - 1, y0, zz + 2, "water_cauldron[level=3]") if zz + 2 < sz2 else None
-        for x in range(sx2 - 4, sx2):
-            d.set(x, y0, sz2 - 1, "dark_oak_fence") if False else None
         # tack & feed barrels along the west side
         need = DLV[L] - n
         n += barrel_wall(d, [(sx1 + 1, z) for z in (sz1 + 1, sz1 + 3, sz1 + 4, sz1 + 5, sz1 + 7)], y0, need,
@@ -1894,7 +1865,6 @@ def dl_cas(rel, L):
             d.set(x, y, z1 - 1, "spruce_planks" if x not in (x1 - 1, x2 + 1) else lg("spruce_log", "y"))
         d.set(x, ridge + 2, z1 - 1, sl("dark_oak"))
     d.sign(mid, ridge - 1, z1 - 2, "north", ["EXPRESS", "& FREIGHT"], "spruce")
-    d.sign(mid - 2, ridge - 1, z1 - 2, "north", ["WELLS", "MAIL"], "spruce") if False else None
     d.door(mid, y0, z1, "south", "spruce")
     for x in (x1 + 2, x2 - 2):
         win(d, x, 3, z1)
@@ -1928,8 +1898,6 @@ def dl_cas(rel, L):
     n = barrel_wall(d, [(x, bz) for x in range(x1 + 1, x2) if x != x1 + 2], y0, DLV[L], "north")
     n += barrel_wall(d, [(x1 + 1, z1 + 4)], y0, DLV[L] - n, "east")
     seats = 0
-    for x in (x1, x2):
-        pass
     for i, x in enumerate((x1, x1 + 1, x2 - 1)):
         if i < min(DSEAT[L], 3):
             d.chair(x if x != x1 else x1 + 1, y0, z1 - 2, "south", "spruce") if x != x1 else None
@@ -1943,7 +1911,6 @@ def dl_cas(rel, L):
         for z in range(15, 19):
             d.bookshelf(x1 + 1, y0, z, 2)
             d.bookshelf(x2 - 1, y0, z, 1)
-        d.bookshelf(x2 - 1, y0, 18, 1) if False else None
         d.bookshelf(x2 - 2, y0, 18, 1)
         d.bookshelf(x2 - 3, y0, 18, 1)
         d.item(x1 + 3, y0, 18, "lectern", "north")
@@ -1953,7 +1920,6 @@ def dl_cas(rel, L):
         d.chair(mid + 1, y0, 16, "east", "spruce")
         d.chair(mid, y0, 17, "south", "spruce")
         if L >= 4:
-            d.bed(mid + 1, y0, 18, "south") if False else None
             d.bed(x2 - 2, y0, 15, "north")
         d.set(mid, 5, 17, LANT)
     # stable lean-to (L2+)
@@ -1981,7 +1947,6 @@ def dl_cas(rel, L):
         d.set(lx2 - 1, y0, lz2 - 1, "water_cauldron[level=3]")
         d.set(lx1 + 2, 4, lz1 + 3, LANT)
         n += barrel_wall(d, [(lx1 + 1, z) for z in range(lz2 - 1, lz1, -1)], y0, DLV[L] - n, "east", 2)
-        log_pile(d, lx1 + 2, 1, lx1 + 2, 1, y0, 1, "spruce_log") if False else None
     # porch freight barrels (counted)
     n += barrel_wall(d, [(x2, z1 - 3), (x2 + 1, z1 - 3)], y0, DLV[L] - n, "up", 2)
     return d
@@ -2020,7 +1985,6 @@ def cp_neo(rel, L):
     d.hut(x1 + 1, y0, z1 + 1)
     d.item(x1 + 2, y0, z2 - 1, "composter")
     rack_line(d, [(x, z2 - 1) for x in range(x1 + 3, x2)], y0, L, 1)
-    d.set(8, 4, 11, "sea_lantern") if False else None
     d.set(8, 5, 11, "sea_lantern")
     # compost bays in the forecourt: concrete U-bins, a barrel in each
     for i in range(CBAR[L] if L < 5 else 4):
@@ -2037,15 +2001,12 @@ def cp_neo(rel, L):
             d.set(x, 1, z, "moss_block")
             d.set(x, y0, z, "fern" if z % 2 else "azalea")
     if L >= 5:
-        for x in range(x1, x2 + 1):
-            d.set(x, 5, 3, sl("smooth_quartz")) if False else None
         for x in (x1, x1 + 11):
             d.fill(x, y0, 3, x, 4, 3, "white_concrete") if x <= x2 else None
         for x in range(x1 - 1, x1 + 13):
             for z in range(3, 8):
                 d.set(x, 5, z, "glass") if z in (3, 7) or x in (x1 - 1, x1 + 12) else d.set(x, 5, z, "glass")
         d.fill(x1 + 11, y0, 7, x1 + 11, 4, 7, "white_concrete")
-        d.fill(x1, y0, 7, x1, 4, 7, "white_concrete") if False else None
     return d
 
 
@@ -2142,7 +2103,6 @@ def cp_cas(rel, L):
     d.set(x1 + 3, 4, (z1 + z2) // 2, LANT)
     # hand cart and fence
     d.set(x2 + 2, y0, 6, "spruce_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]")
-    d.set(x2 + 2, y0, 7, "barrel[facing=up,open=false]") if False else None
     d.set(x2 + 2, y0, 7, "composter[level=4]")
     for z in range(2, 13):
         d.set(1, y0, z, "spruce_fence")

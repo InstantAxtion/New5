@@ -1885,6 +1885,17 @@ def farmer_neoterra(rel, L):
             d.set(x, 5, z, "smooth_quartz_slab[type=bottom,waterlogged=false]")
     posts(d, [(x1, z2 + 5), (x1 + 4, z2 + 5)], 2, 4, "light_gray_concrete")
     compost_bay(d, x1 + 1, 2, z2 + 3)
+    # raised kitchen-garden beds (quartz rims, irrigation channel)
+    for x in range(1, 11):
+        for z in range(16, 21):
+            rim = x in (1, 10) or z in (16, 20)
+            d.set(x, 2, z, "smooth_quartz_slab[type=bottom,waterlogged=false]" if rim else AIR)
+            if not rim:
+                if z == 18:
+                    d.set(x, 1, z, "water")
+                else:
+                    d.set(x, 1, z, "farmland[moisture=7]")
+                    d.set(x, 2, z, ("wheat[age=7]", "carrots[age=7]", "beetroots[age=3]")[x % 3])
     # ---- L2: tool garage ----
     if L >= 2:
         gx1, gx2, gz1, gz2 = 12, 17, 3, 8

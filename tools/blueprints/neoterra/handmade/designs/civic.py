@@ -1976,7 +1976,7 @@ def university_hearthwood(rel, L):
         d.chair(9, Y0, 7, "north", "dark_oak", arms=True)
     d.rug(7, 6, 9, 8, Y0, ("red_carpet",), "plain") if False else None
     d.item(12, Y0, 9, "lectern", "west")
-    d.rack(5, Y0, 9, "east")
+    d.rack(12, Y0, 8, "west")
     d.item(5, Y0, 5, "furnace", "east") if L == 1 else d.set(5, Y0, 5, "dark_oak_slab[type=top,waterlogged=false]")
     runs = [(5, 6, 5, 8, Y0, 3), (6, 9, 6, 9, Y0, 3), (10, 9, 11, 9, Y0, 3)]
     # ---- laboratory (east, L2+)
@@ -1999,7 +1999,7 @@ def university_hearthwood(rel, L):
         d.set(21, 6, 6, "lantern[hanging=true,waterlogged=false]")
         # study table in the common room for the L2 seats
         d.dining(7, Y0, 6, 4, "x", "dark_oak", ("n", "s", "e", "w"))
-        runs.append((18, 5, 18, 7, Y0, 3))
+        runs.append((19, 5, 23, 5, Y0, 3))
     d.set(8, 6, 7, "lantern[hanging=true,waterlogged=false]")
     # ---- quad, cloisters, lecture hall (L3+)
     if L >= 3:
