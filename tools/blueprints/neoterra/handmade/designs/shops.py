@@ -453,6 +453,28 @@ def glass_front(d, x1, x2, z, y1, y2, glass="glass_pane", mull="light_gray_concr
             d.set(x, y, z, mull if every and (x - x1) % every == 0 else glass)
 
 
+def billboard(d, x1, x2, z, y, words, color="cyan", frame="smooth_quartz", panel="white_concrete"):
+    """Rooftop sign: two posts, a 2-high panel set back at z, glowing words on its street face (one sign per
+    word, centred), end-rod lights on top."""
+    for x in (x1, x2):
+        for yy in range(y, y + 4):
+            d.set(x, yy, z, frame)
+    for x in range(x1 + 1, x2):
+        d.set(x, y + 2, z, panel)
+        d.set(x, y + 3, z, panel)
+        d.set(x, y + 4, z, sl("smooth_quartz"))
+    d.set(x1, y + 4, z, "end_rod[facing=up]")
+    d.set(x2, y + 4, z, "end_rod[facing=up]")
+    x0 = (x1 + x2) // 2 - (len(words) - 1) // 2
+    for i, w in enumerate(words):
+        d.sign(x0 + i, y + 3, z - 1, "north", ["", w], "birch", glow=True, color=color)
+
+
+def planter(d, x, z, y, plant="flowering_azalea", box="smooth_quartz"):
+    d.set(x, y, z, box)
+    d.set(x, y + 1, z, plant)
+
+
 def baker_neo(rel, L):
     d = Design("Neoterra", rel, (25, 19, 19), paving="smooth_stone")
     x1, z1, z2, y0, y1 = 3, 4, 11, 2, 5
@@ -474,6 +496,12 @@ def baker_neo(rel, L):
         d.set(x, y1 + 2, z1, "white_concrete")
     for z in (6, 9):
         d.window(x1, 3, z, x1, 4, z)
+    billboard(d, x1 + 2, x1 + 8, z1 + 1, y1 + 2, ["FRESH", "BREAD", "DAILY"], "yellow")
+    for x in (x1, x1 + 1, 12, 13):                                   # planters along the pavement
+        planter(d, x, z1 - 3, y0)
+    for x in range(8, 13):                                           # window display of cakes
+        d.set(x, y0, z1 + 1, sl("smooth_quartz", "top"))
+        d.set(x, 3, z1 + 1, CAKE if x % 2 == 0 else "candle_cake[lit=false]")
     # display counter: glass-fronted cases with cakes on quartz tops
     for x in range(4, 10):
         d.set(x, 2, 7, "light_blue_stained_glass" if x > 4 else "smooth_quartz")
@@ -615,6 +643,40 @@ def range_seq(n_furn, total, smoker_at=2, extra=""):
     return (s + "-" * total)[:total]
 
 
+def free(d, cells, y):
+    return all(d.bp.inside(x, y, z) and d.air(x, y, z) and d.air(x, y + 1, z) and not d.air(x, y - 1, z)
+               for x, z in cells)
+
+
+def booth(d, x, z, y, wood, w=2, along="x"):
+    """Booth across a window wall: bench (backs out) - table - bench, `w` wide. Returns True if placed."""
+    if along == "x":
+        cells = [(x + i, z + k) for i in range(w) for k in range(3)]
+    else:
+        cells = [(x + k, z + i) for i in range(w) for k in range(3)]
+    if not free(d, cells, y):
+        return False
+    for i in range(w):
+        if along == "x":
+            d.chair(x + i, y, z, "north", wood)
+            d.table(x + i, y, z + 1, wood, "slab")
+            d.chair(x + i, y, z + 2, "south", wood)
+        else:
+            d.chair(x, y, z + i, "west", wood)
+            d.table(x + 1, y, z + i, wood, "slab")
+            d.chair(x + 2, y, z + i, "east", wood)
+    return True
+
+
+def bar_row(d, x1, x2, z, y, top, stool_side, wood):
+    """Counter along x with stools on `stool_side` (north/south). Returns seats."""
+    dz = D4[stool_side][1]
+    for x in range(x1, x2 + 1):
+        d.set(x, y, z, top)
+        d.chair(x, y, z + dz, stool_side, wood)
+    return x2 - x1 + 1
+
+
 # ============================================================================================ COOK
 # Hearthwood "The Brown Trout": dining house – a long timber-framed hall with its gable to the street, a brick
 #   kitchen wing on the side with a range under a hood and a big chimney, serving hatch into the hall,
@@ -689,12 +751,38 @@ def cook_hw(rel, L):
         seats += 2
     if L >= 3:
         d.item(4, y0, 7, "jukebox")
-    d.set(12, y0, 8, AIR)
+    d.set(10, y0, 6, "lectern[facing=north,has_book=true,powered=false]")      # host stand by the door
+    if L >= 3:                                                   # bar across the far end, back bar behind
+        for x in range(4, 13):
+            d.set(x, y0, Z2 - 1, "barrel[facing=north,open=false]" if x % 2 else "brewing_stand[has_bottle_0=true,"
+                  "has_bottle_1=false,has_bottle_2=true]")
+            d.set(x, 4, Z2 - 1, lant())
+        seats += bar_row(d, 6, 11, Z2 - 3, y0, "stripped_dark_oak_wood[axis=y]", "north", oak)
+        d.set(12, y0, Z2 - 3, f"{oak}_fence_gate[facing=east,in_wall=false,open=false,powered=false]")
+    for z in range(8, Z2, 4):                                    # booths along the west windows
+        if booth(d, 4, z, y0, oak):
+            seats += 4
+            if free(d, [(4, z + 3)], y0):
+                d.set(4, y0, z + 3, "potted_azalea_bush")
+    for c in range(9, Z2 - 1, 4):                                # 4-tops down the middle on rugs
+        if free(d, [(x, z) for x in (8, 9) for z in (c - 1, c, c + 1)], y0):
+            d.dining(8, y0, c, 2, "x", oak, ("n", "s"))
+            seats += 4
+    for c in range(12, Z2 - 1, 4):                               # tables for two by the east windows
+        if free(d, [(12, c - 1), (12, c), (12, c + 1)], y0):
+            d.table(12, y0, c, oak, "post")
+            d.chair(12, y0, c - 1, "north", oak)
+            d.chair(12, y0, c + 1, "south", oak)
+            seats += 2
+    if L >= 4:                                                   # street terrace tables under the windows
+        for tx in (4, 11):
+            d.table(tx, y0, 2, oak, "post")
+            d.chair(tx - 1, y0, 2, "west", oak)
+            d.chair(tx + 1, y0, 2, "east", oak)
+            seats += 2
+    d.rug(6, 6, 7, Z2 - 1, y0, ("red_carpet",), "plain")
     need = {1: 8, 2: 20, 3: 34}.get(L, 37)
-    d.rug(7, 6, 8, Z2 - 1, y0, ("red_carpet",), "plain")
-    seats += d.seating(4, 7, 6, Z2 - 1, y0, need, oak, "post", step=3)
-    seats += d.seating(9, 7, 12, Z2 - 1, y0, need - seats, oak, "post", step=3)
-    seats += d.seating(4, 7, 12, Z2 - 1, y0, need - seats, oak, "post", step=3)
+    assert seats >= need, (seats, need)
     for z in range(8, Z2, 4):
         d.lamp(8, 5, z)
     # L4+: gabled entrance porch; L5: herb garden behind the kitchen and a hanging sign
@@ -868,8 +956,6 @@ def cook_neo(rel, L):
     d.hut(x2 - 1, y0, z1 + 1)
     if L >= 3:
         d.item(x2 - 1, y0, 10, "jukebox")
-    d.set(10, y0, z1 + 1, "cyan_carpet")
-    d.set(11, y0, z1 + 1, "cyan_carpet")
     need = {1: 8, 2: 20, 3: 34}.get(L, 37)
     if two:                                                      # stair to the upper floor, west wall
         for i in range(5):
@@ -879,22 +965,45 @@ def cook_neo(rel, L):
         for z in range(6, 10):
             d.set(x1 + 1, 6, z, AIR)
             d.set(x1 + 2, 7, z, "glass_pane")
-    seats = d.seating(x1 + 3 if two else x1 + 1, z1 + 1, x2 - 1, 10, y0, need, "birch", "slab",
-                      rug=("light_gray_carpet",), step=3)
+    d.set(12, y0, z1 + 1, "lectern[facing=north,has_book=true,powered=false]")   # host stand
+    seats = 0
+    for bx in ((5, 16) if L == 1 else (5, 8, 13, 16)):           # booths against the glass front
+        if booth(d, bx, z1 + 1, y0, "birch"):
+            seats += 4
+    for x in (7, 15):
+        if free(d, [(x, z1 + 1)], y0):
+            d.plant(x, y0, z1 + 1, "potted_bamboo")
+    xs = range(8, 13) if L == 1 else range(x1 + 2, x2 - 1)      # chef's counter: stools at the pass
+    for x in xs:
+        d.chair(x, y0, 10, "north", "mangrove")
+        seats += 1
+    if L >= 2:                                                   # table for two by the east window
+        d.table(x2 - 1, y0, 7, "birch", "slab", "smooth_quartz_slab")
+        d.chair(x2 - 1, y0, 6, "north", "birch")
+        d.chair(x2 - 1, y0, 8, "south", "birch")
+        seats += 2
+    d.rug(x1 + 2, 8, x2 - 2, 9, y0, ("light_gray_carpet",), "plain")
     for x in range(x1 + 2, x2 - 1, 3):
         d.set(x, 6, 8, "sea_lantern")
-    if two:
-        need2 = need - seats
-        d.seating(x1 + 3, z1 + 1, x2 - 1, z2 - 1, 7, need2, "mangrove", "slab", rug=("cyan_carpet",), step=3)
+    if two:                                                      # upper dining room
+        for bx in (7, 10, 13, 16):
+            if booth(d, bx, z1 + 1, 7, "mangrove"):
+                seats += 4
+        for tx in (7, 11, 15):
+            d.dining(tx, 7, 12, 2, "x", "mangrove", ("n", "s"), kind="slab")
+            seats += 4
+        for x in (9, 13, 17):
+            d.plant(x, 7, 12, "potted_bamboo")
+        d.rug(x1 + 3, 9, x2 - 1, 10, 7, ("cyan_carpet",), "plain")
         for x in range(x1 + 3, x2 - 1):                          # upper bar on the back wall
             if d.air(x, 7, z2 - 1):
                 d.set(x, 7, z2 - 1, "smooth_quartz")
         for x in range(x1 + 2, x2 - 1, 3):
             d.set(x, 11, 10, "sea_lantern")
-        d.plant(x2 - 1, 7, z1 + 1, "potted_bamboo")
+    assert seats >= need, (seats, need)
     if L >= 4:                                                   # cantilevered balcony over the entrance
         for x in range(x1 + 2, x2 - 1):
-            d.set(x, 6 if two else 6, z1 - 1, "smooth_quartz")
+            d.set(x, 6, z1 - 1, "smooth_quartz")
     if L >= 5:
         for x in range(x1 + 1, x2, 3):
             d.set(x, top + 1, z2 - 1, "azalea")
@@ -1177,6 +1286,14 @@ def cookery_neo(rel, L):
         for z in (z1 - 1, z1 - 2):
             d.set(x, 5, z, sl("smooth_quartz", "top"))
     d.sign(9, 4, z1 - 1, "north", ["CENTRAL", "KITCHEN"], "birch", glow=True, color="cyan")
+    billboard(d, 8, 14, z1 + 2, y1 + 2, ["CENTRAL", "KITCHEN"], "cyan")
+    for x in (10, 11):                                           # takeaway hatch with its own canopy
+        d.set(x, y0, z1, "smooth_quartz")
+        d.set(x, 3, z1, AIR)
+        d.set(x, 5, z1 - 1, sl("smooth_quartz", "top"))
+    d.sign(12, 4, z1 - 1, "north", ["TAKE", "AWAY"], "birch", glow=True, color="lime")
+    for x in (x1 + 1, 13, 14):
+        planter(d, x, z1 - 2, y0, "azalea")
     # cooking line in brushed steel (andesite) on the back wall, hood, extract
     seq = range_seq(min(L, 4), 6, 2) + "C"
     for x in range(x1 + 1, x1 + 9):
@@ -1426,7 +1543,7 @@ def florist_cas(rel, L):
     y0 = 2
     x1, z1, x2, z2 = 4, 7, 10, 15
     cas_body(d, x1, z1, x2, z2, y0, 3)
-    ridge = roof(d, x1, z1, x2, z2, 4, "z", "dark_oak", "dark_oak_slab", "stripped_spruce_log[axis=y]",
+    roof(d, x1, z1, x2, z2, 4, "z", "dark_oak", "dark_oak_slab", "stripped_spruce_log[axis=y]",
                  ends=(2, 1))
     d.door(7, y0, z1, "south", "spruce")
     d.window(7, 5, z1, 7, 6, z1)
