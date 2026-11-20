@@ -67,6 +67,12 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## New logos and build-menu icons (1.21.1)
+Each pack has its own crest – Neoterra a cyan skyline tile, Hearthwood a heraldic shield with a Tudor cottage,
+Cascadia a timber-ringed badge with snow peaks and firs, Farmworks a barn sign – and every build-tool category and
+sub-category has a drawn icon in that pack's style (with a greyed disabled version). The mod has a logo in the Mods
+list; logo, banner and square icon for mod pages are in `docs/branding/` (`tools/blueprints/neoterra/branding.py`).
+
 ## Growing complexes, full decor, variety within each pack (1.21.0)
 Every level now has at least 1.5x the blocks of the previous one (checked by the build): huts start as one modest,
 complete building and grow into whole complexes – the university becomes a college round a quad, the blacksmith an
@@ -275,10 +281,10 @@ server with a self-test: two colonies trade a request, the Supply Depot crafts o
 Structurize (`SELFTEST PASS`).
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.21.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.21.1.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a NeoForge mod that carries the Trade Post and all four style packs (Neoterra, Hearthwood, Cascadia and Farmworks);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.21.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.21.1.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>` (compiles `mod/` with Gradle).
 
 ## Install

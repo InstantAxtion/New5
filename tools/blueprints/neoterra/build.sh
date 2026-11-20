@@ -176,3 +176,5 @@ for cat in ("decorations", "trade"):
     g.save(pack / cat / "icon_disabled.png")
 PY
 echo "built $PACK, stylepacks/Hearthwood, stylepacks/Cascadia and stylepacks/Farmworks"
+# logos and build-menu icons per pack, mod logo and banner
+python3 $T/neoterra/branding.py

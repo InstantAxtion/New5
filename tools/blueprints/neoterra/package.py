@@ -28,14 +28,15 @@ modId = "{MODID}"
 version = "{VERSION}"
 displayName = "Neoterra Style Packs + Trade Post"
 authors = "New5"
-logoFile = "neoterra.png"
+logoFile = "neoterra_logo.png"
 description = """
-Three MineColonies style packs: Neoterra (semi-futuristic white, glass and light, every building with its own
-theme and landmarks) and Hearthwood (cozy modern: warm plaster, wood cladding, brick and lantern light, easy-to-
-medium blocks until level 5) and Cascadia (Oregon / Pacific Northwest: cedar and fir timber, river rock, moss
-roofs, basalt), plus Farmworks: automatic mob and food farms as decorations. Every hut levels 1-5, residences, player house and bunker, walls, roads and parks.
-Trade Post hut + Trade Courier job: link Trade Posts of two of your colonies with a Trade Ledger; requests one
-colony cannot fulfil are passed to the other, made there, and carried over by the courier.
+Three hand-designed MineColonies style packs, vanilla blocks only, every building growing from a modest level-1
+hut into a whole complex by level 5:
+  Hearthwood - English village: brick, plaster and timber framing, slate and tile roofs, chimneys and gardens.
+  Cascadia   - Pacific Northwest timber town: log and board walls, river rock, dark shake roofs, porches.
+  Neoterra   - modern city: white concrete, glass, roof gardens and coloured accents.
+Plus Farmworks (automatic mob and food farms) and the Trade Post: link two of your colonies and a Trade Courier
+carries what one colony needs from the other.
 """
 
 [[dependencies.{MODID}]]
