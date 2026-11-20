@@ -1,17 +1,26 @@
 """
-Land-work huts: farmer, fisherman, plantation, miner, nether worker.
+Land-work huts: farmer, fisherman, plantation, miner, nether worker - each grows from a small working core (L1) into
+a complex of purpose-built, furnished buildings (L5), built with the decorated-building kit below (bld / run / porch /
+yard decor). Every type has its own palette per pack (see d.palette and the per-building pal= overrides).
 
-Miner
-  Hearthwood  "Wheal Hearth": Cornish engine house. Rubble-stone house with a tall brick-topped stack built into the
-              west gable (forge hearth inside), the shaft head-frame (cluster) framed in dark-oak lattice against
-              the east gable. L2 ore track to an ore heap, L3 the engine house rises to two storeys with the beam
-              engine upstairs, L4 boiler lean-to, L5 fenced ore yard.
-  Cascadia    "Timberline Mine": spruce-log head-frame with braces around the shaft, a log hoist house with the
-              winding drum (gable to the street, porch), L2 a track to the ore cart siding, L3 a tipple / ore bin on
-              stilts over the rails, L4 powder lean-to, L5 rock dump and lamp shed.
-  Neoterra    "Shaft 01": enclosed concrete winding tower over the shaft attached to a white flat-roofed mining
-              station (lamp room, ore sorting). L3 glazed control floor upstairs, L4 conveyor gallery to the tower,
-              L5 ore yard canopy with tracks.
+Farmer      Hearthwood Cotswold farmhouse (sandstone, red tile) -> tool shed, threshing barn, stable range, dovecote,
+            granary, workers' cottage, orchard.  Cascadia log homestead -> tool shed, red gambrel barn, coop, corral,
+            machine shed, stave silo, windmill, bunkhouse, creamery.  Neoterra agri hub (white/birch/lime, green roofs)
+            -> garage, hydroponic greenhouse, vertical-farm tower, solar canopy, seed bank.
+Fisherman   Neoterra harbour master (white/cyan) -> deck, fish market, cold store, boat hall, lighthouse.  Hearthwood
+            blue-washed cottage (blue slate) -> smokehouse, market hall, boathouse, net-mender's cottage, harbourmaster's
+            house, harbour light, chandlery.  Cascadia birch fish camp (green metal roofs) -> smoke shack, ice house,
+            cannery, bunkhouse, lookout.
+Plantation  Neoterra agri lab (grey/orange) -> greenhouse, research tower, packing hall.  Hearthwood walled kitchen
+            garden (white plaster, rose tile) -> glasshouses, potting yard, head gardener's cottage, bothy, vinery,
+            orangery, apple store.  Cascadia farm stand (dark oak, mustard, red cedar) -> cane press, gambrel barn,
+            sugar mill with water wheel, water tower, cutters' cabins, mess hall.
+Miner       Hearthwood count house + Cornish engine house and stack -> boiler house, dressing floor, ore bins, miners'
+            dry, powder magazine, smithy, cottages, spoil heap.  Cascadia log hoist house + timber head-frame -> tipple,
+            assay office, bunkhouse, stamp mill, blacksmith, lamp house, cookhouse.  Neoterra winding tower + station
+            (grey/deepslate/yellow) -> processing hall, ore silos, control tower, admin block, solar parking.
+Netherworker  shrine around the portal (L1) -> narthex and vestry (L2) -> great hall taking the cluster's gallery as
+            its front, south annex (L3) -> east library/lab wing (L4) -> west refectory wing, watch tower, ember garden.
 """
 from hm import Design, design, AIR, D4, OPP, CW
 

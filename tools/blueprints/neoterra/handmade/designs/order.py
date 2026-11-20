@@ -581,8 +581,14 @@ def deco_ring(d, x1, z1, x2, z2, y, items, lights=True, rug=None, every=1):
                         if _blocky(d.get(x + dx, yy, z + dz)) and (dx == 0 or dz == 0):
                             bad = True
                 wx, wz = x + D4[side][0], z + D4[side][1]
-            if "door" in d.get(x + D4[side][0], y, z + D4[side][1]):
-                bad = True
+            wx, wz = x + D4[side][0], z + D4[side][1]
+            if "door" in d.get(wx, y, wz) or d.air(wx, y, wz) or d.air(wx, y + 1, wz):
+                bad = True                                            # only against a closed wall
+            for dx in (-1, 0, 1):
+                for dz in (-1, 0, 1):
+                    if d.air(x + dx, y - 1, z + dz) or "stairs" in d.get(x + dx, y - 1, z + dz) \
+                            or "ladder" in d.get(x + dx, y, z + dz):
+                        bad = True                                    # stair wells and landings stay clear
             for sx, sz in ((x + 1, z), (x - 1, z), (x, z + 1), (x, z - 1)):
                 if "door" in d.get(sx, y, sz) or "door" in d.get(sx + D4[side][0], y, sz + D4[side][1]):
                     bad = True
