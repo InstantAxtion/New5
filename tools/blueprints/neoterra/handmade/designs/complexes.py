@@ -1187,9 +1187,6 @@ def skytower_ca(rel, L):
                     d.set(x, 2, z, fence("spruce"))
         for x, z in cells(24, 14, 26, 16):
             d.set(x, 1, z, "water[level=0]" if (x, z) != (25, 15) else "water[level=0]")
-        for x, z in cells(23, 14, 27, 17):
-            if not (24 <= x <= 26 and 14 <= z <= 16) and d.air(x, 2, z):
-                pass
         d.set(25, 0, 15, "sea_lantern")
         d.chair(23, 2, 17, "west", "spruce", sit=False)
         d.chair(26, 2, 17, "east", "spruce", sit=False)
@@ -1463,8 +1460,6 @@ def twin_nt(rel, L):
             d.set(x, top - 8, 21, "stone_bricks")
     # ---- L4: site cabin; L5: floodlights
     if L >= 4:
-        for x, z in cells(2, 16, 9, 16):
-            pass
         for x, z in cells(19, 17, 22, 24):
             for y in (2, 3, 4):
                 d.set(x, y, z, "cyan_concrete" if x in (19, 22) or z in (17, 24) else AIR)
