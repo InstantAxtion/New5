@@ -162,7 +162,7 @@ def awning_z(d, z1, z2, x, y, colors=("red_wool", "white_wool"), outward="east")
 # Neoterra "LUMEN BAKERY": white box with a full glass shopfront, cyan canopy, glass display counter, stacked
 #   deck ovens in polished andesite; L3 adds an upper café floor (glass) and roof terrace by L5.
 def baker_hw(rel, L):
-    d = Design("Hearthwood", rel, (27, 20, 23))
+    d = Design("Hearthwood", rel, (40, 30, 36))
     x1, z1, x2, z2, y0, y1 = 3, 5, 15, 11, 2, 5
     oak = "dark_oak"
     hw_body(d, x1, z1, x2, z2, y0, y1)
@@ -313,7 +313,7 @@ def porch(d, x1, x2, z1, z2, y0, ytop, posts, wood="spruce", rail=True, gap=(), 
 
 
 def baker_cas(rel, L):
-    d = Design("Cascadia", rel, (25, 20, 29), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (42, 30, 44), paving="coarse_dirt")
     x1, z1, x2, z2, y0, y1 = 6, 7, 16, 19, 2, 6
     cas_body(d, x1, z1, x2, z2, y0, y1)
     ridge = roof(d, x1, z1, x2, z2, 7, "z", "dark_oak", "dark_oak_slab", "spruce_planks", ends=(2, 1),
@@ -476,7 +476,7 @@ def planter(d, x, z, y, plant="flowering_azalea", box="smooth_quartz"):
 
 
 def baker_neo(rel, L):
-    d = Design("Neoterra", rel, (25, 19, 19), paving="smooth_stone")
+    d = Design("Neoterra", rel, (42, 36, 38), paving="smooth_stone")
     x1, z1, z2, y0, y1 = 3, 4, 11, 2, 5
     x2 = 13 if L == 1 else 21
     neo_body(d, x1, z1, x2, z2, y0, y1)
@@ -593,7 +593,9 @@ def baker_neo(rel, L):
 
 @design("baker")
 def baker(pack, rel, L):
-    return {"Hearthwood": baker_hw, "Cascadia": baker_cas, "Neoterra": baker_neo}[pack](rel, L)
+    d = {"Hearthwood": baker_hw, "Cascadia": baker_cas, "Neoterra": baker_neo}[pack](rel, L)
+    grow(d, L, "baker")
+    return d
 
 
 def line(d, x, y, z, along, facing, seq, counter="smooth_stone", L=5, wood="spruce"):
@@ -686,7 +688,7 @@ def bar_row(d, x1, x2, z, y, top, stool_side, wood):
 # Neoterra "Orbit Bistro": glass-fronted concrete restaurant, open kitchen behind a quartz pass, L3 adds a
 #   glazed upper dining floor with a straight stair, L5 a roof terrace.
 def cook_hw(rel, L):
-    d = Design("Hearthwood", rel, (27, 20, 29))
+    d = Design("Hearthwood", rel, (40, 32, 42))
     y0, y1 = 2, 5
     oak = "dark_oak"
     Z2 = {1: 13, 2: 19}.get(L, 25)
@@ -816,7 +818,7 @@ def cook_hw(rel, L):
 
 
 def cook_cas(rel, L):
-    d = Design("Cascadia", rel, (29, 18, 23), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (44, 32, 44), paving="coarse_dirt")
     y0, y1 = 2, 5
     x1, z1, z2 = 3, 7, 15
     x2 = 15 if L == 1 else 25
@@ -902,7 +904,7 @@ def cook_cas(rel, L):
 
 
 def cook_neo(rel, L):
-    d = Design("Neoterra", rel, (23, 20, 22), paving="smooth_stone")
+    d = Design("Neoterra", rel, (42, 36, 40), paving="smooth_stone")
     x1, z1, x2, z2, y0 = 3, 4, 19, 16, 2
     two = L >= 3
     neo_body(d, x1, z1, x2, z2, y0, 5, roof_=None)
@@ -1016,7 +1018,9 @@ def cook_neo(rel, L):
 
 @design("cook")
 def cook(pack, rel, L):
-    return {"Hearthwood": cook_hw, "Cascadia": cook_cas, "Neoterra": cook_neo}[pack](rel, L)
+    d = {"Hearthwood": cook_hw, "Cascadia": cook_cas, "Neoterra": cook_neo}[pack](rel, L)
+    grow(d, L, "cook")
+    return d
 
 
 # ============================================================================================ COOKERY
@@ -1029,7 +1033,7 @@ def cook(pack, rel, L):
 #   (andesite/iron) cooking line, walk-in cold room of packed ice with the racks, loading bay with a roller
 #   door, extract ducts and condensers on the roof growing with each level.
 def cookery_hw(rel, L):
-    d = Design("Hearthwood", rel, (25, 20, 25))
+    d = Design("Hearthwood", rel, (40, 30, 42))
     x1, z1, x2, z2, y0, y1 = 5, 5, 15, 15, 2, 6
     d.box(x1, y0, z1, x2, y1, z2, "stone_bricks", floor="stone_bricks")
     for x, z in perim(x1, z1, x2, z2):
@@ -1168,7 +1172,7 @@ def cookery_hw(rel, L):
 
 
 def cookery_cas(rel, L):
-    d = Design("Cascadia", rel, (25, 20, 25), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (42, 30, 42), paving="coarse_dirt")
     x1, z1, x2, z2, y0, y1 = 4, 5, 12, 17, 2, 5
     cas_body(d, x1, z1, x2, z2, y0, y1, ceiling=None)
     ridge = roof(d, x1, z1, x2, z2, 6, "z", "spruce", "spruce_slab", "spruce_planks", ends=(1, 1),
@@ -1269,7 +1273,7 @@ def cookery_cas(rel, L):
 
 
 def cookery_neo(rel, L):
-    d = Design("Neoterra", rel, (27, 14, 19), paving="smooth_stone")
+    d = Design("Neoterra", rel, (44, 36, 36), paving="smooth_stone")
     x1, z1, z2, y0, y1 = 3, 4, 14, 2, 5
     x2 = 15 if L == 1 else 22
     neo_body(d, x1, z1, x2, z2, y0, y1, wall="light_gray_concrete", pillar="gray_concrete", floor="smooth_stone",
@@ -1367,7 +1371,9 @@ def cookery_neo(rel, L):
 
 @design("cookery")
 def cookery(pack, rel, L):
-    return {"Hearthwood": cookery_hw, "Cascadia": cookery_cas, "Neoterra": cookery_neo}[pack](rel, L)
+    d = {"Hearthwood": cookery_hw, "Cascadia": cookery_cas, "Neoterra": cookery_neo}[pack](rel, L)
+    grow(d, L, "cookery")
+    return d
 
 
 def glass_gable(d, x1, z1, x2, z2, y, axis, frame="dark_oak", glass="glass", every=3, end="glass_pane", oh=0):
@@ -1441,7 +1447,7 @@ def flower_stall(d, x1, x2, z, y, wood="spruce"):
 # Neoterra "BLOOM LAB": a single glass pavilion on a concrete frame, living green wall, flower bar at the
 #   front, grid of quartz-edged planters; grows in length, L4 green roof edges, L5 glowing sign + benches.
 def florist_hw(rel, L):
-    d = Design("Hearthwood", rel, (25, 16, 21))
+    d = Design("Hearthwood", rel, (40, 30, 40))
     y0, y1 = 2, 5
     oak = "dark_oak"
     hw_body(d, 3, 4, 12, 10, y0, y1)
@@ -1539,7 +1545,7 @@ def florist_hw(rel, L):
 
 
 def florist_cas(rel, L):
-    d = Design("Cascadia", rel, (25, 16, 25), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (42, 30, 42), paving="coarse_dirt")
     y0 = 2
     x1, z1, x2, z2 = 4, 7, 10, 15
     cas_body(d, x1, z1, x2, z2, y0, 3)
@@ -1625,7 +1631,7 @@ def florist_cas(rel, L):
 
 
 def florist_neo(rel, L):
-    d = Design("Neoterra", rel, (23, 13, 23), paving="smooth_stone")
+    d = Design("Neoterra", rel, (42, 36, 42), paving="smooth_stone")
     y0, y1 = 2, 6
     x1, z1, x2 = 4, 4, 18
     z2 = 12 if L < 3 else 18
@@ -1684,7 +1690,9 @@ def florist_neo(rel, L):
 
 @design("florist")
 def florist(pack, rel, L):
-    return {"Hearthwood": florist_hw, "Cascadia": florist_cas, "Neoterra": florist_neo}[pack](rel, L)
+    d = {"Hearthwood": florist_hw, "Cascadia": florist_cas, "Neoterra": florist_neo}[pack](rel, L)
+    grow(d, L, "florist")
+    return d
 
 
 DYES = {"Hearthwood": ["red", "yellow", "blue", "brown", "orange", "green"],          # madder, weld, woad...
@@ -1732,7 +1740,7 @@ def vats(d, cells, y, n):
 # Neoterra "CHROMA TEXTILES": concrete studio with a facade of rainbow concrete fins, glass front, vat line
 #   inside, rooftop drying deck with banners on rails (L3+).
 def dyer_hw(rel, L):
-    d = Design("Hearthwood", rel, (25, 17, 23))
+    d = Design("Hearthwood", rel, (42, 30, 40))
     y0, y1 = 2, 5
     oak = "dark_oak"
     nv = {1: 2, 2: 3, 3: 4}.get(L, 5)
@@ -1824,7 +1832,7 @@ def dyer_hw(rel, L):
 
 
 def dyer_cas(rel, L):
-    d = Design("Cascadia", rel, (23, 17, 29), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (42, 30, 44), paving="coarse_dirt")
     y0 = 2
     nv = {1: 2, 2: 3, 3: 4}.get(L, 5)
     x1, x2, z1 = 5, 13, 4
@@ -1915,7 +1923,7 @@ def dyer_cas(rel, L):
 
 
 def dyer_neo(rel, L):
-    d = Design("Neoterra", rel, (25, 14, 19), paving="smooth_stone")
+    d = Design("Neoterra", rel, (44, 36, 38), paving="smooth_stone")
     y0, y1 = 2, 6
     nv = {1: 2, 2: 3, 3: 4}.get(L, 5)
     x1, z1, z2 = 3, 5, 13
@@ -1973,7 +1981,9 @@ def dyer_neo(rel, L):
 
 @design("dyer")
 def dyer(pack, rel, L):
-    return {"Hearthwood": dyer_hw, "Cascadia": dyer_cas, "Neoterra": dyer_neo}[pack](rel, L)
+    d = {"Hearthwood": dyer_hw, "Cascadia": dyer_cas, "Neoterra": dyer_neo}[pack](rel, L)
+    grow(d, L, "dyer")
+    return d
 
 
 GLASS = {"Hearthwood": ["red", "blue", "yellow", "green"],                     # leaded church-window colours
@@ -1996,7 +2006,7 @@ def glass_c(d, i, pane=False):
 # Neoterra "PRISM GLASS STUDIO": white concrete cube with a stained-glass mosaic curtain wall, furnace island
 #   under an extract hood in the middle; L3 a cantilevered glass display box over the entrance, L5 roof sign.
 def glassblower_hw(rel, L):
-    d = Design("Hearthwood", rel, (25, 21, 23))
+    d = Design("Hearthwood", rel, (42, 30, 40))
     y0 = 2
     cx, cz = 15, 13
     top = 16
@@ -2092,7 +2102,7 @@ def glassblower_hw(rel, L):
 
 
 def glassblower_cas(rel, L):
-    d = Design("Cascadia", rel, (25, 17, 23), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (42, 30, 40), paving="coarse_dirt")
     y0, y1 = 2, 5
     x1, z1, z2 = 3, 7, 14
     x2 = 13 if L < 3 else 20
@@ -2164,7 +2174,7 @@ def glassblower_cas(rel, L):
 
 
 def glassblower_neo(rel, L):
-    d = Design("Neoterra", rel, (21, 15, 21), paving="smooth_stone")
+    d = Design("Neoterra", rel, (40, 36, 40), paving="smooth_stone")
     y0, y1 = 2, 7
     x1, z1, x2, z2 = 4, 5, 16, 15
     neo_body(d, x1, z1, x2, z2, y0, y1)
@@ -2233,7 +2243,9 @@ def glassblower_neo(rel, L):
 
 @design("glassblower")
 def glassblower(pack, rel, L):
-    return {"Hearthwood": glassblower_hw, "Cascadia": glassblower_cas, "Neoterra": glassblower_neo}[pack](rel, L)
+    d = {"Hearthwood": glassblower_hw, "Cascadia": glassblower_cas, "Neoterra": glassblower_neo}[pack](rel, L)
+    grow(d, L, "glassblower")
+    return d
 
 
 def silo(d, cx, cz, y0, h, wall="white_concrete", band="cyan_concrete", r=2.3, cap="smooth_quartz_slab"):
@@ -2262,7 +2274,7 @@ def silo(d, cx, cz, y0, h, wall="white_concrete", band="cyan_concrete", r=2.3, c
 # Neoterra "NEOCRETE PLANT": glass control office with cyan trim, a row of white banded silos (1 at L1, 2 at
 #   L2, 3 at L3+) with chutes down to the basin, L4 conveyor bridge, L5 roof sign.
 def concretemixer_hw(rel, L):
-    d = Design("Hearthwood", rel, (25, 20, 23))
+    d = Design("Hearthwood", rel, (42, 30, 40))
     y0 = 2
     d.cluster(3, 17)                                             # basin x3..21, z17..20
     # workshop
@@ -2343,7 +2355,7 @@ def concretemixer_hw(rel, L):
 
 
 def concretemixer_cas(rel, L):
-    d = Design("Cascadia", rel, (23, 20, 27), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (42, 30, 44), paving="coarse_dirt")
     y0 = 2
     d.cluster(2, 21)                                             # basin x2..20, z21..24
     # office shack
@@ -2420,7 +2432,7 @@ def concretemixer_cas(rel, L):
 
 
 def concretemixer_neo(rel, L):
-    d = Design("Neoterra", rel, (23, 20, 24), paving="smooth_stone")
+    d = Design("Neoterra", rel, (42, 36, 42), paving="smooth_stone")
     y0 = 2
     d.cluster(2, 18)                                             # basin x2..20, z18..21
     # glass control office (two storeys at L3+)
@@ -2464,5 +2476,604 @@ def concretemixer_neo(rel, L):
 
 @design("concretemixer")
 def concretemixer(pack, rel, L):
-    return {"Hearthwood": concretemixer_hw, "Cascadia": concretemixer_cas,
+    d = {"Hearthwood": concretemixer_hw, "Cascadia": concretemixer_cas,
             "Neoterra": concretemixer_neo}[pack](rel, L)
+    grow(d, L, "concretemixer")
+    return d
+
+
+# ============================================================================================ GROWTH MODULES
+# Complete, furnished buildings that the huts add as they level up (offices, stores, living quarters, halls...).
+# building(d, ...) draws a multi-storey building in the pack's construction style with stairs between floors,
+# windows with sills/shutters, a door with lamps, a roof with chimney or roof-top plant, and furnishes every
+# floor for the given room kind.
+STY = {
+    "Hearthwood": dict(wood="dark_oak", wood2="spruce", floor="oak_planks", rug=("red_carpet", "orange_carpet"),
+                       bed="red", banner="red", plant="potted_red_tulip", chim="bricks"),
+    "Cascadia": dict(wood="spruce", wood2="dark_oak", floor="spruce_planks", rug=("brown_carpet", "green_carpet"),
+                     bed="brown", banner="green", plant="potted_fern", chim="cobblestone"),
+    "Neoterra": dict(wood="birch", wood2="mangrove", floor="polished_diorite", rug=("cyan_carpet", "light_gray_carpet"),
+                     bed="cyan", banner="cyan", plant="potted_bamboo", chim="polished_andesite"),
+}
+INTO = {"north": "south", "south": "north", "east": "west", "west": "east"}   # wall side -> facing into room
+
+
+def _wall_slots(ix1, iz1, ix2, iz2):
+    """Cells along the inside of the walls, with the side of the wall they stand against."""
+    out = []
+    for x in range(ix1, ix2 + 1):
+        out.append((x, iz1, "north"))
+        out.append((x, iz2, "south"))
+    for z in range(iz1 + 1, iz2):
+        out.append((ix1, z, "west"))
+        out.append((ix2, z, "east"))
+    return out
+
+
+def _ok(d, x, y, z, keep):
+    return (x, z) not in keep and d.air(x, y, z) and d.air(x, y + 1, z) and not d.air(x, y - 1, z)
+
+
+def furnish(d, kind, ix1, iz1, ix2, iz2, y, keep, extra=()):
+    """Furnish the room ix1..ix2 / iz1..iz2 (interior, standing level y) for `kind`, never touching `keep` cells.
+    Pieces go against the walls (spaced so every piece stays reachable), a centre group on a rug, a hanging lamp
+    under the ceiling (y + 3) and wall decoration."""
+    S = STY[d.pack]
+    w, w2 = S["wood"], S["wood2"]
+    pot = "decorated_pot[cracked=false,facing=north,waterlogged=false]"
+    cand = lambda: f"candle[candles={1 + (ix1 + iz1) % 3},lit=false,waterlogged=false]"   # noqa: E731
+    shelf = lambda x, z, top: (d.set(x, y, z, sl(w2, "top")), d.set(x, y + 1, z, top))   # noqa: E731
+    pieces = list(extra)
+    if kind == "bedroom":
+        pieces += ["bed", "nightstand", "wardrobe", "chiseled", "plant", "bed", "nightstand", "chest", "chiseled"]
+    elif kind == "dorm":
+        pieces += ["bed", "nightstand", "bed", "chest", "bed", "nightstand", "bed", "chest", "bed", "plant"]
+    elif kind == "living":
+        pieces += ["chiseled", "armchair", "plant", "chiseled", "sidetable", "armchair", "jukebox", "chiseled"]
+    elif kind == "office":
+        pieces += ["desk", "chiseled", "lectern", "cartography", "chiseled", "plant", "desk", "chiseled", "chest"]
+    elif kind == "store":
+        pieces += ["crate", "sack", "crate", "hay", "crate", "sack", "crate", "pots", "crate", "sack", "crate"]
+    elif kind == "workshop":
+        pieces += ["grindstone", "bench", "anvil", "crate", "bench", "smithing", "toolwall", "crate", "bench"]
+    elif kind == "dining":
+        pieces += ["sideboard", "plant", "sideboard", "chiseled", "sideboard", "plant"]
+    elif kind == "kitchen":
+        pieces += ["stove", "counter", "sink", "counter", "smoke", "counter", "crate", "sack", "plant"]
+    elif kind == "shop":
+        pieces += ["sideboard", "pots", "sideboard", "plant", "sideboard", "pots", "crate"]
+    slots = _wall_slots(ix1, iz1, ix2, iz2)
+    # skip corners next to doors etc. by spacing: take every second free slot
+    used = set()
+    k = 0
+    for (x, z, side) in slots:
+        if k >= len(pieces):
+            break
+        if not _ok(d, x, y, z, keep) or any(abs(x - a) + abs(z - b) <= 1 for a, b in used):
+            continue
+        f = INTO[side]
+        p = pieces[k]
+        if p == "bed":
+            fx, fz = D4[f]
+            if not _ok(d, x + fx, y, z + fz, keep):
+                continue
+            d.bed(x, y, z, side, S["bed"])
+            d.placed["beds"] -= 1                      # decorative bed, not a hut requirement
+            used.add((x + fx, z + fz))
+        elif p == "nightstand":
+            shelf(x, z, cand())
+        elif p == "wardrobe":
+            d.set(x, y, z, "barrel[facing=" + f + ",open=false]")
+            d.set(x, y + 1, z, f"{w}_planks")
+            d.set(x, y + 2, z, sl(w))
+        elif p == "chiseled":
+            for yy in (y, y + 1):
+                d.set(x, yy, z, f"chiseled_bookshelf[facing={f},slot_0_occupied=true,slot_1_occupied=true,"
+                                f"slot_2_occupied=false,slot_3_occupied=true,slot_4_occupied=false,"
+                                f"slot_5_occupied=true]")
+        elif p == "plant":
+            d.set(x, y, z, S["plant"])
+        elif p == "armchair":
+            d.chair(x, y, z, side, w, sit=False)
+        elif p == "sidetable":
+            shelf(x, z, "flower_pot")
+        elif p == "jukebox":
+            d.set(x, y, z, "note_block[instrument=harp,note=0,powered=false]")
+        elif p == "desk":
+            d.set(x, y, z, sl(w, "top"))
+            d.set(x, y + 1, z, "lantern[hanging=false,waterlogged=false]" if (x + z) % 2 else cand())
+        elif p == "lectern":
+            d.set(x, y, z, f"lectern[facing={f},has_book=true,powered=false]")
+        elif p == "cartography":
+            d.set(x, y, z, "cartography_table")
+        elif p in ("chest", "crate"):
+            d.keg(x, y, z, "up" if p == "crate" else f)
+            if p == "crate" and (x + z) % 2 == 0:
+                d.set(x, y + 1, z, "barrel[facing=up,open=false]")
+        elif p == "sack":
+            d.set(x, y, z, "white_wool")
+            d.set(x, y + 1, z, "white_carpet")
+        elif p == "hay":
+            d.set(x, y, z, "hay_block[axis=y]")
+        elif p == "pots":
+            shelf(x, z, pot)
+        elif p == "grindstone":
+            d.set(x, y, z, f"grindstone[face=floor,facing={f}]")
+        elif p == "anvil":
+            d.set(x, y, z, f"anvil[facing={CW[f]}]")
+        elif p == "smithing":
+            d.set(x, y, z, "smithing_table")
+        elif p == "bench":
+            shelf(x, z, "flower_pot" if (x + z) % 3 else cand())
+        elif p == "toolwall":
+            d.set(x, y, z, "fletching_table")
+        elif p == "sideboard":
+            shelf(x, z, pot if (x + z) % 2 else cand())
+        elif p == "stove":
+            d.set(x, y, z, f"furnace[facing={f},lit=true]")
+        elif p == "smoke":
+            d.set(x, y, z, f"smoker[facing={f},lit=false]")
+        elif p == "sink":
+            d.set(x, y, z, "water_cauldron[level=3]")
+        elif p == "counter":
+            shelf(x, z, "flower_pot")
+        elif isinstance(p, str) and p.startswith("block:"):
+            d.set(x, y, z, p[6:])
+        used.add((x, z))
+        k += 1
+    # centre: rug + table group
+    cx, cz = (ix1 + ix2) // 2, (iz1 + iz2) // 2
+    if kind in ("living", "dining", "office", "bedroom", "shop") and ix2 - ix1 >= 4 and iz2 - iz1 >= 4:
+        d.rug(cx - 1, cz - 1, cx + 1, cz + 1, y, S["rug"], "border")
+        if kind in ("living", "dining", "office"):
+            if all(_ok(d, a, y, b, keep) or d.get(a, y, b).endswith("carpet") for a in (cx - 1, cx, cx + 1)
+                   for b in (cz - 1, cz, cz + 1)):
+                for a in (cx - 1, cx, cx + 1):
+                    for b in (cz - 1, cz, cz + 1):
+                        d.set(a, y, b, AIR)
+                d.table(cx, y, cz, w, "post")
+                for side in (("north", "south") if kind != "dining" else ("north", "south", "east", "west")):
+                    dx, dz = D4[side]
+                    d.chair(cx + dx, y, cz + dz, side, w, sit=False)
+                d.set(cx - 1, y, cz - 1, S["rug"][0])
+    elif kind == "store" and ix2 - ix1 >= 5 and iz2 - iz1 >= 4:
+        for a in range(cx - 1, cx + 1):
+            if _ok(d, a, y, cz, keep):
+                d.keg(a, y, cz, "up")
+                d.set(a, y + 1, cz, "white_wool" if a % 2 else "hay_block[axis=y]")
+    # hanging lamps
+    for a in range(ix1 + 1, ix2, 4):
+        for b in range(iz1 + 1, iz2, 4):
+            if d.air(a, y + 3, b) and not d.air(a, y + 4, b):
+                if d.pack == "Neoterra":
+                    d.set(a, y + 4, b, "pearlescent_froglight[axis=y]")
+                else:
+                    d.set(a, y + 3, b, lant())
+    # wall decoration: banners / framed shelves above wall pieces
+    for i, (x, z, side) in enumerate(slots):
+        bx, bz = x - D4[INTO[side]][0], z - D4[INTO[side]][1]
+        if i % 6 == 3 and (x, z) not in keep and d.air(x, y + 2, z) and d.air(x, y + 1, z) \
+                and not d.air(bx, y + 2, bz) \
+                and "pane" not in d.get(bx, y + 2, bz) and "glass" not in d.get(bx, y + 2, bz):
+            d.banner(x, y + 2, z, INTO[side], S["banner"])
+
+
+def _stair_flight(d, x0, z, yb, step, mat, fill):
+    """5-step straight flight along x from x0 (step = +1 east / -1 west), rising from standing level yb to yb+5.
+    Returns the cells to keep clear (landing below, exit above)."""
+    face = "east" if step > 0 else "west"
+    for i in range(5):
+        x = x0 + step * i
+        d.set(x, yb + i, z, st(mat, face))
+        for yy in range(yb, yb + i):
+            d.set(x, yy, z, fill)
+        if i in (1, 2, 3):
+            d.set(x, yb + 4, z, AIR)
+    return {(x0 - step, z), (x0 + step * 5, z)} | {(x0 + step * i, z) for i in range(5)}
+
+
+def window_dressing(d, x, y, z, out, shutters=True, box=True):
+    """Outside a window cell (x,y..y+1,z) on a wall facing `out`: open shutters either side, a sill below with a
+    flower box (pot) on it."""
+    S = STY[d.pack]
+    ox, oz = D4[out]
+    px, pz = D4[CW[out]]
+    if shutters:
+        for sgn in (1, -1):
+            a, b = x + ox + px * sgn, z + oz + pz * sgn
+            for yy in (y, y + 1):
+                if d.bp.inside(a, yy, b) and d.air(a, yy, b):
+                    d.set(a, yy, b, td(S["wood"], out, "bottom", True))
+    a, b = x + ox, z + oz
+    if box and d.bp.inside(a, y - 1, b) and d.air(a, y - 1, b) and y - 1 > d.gy + 1:
+        d.set(a, y - 1, b, td(S["wood"], out, "top", False) if d.pack != "Neoterra" else sl("smooth_quartz", "top"))
+        if d.air(a, y, b):
+            d.set(a, y, b, "potted_" + flower(d, x + z + y))
+
+
+def tree(d, x, z, kind="oak", h=4):
+    """Small garden tree: trunk + rounded crown of persistent leaves (stays within the plot)."""
+    leaves = f"{kind}_leaves[distance=1,persistent=true,waterlogged=false]"
+    for y in range(2, 2 + h):
+        d.set(x, y, z, lg(f"{kind}_log"))
+    top = 2 + h
+    for dy, r in ((-2, 2), (-1, 2), (0, 1), (1, 0)):
+        for a in range(-r, r + 1):
+            for b in range(-r, r + 1):
+                if abs(a) + abs(b) > r + (1 if r == 2 else 0):
+                    continue
+                xx, yy, zz = x + a, top + dy, z + b
+                if d.bp.inside(xx, yy, zz) and d.air(xx, yy, zz):
+                    d.set(xx, yy, zz, leaves)
+
+
+def lamp_post(d, x, z, h=3):
+    S = STY[d.pack]
+    for y in range(2, 2 + h):
+        d.set(x, y, z, f"{S['wood']}_fence" if d.pack != "Neoterra" else "iron_bars")
+    d.set(x, 2 + h, z, lant(False) if d.pack != "Neoterra" else "sea_lantern")
+
+
+def bench(d, x, z, facing, n=2):
+    """Outdoor bench of `n` seats along the axis perpendicular to `facing` (facing = direction people look)."""
+    S = STY[d.pack]
+    px, pz = D4[CW[facing]]
+    for i in range(n):
+        d.chair(x + px * i, 2, z + pz * i, OPP[facing], S["wood"], sit=False)
+
+
+def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, roofdeco=True, stairs_row=None,
+             wall=None, flat=None):
+    """A complete furnished building. rooms = list of room kinds, one per storey (ground first). door = (side,
+    offset along that wall). Interior must be at least 7 long in x (stairs run along x)."""
+    S = STY[d.pack]
+    P = d.pack
+    n = len(rooms)
+    y0 = 2
+    tops = []
+    for k in range(n):
+        yb = y0 + 5 * k
+        if P == "Hearthwood":
+            hw_body(d, x1, z1, x2, z2, yb, yb + 3, wall=wall or ("bricks" if k == 0 and n > 2 else "calcite"),
+                    base="stone_bricks" if k == 0 else "dark_oak_planks", floor=S["floor"] if k == 0 else None,
+                    ceiling="dark_oak_planks")
+        elif P == "Cascadia":
+            cas_body(d, x1, z1, x2, z2, yb, yb + 3, floor=S["floor"] if k == 0 else None, footing=k == 0,
+                     ceiling="spruce_planks")
+            if k > 0:                                              # board-and-batten upper storeys
+                for x, z in perim(x1, z1, x2, z2):
+                    for yy in range(yb, yb + 4):
+                        if "log" in d.get(x, yy, z) and not (x in (x1, x2) and z in (z1, z2)):
+                            d.set(x, yy, z, "spruce_planks" if (x + z) % 2 else lg("stripped_spruce_log"))
+        else:
+            neo_body(d, x1, z1, x2, z2, yb, yb + 3, wall=wall or "white_concrete", floor=S["floor"] if k == 0 else None,
+                     roof_=None)
+            d.fill(x1, yb + 4, z1, x2, yb + 4, z2, "light_gray_concrete")
+            d.fill(x1 + 1, yb + 4, z1 + 1, x2 - 1, yb + 4, z2 - 1, "smooth_stone")
+        tops.append(yb)
+    ytop = y0 + 5 * n - 1                                          # ceiling of the top storey
+    side, off = door
+    if side in ("north", "south"):
+        dx, dz = x1 + off, z1 if side == "north" else z2
+    else:
+        dx, dz = x1 if side == "west" else x2, z1 + off
+    # windows on all four walls
+    for k, yb in enumerate(tops):
+        for x, z in perim(x1, z1, x2, z2):
+            if x in (x1, x2) and z in (z1, z2) or k == 0 and abs(x - dx) + abs(z - dz) <= 1:
+                continue
+            along = x - x1 if z in (z1, z2) else z - z1
+            wside = "north" if z == z1 else "south" if z == z2 else "west" if x == x1 else "east"
+            if P == "Neoterra":
+                if along % 4 != 0:
+                    d.set(x, yb + 1, z, "glass_pane")
+                    d.set(x, yb + 2, z, "glass_pane")
+                continue
+            if along % 3 == 2 and (P != "Hearthwood" or "log" not in d.get(x, yb + 1, z)):
+                d.window(x, yb + 1, z, x, yb + 2, z)
+                window_dressing(d, x, yb + 1, z, wside, shutters=k == 0, box=k == 0 or P != "Cascadia")
+    # door
+    for yy in (y0, y0 + 1, y0 + 2):
+        d.set(dx, yy, dz, AIR)
+    d.door(dx, y0, dz, INTO[side], S["wood"])
+    ox, oz = D4[side]
+    d.set(dx, y0 + 2, dz, "glass_pane" if P != "Neoterra" else "white_concrete")
+    px, pz = D4[CW[side]]
+    for sgn in (1, -1):                                            # lamps either side of the door
+        a, b = dx + ox + px * sgn, dz + oz + pz * sgn
+        if d.bp.inside(a, y0 + 2, b) and d.air(a, y0 + 2, b):
+            d.set(a, y0 + 2, b, f"wall_torch[facing={side}]")
+    if sign:
+        a, b = dx + ox + px * 2, dz + oz + pz * 2
+        if d.air(a, y0 + 1, b):
+            d.sign(a, y0 + 1, b, side, sign, S["wood"], glow=P == "Neoterra", color="cyan" if P == "Neoterra" else "black")
+    for i in range(1, 4):                                          # path from the door
+        a, b = dx + ox * i, dz + oz * i
+        if d.bp.inside(a, 1, b):
+            d.set(a, 1, b, {"Hearthwood": "gravel", "Cascadia": "dirt_path", "Neoterra": "smooth_stone"}[P])
+    # stairs between storeys (alternate rows), furnishing per storey
+    ix1, iz1, ix2, iz2 = x1 + 1, z1 + 1, x2 - 1, z2 - 1
+    keep_by = {k: set() for k in range(n)}
+    keep_by[0] |= {(dx - ox, dz - oz), (dx - 2 * ox, dz - 2 * oz)}
+    mat = {"Hearthwood": "dark_oak", "Cascadia": "spruce", "Neoterra": "smooth_quartz"}[P]
+    fill = {"Hearthwood": "dark_oak_planks", "Cascadia": "spruce_planks", "Neoterra": "white_concrete"}[P]
+    door_in = {(dx - ox, dz - oz), (dx - 2 * ox, dz - 2 * oz), (dx - ox + px, dz - oz + pz),
+               (dx - ox - px, dz - oz - pz)}
+    opts = [(iz1, ix1 + 1, 1), (iz2, ix2 - 1, -1), (iz1, ix2 - 1, -1), (iz2, ix1 + 1, 1)]
+    first = next(o for o in opts if not ({(o[1] + o[2] * i, o[0]) for i in range(-1, 6)} & door_in))
+    for k in range(n - 1):
+        yb = tops[k]
+        if k % 2 == 0:
+            rowz, sx0, step = first
+        else:
+            rowz = iz2 if first[0] == iz1 else iz1
+            sx0, step = (ix2 - 1, -1) if first[2] == 1 else (ix1 + 1, 1)
+        cells = _stair_flight(d, sx0, rowz, yb, step, mat, fill)
+        keep_by[k] |= cells
+        keep_by[k + 1] |= cells
+        inner = 1 if rowz == iz1 else -1
+        for c in cells:
+            keep_by[k].add((c[0], rowz + inner))
+            keep_by[k + 1].add((c[0], rowz + inner))
+    for k, kind in enumerate(rooms):
+        furnish(d, kind, ix1, iz1, ix2, iz2, tops[k], keep_by[k])
+    # roof
+    if P == "Neoterra" or flat:
+        d.flat(x1, z1, x2, z2, ytop + 1, "smooth_quartz", "white_concrete", "smooth_quartz_slab")
+        if roofdeco:
+            for x in range(x1 + 2, x2 - 1, 2):
+                d.set(x, ytop + 2, z1 + 2, "daylight_detector[inverted=false,power=0]")
+                d.set(x, ytop + 2, z1 + 3, "daylight_detector[inverted=false,power=0]")
+            for x in range(x1 + 1, x2, 2):
+                d.set(x, ytop + 2, z2 - 1, "moss_block")
+                d.set(x, ytop + 3, z2 - 1, "azalea")
+            d.set(x2 - 2, ytop + 2, z1 + 5, "smooth_stone")
+            d.set(x2 - 2, ytop + 3, z1 + 5, "iron_trapdoor[facing=north,half=bottom,open=false,powered=false,"
+                                             "waterlogged=false]")
+        return ytop + 1
+    if P == "Hearthwood":
+        ridge = roof(d, x1, z1, x2, z2, ytop + 1, axis, "deepslate_tile", "deepslate_tile_slab", "calcite")
+    else:
+        ridge = roof(d, x1, z1, x2, z2, ytop + 1, axis, "dark_oak", "dark_oak_slab", "spruce_planks")
+    if chimney:                                                    # stack on the outside of a gable end
+        if axis == "x":
+            cx, cz, wx, wz, f = x2 + 1, (z1 + z2) // 2, x2, (z1 + z2) // 2, "west"
+        else:
+            cx, cz, wx, wz, f = (x1 + x2) // 2, z2 + 1, (x1 + x2) // 2, z2, "north"
+        if d.bp.inside(cx, ridge + 3, cz):
+            for yy in range(y0, ridge + 3):
+                d.set(cx, yy, cz, S["chim"])
+            d.set(cx, ridge + 3, cz, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+            d.set(wx, y0, wz, f"campfire[facing={f},lit=true,signal_fire=false,waterlogged=false]")
+            d.set(wx, y0 + 1, wz, S["chim"])
+    return ridge
+
+
+
+def grow(d, L, base):
+    for lv, fn in GROW.get((base, d.pack), []):
+        if L >= lv:
+            fn(d)
+    yard(d, {1: 2, 2: 3, 3: 5, 4: 7, 5: 10}[L])
+
+
+def _open(d, x1, z1, x2, z2, y1=2, y2=9):
+    if not (d.bp.inside(x1, 1, z1) and d.bp.inside(x2, y2, z2)):
+        return False
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            if d.get(x, 1, z) in ("minecraft:water",) or "cluster" in d.get(x, 1, z):
+                return False
+            for y in range(y1, y2 + 1):
+                if not d.air(x, y, z):
+                    return False
+    return True
+
+
+def spruce_tree(d, x, z, h=6):
+    leaves = "spruce_leaves[distance=1,persistent=true,waterlogged=false]"
+    for y in range(2, 2 + h):
+        d.set(x, y, z, lg("spruce_log"))
+    for i, y in enumerate(range(4, 3 + h)):
+        r = 2 if i % 2 == 0 and i < 3 else 1
+        for a in range(-r, r + 1):
+            for b in range(-r, r + 1):
+                if (a or b) and abs(a) + abs(b) <= r + (r > 1) and d.air(x + a, y, z + b):
+                    d.set(x + a, y, z + b, leaves)
+    d.set(x, 2 + h, z, leaves)
+
+
+def yard(d, n):
+    """Garden furniture in the open parts of the plot: trees, lamp posts with benches, flower beds. Only where a
+    7x7 patch is completely open (so paths, doors and work areas stay clear)."""
+    P = d.pack
+    k = 0
+    for z in range(3, d.sz - 3, 6):
+        for x in range(3, d.sx - 3, 6):
+            if k >= n:
+                return
+            if not _open(d, x - 3, z - 3, x + 3, z + 3):
+                continue
+            kind = k % 3
+            if kind == 0:
+                if P == "Cascadia":
+                    spruce_tree(d, x, z)
+                else:
+                    tree(d, x, z, "oak" if P == "Hearthwood" else "birch", 4)
+                for a, b in ((-1, 2), (1, 2)):
+                    d.set(x + a, 1, z + b, "grass_block[snowy=false]" if P != "Neoterra" else "moss_block")
+                    d.set(x + a, 2, z + b, flower(d, x + a + z))
+            elif kind == 1:
+                lamp_post(d, x, z, 3)
+                bench(d, x - 1, z + 1, "south", 2) if P != "Neoterra" else bench(d, x - 1, z + 1, "south", 3)
+                d.set(x + 1, 2, z - 1, "barrel[facing=up,open=false]" if P == "Cascadia" else S_POT[P])
+            else:
+                for a in range(-2, 3):
+                    for b in (-1, 0, 1):
+                        d.set(x + a, 1, z + b, "grass_block[snowy=false]" if P != "Neoterra" else "moss_block")
+                        d.set(x + a, 2, z + b, flower(d, a * 3 + b + x))
+                for a in range(-3, 4):
+                    for b in (-2, 2):
+                        d.set(x + a, 2, z + b, {"Hearthwood": "stone_brick_wall", "Cascadia": "spruce_fence",
+                                                "Neoterra": sl("smooth_quartz")}[P])
+                for b in (-1, 0, 1):
+                    for a in (-3, 3):
+                        d.set(x + a, 2, z + b, {"Hearthwood": "stone_brick_wall", "Cascadia": "spruce_fence",
+                                                "Neoterra": sl("smooth_quartz")}[P])
+            k += 1
+
+
+S_POT = {"Hearthwood": "potted_red_tulip", "Cascadia": "potted_fern", "Neoterra": "potted_bamboo"}
+
+
+def B(*args, **kw):
+    return lambda d: building(d, *args, **kw)
+
+
+GROW = {
+    # ---------------------------------------------------------------- restaurant: pantry, staff house, banquet
+    ("cook", "Hearthwood"): [
+        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "x", sign=["Pantry"])),
+        (3, B(26, 12, 36, 20, ["living", "dorm"], ("west", 4), "z", sign=["Staff", "House"])),
+        (4, B(3, 30, 15, 38, ["dining", "dining", "bedroom"], ("north", 6), "x", sign=["Banquet", "Hall"])),
+        (5, B(22, 26, 35, 37, ["dining", "bedroom", "bedroom", "bedroom"], ("north", 6), "x", sign=["Guest", "Rooms"])),
+    ],
+    ("cook", "Cascadia"): [
+        (2, B(31, 3, 39, 9, ["store"], ("west", 3), "z", sign=["Root", "Cellar"])),
+        (3, B(31, 13, 41, 22, ["living", "dorm"], ("west", 4), "z", sign=["Bunkhouse"])),
+        (4, B(3, 24, 13, 35, ["dining", "dining", "bedroom"], ("north", 5), "z", sign=["Mess", "Hall"])),
+        (5, B(18, 27, 30, 40, ["dining", "bedroom", "bedroom", "bedroom"], ("north", 6), "z", sign=["Lodge"])),
+    ],
+    ("cook", "Neoterra"): [
+        (2, B(24, 3, 32, 9, ["store"], ("west", 3), sign=["COLD", "STORE"])),
+        (3, B(24, 12, 33, 20, ["office", "living", "dorm"], ("west", 4), sign=["STAFF"])),
+        (4, B(3, 21, 13, 29, ["dining", "dining", "bedroom", "bedroom"], ("north", 5), sign=["SKY", "DINING"])),
+        (5, B(18, 24, 29, 34, ["dining", "dining", "bedroom", "bedroom", "bedroom", "living"], ("north", 5), sign=["ORBIT", "HOTEL"])),
+    ],
+    # ---------------------------------------------------------------- kitchen: larder, scullery, staff
+    ("cookery", "Hearthwood"): [
+        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "x", sign=["Larder"])),
+        (3, B(26, 12, 36, 20, ["kitchen", "dorm"], ("west", 4), "z", sign=["Scullery"])),
+        (4, B(3, 24, 13, 33, ["store", "office", "bedroom"], ("north", 5), "x", sign=["Stores"])),
+        (5, B(17, 26, 29, 37, ["kitchen", "dining", "dorm", "bedroom"], ("north", 6), "x", sign=["Servants'", "Hall"])),
+    ],
+    ("cookery", "Cascadia"): [
+        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "z", sign=["Larder"])),
+        (3, B(26, 12, 36, 20, ["kitchen", "dorm"], ("west", 4), "z", sign=["Camp", "Kitchen"])),
+        (4, B(2, 26, 12, 36, ["store", "office"], ("north", 5), "z", sign=["Supply"])),
+        (5, B(25, 25, 37, 37, ["kitchen", "dining", "dorm"], ("north", 6), "z", sign=["Cook", "Shack"])),
+    ],
+    ("cookery", "Neoterra"): [
+        (2, B(27, 3, 35, 9, ["store"], ("west", 3), sign=["DRY", "STORE"])),
+        (3, B(31, 12, 40, 20, ["kitchen", "office", "dorm"], ("north", 4), sign=["PREP"])),
+        (4, B(3, 19, 13, 27, ["store", "kitchen", "office"], ("north", 5), sign=["LABS"])),
+        (5, B(16, 22, 27, 32, ["kitchen", "dining", "dorm", "living"], ("north", 5), sign=["STAFF"])),
+    ],
+    # ---------------------------------------------------------------- bakery
+    ("baker", "Hearthwood"): [
+        (3, B(25, 3, 35, 11, ["living", "bedroom"], ("west", 4), "z", sign=["Baker's", "House"])),
+        (4, B(3, 22, 14, 30, ["store", "store"], ("north", 5), "x", sign=["Granary"])),
+        (5, B(24, 22, 36, 32, ["kitchen", "dining", "bedroom"], ("north", 6), "x", sign=["Pastry", "School"])),
+    ],
+    ("baker", "Cascadia"): [
+        (2, B(26, 3, 35, 10, ["store"], ("west", 3), "z", sign=["Flour", "Shed"])),
+        (3, B(27, 14, 37, 23, ["living", "bedroom"], ("west", 4), "z", sign=["Baker's", "Cabin"])),
+        (4, B(4, 29, 14, 38, ["kitchen", "store", "bedroom"], ("north", 5), "z", sign=["Bake", "House"])),
+        (5, B(19, 28, 31, 40, ["shop", "dining", "bedroom", "bedroom"], ("north", 6), "z", sign=["Cafe"])),
+    ],
+    ("baker", "Neoterra"): [
+        (2, B(24, 3, 32, 9, ["store"], ("west", 3), sign=["FLOUR"])),
+        (3, B(25, 12, 34, 20, ["kitchen", "office", "living"], ("west", 4), sign=["PATISSERIE"])),
+        (4, B(3, 15, 13, 23, ["store", "kitchen", "dorm"], ("north", 5), sign=["LAB"])),
+        (5, B(16, 25, 27, 35, ["shop", "dining", "dining", "bedroom"], ("north", 5), sign=["LUMEN", "CAFE"])),
+    ],
+    # ---------------------------------------------------------------- florist
+    ("florist", "Hearthwood"): [
+        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "x", sign=["Potting", "Shed"])),
+        (3, B(26, 20, 36, 28, ["shop", "office"], ("west", 4), "z", sign=["Seed", "Shop"])),
+        (4, B(3, 24, 13, 32, ["workshop", "store", "bedroom"], ("north", 5), "x", sign=["Wreaths"])),
+        (5, B(15, 29, 27, 38, ["shop", "living", "bedroom", "bedroom"], ("north", 6), "x", sign=["Florist's", "House"])),
+    ],
+    ("florist", "Cascadia"): [
+        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "z", sign=["Tool", "Shed"])),
+        (3, B(25, 25, 35, 33, ["shop", "office"], ("north", 4), "z", sign=["Seed", "Store"])),
+        (4, B(2, 27, 12, 36, ["workshop", "store", "bedroom"], ("north", 5), "z", sign=["Bulbs"])),
+        (5, B(14, 29, 24, 40, ["shop", "living", "bedroom", "bedroom"], ("north", 5), "z", sign=["Cabin"])),
+    ],
+    ("florist", "Neoterra"): [
+        (2, B(25, 4, 33, 10, ["store"], ("west", 3), sign=["SEEDS"])),
+        (3, B(25, 14, 34, 22, ["shop", "office", "living"], ("west", 4), sign=["BLOOM", "SHOP"])),
+        (4, B(3, 23, 13, 31, ["workshop", "store", "office"], ("north", 5), sign=["LAB"])),
+        (5, B(18, 26, 29, 37, ["shop", "office", "living", "bedroom"], ("north", 5), sign=["BLOOM", "TOWER"])),
+    ],
+    # ---------------------------------------------------------------- dye works
+    ("dyer", "Hearthwood"): [
+        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "x", sign=["Wool", "Store"])),
+        (3, B(27, 12, 37, 20, ["workshop", "store"], ("west", 4), "z", sign=["Weaving", "Shed"])),
+        (4, B(3, 24, 13, 33, ["office", "dorm"], ("north", 5), "x", sign=["Counting", "House"])),
+        (5, B(17, 24, 29, 35, ["workshop", "store", "dorm"], ("north", 6), "x", sign=["Cloth", "Hall"])),
+    ],
+    ("dyer", "Cascadia"): [
+        (2, B(26, 3, 34, 9, ["store"], ("west", 3), "z", sign=["Wool", "Shed"])),
+        (3, B(25, 13, 35, 21, ["workshop", "store"], ("west", 4), "z", sign=["Loom", "House"])),
+        (4, B(25, 25, 35, 34, ["office", "dorm"], ("north", 5), "z", sign=["Office"])),
+        (5, B(10, 31, 22, 42, ["workshop", "store", "dorm"], ("north", 6), "z", sign=["Mill"])),
+    ],
+    ("dyer", "Neoterra"): [
+        (2, B(26, 4, 34, 10, ["store"], ("west", 3), sign=["YARN"])),
+        (3, B(26, 13, 35, 21, ["workshop", "store", "office"], ("west", 4), sign=["STUDIO"])),
+        (4, B(3, 18, 13, 26, ["workshop", "office", "dorm"], ("north", 5), sign=["LAB"])),
+        (5, B(17, 24, 28, 34, ["workshop", "store", "office", "living"], ("north", 5), sign=["CHROMA"])),
+    ],
+    # ---------------------------------------------------------------- glassworks
+    ("glassblower", "Hearthwood"): [
+        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "x", sign=["Sand &", "Cullet"])),
+        (3, B(27, 12, 37, 20, ["shop", "workshop"], ("west", 4), "z", sign=["Glass", "Shop"])),
+        (4, B(3, 24, 13, 33, ["workshop", "store", "bedroom"], ("north", 5), "x", sign=["Cutting", "Room"])),
+        (5, B(20, 24, 32, 35, ["shop", "office", "living", "bedroom"], ("north", 6), "x", sign=["Master's", "House"])),
+    ],
+    ("glassblower", "Cascadia"): [
+        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "z", sign=["Sand", "Shed"])),
+        (3, B(27, 12, 37, 20, ["shop", "workshop"], ("west", 4), "z", sign=["Gallery"])),
+        (4, B(2, 19, 12, 28, ["workshop", "store", "bedroom"], ("north", 5), "z", sign=["Kiln", "Shed"])),
+        (5, B(15, 24, 27, 35, ["shop", "office", "living", "bedroom"], ("north", 6), "z", sign=["Lodge"])),
+    ],
+    ("glassblower", "Neoterra"): [
+        (2, B(23, 3, 31, 9, ["store"], ("west", 3), sign=["SILICA"])),
+        (3, B(24, 12, 33, 20, ["shop", "workshop", "office"], ("west", 4), sign=["GALLERY"])),
+        (4, B(3, 19, 13, 27, ["workshop", "store", "office"], ("north", 5), sign=["KILN", "LAB"])),
+        (5, B(17, 24, 28, 34, ["shop", "shop", "office", "living"], ("north", 5), sign=["PRISM"])),
+    ],
+    # ---------------------------------------------------------------- concrete plant
+    ("concretemixer", "Hearthwood"): [
+        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "x", sign=["Lime", "Store"])),
+        (3, B(27, 12, 37, 20, ["office", "dorm"], ("west", 4), "z", sign=["Works", "Office"])),
+        (4, B(3, 26, 13, 35, ["workshop", "store", "bedroom"], ("north", 5), "x", sign=["Mason's", "Shop"])),
+        (5, B(17, 26, 29, 37, ["store", "office", "dorm", "bedroom"], ("north", 6), "x", sign=["Foreman's", "House"])),
+    ],
+    ("concretemixer", "Cascadia"): [
+        (2, B(27, 3, 35, 9, ["store"], ("west", 3), "z", sign=["Powder", "Shed"])),
+        (3, B(27, 13, 37, 21, ["office", "dorm"], ("west", 4), "z", sign=["Office"])),
+        (4, B(2, 28, 12, 37, ["workshop", "store"], ("north", 5), "z", sign=["Repair", "Shop"])),
+        (5, B(16, 29, 28, 40, ["store", "office", "dorm"], ("north", 6), "z", sign=["Bunks"])),
+    ],
+    ("concretemixer", "Neoterra"): [
+        (2, B(25, 3, 33, 9, ["store"], ("west", 3), sign=["POWDER"])),
+        (3, B(25, 12, 34, 20, ["office", "office", "dorm"], ("west", 4), sign=["NEOCRETE", "HQ"])),
+        (4, B(3, 24, 13, 32, ["workshop", "store", "office"], ("north", 5), sign=["LAB"])),
+        (5, B(17, 25, 28, 35, ["store", "office", "office", "dorm", "bedroom"], ("north", 5), sign=["TOWER"])),
+    ],
+    # ---------------------------------------------------------------- tavern: coach house, stables, hotel
+    ("tavern", "Hearthwood"): [
+        (2, B(24, 3, 34, 11, ["dining", "bedroom"], ("west", 4), "z", sign=["Coach", "House"])),
+        (3, B(4, 26, 16, 36, ["store", "dorm", "bedroom"], ("north", 6), "x", sign=["Stables &", "Rooms"])),
+    ],
+    ("tavern", "Cascadia"): [
+        (2, B(25, 3, 35, 11, ["dining", "bedroom"], ("west", 4), "z", sign=["Bunk", "House"])),
+        (3, B(25, 16, 37, 28, ["store", "dorm", "bedroom"], ("west", 5), "z", sign=["Livery"])),
+    ],
+    ("tavern", "Neoterra"): [
+        (2, B(24, 3, 32, 11, ["dining", "bedroom"], ("west", 4), sign=["SKY", "BAR"])),
+        (3, B(4, 21, 14, 29, ["dining", "bedroom", "bedroom", "living"], ("north", 5), sign=["SKYLINE", "HOTEL"])),
+    ],
+}

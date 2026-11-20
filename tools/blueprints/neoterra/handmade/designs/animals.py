@@ -12,7 +12,11 @@ work room (crafting table, racks, feed) inside, and fenced pens / paddocks with 
   Neoterra    Modern agri-tech: white concrete frame, glass curtain walls, flat roofs with solar arrays and green
               roofs, birch fencing on andesite curbs, glowing signage.
 """
-from hm import Design, design, AIR, D4, OPP
+import copy
+
+from hm import Design, design, AIR, D4, OPP, REQ, rels_for
+
+GROWTH = 1.6
 
 GRASS = "grass_block[snowy=false]"
 
@@ -221,7 +225,7 @@ def need_racks(d):
 def chicken_hw(rel, L):
     """Cotswold hen house: brick & timber coop with a nesting-box wall, pop hole into a fenced run with a
     duck pond, rear feed store from L3, dovecote gable from L5."""
-    d = Design("Hearthwood", rel, (23, 16, 22), paving="grass_block[snowy=false]")
+    d = farm_design("Hearthwood", rel, (23, 16, 22), paving="grass_block[snowy=false]")
     x1, z1, x2, z2 = 3, 3, 11, 9
     hw_walls(d, x1, z1, x2, z2, 5, floor="spruce_planks")
     ridge = d.gable(x1, z1, x2, z2, 6, "x", "deepslate_tile_stairs", "deepslate_tile_slab", "calcite", overhang=1)
@@ -313,7 +317,7 @@ def chicken_hw(rel, L):
 def chicken_cs(rel, L):
     """Homestead log coop: narrow A-frame with the gable to the street, chicken ramp to a hen loft, a long
     rail-fenced run down the east side, feed lean-to from L2 and a hen-house deck from L4."""
-    d = Design("Cascadia", rel, (21, 18, 25), paving=GRASS)
+    d = farm_design("Cascadia", rel, (21, 18, 25), paving=GRASS)
     x1, z1, x2, z2 = 3, 4, 9, 13
     cs_logs(d, x1, z1, x2, z2, 4)
     ridge = d.gable(x1, z1, x2, z2, 5, "z", "dark_oak_stairs", "dark_oak_slab", "spruce_planks", overhang=1)
@@ -387,7 +391,7 @@ def chicken_cs(rel, L):
 def chicken_nt(rel, L):
     """Urban poultry pavilion: glass-fronted white hen house behind a street-facing run so passers-by see the
     hens; green roof, solar canopy, egg-shop counter from L3, roof garden from L5."""
-    d = Design("Neoterra", rel, (19, 14, 21), paving="smooth_stone")
+    d = farm_design("Neoterra", rel, (19, 14, 21), paving="smooth_stone")
     x1, z1, x2, z2 = 2, 11, 14, 18
     nt_walls(d, x1, z1, x2, z2, 5, sides="ne")
     nt_roof(d, x1, z1, x2, z2, 6, solar_rows=L < 5, green=L >= 5)
@@ -467,7 +471,7 @@ def stairs_up(d, x, z, y0, y1, dirn, block, wood_planks):
 
 @design("chickenherder")
 def chickenherder(pack, rel, L):
-    return {"Hearthwood": chicken_hw, "Cascadia": chicken_cs, "Neoterra": chicken_nt}[pack](rel, L)
+    return farmstead({"Hearthwood": chicken_hw, "Cascadia": chicken_cs, "Neoterra": chicken_nt}[pack], pack, rel, L, "poultry")
 
 
 def stone_fold(d, x1, z1, x2, z2, stone, fence, gates=(), ground=GRASS, y=2):
@@ -509,7 +513,7 @@ def cow_hw(rel, L):
     """Cotswold cow byre: long brick-and-timber byre with a cross-passage door, mangers with water troughs,
     stalls opening onto the paddock behind, hay loft under the tiled roof (pitching door in the gable).
     L3 lengthens the byre, L4 adds a hay rick and cart, L5 a milk stand by the lane."""
-    d = Design("Hearthwood", rel, (27, 18, 27), paving=GRASS)
+    d = farm_design("Hearthwood", rel, (27, 18, 27), paving=GRASS)
     x1, z1, z2 = 3, 3, 11
     x2 = 13 if L < 3 else 19
     pz2 = 20 if L < 3 else 25
@@ -596,7 +600,7 @@ def cow_cs(rel, L):
     """Red gambrel dairy barn, gable to the road: big double barn doors with the hay door above, a central
     aisle with mangers and tie stalls both sides, dairy/work room at the front, loft under the gambrel and a
     rail-fenced pasture to the east. L3 lengthens the barn, L4 adds a silo, L5 a porch bench and signage."""
-    d = Design("Cascadia", rel, (29, 22, 27), paving=GRASS)
+    d = farm_design("Cascadia", rel, (29, 22, 27), paving=GRASS)
     x1, x2, z1 = 4, 15, 3
     z2 = 11 if L < 3 else 17
     pz2 = 15 if L < 3 else 24
@@ -702,7 +706,7 @@ def cow_nt(rel, L):
     """Agri-tech dairy: glass milking parlour cube on the street corner, a long open-sided freestall barn
     behind it (columns, birch rails, flat solar roof), drinkers and a feed line inside, pasture on the east.
     L3 lengthens the freestall barn, L5 adds a green-roof terrace to the parlour."""
-    d = Design("Neoterra", rel, (27, 14, 25), paving="smooth_stone")
+    d = farm_design("Neoterra", rel, (27, 14, 25), paving="smooth_stone")
     # pasture east of the parlour
     pen(d, 13, 2, 25, 10, "birch_fence", gates=[(19, 2), (13, 6)])
     # parlour
@@ -786,7 +790,7 @@ def cow_nt(rel, L):
 
 @design("cowboy")
 def cowboy(pack, rel, L):
-    return {"Hearthwood": cow_hw, "Cascadia": cow_cs, "Neoterra": cow_nt}[pack](rel, L)
+    return farmstead({"Hearthwood": cow_hw, "Cascadia": cow_cs, "Neoterra": cow_nt}[pack], pack, rel, L, "cattle")
 
 
 # ============================================================================================ SHEPHERD
@@ -794,7 +798,7 @@ def sheep_hw(rel, L):
     """Shearing barn & sheepfold: timber-framed barn with its gable to the lane, shearing floor, loom by the
     window, dye vats (water cauldrons) and wool bales; a dry-stone sheepfold beside it. L3 lengthens the barn,
     L4 adds a wool-drying line, L5 a shepherd's hut on wheels in the fold."""
-    d = Design("Hearthwood", rel, (25, 18, 24), paving=GRASS)
+    d = farm_design("Hearthwood", rel, (25, 18, 24), paving=GRASS)
     x1, x2, z1 = 3, 10, 3
     z2 = 11 if L < 3 else 15
     fz2 = 14 if L < 3 else 21
@@ -869,7 +873,7 @@ def sheep_cs(rel, L):
     """Ranch shearing shed: long log shed with a deep covered shearing porch to the road, wool press and
     loom, wash tubs; a big rail-fenced sheep pasture behind with a run-in shelter. L3 lengthens the shed,
     L5 adds a sheepdog kennel and pasture shelter."""
-    d = Design("Cascadia", rel, (27, 16, 26), paving=GRASS)
+    d = farm_design("Cascadia", rel, (27, 16, 26), paving=GRASS)
     x1, z1, z2 = 3, 8, 14
     x2 = 12 if L < 3 else 17
     pz2 = 20 if L < 3 else 24
@@ -951,7 +955,7 @@ def sheep_nt(rel, L):
     """Wool lab: white textile studio with a north-light sawtooth roof, loom and dyeing line inside, glass
     street front showing the bolts of wool; pasture behind with a smart shelter. L3 adds a teeth row, L5 a
     rooftop wind turbine mast and street planters."""
-    d = Design("Neoterra", rel, (23, 16, 25), paving="smooth_stone")
+    d = farm_design("Neoterra", rel, (23, 16, 25), paving="smooth_stone")
     x1, z1, x2 = 2, 2, 14
     z2 = 8 if L < 3 else 11
     pz2 = 19 if L < 3 else 23
@@ -1002,7 +1006,7 @@ def sheep_nt(rel, L):
 
 @design("shepherd")
 def shepherd(pack, rel, L):
-    return {"Hearthwood": sheep_hw, "Cascadia": sheep_cs, "Neoterra": sheep_nt}[pack](rel, L)
+    return farmstead({"Hearthwood": sheep_hw, "Cascadia": sheep_cs, "Neoterra": sheep_nt}[pack], pack, rel, L, "sheep")
 
 
 # ============================================================================================ SWINEHERDER
@@ -1010,7 +1014,7 @@ def pig_hw(rel, L):
     """Brick pigsties: a timber-framed feed house (swill barrels, composter, racks) on a gravel lane, and a
     terrace of little brick sties with pent tiled roofs, each opening onto its own walled yard with a trough
     and a mud wallow. 2 sties at L1, 3 from L3, 4 at L5."""
-    d = Design("Hearthwood", rel, (25, 16, 23), paving=GRASS)
+    d = farm_design("Hearthwood", rel, (25, 16, 23), paving=GRASS)
     x1, z1, x2, z2 = 3, 3, 9, 9
     hw_walls(d, x1, z1, x2, z2, 5, floor="spruce_planks", infill="bricks")
     ridge = d.gable(x1, z1, x2, z2, 6, "x", "deepslate_tile_stairs", "deepslate_tile_slab", "calcite")
@@ -1117,7 +1121,7 @@ def hog_hut(d, x0, z0, wood):
 def pig_cs(rel, L):
     """Hog barn: low log barn with a skillion roof on a river-rock footing, farrowing pens inside, and a
     muddy rail-fenced hog lot with A-frame hog huts, a long trough line and a mud wallow."""
-    d = Design("Cascadia", rel, (27, 18, 24), paving=GRASS)
+    d = farm_design("Cascadia", rel, (27, 18, 24), paving=GRASS)
     x1, z1, x2, z2 = 3, 3, 11, 11
     lz2 = 14 if L < 3 else 21
     pen(d, x2, z1, 25, lz2, "spruce_fence", gates=[(18, lz2)], ground="coarse_dirt", patches=(GRASS, 3))
@@ -1184,7 +1188,7 @@ def pig_nt(rel, L):
     """Welfare pig unit: long low white barn with a glass clerestory band and green roof; indoor pens with
     steel rails and drinkers off a service corridor, each opening to an outdoor run with a mud wallow; the
     feed / office room is at the east end by the street path."""
-    d = Design("Neoterra", rel, (23, 14, 23), paving="smooth_stone")
+    d = farm_design("Neoterra", rel, (23, 14, 23), paving="smooth_stone")
     x1, z1, x2, z2 = 2, 12, 20, 20
     rz1 = 6 if L < 3 else 2
     pen(d, 2, rz1, 13, z1, "birch_fence", gates=[(8, rz1)])
@@ -1254,7 +1258,7 @@ def pig_nt(rel, L):
 
 @design("swineherder")
 def swineherder(pack, rel, L):
-    return {"Hearthwood": pig_hw, "Cascadia": pig_cs, "Neoterra": pig_nt}[pack](rel, L)
+    return farmstead({"Hearthwood": pig_hw, "Cascadia": pig_cs, "Neoterra": pig_nt}[pack], pack, rel, L, "pig")
 
 
 # ============================================================================================ RABBIT HUTCH
@@ -1297,7 +1301,7 @@ def rabbit_hw(rel, L):
     """Rabbit warren cottage: a tiny brick-and-plaster cottage with a catslide roof, tiered hutches along
     the inside walls and a fenced rabbit garden behind with carrot rows; L3 adds an outdoor hutch range under
     a pent roof, L5 a garden well and flower border."""
-    d = Design("Hearthwood", rel, (19, 16, 20), paving=GRASS)
+    d = farm_design("Hearthwood", rel, (19, 16, 20), paving=GRASS)
     x1, z1, x2, z2 = 3, 3, 11, 9
     gz2 = 14 if L < 3 else 18
     pen(d, 2, z2, 16, gz2, "oak_fence", gates=[(16, z2 + 2)])
@@ -1360,7 +1364,7 @@ def rabbit_hw(rel, L):
 def rabbit_cs(rel, L):
     """Rabbitry cabin: steep A-frame log cabin with its gable to the road, a two-tier hutch range under a
     lean-to on the east wall, and a rail-fenced rabbit run with a carrot patch and hollow logs."""
-    d = Design("Cascadia", rel, (21, 16, 21), paving=GRASS)
+    d = farm_design("Cascadia", rel, (21, 16, 21), paving=GRASS)
     x1, z1, x2, z2 = 3, 3, 9, 10
     rz2 = 13 if L < 3 else 19
     pen(d, 12, 2, 19, rz2, "spruce_fence", gates=[(15, 2)], patches=("coarse_dirt", 6))
@@ -1418,7 +1422,7 @@ def rabbit_cs(rel, L):
 def rabbit_nt(rel, L):
     """Rabbitry studio: low glass pavilion with an indoor clover run, white hutch pods with cyan doors and
     a skylit flat roof; a street-side outdoor run with raised carrot planters."""
-    d = Design("Neoterra", rel, (17, 12, 21), paving="smooth_stone")
+    d = farm_design("Neoterra", rel, (17, 12, 21), paving="smooth_stone")
     x1, z1, x2, z2 = 2, 9, 14, 18
     rz1 = 4 if L < 3 else 2
     pen(d, 2, rz1, 9, z1 - 1, "birch_fence", gates=[(5, rz1)])
@@ -1467,7 +1471,7 @@ def rabbit_nt(rel, L):
 
 @design("rabbithutch")
 def rabbithutch(pack, rel, L):
-    return {"Hearthwood": rabbit_hw, "Cascadia": rabbit_cs, "Neoterra": rabbit_nt}[pack](rel, L)
+    return farmstead({"Hearthwood": rabbit_hw, "Cascadia": rabbit_cs, "Neoterra": rabbit_nt}[pack], pack, rel, L, "rabbit")
 
 
 # ============================================================================================ BEEKEEPER
@@ -1483,7 +1487,7 @@ def bee_hw(rel, L):
     """Honey house & bee garden: a little timber-framed honey house (extracting bench, racks, honey jars,
     candles) beside a walled cottage garden whose south brick wall holds the hives in bee boles; lavender
     and flower beds, fruit trees, gravel paths."""
-    d = Design("Hearthwood", rel, (21, 14, 21), paving=GRASS)
+    d = farm_design("Hearthwood", rel, (21, 14, 21), paving=GRASS)
     x1, z1, x2, z2 = 3, 3, 9, 9
     hw_walls(d, x1, z1, x2, z2, 4, floor="oak_planks", infill="calcite")
     ridge = d.gable(x1, z1, x2, z2, 5, "z", "deepslate_tile_stairs", "deepslate_tile_slab", "calcite")
@@ -1566,7 +1570,7 @@ def bee_hw(rel, L):
 def bee_cs(rel, L):
     """Mountain apiary: log honey shack with a deep porch and stone chimney (wax melting stove), hives on
     log stump stands in a wildflower meadow behind a spruce rail fence, sunflowers along the fence."""
-    d = Design("Cascadia", rel, (23, 16, 22), paving=GRASS)
+    d = farm_design("Cascadia", rel, (23, 16, 22), paving=GRASS)
     x1, z1, x2, z2 = 3, 6, 11, 12
     cs_logs(d, x1, z1, x2, z2, 4)
     ridge = d.gable(x1, z1, x2, z2, 5, "x", "dark_oak_stairs", "dark_oak_slab", "spruce_planks")
@@ -1640,7 +1644,7 @@ def bee_cs(rel, L):
 def bee_nt(rel, L):
     """Urban apiary: a glass honey lab (white concrete frame, honey-amber accent band) beside a pollinator
     meadow where the hives stand on quartz plinths; the lab has a green roof with more hives at L5."""
-    d = Design("Neoterra", rel, (19, 14, 19), paving="smooth_stone")
+    d = farm_design("Neoterra", rel, (19, 14, 19), paving="smooth_stone")
     x1, z1, x2, z2 = 2, 2, 9, 9
     nt_walls(d, x1, z1, x2, z2, 5, sides="nwe", col_step=3)
     for x in range(x1, x2 + 1):
@@ -1698,7 +1702,7 @@ def bee_nt(rel, L):
 
 @design("beekeeper")
 def beekeeper(pack, rel, L):
-    return {"Hearthwood": bee_hw, "Cascadia": bee_cs, "Neoterra": bee_nt}[pack](rel, L)
+    return farmstead({"Hearthwood": bee_hw, "Cascadia": bee_cs, "Neoterra": bee_nt}[pack], pack, rel, L, "bees")
 
 
 # ============================================================================================ STABLE
@@ -1741,7 +1745,7 @@ def stable_hw(rel, L):
     """Coaching stable block: long brick-and-timber range with a steep tiled roof and a clock cupola on the
     ridge; tack room with saddle racks at the west end, loose boxes either side of a cobbled aisle, grooms'
     loft upstairs. It grows a pair of boxes per level; a fenced paddock lies behind."""
-    d = Design("Hearthwood", rel, (27, 20, 27), paving=GRASS)
+    d = farm_design("Hearthwood", rel, (27, 20, 27), paving=GRASS)
     nst = d.req["spots"]["stall"]
     ns = (nst + 1) // 2
     x1, z1, z2 = 3, 3, 14
@@ -1841,7 +1845,7 @@ def stable_cs(rel, L):
     """Ranch horse barn: long log barn with its gable to the road, big double doors and a hay door with a
     hood, centre aisle with stalls both sides, tack and feed rooms at the front, wranglers' bunk loft under
     the roof, and a round rail-fenced corral behind. Grows a pair of stalls per level."""
-    d = Design("Cascadia", rel, (25, 20, 33), paving=GRASS)
+    d = farm_design("Cascadia", rel, (25, 20, 33), paving=GRASS)
     nst = d.req["spots"]["stall"]
     ns = (nst + 1) // 2
     x1, x2, z1 = 4, 16, 3
@@ -1935,7 +1939,7 @@ def stable_nt(rel, L):
     """Equestrian centre: two-storey glass grooms' house (tack lounge below, capsule bedrooms above) joined
     to a low white stable wing with a raised clerestory aisle and solar roof, stalls with steel-bar fronts,
     and a show-jumping arena with birch rails. The stable wing grows a pair of stalls per level."""
-    d = Design("Neoterra", rel, (31, 16, 25), paving="smooth_stone")
+    d = farm_design("Neoterra", rel, (31, 16, 25), paving="smooth_stone")
     nst = d.req["spots"]["stall"]
     ns = (nst + 1) // 2
     # grooms' house
@@ -2039,4 +2043,746 @@ def stable_nt(rel, L):
 
 @design("stable")
 def stable(pack, rel, L):
-    return {"Hearthwood": stable_hw, "Cascadia": stable_cs, "Neoterra": stable_nt}[pack](rel, L)
+    return farmstead({"Hearthwood": stable_hw, "Cascadia": stable_cs, "Neoterra": stable_nt}[pack], pack, rel, L, "horse")
+
+
+# ============================================================================================ FARMSTEAD GROWTH
+# Every type keeps its core (the hut building with its pens, drawn above) in the north-west of the plot. The
+# farmstead grows around it level by level with real farm buildings, in the pack's style:
+#   L2  a cart / wood / equipment shed       (east strip, by the lane)
+#   L3  the herder's cottage                 (east strip)
+#   L4  a second livestock hall for the type (south strip: poultry house, calf house, lambing shed, farrowing
+#       house, hutch house, honey & candle house, indoor riding school)
+#   L5  hay barn / threshing barn with granary or silos (south-east)
+# plus a window-dressing pass (sills, shutters) and lamps along the paths.
+EAST, SOUTH = 28, 13
+LEAVES = "[distance=1,persistent=true,waterlogged=false]"
+
+
+def farm_design(pack, rel, size, **kw):
+    sx, sy, sz = size
+    d = Design(pack, rel, (sx + EAST, max(sy, 24), sz + SOUTH), **kw)
+    d.ex, d.ez = sx, sz
+    return d
+
+
+def hang(d, x, ytop, z, ybot, kind="lantern"):
+    """Lantern on a chain hanging from ytop down to ybot."""
+    for y in range(ybot + 1, ytop + 1):
+        d.set(x, y, z, "chain[axis=y,waterlogged=false]")
+    d.set(x, ybot, z, f"{kind}[hanging=true,waterlogged=false]")
+
+
+def lamp_post(d, x, z, pack):
+    if pack == "Neoterra":
+        d.set(x, 2, z, "light_gray_concrete")
+        d.set(x, 3, z, "end_rod[facing=up]")
+        d.set(x, 4, z, "end_rod[facing=up]")
+        d.set(x, 5, z, "sea_lantern")
+    else:
+        w = "dark_oak" if pack == "Hearthwood" else "spruce"
+        d.set(x, 2, z, f"{w}_fence")
+        d.set(x, 3, z, f"{w}_fence")
+        d.set(x, 4, z, "lantern[hanging=false,waterlogged=false]")
+
+
+def tree(d, x, z, log="oak_log", leaves="oak_leaves", h=4, r=2):
+    for y in range(2, 2 + h):
+        d.set(x, y, z, f"{log}[axis=y]")
+    top = 1 + h
+    for y, rr in ((top - 1, r), (top, r), (top + 1, 1)):
+        for dx in range(-rr, rr + 1):
+            for dz in range(-rr, rr + 1):
+                if abs(dx) == rr and abs(dz) == rr and rr > 1:
+                    continue
+                if (dx or dz or y > top - 1) and d.bp.inside(x + dx, y, z + dz) and d.air(x + dx, y, z + dz):
+                    d.set(x + dx, y, z + dz, leaves + LEAVES)
+    d.set(x, top + 1, z, leaves + LEAVES)
+
+
+def bed_of(d, x1, z1, x2, z2, kinds, ground=GRASS, edge=None):
+    """Flower bed with an optional edging (slabs/trapdoors) at y=2 around it."""
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            d.set(x, 1, z, ground)
+            d.set(x, 2, z, kinds[(x * 5 + z * 3) % len(kinds)])
+
+
+def bench(d, x, z, back, wood, n=2, along="x"):
+    for i in range(n):
+        cx, cz = (x + i, z) if along == "x" else (x, z + i)
+        d.set(cx, 2, cz, st(f"{wood}_stairs", back))
+
+
+def shelf(d, x, y, z, wood, item):
+    d.set(x, y, z, slab(f"{wood}_slab", "top"))
+    d.set(x, y + 1, z, item)
+
+
+POTS = ("potted_red_tulip", "decorated_pot[cracked=false,facing=north,waterlogged=false]",
+        "candle[candles=3,lit=false,waterlogged=false]", "potted_fern", "potted_azure_bluet")
+
+
+def dress_windows(d, wood):
+    """Shutters beside single windows and sills under upper windows on every sky-facing glass pane."""
+    bp = d.bp
+    names = {(0, -1): "north", (0, 1): "south", (1, 0): "east", (-1, 0): "west"}
+
+    def sky(x, y, z):
+        return bp.inside(x, y, z) and all(bp.get(x, yy, z) == AIR for yy in range(y, bp.sy))
+
+    def pane(x, y, z):
+        return bp.inside(x, y, z) and bp.get(x, y, z).split("[")[0].endswith("glass_pane")
+    todo = []
+    for x, y, z, s in bp.blocks():
+        if y < 3 or not s.split("[")[0].endswith("glass_pane"):
+            continue
+        for (dx, dz), nm in names.items():
+            if sky(x + dx, y, z + dz) and not sky(x - dx, y, z - dz) and bp.get(x - dx, y, z - dz) == AIR:
+                todo.append((x, y, z, dx, dz, nm))
+                break
+    for x, y, z, dx, dz, nm in todo:
+        ox, oz = x + dx, z + dz
+        lx, lz = dz, dx
+        single = not pane(x + lx, y, z + lz) and not pane(x - lx, y, z - lz)
+        if not pane(x, y - 1, z) and y - 1 >= 4 and d.air(ox, y - 1, oz):
+            d.set(ox, y - 1, oz, trap(wood, nm, "top"))
+        if single:
+            for sgn in (1, -1):
+                sx_, sz_ = ox + sgn * lx, oz + sgn * lz
+                wx, wz = x + sgn * lx, z + sgn * lz
+                if bp.inside(sx_, y, sz_) and d.air(sx_, y, sz_) and sky(sx_, y, sz_) and not d.air(wx, y, wz) \
+                        and y >= 4:
+                    d.set(sx_, y, sz_, trap(wood, nm, "bottom", open_=True))
+
+
+# ------------------------------------------------------------------------------------------- L2: shed
+def shed(d, pack, x1, z1, w=7):
+    """w x 5 shed, open to the north lane."""
+    x2, z2 = x1 + w - 1, z1 + 4
+    if pack == "Hearthwood":                                           # cart shed
+        for x in range(x1, x2 + 1):
+            for z in range(z1, z2 + 1):
+                d.set(x, 1, z, "cobblestone")
+                if (x in (x1, x2) and z > z1) or z == z2:
+                    for y in (2, 3, 4):
+                        d.set(x, y, z, "bricks" if y < 4 else "stripped_dark_oak_log[axis=y]")
+        for x in list(range(x1, x2, 3)) + [x2]:
+            for y in (2, 3, 4):
+                d.set(x, y, z1, "dark_oak_log[axis=y]")
+        for x in range(x1, x2 + 1):
+            d.set(x, 4, z1, "stripped_dark_oak_log[axis=x]")
+        d.gable(x1, z1, x2, z2, 5, "x", "deepslate_tile_stairs", "deepslate_tile_slab", "bricks")
+        # hay cart
+        for z in (z1 + 1, z1 + 2, z1 + 3):
+            d.set(x1 + 1, 2, z, slab("dark_oak_slab", "top"))
+            d.set(x1 + 2, 2, z, slab("dark_oak_slab", "top"))
+        hay(d, x1 + 1, 3, z1 + 2, "z")
+        hay(d, x1 + 2, 3, z1 + 2, "z")
+        d.set(x1 + 1, 3, z1 + 1, "hay_block[axis=x]")
+        d.set(x1 + 2, 2, z1 + 0, "dark_oak_fence")
+        # tool bay
+        d.set(x1 + 4, 2, z2 - 1, "grindstone[face=floor,facing=north]")
+        d.set(x1 + 5, 2, z2 - 1, "barrel[facing=up,open=false]")
+        d.set(x1 + 5, 3, z2 - 1, "white_wool")
+        d.set(x1 + 5, 2, z2 - 2, "brown_wool")
+        d.set(x1 + 5, 2, z2 - 3, "composter[level=4]")
+        for x in (x1 + 4, x1 + 5):
+            d.set(x, 4, z2 - 1, "tripwire_hook[attached=false,facing=north,powered=false]")
+        for x in range(x1 + 7, x2):                                   # extra bays: sacks, kegs, a plough
+            for y in (2, 3):
+                d.set(x, y, z2 - 1, ("white_wool", "brown_wool", "barrel[facing=up,open=false]")[(x + y) % 3])
+            d.set(x, 2, z2 - 2, "hay_block[axis=x]" if x % 2 else "barrel[facing=north,open=false]")
+        if w >= 10:
+            d.set(x2 - 2, 2, z1 + 1, "anvil[facing=east]")
+            d.set(x2 - 1, 2, z1 + 1, "dark_oak_fence")
+            d.set(x2 - 1, 3, z1 + 1, slab("dark_oak_slab"))
+        for x in range(x1 + 3, x2, 4):
+            hang(d, x, 6, z1 + 2, 5)
+        d.set(x1 - 1, 2, z1, "barrel[facing=up,open=false]")
+        d.set(x1 - 1, 3, z1, "lantern[hanging=false,waterlogged=false]")
+    elif pack == "Cascadia":                                           # woodshed with lean-to roof
+        for x in range(x1, x2 + 1):
+            for z in range(z1, z2 + 1):
+                d.set(x, 1, z, "coarse_dirt")
+        for x in list(range(x1, x2, 3)) + [x2]:
+            for z in (z1, z2):
+                for y in (2, 3, 4):
+                    d.set(x, y, z, "spruce_log[axis=y]")
+        mono(d, x1, z1, x2, z2, 5, "dark_oak_stairs", "dark_oak_slab", "spruce_planks")
+        for x in range(x1 + 1, x2):                                     # firewood stack along the back
+            for y in (2, 3, 4):
+                d.set(x, y, z2, "oak_log[axis=z]" if (x + y) % 2 else "stripped_spruce_log[axis=z]")
+        for z in range(z1 + 1, z2):
+            for y in (2, 3):
+                d.set(x1, y, z, "birch_log[axis=x]" if (z + y) % 2 else "spruce_log[axis=x]")
+        d.set(x1 + 2, 2, z1 + 2, "stripped_oak_log[axis=y]")         # chopping block
+        d.set(x2 - 2, 2, z1 + 2, "spruce_fence")                      # sawhorse
+        d.set(x2 - 1, 2, z1 + 2, "spruce_fence")
+        d.set(x2 - 2, 3, z1 + 2, slab("spruce_slab"))
+        d.set(x2 - 1, 3, z1 + 2, slab("spruce_slab"))
+        d.set(x2 - 1, 2, z2 - 1, "cauldron")                          # wheelbarrow
+        d.set(x2 - 1, 2, z2 - 2, trap("spruce", "north", "top"))
+        d.set(x2 - 1, 2, z1 + 1, "grindstone[face=floor,facing=east]")
+        for x in range(x1 + 3, x2, 4):
+            hang(d, x, 5, z1 + 2, 4)
+        d.keg(x1 - 1, 2, z1, "up")
+        d.set(x1 - 1, 3, z1, "lantern[hanging=false,waterlogged=false]")
+    else:                                                              # equipment pod + drone pad
+        nt_walls(d, x1, z1, x2, z2, 4, sides="n", col_step=3, floor="polished_andesite")
+        nt_roof(d, x1, z1, x2, z2, 5, solar_rows=True)
+        d.double_door(x1 + 3, 2, z1, "x", "south", "birch")
+        for z in range(z1 + 1, z2):
+            d.set(x1 + 1, 2, z, "iron_block" if z == z1 + 1 else "white_concrete")
+            d.set(x1 + 1, 3, z, "lightning_rod[facing=up,powered=false,waterlogged=false]" if z == z1 + 1 else
+                  "iron_trapdoor[facing=east,half=bottom,open=false,powered=false,waterlogged=false]")
+        for x in range(x1 + 2, x2):
+            d.set(x, 2, z2 - 1, "barrel[facing=north,open=false]" if x % 2 else "light_gray_concrete")
+            d.set(x, 3, z2 - 1, "potted_bamboo" if x % 2 else slab("smooth_quartz_slab"))
+        d.set(x2 - 1, 2, z1 + 1, "smooth_quartz_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]")
+        d.set(x2 - 1, 4, z1 + 2, "sea_lantern")
+        d.set(x1 + 3, 4, z1 + 2, "end_rod[facing=down]")
+        px = x2 + 2
+        if px + 2 < d.sx:
+            for dx in range(3):
+                for dz in range(3):
+                    d.set(px + dx - 1, 1, z1 + 1 + dz, "cyan_concrete" if (dx == 1 or dz == 1) and
+                          (dx, dz) != (1, 1) else "polished_andesite")
+            d.set(px, 1, z1 + 2, "sea_lantern")
+
+
+# ------------------------------------------------------------------------------------------- L3: cottage
+def cottage(d, pack, x1, z1, w=9):
+    """Herder's cottage, w x 8, front door to the north."""
+    x2, z2 = x1 + w - 1, z1 + 7
+    xm = x1 + 4
+    if pack == "Hearthwood":
+        hw_walls(d, x1, z1, x2, z2, 5, floor="oak_planks", infill="bricks", lower=4)
+        hw_walls(d, x1, z1, x2, z2, 9, floor="spruce_planks", y0=7, lower=0, post_step=2)
+        for x in range(x1, x2 + 1):                                    # jetty bressumer
+            d.set(x, 6, z1, "dark_oak_planks")
+            d.set(x, 6, z2, "dark_oak_planks")
+        ridge = d.gable(x1, z1, x2, z2, 10, "x", "deepslate_tile_stairs", "deepslate_tile_slab", "calcite")
+        d.door(xm, 2, z1, "south", "dark_oak")
+        d.set(xm, 4, z1 - 1, st("deepslate_tile_stairs", "south", "top"))
+        for x in (x1 + 2, x1 + 6):
+            d.window(x, 3, z1, x, 4, z1)
+            d.window(x, 3, z2, x, 4, z2)
+            d.window(x - 1, 8, z1, x, 8, z1)
+            d.window(x - 1, 8, z2, x, 8, z2)
+        d.window(x1, 3, z1 + 3, x1, 4, z1 + 3)
+        # kitchen on the west wall
+        d.set(x1 + 1, 2, z1 + 1, "smoker[facing=east,lit=true]")
+        d.set(x1 + 1, 2, z1 + 2, "water_cauldron[level=3]")
+        d.set(x1 + 1, 2, z1 + 4, "barrel[facing=up,open=false]")
+        d.set(x1 + 1, 2, z1 + 5, slab("dark_oak_slab", "top"))
+        d.set(x1 + 1, 3, z1 + 5, "candle[candles=2,lit=false,waterlogged=false]")
+        for z in (z1 + 1, z1 + 2, z1 + 4, z1 + 5):
+            shelf(d, x1 + 1, 4, z, "dark_oak", POTS[z % len(POTS)])
+        d.table(x1 + 3, 2, z1 + 3, "dark_oak")
+        d.chair(x1 + 3, 2, z1 + 2, "north", "dark_oak", sit=False)
+        d.chair(x1 + 3, 2, z1 + 4, "south", "dark_oak", sit=False)
+        d.chair(x1 + 4, 2, z1 + 3, "east", "dark_oak", sit=False)
+        # inglenook on the east wall, flue through the roof
+        d.hearth(x2 - 1, 2, z1 + 3, "west", ridge + 2, "bricks", "campfire")
+        d.set(x2 - 1, ridge + 2, z1 + 3, slab("brick_slab"))
+        d.rug(x1 + 5, z1 + 2, x1 + 6, z1 + 4, 2, ("red_carpet", "orange_carpet"), "check")
+        d.chair(x1 + 5, 2, z1 + 1, "north", "oak", sit=False)
+        hang(d, x1 + 3, 5, z1 + 3, 4)
+        stairs_up(d, x1 + 3, z2 - 1, 2, 6, "east", "dark_oak_stairs", "dark_oak_planks")
+        for x in (x1 + 4, x1 + 5):
+            d.set(x, 7, z2 - 2, "dark_oak_fence")
+        # bedroom upstairs
+        d.bed(x1 + 1, 7, z1 + 1, "north", "red")
+        d.bed(x1 + 3, 7, z1 + 1, "north", "red")
+        d.set(x1 + 2, 7, z1 + 1, "barrel[facing=up,open=false]")
+        d.candle(x1 + 2, 8, z1 + 1, 1)
+        d.set(x1 + 5, 7, z1 + 1, "chiseled_bookshelf[facing=south,slot_0_occupied=true,slot_1_occupied=true,"
+                                 "slot_2_occupied=false,slot_3_occupied=true,slot_4_occupied=false,"
+                                 "slot_5_occupied=true]")
+        d.set(x1 + 6, 7, z1 + 1, "barrel[facing=south,open=false]")
+        d.set(x1 + 6, 8, z1 + 1, "potted_red_tulip")
+        d.set(x1 + 1, 7, z1 + 5, "lectern[facing=east,has_book=false,powered=false]")
+        d.rug(x1 + 2, z1 + 3, x1 + 5, z1 + 4, 7, ("red_carpet", "white_carpet"), "border")
+        hang(d, x1 + 3, 11, z1 + 3, 9)
+        # garden front: path, beds, bench, lamp
+        path(d, xm, z1 - 2, xm, z1 - 1, "gravel")
+        bed_of(d, x1, z1 - 2, xm - 2, z1 - 1, ("poppy", "cornflower", "oxeye_daisy", "allium"))
+        bed_of(d, xm + 2, z1 - 2, x2, z1 - 1, ("azure_bluet", "poppy", "lily_of_the_valley"))
+        lamp_post(d, xm - 1, z1 - 2, pack)
+        bench(d, x2 + 1, z1 + 2, "east", "dark_oak", 2, "z")
+    elif pack == "Cascadia":
+        cs_logs(d, x1, z1, x2, z2, 4, log="spruce_log")
+        for x in range(x1, x2 + 1):
+            for z in range(z1, z2 + 1):
+                if x in (x1, x2) or z in (z1, z2):
+                    for y in (2, 3, 4):
+                        if "spruce_log" in d.get(x, y, z) and not (x in (x1, x2) and z in (z1, z2)):
+                            d.set(x, y, z, d.get(x, y, z).replace("spruce_log", "stripped_spruce_log"))
+        ridge = d.gable(x1, z1, x2, z2, 5, "x", "dark_oak_stairs", "dark_oak_slab", "spruce_planks")
+        d.door(xm, 2, z1, "south", "spruce")
+        for x in (x1 + 2, x1 + 6):
+            d.window(x, 3, z1, x, 3, z1)
+            d.window(x, 3, z2, x, 3, z2)
+        d.window(xm, 6, z1, xm, 7, z1)
+        d.window(xm, 6, z2, xm, 7, z2)
+        # porch
+        for x in range(x1 - 1, x2 + 2):
+            for z in range(z1 - 3, z1):
+                d.set(x, 1, z, "spruce_planks")
+            d.set(x, 5, z1 - 3, st("dark_oak_stairs", "south"))
+            d.set(x, 5, z1 - 2, slab("dark_oak_slab", "top"))
+        for x in (x1 - 1, x1 + 3, x1 + 5, x2 + 1):
+            for y in (2, 3, 4):
+                d.set(x, y, z1 - 3, "spruce_log[axis=y]")
+        for x in range(x1, x2 + 1):
+            if d.air(x, 2, z1 - 3) and x != xm:
+                d.set(x, 2, z1 - 3, "spruce_fence")
+        d.chair(x1 + 1, 2, z1 - 2, "north", "spruce", sit=False)
+        d.chair(x1 + 2, 2, z1 - 2, "north", "spruce", sit=False)
+        d.keg(x2 - 1, 2, z1 - 2, "up")
+        d.set(x2 - 1, 3, z1 - 2, "lantern[hanging=false,waterlogged=false]")
+        d.set(x2, 2, z1 - 2, "barrel[facing=north,open=false]")
+        # stone fireplace & chimney on the west gable
+        d.hearth(x1 + 1, 2, z1 + 3, "east", ridge + 2, "cobblestone", "campfire")
+        for y in range(1, ridge + 2):
+            d.set(x1 - 1, y, z1 + 3, "mossy_cobblestone" if y % 3 == 0 else "cobblestone")
+            if y < 5:
+                d.set(x1 - 1, y, z1 + 2, "cobblestone")
+                d.set(x1 - 1, y, z1 + 4, "cobblestone")
+        d.set(x1 + 1, ridge + 2, z1 + 3, slab("cobblestone_slab"))
+        d.rug(x1 + 2, z1 + 2, x1 + 3, z1 + 4, 2, ("brown_carpet", "green_carpet"), "check")
+        d.chair(x1 + 3, 2, z1 + 5, "south", "spruce", sit=False)
+        # kitchen corner, table, bunks
+        d.set(x1 + 1, 2, z2 - 1, "furnace[facing=north,lit=true]")
+        d.set(x1 + 2, 2, z2 - 1, "water_cauldron[level=3]")
+        d.set(x1 + 3, 2, z2 - 1, "barrel[facing=up,open=false]")
+        for x in (x1 + 1, x1 + 2, x1 + 3):
+            shelf(d, x, 4, z2 - 1, "spruce", POTS[x % len(POTS)])
+        d.table(x1 + 5, 2, z1 + 3, "spruce")
+        d.chair(x1 + 5, 2, z1 + 2, "north", "spruce", sit=False)
+        d.chair(x1 + 5, 2, z1 + 4, "south", "spruce", sit=False)
+        d.bed(x2 - 1, 2, z1 + 1, "east", "brown")
+        d.bed(x2 - 1, 2, z2 - 1, "east", "brown")
+        d.set(x2 - 1, 2, z1 + 3, "barrel[facing=up,open=false]")
+        d.set(x2 - 1, 3, z1 + 3, "candle[candles=2,lit=false,waterlogged=false]")
+        d.banner(x2 - 1, 4, z1 + 4, "west", "brown")
+        hang(d, xm, ridge - 1, z1 + 3, 5)
+        if x2 + 3 < d.sx:
+            lamp_post(d, x2 + 2, z1 - 3, pack)
+            tree(d, x2 + 2, z2 + 1, "spruce_log", "spruce_leaves", 6, 1)
+    else:
+        nt_walls(d, x1, z1, x2, z2, 5, sides="nse", col_step=4)
+        d.fill(x1, 6, z1 - 1, x2, 6, z2, "light_gray_concrete")
+        d.box(x1, 7, z1 - 1, x2, 9, z2, "white_concrete")
+        for x in range(x1 + 1, x2):
+            d.window(x, 7, z1 - 1, x, 8, z1 - 1, "light_gray_stained_glass_pane")
+        for z in range(z1, z2):
+            d.window(x2, 7, z, x2, 8, z, "light_gray_stained_glass_pane")
+        nt_roof(d, x1, z1 - 1, x2, z2, 10, solar_rows=False, green=True)
+        d.fill(x1, 6, z1 - 1, x2, 6, z1 - 1, "cyan_terracotta")
+        d.double_door(xm, 2, z1, "x", "south", "birch")
+        # open-plan living: kitchen wall, island, lounge
+        for z in range(z1 + 1, z2):
+            d.set(x1 + 1, 2, z, "smoker[facing=east,lit=false]" if z == z1 + 2 else
+                  "water_cauldron[level=3]" if z == z1 + 3 else "white_concrete")
+            d.set(x1 + 1, 4, z, "light_gray_stained_glass")
+        for z in (z1 + 1, z1 + 4, z1 + 5):
+            d.set(x1 + 1, 3, z, "potted_bamboo" if z % 2 else "candle[candles=3,lit=false,waterlogged=false]")
+        for z in (z1 + 2, z1 + 4):
+            d.set(x1 + 3, 2, z, "smooth_quartz")
+        d.set(x1 + 3, 2, z1 + 3, "smooth_quartz")
+        d.set(x1 + 3, 3, z1 + 3, "potted_azure_bluet")
+        for z in (z1 + 2, z1 + 3, z1 + 4):
+            d.chair(x1 + 4, 2, z, "east", "birch", sit=False)
+        d.chair(x2 - 1, 2, z1 + 2, "east", "mangrove", sit=False)
+        d.chair(x2 - 1, 2, z1 + 3, "east", "mangrove", sit=False)
+        d.set(x2 - 2, 2, z1 + 3, slab("smooth_quartz_slab"))
+        d.rug(x2 - 3, z1 + 1, x2 - 2, z1 + 4, 2, ("cyan_carpet", "light_gray_carpet"), "check")
+        d.set(x2 - 1, 2, z1 + 1, "potted_bamboo")
+        for x in (x1 + 3, x1 + 6):
+            d.set(x, 6, z1 + 3, "sea_lantern")
+        stairs_up(d, x1 + 3, z2 - 1, 2, 6, "east", "smooth_quartz_stairs", "white_concrete")
+        d.set(x1 + 4, 7, z2 - 2, "glass_pane")
+        d.set(x1 + 5, 7, z2 - 2, "glass_pane")
+        # bedroom
+        d.bed(x1 + 2, 7, z1, "north", "cyan")
+        d.bed(x1 + 4, 7, z1, "north", "cyan")
+        d.set(x1 + 3, 7, z1, "white_concrete")
+        d.set(x1 + 3, 8, z1, "potted_bamboo")
+        d.set(x1 + 1, 7, z1 + 3, "white_concrete")
+        d.set(x1 + 1, 8, z1 + 3, "candle[candles=2,lit=false,waterlogged=false]")
+        d.chair(x1 + 2, 7, z1 + 3, "east", "birch", sit=False)
+        d.set(x2 - 1, 7, z1 + 1, "barrel[facing=up,open=false]")
+        d.set(x2 - 1, 7, z1 + 2, "barrel[facing=up,open=false]")
+        d.rug(x1 + 3, z1 + 2, x1 + 6, z1 + 4, 7, ("light_gray_carpet",), "plain")
+        for x in (x1 + 3, x1 + 6):
+            d.set(x, 9, z1 + 3, "sea_lantern")
+        for x in range(x1, x2 + 1, 2):
+            d.set(x, 1, z1 - 2, "moss_block")
+            d.set(x, 2, z1 - 2, "azalea" if x != xm else AIR)
+        path(d, xm, z1 - 2, xm + 1, z1 - 1, "polished_andesite")
+        d.set(xm, 2, z1 - 2, AIR)
+
+
+# ------------------------------------------------------------------------------------------- L4: livestock hall
+def hall(d, pack, kind, x1, z1, size):
+    """Second livestock building, w x 9, door to the north; interior per kind. With `loft` the gabled halls get
+    a hay loft, the Neoterra hall an upper office/store floor and the riding school taller walls and a gallery."""
+    w, loft = size
+    x2, z2 = x1 + w - 1, z1 + 8
+    xm = (x1 + x2) // 2
+    zc = z1 + 4
+    wood = {"Hearthwood": "dark_oak", "Cascadia": "spruce", "Neoterra": "birch"}[pack]
+    top = 7 if (loft and kind == "horse") else 5
+    if pack == "Hearthwood":
+        hw_walls(d, x1, z1, x2, z2, top, floor="spruce_planks" if kind in ("bees", "rabbit") else "cobblestone")
+        ridge = d.gable(x1, z1, x2, z2, top + 1, "x", "deepslate_tile_stairs", "deepslate_tile_slab", "calcite")
+        ytop, ylamp = ridge - 1, 5
+        for x in range(xm - 1, xm + 2):                                # ridge ventilator
+            d.set(x, ridge, zc, "dark_oak_planks")
+            d.set(x, ridge + 1, zc, slab("deepslate_tile_slab"))
+    elif pack == "Cascadia":
+        cs_logs(d, x1, z1, x2, z2, top)
+        ridge = d.gable(x1, z1, x2, z2, top + 1, "x", "dark_oak_stairs", "dark_oak_slab", "spruce_planks")
+        ytop, ylamp = ridge - 1, 5
+    else:
+        ntop = 9 if loft else top
+        nt_walls(d, x1, z1, x2, z2, ntop, sides="nsew", col_step=3, glaze=(4, 4))
+        if loft:
+            for x in range(x1 + 1, x2):
+                for z in (z1, z2):
+                    if d.get(x, 5, z) != "minecraft:light_gray_concrete":
+                        d.set(x, 8, z, "light_gray_stained_glass_pane")
+                d.set(x, 6, z1, "cyan_terracotta")
+                d.set(x, 6, z2, "cyan_terracotta")
+        nt_roof(d, x1, z1, x2, z2, ntop + 1, solar_rows=True)
+        if not loft:
+            for x in range(x1 + 1, x2):
+                d.set(x, 6, zc, "glass")
+                d.set(x, 7, zc, AIR)
+        ytop, ylamp = 5, 5
+    if loft and kind != "horse":                                       # hay loft / upper floor
+        deck = "light_gray_concrete" if pack == "Neoterra" else "spruce_planks"
+        d.fill(x1 + 1, 6, z1 + 1, x2 - 1, 6, z2 - 1, deck)
+        for x in range(x1 + 2, x2 - 1):
+            for z in (z1 + 1, z2 - 1):
+                if pack == "Neoterra":
+                    d.set(x, 7, z, "barrel[facing=up,open=false]" if x % 3 else "white_concrete")
+                    d.set(x, 8, z, "potted_bamboo" if x % 3 == 0 else AIR)
+                else:
+                    hay(d, x, 7, z, "x")
+                    if x % 2 and pack == "Cascadia":
+                        hay(d, x, 8, z, "x")
+        for x in range(x1 + 3, x2 - 2, 4):
+            if pack == "Neoterra":
+                d.set(x, 7, zc - 1, "white_concrete")
+                d.set(x, 8, zc - 1, "potted_azure_bluet")
+                d.chair(x, 7, zc, "south", "birch", sit=False)
+                d.set(x, 10, zc, "sea_lantern")
+        for y in range(2, 7):
+            d.set(x1 + 1, y, zc, "ladder[facing=east,waterlogged=false]")
+        ytop, ylamp = 5, 5
+    d.double_door(xm, 2, z1, "x", "south", wood)
+    for x in range(x1 + 2, x2 - 1, 3):
+        if pack != "Neoterra" and abs(x - xm) > 1:
+            d.window(x, 3, z1, x, 4, z1)
+            d.window(x, 3, z2, x, 4, z2)
+    d.window(x1, 3, zc, x1, 4, zc)
+    d.window(x2, 3, zc, x2, 4, zc)
+    xs = [x for x in range(x1 + 1, x2) if x not in (xm, xm + 1)]
+    upper = f"{wood}_fence"
+    lower = "smooth_quartz" if pack == "Neoterra" else f"{wood}_planks"
+    if kind in ("cattle", "sheep", "pig"):
+        manger = {"cattle": "hay_block[axis=x]", "sheep": "hay_block[axis=y]", "pig": "water_cauldron[level=3]"}[kind]
+        for zb, zf in ((z1 + 1, z1 + 3), (z2 - 1, z2 - 3)):
+            for x in xs:
+                d.set(x, 2, zb, manger if x % 2 else ("hay_block[axis=x]" if kind == "pig" else
+                                                      "water_cauldron[level=3]"))
+                d.set(x, 2, zf, gate(wood, "south" if zf > zb else "north") if (x - x1) % 3 == 2 else upper)
+                if (x - x1) % 3 == 0:
+                    for z in range(min(zb, zf) + 1, max(zb, zf)):
+                        d.set(x, 2, z, lower if kind == "pig" else upper)
+            for x in xs:
+                if kind == "pig" and x % 4 == 1:
+                    d.set(x, 1, (zb + zf) // 2, "hay_block[axis=x]")
+        if kind == "sheep":
+            for x in (x1 + 1, x2 - 1):
+                d.set(x, 2, zc, "white_wool")
+                d.set(x, 3, zc, "white_wool")
+    elif kind == "poultry":
+        for zz, face in ((z1 + 1, "south"), (z2 - 1, "north")):
+            for x in xs:
+                d.set(x, 2, zz, "hay_block[axis=x]")
+                d.set(x, 3, zz, trap(wood, face, "top"))
+                d.set(x, 4, zz, "hay_block[axis=x]")
+        for x in xs[::3]:
+            d.set(x, 2, zc - 1, "composter[level=6]")
+            d.set(x, 2, zc + 1, "water_cauldron[level=3]")
+        for x in xs[1::4]:
+            d.set(x, 2, zc, upper)
+            d.set(x, 3, zc, slab(f"{wood}_slab"))
+    elif kind == "rabbit":
+        hutch_row(d, x1 + 1, xm - 1, z1 + 1, 2, wood if pack != "Neoterra" else "birch", "south", 2)
+        hutch_row(d, xm + 2, x2 - 1, z1 + 1, 2, wood if pack != "Neoterra" else "birch", "south", 2)
+        hutch_row(d, x1 + 1, x2 - 1, z2 - 1, 2, wood if pack != "Neoterra" else "birch", "north", 2)
+        for x in xs[1::3]:
+            d.set(x, 2, zc, slab(f"{wood}_slab", "top"))
+            d.set(x, 3, zc, "potted_dandelion")
+    elif kind == "bees":
+        for zz, face in ((z1 + 1, "south"), (z2 - 1, "north")):
+            for x in xs:
+                k = x % 4
+                d.set(x, 2, zz, ("barrel[facing=up,open=false]", "honey_block", "beehive[facing=%s,honey_level=5]"
+                                 % face, "honeycomb_block")[k])
+                shelf(d, x, 3, zz, wood, ("candle[candles=4,lit=false,waterlogged=false]", "honey_block",
+                                          "decorated_pot[cracked=false,facing=north,waterlogged=false]",
+                                          "candle[candles=2,lit=false,waterlogged=false]")[k])
+        for x in xs[1::4]:
+            d.set(x, 2, zc, slab(f"{wood}_slab", "top"))
+            if x + 1 not in (xm, xm + 1):
+                d.set(x + 1, 2, zc, "water_cauldron[level=3]")
+            d.set(x, 3, zc, "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=true]")
+    elif kind == "horse":                                              # indoor riding school
+        for x in range(x1 + 1, x2):
+            for z in range(z1 + 1, z2):
+                d.set(x, 1, z, "sand" if pack != "Neoterra" else "smooth_sandstone")
+        for x in range(x1 + 2, x2 - 1):
+            d.set(x, 2, z1 + 2, upper if x not in (xm, xm + 1) else AIR)
+        for x in range(x1 + 1, x2):
+            if x not in (xm, xm + 1):
+                d.set(x, 2, z1 + 1, st(f"{wood}_stairs", "north"))
+        for jx in range(x1 + 4, x2 - 2, 6):
+            d.set(jx, 2, zc + 1, upper)
+            d.set(jx + 2, 2, zc + 1, upper)
+            d.set(jx + 1, 2, zc + 1, trap(wood, "north", "top"))
+            d.set(jx, 3, zc + 1, "white_wool" if pack != "Neoterra" else "cyan_concrete")
+            d.set(jx + 2, 3, zc + 1, "red_wool" if pack != "Neoterra" else "cyan_concrete")
+        d.set(x2 - 2, 2, z2 - 1, st(f"{wood}_stairs", "south"))
+        d.set(x2 - 1, 2, z2 - 1, f"{wood}_planks")
+    if loft and kind == "horse":                                       # spectators' gallery
+        deck = "light_gray_concrete" if pack == "Neoterra" else f"{wood}_planks"
+        for x in range(x1 + 1, x2):
+            d.set(x, 6, z1 + 1, deck)
+            d.set(x, 6, z1 + 2, deck)
+            d.set(x, 7, z1 + 3, upper)
+            d.set(x, 6, z1 + 3, slab(f"{wood}_slab", "top"))
+            if x % 2:
+                d.set(x, 7, z1 + 1, st(f"{wood}_stairs", "north"))
+        for y in range(2, 8):
+            d.set(x2 - 1, y, z1 + 1, "ladder[facing=west,waterlogged=false]")
+        d.set(x2 - 1, 7, z1 + 1, "ladder[facing=west,waterlogged=false]")
+        d.set(x2 - 1, 7, z1 + 3, AIR)
+    for x in range(x1 + 2, x2 - 1, 4):
+        if pack == "Neoterra":
+            d.set(x, 5, zc + 1, "sea_lantern")
+        elif loft and kind != "horse":
+            hang(d, x, 5, zc + 1, 4)
+        else:
+            hang(d, x, ytop, zc, ylamp - 1 if kind != "horse" else ylamp + top - 5)
+    lamp_post(d, xm - 2, z1 - 1, pack)
+    d.sign(xm + 3, 4, z1 - 1, "north", {"poultry": ["Laying", "House"], "cattle": ["Calf", "House"],
+                                         "sheep": ["Lambing", "Shed"], "pig": ["Farrowing", "House"],
+                                         "rabbit": ["Hutch", "House"], "bees": ["Honey &", "Candles"],
+                                         "horse": ["Riding", "School"]}[kind], wood,
+           glow=pack == "Neoterra", color="cyan" if pack == "Neoterra" else "black")
+
+
+# ------------------------------------------------------------------------------------------- L5: hay barn
+def haybarn(d, pack, x1, z1, n=11):
+    """Big hay / threshing barn n x 9 plus granary or silos to the east (x2+2..x2+4)."""
+    x2, z2 = x1 + n - 1, z1 + 8
+    xm = (x1 + x2) // 2
+    if pack == "Hearthwood":                                           # stone threshing barn + granary
+        d.box(x1, 2, z1, x2, 6, z2, "cobblestone", floor="stone_bricks")
+        for x, z in ((x1, z1), (x2, z1), (x1, z2), (x2, z2)):
+            for y in range(2, 7):
+                d.set(x, y, z, "stone_bricks" if y % 2 else "polished_andesite")
+        for x in range(x1 + 2, x2 - 1, 4):                             # buttresses
+            for z, f in ((z1 - 1, "south"), (z2 + 1, "north")):
+                d.set(x, 2, z, "stone_bricks")
+                d.set(x, 3, z, "stone_bricks")
+                d.set(x, 4, z, st("stone_brick_stairs", f))
+        ridge = d.gable(x1, z1, x2, z2, 7, "x", "deepslate_tile_stairs", "deepslate_tile_slab", "cobblestone")
+        for z in (z1, z2):                                             # wagon doors
+            for x in range(xm - 1, xm + 2):
+                for y in range(2, 6):
+                    d.set(x, y, z, AIR)
+                d.set(x, 6, z, "stripped_dark_oak_log[axis=x]")
+        d.set(x1, ridge - 2, z1 + 4, AIR)                              # owl hole
+        for x in [x for x in range(x1 + 1, x2) if abs(x - xm) > 1]:   # hay bays, stepped toward the floor
+            for z in range(z1 + 1, z2):
+                for y in range(2, 2 + min(4, abs(x - xm))):
+                    hay(d, x, y, z, "z" if (y + x) % 2 else "x")
+        for x in (xm - 1, xm, xm + 1):                                 # loaded wagon on the threshing floor
+            d.set(x, 2, z1 + 3, slab("dark_oak_slab", "top"))
+            d.set(x, 2, z1 + 5, slab("dark_oak_slab", "top"))
+            d.set(x, 2, z1 + 4, slab("dark_oak_slab", "top"))
+            hay(d, x, 3, z1 + 4, "x")
+        for z in (z1 + 3, z1 + 5):
+            d.set(xm - 1, 3, z, trap("dark_oak", "north" if z < z1 + 4 else "south", open_=True))
+        d.set(xm, 2, z1 + 2, "dark_oak_fence")
+        for z in (z1 + 6, z1 + 7):
+            d.set(xm + 1, 2, z, "white_wool")
+            d.set(xm - 1, 2, z, "barrel[facing=up,open=false]")
+        hang(d, xm, ridge - 1, z1 + 4, 6)
+        gx = x2 + 2                                                    # granary on staddle stones
+        for dx in range(3):
+            for dz in range(3):
+                x, z = gx + dx, z1 + 2 + dz
+                if (dx, dz) in ((0, 0), (2, 0), (0, 2), (2, 2)):
+                    d.set(x, 2, z, "andesite_wall[east=none,north=none,south=none,up=true,waterlogged=false,"
+                                   "west=none]")
+                    d.set(x, 3, z, slab("andesite_slab", "top"))
+                for y in (4, 5, 6):
+                    d.set(x, y, z, "oak_planks" if dx != 1 or dz != 1 else "hay_block[axis=y]")
+                d.set(x, 7, z, slab("deepslate_tile_slab"))
+        d.set(gx + 1, 8, z1 + 3, "deepslate_tiles")
+        d.set(gx + 1, 5, z1 + 2, "dark_oak_trapdoor[facing=north,half=bottom,open=true,powered=false,"
+                                 "waterlogged=false]")
+    elif pack == "Cascadia":                                           # pole hay barn + stave silo
+        for x in range(x1, x2 + 1):
+            for z in range(z1, z2 + 1):
+                d.set(x, 1, z, "coarse_dirt")
+                if (x in (x1, x2) or z in (z1, z2)):
+                    post = (x - x1) % 5 == 0 and z in (z1, z2) or (z - z1) % 4 == 0 and x in (x1, x2)
+                    for y in range(2, 7):
+                        if post:
+                            d.set(x, y, z, "spruce_log[axis=y]")
+                        elif y <= 3 and z != z1:
+                            d.set(x, y, z, "spruce_planks")
+                    if not post:
+                        d.set(x, 6, z, "stripped_spruce_log[axis=%s]" % ("x" if z in (z1, z2) else "z"))
+        ridge = d.gable(x1, z1, x2, z2, 7, "x", "dark_oak_stairs", "dark_oak_slab", "spruce_planks")
+        for x in range(x1 + 1, x2):
+            for z in range(z1 + 3, z2):
+                h = 5 if x not in (xm, xm + 1) else 0
+                for y in range(2, 2 + h):
+                    hay(d, x, y, z, "x" if (y + z) % 2 else "z")
+        for x in (xm, xm + 1):                                         # hay wagon in the drive
+            for z in (z1 + 4, z1 + 5, z1 + 6):
+                d.set(x, 2, z, slab("spruce_slab", "top"))
+                hay(d, x, 3, z, "z")
+        d.set(xm, 2, z1 + 3, "spruce_fence")
+        hang(d, xm, ridge - 1, z1 + 2, 6)
+        sx = x2 + 2                                                    # stave silo
+        for y in range(2, 15):
+            for dx in range(3):
+                for dz in range(3):
+                    if (dx, dz) != (1, 1):
+                        d.set(sx + dx, y, z1 + 2 + dz, "spruce_planks" if y % 4 else "stripped_spruce_log[axis=x]")
+                    else:
+                        d.set(sx + dx, y, z1 + 2 + dz, "hay_block[axis=y]")
+        for dx in range(3):
+            for dz in range(3):
+                d.set(sx + dx, 15, z1 + 2 + dz, slab("dark_oak_slab") if (dx, dz) != (1, 1) else "dark_oak_planks")
+        d.set(sx + 1, 16, z1 + 3, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        for y in range(2, 14):
+            d.set(sx + 1, y, z1 + 1, "ladder[facing=north,waterlogged=false]")
+    else:                                                              # feed hub: machine hall + two silos
+        nt_walls(d, x1, z1, x2, z2, 6, sides="nwe", col_step=5, floor="smooth_stone")
+        nt_roof(d, x1, z1, x2, z2, 7, solar_rows=True)
+        for x in range(xm - 1, xm + 2):
+            for y in range(2, 6):
+                d.set(x, y, z1, AIR)
+            d.set(x, 6, z1, "cyan_terracotta")
+        for x in range(x1 + 1, x2):
+            for z in range(z1 + 4, z2):
+                if x not in (xm - 1, xm, xm + 1):
+                    for y in range(2, 2 + (3 if z > z1 + 5 else 2)):
+                        hay(d, x, y, z, "x")
+        d.set(xm, 2, z1 + 2, "iron_block")
+        d.set(xm, 3, z1 + 2, "hopper[enabled=true,facing=down]")
+        d.set(xm + 1, 2, z1 + 2, "iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
+        for x in (x1 + 3, x2 - 3):
+            d.set(x, 6, z1 + 4, "sea_lantern")
+        for sz_ in (z1, z1 + 5):                                       # silos
+            sx = x2 + 2
+            for y in range(2, 16):
+                for dx in range(3):
+                    for dz in range(3):
+                        if (dx, dz) != (1, 1):
+                            d.set(sx + dx, y, sz_ + dz, "light_gray_concrete" if y % 5 else "cyan_terracotta")
+                        else:
+                            d.set(sx + dx, y, sz_ + dz, "hay_block[axis=y]")
+            for dx in range(3):
+                for dz in range(3):
+                    d.set(sx + dx, 16, sz_ + dz, slab("smooth_quartz_slab"))
+            d.set(sx + 1, 17, sz_ + 1, "end_rod[facing=up]")
+        for x in range(x2 + 1, x2 + 2):
+            d.set(x, 13, z1 + 1, "iron_bars")
+            d.set(x, 12, z1 + 1, slab("smooth_stone_slab", "top"))
+
+
+# ------------------------------------------------------------------------------------------- assembly
+_COUNTS = {}
+_SIZES = {}
+
+
+def count_blocks(d):
+    gy = d.gy
+    return sum(1 for _x, y, _z, b in d.bp.blocks() if y != gy and b != AIR and "substitution" not in b)
+
+
+def _snap(d):
+    return (copy.deepcopy(d.bp.grid), dict(d.bp.tile_entities), copy.deepcopy(d.placed),
+            copy.deepcopy(d.tags))
+
+
+def _restore(d, sn):
+    d.bp.grid, d.bp.tile_entities, d.placed, d.tags = copy.deepcopy(sn[0]), dict(sn[1]), \
+        copy.deepcopy(sn[2]), copy.deepcopy(sn[3])
+
+
+def _grow(d, target, sizes, build):
+    """Add one new structure, trying sizes in order until the farmstead reaches `target` blocks."""
+    sn = _snap(d)
+    for i, size in enumerate(sizes):
+        if i:
+            _restore(d, sn)
+        build(size)
+        if count_blocks(d) >= target:
+            return size
+    return size
+
+
+def farmstead(core, pack, rel, L, kind):
+    d = core(rel, L)
+    ex, ez = d.ex, d.ez
+    wood = {"Hearthwood": "dark_oak", "Cascadia": "spruce", "Neoterra": "birch"}[pack]
+    lane = {"Hearthwood": "gravel", "Cascadia": "dirt_path", "Neoterra": "polished_andesite"}[pack]
+    target = 0
+    if L >= 2:
+        key = (core.__name__, pack, L - 1)
+        if key not in _COUNTS:
+            prev_rel = rels_for(REQ[rel]["base"])[L - 2]
+            _COUNTS[key] = count_blocks(farmstead(core, pack, prev_rel, L - 1, kind))
+        target = int(_COUNTS[key] * GROWTH) + 1
+    # structures of earlier levels at the size they were built with
+    if L >= 2:
+        path(d, ex, 0, ex, ez, lane)
+        if L == 2:
+            _SIZES[(core.__name__, pack, 2)] = _grow(d, target, (7, 9, 11, 13, 15, 17, 19),
+                                                     lambda w: shed(d, pack, ex + 1, 2, w))
+        else:
+            shed(d, pack, ex + 1, 2, _SIZES.get((core.__name__, pack, 2), 7))
+    if L >= 3:
+        if L == 3:
+            _SIZES[(core.__name__, pack, 3)] = _grow(d, target, (9, 11, 13), lambda w: cottage(d, pack, ex + 2, 10, w))
+        else:
+            cottage(d, pack, ex + 2, 10, _SIZES.get((core.__name__, pack, 3), 9))
+    if L >= 4:
+        path(d, 0, ez + 1, ex, ez + 1, lane)
+        ws = [(w, False) for w in range(11, ex - 3, 2)] + [(w, True) for w in range(11, ex - 3, 2)]
+        if L == 4:
+            _SIZES[(core.__name__, pack, 4)] = _grow(d, target, ws, lambda w: hall(d, pack, kind, 2, ez + 2, w))
+        else:
+            hall(d, pack, kind, 2, ez + 2, _SIZES.get((core.__name__, pack, 4), ws[-1]))
+    if L >= 5:
+        _grow(d, target, (11, 13, 15, 17, 19, 21, 23), lambda n: haybarn(d, pack, ex - 2, ez + 2, n))
+        if pack != "Neoterra":
+            tree(d, ex + 24, 3, "oak_log" if pack == "Hearthwood" else "spruce_log",
+                 "oak_leaves" if pack == "Hearthwood" else "spruce_leaves", 5, 2 if pack == "Hearthwood" else 1)
+    if pack != "Neoterra":
+        dress_windows(d, wood)
+    return d

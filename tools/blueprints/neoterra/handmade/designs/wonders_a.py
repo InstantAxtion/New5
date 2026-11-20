@@ -175,10 +175,10 @@ def rose(d, cx, cy, z, R, frame, cols=("blue", "red", "yellow")):
 
 # ================================================================================================ CATHEDRAL
 # ---------------------------------------------------------------------------- Hearthwood: English Gothic
-HC_SIZE = (31, 60, 33)
+HC_SIZE = (48, 64, 44)
 HC_TX, HC_TZ, HC_TW = (5, 19), 1, 7          # west towers (wings) x origin, z origin, footprint
 HC_WHUT = (1, 1, 5)                            # wing hut, tower-local
-HC_TOP = {1: 17, 2: 21, 3: 25, 4: 29, 5: 29}   # tower wall top (local y)
+HC_TOP = {1: 11, 2: 19, 3: 24, 4: 29, 5: 29}   # tower wall top (local y)
 
 
 def hc_wing(rel, L):
@@ -274,7 +274,8 @@ def hc_buttress(d, x, z, out, y_top, fly_to=None, fly_y=None):
 def hc_cathedral(rel, L):
     d = Design("Hearthwood", rel, HC_SIZE, gy=1, paving="grass_block")
     S, ST = "stone_bricks", "stone_brick_stairs"
-    ne = 14 if L == 1 else 17                     # nave east end
+    ne = 10 if L == 1 else 17                     # nave east end
+    NH = 10 if L == 1 else 16                     # nave wall top
     aisles = L >= 2
     cross = L >= 3
     # paths
@@ -284,11 +285,14 @@ def hc_cathedral(rel, L):
     # ---------------- nave -------------
     d.fill(12, 1, 1, 18, 1, ne, "polished_andesite")
     for x in (11, 19):
-        d.fill(x, 2, 1, x, 16, ne, S)
-    d.fill(11, 2, 1, 19, 16, 1, S)
+        d.fill(x, 2, 1, x, NH, ne, S)
+    d.fill(11, 2, 1, 19, NH, 1, S)
     if not cross:
-        d.fill(11, 2, ne, 19, 16, ne, S)
-    d.clear(12, 2, 2, 18, 16, ne - 1 if not cross else ne)
+        d.fill(11, 2, ne, 19, NH, ne, S)
+    d.clear(12, 2, 2, 18, NH, ne - 1 if not cross else ne)
+    for z in range(1, ne + 1):                     # plinth course
+        for x in (11, 19):
+            d.set(x, 2, z, "polished_andesite")
     for z in range(2, ne + 1, 2):                  # checkered stone floor
         for x in range(12, 19):
             if (x + z) % 4 == 0:
@@ -296,21 +300,21 @@ def hc_cathedral(rel, L):
     # cornice
     for z in range(0, ne + 1 if not cross else ne + 1):
         for x, f in ((10, "east"), (20, "west")):
-            if d.air(x, 16, z):
-                d.set(x, 16, z, stair(ST, f, "top"))
+            if d.air(x, NH, z):
+                d.set(x, NH, z, stair(ST, f, "top"))
     # clerestory lancets (above the aisle roofs)
-    for z in range(9, ne, 3):
-        for x in (11, 19):
-            lancet(d, x, z, 13, 15)
-    if not aisles:                                 # L1: tall side lancets in the plain nave walls
-        for z in (9, 12):
+    if aisles:
+        for z in range(9, ne, 3):
             for x in (11, 19):
-                lancet(d, x, z, 4, 10)
-        for z in (8, 11, ne):
+                lancet(d, x, z, 13, 15)
+    else:                                          # L1: side lancets in the plain chapel walls
+        for x in (11, 19):
+            lancet(d, x, 9, 4, 7)
+        for z in (8, ne):
             for x, out in ((10, "west"), (20, "east")):
-                for y in range(2, 11):
+                for y in range(2, 8):
                     d.set(x, y, z, S)
-                d.set(x, 11, z, stair(ST, OPP[out]))
+                d.set(x, 8, z, stair(ST, OPP[out]))
     # ---------------- aisles -------------
     if aisles:
         for side, (xo, xi, xw) in (("west", (6, 10, 11)), ("east", (24, 20, 19))):
@@ -439,12 +443,13 @@ def hc_cathedral(rel, L):
             d.chair(12, 2, z, "west", "dark_oak")
             d.chair(18, 2, z, "east", "dark_oak")
         d.rug(15, 18, 15, 29, 2, ("red_carpet",), "plain")
-        d.set(14, 2, 30, "chiseled_stone_bricks")
-        d.set(15, 2, 30, "chiseled_quartz_block")
-        d.set(16, 2, 30, "chiseled_stone_bricks")
-        d.candle(14, 3, 30, 3)
-        d.set(15, 3, 30, "gold_block" if L >= 4 else "candle[candles=4,lit=false,waterlogged=false]")
-        d.candle(16, 3, 30, 3)
+        az = 29 if L >= 4 else 30
+        d.set(14, 2, az, "chiseled_stone_bricks")
+        d.set(15, 2, az, "chiseled_quartz_block")
+        d.set(16, 2, az, "chiseled_stone_bricks")
+        d.candle(14, 3, az, 3)
+        d.set(15, 3, az, "gold_block" if L >= 4 else "candle[candles=4,lit=false,waterlogged=false]")
+        d.candle(16, 3, az, 3)
         d.set(13, 2, 21, "lectern[facing=south,has_book=true,powered=false]")
         for x0, step in ((3, 1), (27, -1)):
             d.set(x0, 2, 22, "chiseled_stone_bricks")
@@ -467,11 +472,17 @@ def hc_cathedral(rel, L):
         d.candle(16, 4, ne - 1, 3)
         d.set(13, 3, ne - 2, "lectern[facing=north,has_book=true,powered=false]")
         for x in (14, 15, 16):                                          # east window
-            lancet(d, x, ne, 5, 13 if x == 15 else 11)
+            lancet(d, x, ne, 5, (13 if x == 15 else 11) if L > 1 else (9 if x == 15 else 8))
     # ---------------- nave roof and west front -------------
-    d.gable(11, 1, 19, ne, 17, "z", "deepslate_tile_stairs", "deepslate_tile_slab", S, 1)
-    d.set(15, 22, 0, wallb("stone_brick_wall"))     # cross on the west gable
-    d.set(15, 23, 0, wallb("stone_brick_wall"))
+    rdg = d.gable(11, 1, 19, ne, NH + 1, "z", "deepslate_tile_stairs", "deepslate_tile_slab", S, 1)
+    d.set(15, rdg + 1, 0, wallb("stone_brick_wall"))     # cross on the west gable
+    d.set(15, rdg + 2, 0, wallb("stone_brick_wall"))
+    d.set(14, rdg + 2, 0, wallb("stone_brick_wall"))
+    d.set(16, rdg + 2, 0, wallb("stone_brick_wall"))
+    d.set(15, rdg + 3, 0, wallb("stone_brick_wall"))
+    for z in range(2, ne, 2):                            # ridge crest
+        if d.get(15, rdg, z).startswith("minecraft:deepslate_tile_slab"):
+            d.set(15, rdg + 1, z, "iron_bars")
     # portal: two doors with a trumeau, gabled hood on shafts
     d.door(14, 2, 1, "south", "dark_oak", "left")
     d.door(16, 2, 1, "south", "dark_oak", "right")
@@ -496,17 +507,21 @@ def hc_cathedral(rel, L):
         rose(d, 15, 12, 1, 3, "chiseled_stone_bricks")
     else:
         for x in (13, 15, 17):
-            lancet(d, x, 1, 9, 14 if x == 15 else 13)
+            lancet(d, x, 1, 9, 12 if x == 15 else 11)
     # nave furnishing: pews either side of the central walk, font, chandeliers, hut by the entrance
     d.hut(12, 2, 2)
     d.set(17, 2, 3, "water_cauldron[level=3]")
     d.set(18, 2, 3, "chiseled_stone_bricks")
     d.rug(15, 3, 15, ne - (3 if not cross else 0), 2, ("red_carpet",), "plain")
-    pz = list(range(5, ne - 2, 2)) if not cross else list(range(5, 17, 2))
+    pz = list(range(4, ne - 2, 2)) if not cross else list(range(5, 17, 2))
     pews(d, 12, 14, pz, 2, "dark_oak")
     pews(d, 16, 18, pz, 2, "dark_oak")
     for z in range(5, ne - 1, 4):
-        chandelier(d, 15, z, 20, 11)
+        chandelier(d, 15, z, rdg - 1, NH - 3 if L == 1 else 11)
+    for z in range(4, ne - 1, 3):                        # wall candles / banners between the windows
+        for x, f in ((12, "east"), (18, "west")):
+            if L >= 2 and d.air(x, 5, z):
+                d.set(x, 5, z, f"wall_torch[facing={f}]" if z % 2 else f"red_wall_banner[facing={f}]")
     # ---------------- buttresses (L4: flying) -------------
     if L >= 4:
         for z in (11, 14):
@@ -516,7 +531,8 @@ def hc_cathedral(rel, L):
             hc_buttress(d, 10, z, "west", 12)
             hc_buttress(d, 20, z, "east", 12)
         for x in (12, 18):
-            hc_buttress(d, x, 32, "south", 12)
+            if L < 4:
+                hc_buttress(d, x, 32, "south", 12)
         for x in (2, 28):
             for z in (18, 26):
                 hc_buttress(d, x + (-1 if x == 2 else 1), z, "west" if x == 2 else "east", 13)
@@ -528,20 +544,442 @@ def hc_cathedral(rel, L):
                 d.set(x, 8, z, slab("stone_brick_slab"))
     # ---------------- churchyard -------------
     if L >= 5:
-        for x, z in ((1, 9), (29, 9), (1, 30), (29, 30), (8, 30), (22, 30)):
-            yew(d, x, z, 2)
-        for z in (12, 15):
-            for x in (1, 29):
-                d.set(x, 2, z, "mossy_stone_bricks")
-                d.set(x, 3, z, slab("mossy_stone_brick_slab"))
         for x in (3, 27):
             d.set(x, 2, 1, "polished_andesite")
             d.set(x, 3, 1, lantern(False))
+    if L >= 4:
+        hc_cloister(d, L)
+        hc_lady_chapel(d, L)
+    if L >= 5:
+        hc_chapter_house(d, L)
+        hc_palace(d, L)
+        stamp(d, hc_palace, 21, 1, L)
+        hc_library(d, L)          # the deanery: same hall-house plan south-east of the choir
+        hc_close(d, L)
     # reserve the west towers last so nothing drawn above leaks into them
     for tx in HC_TX:
-        d.reserve(tx, 1, HC_TZ, tx + HC_TW - 1, HC_SIZE[1] - 1, HC_TZ + HC_TW - 1)
+        d.reserve(tx, 1, HC_TZ, tx + HC_TW - 1, 46, HC_TZ + HC_TW - 1)
         d.child_hut(tx + HC_WHUT[0], 1 + HC_WHUT[1], HC_TZ + HC_WHUT[2], CATH_WING)
     return d
+
+
+def hc_cloister(d, L):
+    """Cloister east of the nave: four vaulted walks round a garth with a well, reached by a slype from the
+    east aisle; carrels, benches and lanterns in the walks."""
+    S, ST, TS = "stone_bricks", "stone_brick_stairs", "deepslate_tile_stairs"
+    x1, z1, x2, z2 = 29, 2, 45, 16
+    a1, b1, a2, b2 = x1 + 3, z1 + 3, x2 - 3, z2 - 3                 # arcade line
+    d.fill(x1, 1, z1, x2, 1, z2, "polished_andesite")
+    d.fill(a1 + 1, 1, b1 + 1, a2 - 1, 1, b2 - 1, "grass_block")
+    # outer wall with lancets
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            if x in (x1, x2) or z in (z1, z2):
+                d.fill(x, 2, z, x, 7, z, S)
+                d.set(x, 2, z, "polished_andesite")
+    for x in range(x1 + 2, x2 - 1, 3):
+        for z in (z1, z2):
+            lancet(d, x, z, 4, 5)
+    for z in range(z1 + 2, z2 - 1, 3):
+        lancet(d, x2, z, 4, 5)
+    # arcade: shafts with pointed arches
+    for x in range(a1, a2 + 1):
+        for z in range(b1, b2 + 1):
+            if not (x in (a1, a2) or z in (b1, b2)):
+                continue
+            corner = x in (a1, a2) and z in (b1, b2)
+            pier = corner or ((x - a1) % 3 == 0 if z in (b1, b2) else (z - b1) % 3 == 0)
+            d.set(x, 2, z, "polished_andesite" if pier else slab("stone_brick_slab"))
+            for y in (3, 4):
+                d.set(x, y, z, wallb("stone_brick_wall") if pier else AIR)
+            if pier:
+                d.set(x, 5, z, S)
+            else:
+                if z in (b1, b2):
+                    f = "east" if (x - a1) % 3 == 1 else "west"
+                else:
+                    f = "south" if (z - b1) % 3 == 1 else "north"
+                d.set(x, 5, z, stair(ST, f, "top"))
+            d.set(x, 6, z, S)
+    for x, z in ((a1 + (a2 - a1) // 2, b1), (a1 + (a2 - a1) // 2, b2), (a1, b1 + (b2 - b1) // 2),
+                 (a2, b1 + (b2 - b1) // 2)):
+        d.set(x, 2, z, AIR)                                        # openings into the garth
+    # lean-to roofs over the walks
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            ring = min(x - x1, x2 - x, z - z1, z2 - z)
+            if ring > 3:
+                continue
+            y = 8 - ring
+            if min(x - x1, x2 - x) <= min(z - z1, z2 - z):
+                f = "west" if x - x1 < x2 - x else "east"
+            else:
+                f = "north" if z - z1 < z2 - z else "south"
+            if ring == 0:
+                d.set(x, 8, z, stair(TS, f))
+            else:
+                d.set(x, y, z, stair(TS, f))
+                if ring <= 2:
+                    d.set(x, y - 1, z, stair(ST, OPP[f], "top"))
+    # garth: crossing paths, well, rose beds
+    cx, cz = (a1 + a2) // 2, (b1 + b2) // 2
+    for x in range(a1 + 1, a2):
+        d.set(x, 1, cz, "gravel")
+    for z in range(b1 + 1, b2):
+        d.set(cx, 1, z, "gravel")
+    for dx in (-1, 0, 1):
+        for dz in (-1, 0, 1):
+            d.set(cx + dx, 2, cz + dz, "cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,"
+                  "west=none]" if (dx or dz) else "water_cauldron[level=3]")
+    for dx, dz in ((-1, -1), (1, 1)):
+        d.set(cx + dx, 3, cz + dz, fence("dark_oak_fence"))
+        d.set(cx + dx, 4, cz + dz, fence("dark_oak_fence"))
+    d.fill(cx - 1, 5, cz - 1, cx + 1, 5, cz + 1, slab("dark_oak_slab"))
+    d.set(cx, 4, cz, "chain[axis=y,waterlogged=false]")
+    for x, z in ((a1 + 2, b1 + 2), (a2 - 2, b1 + 2), (a1 + 2, b2 - 2), (a2 - 2, b2 - 2)):
+        d.set(x, 2, z, "rose_bush[half=lower]")
+        d.set(x, 3, z, "rose_bush[half=upper]")
+    for x in range(a1 + 1, a2):
+        for z in (b1 + 1, b2 - 1):
+            if d.air(x, 2, z) and d.get(x, 1, z).endswith("grass_block") and x != cx:
+                d.set(x, 2, z, "allium" if x % 2 else "lily_of_the_valley")
+    # walks: carrels (lectern + stool) on the north walk, benches on the others, lanterns
+    for x in range(x1 + 2, x2 - 1, 3):
+        d.set(x, 2, z1 + 1, "lectern[facing=south,has_book=true,powered=false]")
+    for z in range(z1 + 3, z2 - 2, 3):
+        d.chair(x2 - 1, 2, z, "east", "dark_oak")
+    for x in range(x1 + 3, x2 - 2, 4):
+        d.chair(x, 2, z2 - 1, "south", "dark_oak")
+    for x in range(x1 + 2, x2 - 1, 4):
+        for z in (z1 + 2, z2 - 2):
+            d.set(x, 6, z, lantern(True))
+    for z in range(z1 + 4, z2 - 3, 4):
+        d.set(x1 + 2, 6, z, lantern(True))
+        d.set(x2 - 2, 6, z, lantern(True))
+    # slype from the east aisle
+    d.fill(25, 1, 8, 28, 1, 10, "polished_andesite")
+    for x in range(25, 29):
+        for z in (8, 10):
+            d.fill(x, 2, z, x, 5, z, S)
+        d.set(x, 6, 8, stair(TS, "south"))
+        d.set(x, 6, 9, slab("deepslate_tile_slab"))
+        d.set(x, 6, 10, stair(TS, "north"))
+        d.set(x, 5, 9, S)
+        d.clear(x, 2, 9, x, 4, 9)
+    d.set(26, 4, 9, lantern(True))
+    d.door(24, 2, 9, "east", "dark_oak")
+    d.door(29, 2, 9, "east", "dark_oak")
+    d.set(29, 4, 9, S)
+    d.set(24, 4, 9, S)
+
+
+def hc_lady_chapel(d, L):
+    """Lady chapel beyond the chancel: tall windows, vault, Madonna statue and side altars."""
+    S, ST = "stone_bricks", "stone_brick_stairs"
+    d.fill(12, 1, 32, 18, 1, 40, "polished_andesite")
+    d.box(11, 2, 32, 19, 12, 41, S)
+    d.clear(12, 2, 31, 18, 12, 40)
+    for z in range(32, 42):
+        d.set(11, 2, z, "polished_andesite")
+        d.set(19, 2, z, "polished_andesite")
+    d.clear(14, 2, 31, 16, 7, 31)                                   # arch from the chancel
+    d.set(14, 7, 31, stair(ST, "east", "top"))
+    d.set(16, 7, 31, stair(ST, "west", "top"))
+    for x in range(12, 19):                                          # restore the east window head
+        d.set(x, 8, 31, S if x in (12, 18) else sglass(x, 8, 31))
+    for z in (34, 37, 40):
+        for x in (11, 19):
+            lancet(d, x, z, 4, 10)
+    for x in (13, 14, 15, 16, 17):
+        lancet(d, x, 41, 4, 10 if x in (14, 15, 16) else 8)
+    d.set(15, 11, 41, sglass(15, 11, 41))
+    d.gable(11, 32, 19, 41, 13, "z", "deepslate_tile_stairs", "deepslate_tile_slab", S, 1)
+    for z in range(33, 42, 2):
+        for x, f in ((10, "east"), (20, "west")):
+            pass
+    for z in (33, 36, 39):
+        hc_buttress(d, 10, z, "west", 10)
+        hc_buttress(d, 20, z, "east", 10)
+    hc_buttress(d, 12, 42, "south", 10)
+    hc_buttress(d, 18, 42, "south", 10)
+    # furnishing
+    d.rug(15, 32, 15, 38, 2, ("blue_carpet",), "plain")
+    d.fill(13, 2, 39, 17, 2, 40, slab("polished_andesite_slab"))
+    d.set(15, 3, 40, "chiseled_quartz_block")
+    d.set(15, 4, 40, "calcite")
+    d.set(15, 5, 40, "calcite")
+    d.set(15, 6, 40, "white_stained_glass")                          # statue of the Virgin on the altar
+    d.set(15, 3, 39, "blue_carpet")
+    d.candle(14, 3, 40, 3, "white")
+    d.candle(16, 3, 40, 3, "white")
+    for z in range(33, 38, 2):
+        for x in (12, 13, 17, 18):
+            d.chair(x, 2, z, "north", "dark_oak")
+    for z in (35, 38):
+        chandelier(d, 15, z, 15, 9)
+    for x, f in ((12, "east"), (18, "west")):
+        for z in (32, 36):
+            d.set(x, 5, z, f"blue_wall_banner[facing={f}]")
+
+
+def hc_chapter_house(d, L):
+    """Octagonal chapter house off the cloister with a central pier, stone bench ring and a tall tiled roof."""
+    S = "stone_bricks"
+    cx, cz, r = 38, 26, 5
+    for dx in range(-r, r + 1):
+        for dz in range(-r, r + 1):
+            if not _oct(dx, dz, r):
+                continue
+            d.set(cx + dx, 1, cz + dz, "polished_andesite" if (dx + dz) % 2 else "smooth_stone")
+            edge = not _oct(dx, dz, r - 1)
+            for y in range(2, 11):
+                d.set(cx + dx, y, cz + dz, S if edge else AIR)
+            if edge:
+                d.set(cx + dx, 2, cz + dz, "polished_andesite")
+                d.set(cx + dx, 11, cz + dz, stair("stone_brick_stairs", "north", "top") if False else S)
+            elif not _oct(dx, dz, r - 2):                           # bench ring
+                ex = [s2 for s2, (ox, oz) in D4.items() if not _oct(dx + ox, dz + oz, r - 1)]
+                if ex and abs(dx) + abs(dz) != 0:
+                    d.chair(cx + dx, 2, cz + dz, ex[0], "stone_brick")
+    for dx, dz in ((0, -5), (0, 5), (-5, 0), (5, 0), (-3, -4), (3, -4), (-3, 4), (3, 4),
+                   (-4, -3), (4, -3), (-4, 3), (4, 3)):
+        if _oct(dx, dz, r) and not _oct(dx, dz, r - 1) and (dx, dz) != (0, -5):
+            lancet(d, cx + dx, cz + dz, 4, 9)
+    for y in range(2, 12):                                          # central pier
+        d.set(cx, y, cz, "polished_andesite" if y < 11 else "chiseled_stone_bricks")
+    for ox, oz in D4.values():
+        d.set(cx + ox, 8, cz + oz, lantern(True) if False else "lantern[hanging=false,waterlogged=false]") \
+            if False else d.set(cx + ox, 7, cz + oz, lantern(True))
+        d.set(cx + ox, 8, cz + oz, stair("stone_brick_stairs", {(1, 0): "west", (-1, 0): "east", (0, 1): "north",
+                                                                 (0, -1): "south"}[(ox, oz)], "top"))
+    d.set(cx, 2, cz - 2, "lectern[facing=north,has_book=true,powered=false]")
+    d.fill(cx - r, 11, cz - r, cx + r, 11, cz + r, AIR)
+    for dx in range(-r, r + 1):
+        for dz in range(-r, r + 1):
+            if _oct(dx, dz, r):
+                d.set(cx + dx, 11, cz + dz, S if not _oct(dx, dz, r - 1) else "dark_oak_planks")
+    spire(d, cx, cz, 12, 5, "deepslate_tiles", "deepslate_tile_stairs", step=2, needle=2,
+          broach=False, top="lightning_rod[facing=up,powered=false,waterlogged=false]")
+    # passage from the cloister south walk
+    d.fill(37, 1, 16, 39, 1, 21, "polished_andesite")
+    for z in range(17, 22):
+        for x in (36, 40):
+            d.fill(x, 2, z, x, 5, z, S)
+        d.fill(37, 6, z, 39, 6, z, S)
+        d.set(36, 6, z, stair("deepslate_tile_stairs", "east"))
+        d.set(40, 6, z, stair("deepslate_tile_stairs", "west"))
+        d.set(38, 7, z, slab("deepslate_tile_slab"))
+        d.set(37, 7, z, stair("deepslate_tile_stairs", "east"))
+        d.set(39, 7, z, stair("deepslate_tile_stairs", "west"))
+        d.clear(37, 2, z, 39, 5, z)
+    d.clear(37, 2, 16, 39, 4, 16)
+    d.clear(37, 2, 21, 39, 5, 21)
+    d.set(38, 5, 19, lantern(True))
+    for z in (18, 20):
+        d.set(36, 4, z, "glass_pane")
+        d.set(40, 4, z, "glass_pane")
+
+
+def hc_palace(d, L):
+    """Bishop's palace: stone ground floor (hall + kitchen), timber-framed jettied upper floor (study and
+    chamber), tiled gable with a brick chimney."""
+    S = "stone_bricks"
+    x1, z1, x2, z2 = 1, 29, 8, 41
+    d.fill(x1, 1, z1, x2, 1, z2, "spruce_planks")
+    d.box(x1, 2, z1, x2, 5, z2, S, floor=None)
+    for z in range(z1, z2 + 1):
+        for x in (x1, x2):
+            d.set(x, 2, z, "polished_andesite")
+    d.fill(x1, 6, z1, x2, 6, z2, "dark_oak_planks")
+    d.box(x1, 7, z1, x2, 10, z2, "calcite")
+    for x in range(x1, x2 + 1, 2):
+        for z in (z1, z2):
+            d.fill(x, 7, z, x, 10, z, log("dark_oak_log"))
+    for z in range(z1, z2 + 1, 2):
+        for x in (x1, x2):
+            d.fill(x, 7, z, x, 10, z, log("dark_oak_log"))
+    for x in range(x1, x2 + 1):
+        for z in (z1, z2):
+            d.set(x, 10, z, log("dark_oak_log", "x"))
+    for z in range(z1, z2 + 1):
+        for x in (x1, x2):
+            d.set(x, 10, z, log("dark_oak_log", "z"))
+    # windows with shutters and boxes
+    for z in range(z1 + 2, z2 - 1, 3):
+        for x, f in ((x1, "west"), (x2, "east")):
+            d.window(x, 3, z, x, 4, z)
+            d.window(x, 8, z, x, 9, z)
+            ox, oz = D4[f]
+            if d.bp.inside(x + ox, 2, z + oz) and x + ox >= 0:
+                d.set(x + ox, 8, z + oz, trap("spruce_trapdoor", f, "top"))
+                if x + ox != 9:
+                    d.set(x + ox, 7, z + oz, "potted_red_tulip") if False else None
+    rd = d.gable(x1, z1, x2, z2, 11, "z", "deepslate_tile_stairs", "deepslate_tile_slab", "calcite", 1)
+    # door on the north gable with a hood
+    d.door(4, 2, z1, "south", "dark_oak")
+    d.set(4, 4, z1, S)
+    d.set(3, 5, z1 - 1, stair("deepslate_tile_stairs", "east"))
+    d.set(4, 5, z1 - 1, slab("deepslate_tile_slab"))
+    d.set(5, 5, z1 - 1, stair("deepslate_tile_stairs", "west"))
+    d.set(4, 4, z1 - 1, lantern(True))
+    d.sign(5, 3, z1 - 1, "north", ["Bishop's", "Palace"], "dark_oak")
+    # chimney + hearth in the hall
+    d.hearth(x1 + 1, 2, 35, "east", rd + 3, "bricks", "campfire")
+    for y in range(6, rd + 3):
+        d.set(x1, y, 35, "bricks")
+    d.set(x1, rd + 3, 35, slab("brick_slab"))
+    # ground floor: great hall with a long table, kitchen at the back
+    d.dining(4, 2, 32, 5, "z", "dark_oak", chairs=("e", "w"), sit=True)
+    d.rug(3, 31, 7, 31, 2, ("red_carpet",), "plain")
+    for x in (3, 6):
+        d.lamp(x, 5, 34)
+    d.item(7, 2, 40, "furnace", "west")
+    d.item(7, 2, 39, "smoker", "west")
+    d.set(7, 2, 38, "barrel[facing=up,open=false]")
+    d.set(2, 2, 40, "crafting_table")
+    d.set(3, 2, 40, "cauldron")
+    d.set(2, 4, 40, "decorated_pot[cracked=false,facing=north,waterlogged=false]") if False else None
+    d.set(7, 3, 40, "decorated_pot[cracked=false,facing=west,waterlogged=false]")
+    # stair up along the east wall
+    for i, y in enumerate(range(2, 6)):
+        d.set(7, y, 30 + i, stair("dark_oak_stairs", "south"))
+        if y > 2:
+            d.fill(7, 2, 30 + i, 7, y - 1, 30 + i, "dark_oak_planks")
+    d.clear(7, 6, 30, 7, 6, 34)
+    d.set(6, 7, 30, fence("dark_oak_fence"))
+    # upper floor: study (books) and chamber (bed)
+    for z in range(31, 35):
+        d.set(2, 7, z, "bookshelf")
+        d.set(2, 8, z, "chiseled_bookshelf[facing=east,slot_0_occupied=true,slot_1_occupied=false,"
+              "slot_2_occupied=true,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
+    d.set(4, 7, 33, "lectern[facing=east,has_book=true,powered=false]")
+    d.chair(4, 7, 35, "south", "dark_oak")
+    d.set(4, 7, 36, slab("dark_oak_slab", "top"))
+    d.candle(4, 8, 36, 2)
+    d.fill(2, 7, 37, 7, 9, 37, "dark_oak_planks")
+    d.door(5, 7, 37, "south", "dark_oak")
+    d.bed(3, 7, 40, "south", "purple")
+    d.set(2, 7, 40, slab("dark_oak_slab", "top"))
+    d.candle(2, 8, 40, 1)
+    d.set(6, 7, 40, "barrel[facing=up,open=false]")
+    d.rug(3, 38, 6, 39, 7, ("purple_carpet",), "plain")
+    for z in (33, 39):
+        d.lamp(4, 10, z)
+    # garden: hedge and benches
+    for z in range(29, 42):
+        if d.air(0, 2, z):
+            d.set(0, 2, z, "oak_leaves[distance=1,persistent=true,waterlogged=false]")
+
+
+def hc_library(d, L):
+    """Chained library over the east cloister walk (as at Wells): stone upper range with lancets, tiled roof,
+    bookcases in bays, reading desks; reached by an outside stair."""
+    S = "stone_bricks"
+    x1, x2, z1, z2 = 42, 45, 2, 16
+    d.fill(x1, 8, z1, x2, 8, z2, "dark_oak_planks")
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            if x in (x1, x2) or z in (z1, z2):
+                d.fill(x, 9, z, x, 13, z, S)
+            else:
+                d.clear(x, 9, z, x, 13, z)
+    for z in range(z1 + 2, z2 - 1, 2):
+        for x in (x1, x2):
+            lancet(d, x, z, 10, 12)
+    for x in range(x1, x2 + 1):
+        d.set(x, 9, z1, S)
+        d.set(x, 9, z2, S)
+    d.gable(x1, z1, x2, z2, 14, "z", "deepslate_tile_stairs", "deepslate_tile_slab", S, 1)
+    for z in range(z1 + 1, z2):                                    # bookcases + desks alternate
+        if z % 2 == 0:
+            d.set(x1 + 1, 9, z, "bookshelf")
+            d.set(x1 + 1, 10, z, "chiseled_bookshelf[facing=east,slot_0_occupied=true,slot_1_occupied=true,"
+                  "slot_2_occupied=false,slot_3_occupied=true,slot_4_occupied=true,slot_5_occupied=false]")
+        else:
+            d.set(x1 + 1, 9, z, "lectern[facing=east,has_book=true,powered=false]") if z % 4 == 1 else \
+                d.chair(x1 + 1, 9, z, "west", "dark_oak")
+    for z in range(z1 + 2, z2 - 1, 4):
+        d.lamp(x1 + 2, 13, z)
+    d.rug(x1 + 2, z1 + 1, x1 + 2, z2 - 1, 9, ("red_carpet",), "plain")
+    # outside stair along the east wall, rising south to a door at z = 11
+    for i, z in enumerate(range(4, 10)):
+        y = 3 + i
+        d.set(46, y, z, stair("stone_brick_stairs", "south"))
+        d.fill(46, 2, z, 46, y - 1, z, S)
+        d.set(47, y + 1, z, wallb("stone_brick_wall"))
+        d.fill(47, 2, z, 47, y, z, S)
+    d.set(46, 2, 3, stair("stone_brick_stairs", "south"))
+    d.fill(46, 2, 10, 46, 8, 11, S)
+    d.set(47, 9, 10, wallb("stone_brick_wall"))
+    d.fill(47, 2, 10, 47, 8, 11, S)
+    d.door(45, 9, 11, "west", "dark_oak")
+    d.set(46, 11, 11, lantern(True)) if False else d.set(46, 9, 12, "lantern[hanging=false,waterlogged=false]")
+
+
+def stamp(d, draw, ox, oz, *args):
+    """Draw a sub-building with `draw(scratch, *args)` in plot coordinates of a scratch design, then copy it into d
+    shifted by (ox, oz). Used to reuse one house plan at several places of a complex."""
+    sc = Design(d.pack, d.rel, (d.sx, d.sy, d.sz), gy=d.gy)
+    base = {(x, y, z): st for x, y, z, st in sc.bp.blocks()}
+    draw(sc, *args)
+    for x, y, z, st in sc.bp.blocks():
+        if y < d.gy or base.get((x, y, z)) == st:
+            continue
+        tx, tz = x + ox, z + oz
+        if d.bp.inside(tx, y, tz):
+            d.bp.set(tx, y, tz, st, sc.bp.tile_entities.get((x, y, z)))
+    for (x, y, z), names in sc.tags.items():
+        for n in names:
+            d.tag(x + ox, y, z + oz, n)
+
+
+def hc_close(d, L):
+    """Cathedral close: lamp posts along the paths, graves, benches, yews, lych-gate on the street."""
+    for x, z in ((1, 9), (1, 14), (2, 28), (44, 34), (44, 40), (32, 41), (32, 36)):
+        yew(d, x, z, 2)
+    for z in range(9, 17, 2):
+        for x in (3,):
+            d.set(x, 2, z, "mossy_stone_bricks")
+            d.set(x, 3, z, slab("mossy_stone_brick_slab"))
+            d.set(x, 1, z + 1, "podzol")
+    for x, z in ((36, 35), (36, 38), (39, 41), (42, 35), (42, 38)):
+        d.set(x, 2, z, "cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
+        d.set(x, 1, z + 1, "podzol")
+    for x, z in ((10, 0), (20, 0), (27, 0), (46, 0), (46, 20), (30, 29)):
+        d.set(x, 2, z, wallb("stone_brick_wall"))
+        d.set(x, 3, z, fence("dark_oak_fence"))
+        d.set(x, 4, z, "lantern[hanging=false,waterlogged=false]")
+    for x in (8, 22):
+        d.chair(x, 2, 0, "north", "dark_oak")
+    # churchyard wall with coping along the street and the east side, lych-gate on the street
+    for x in range(28, 48):
+        if 35 <= x <= 37:
+            continue
+        d.set(x, 2, 0, "mossy_stone_bricks" if x % 3 == 0 else "stone_bricks")
+        d.set(x, 3, 0, slab("stone_brick_slab"))
+    for z in range(21, 44):
+        if d.air(47, 2, z):
+            d.set(47, 2, z, "mossy_stone_bricks" if z % 3 == 0 else "stone_bricks")
+            d.set(47, 3, z, slab("stone_brick_slab"))
+    for x in (34, 38):
+        d.fill(x, 2, 0, x, 4, 0, log("dark_oak_log"))
+    for x in range(33, 40):
+        d.set(x, 5, 0, stair("deepslate_tile_stairs", "south") if False else slab("deepslate_tile_slab"))
+    d.fill(34, 5, 0, 38, 5, 0, log("dark_oak_log", "x"))
+    for x in range(33, 40):
+        d.set(x, 6, 0, slab("deepslate_tile_slab"))
+    d.set(36, 7, 0, wallb("stone_brick_wall"))
+    for x in range(35, 38):
+        d.set(x, 1, 0, "gravel")
+    # gargoyles under the nave cornice
+    for z in range(9, 17, 3):
+        d.set(10, 15, z, stair("stone_brick_stairs", "east", "top"))
+        d.set(20, 15, z, stair("stone_brick_stairs", "west", "top"))
+    # gravel paths
+    for x in range(26, 48):
+        d.set(x, 1, 18, "gravel")
+    for z in range(17, 30):
+        d.set(30, 1, z, "gravel")
 
 
 def yew(d, x, z, y, leaves="oak_leaves", trunk="spruce_log"):
@@ -581,10 +1019,10 @@ def rose_x(d, x, cy, cz, R, frame, cols=("blue", "red", "yellow")):
 
 
 # ---------------------------------------------------------------------------- Cascadia: stave church close
-CC_SIZE = (27, 46, 31)
+CC_SIZE = (48, 50, 48)
 CC_TX, CC_TZ, CC_TW = (0, 20), 1, 7           # timber belfries (wings)
 CC_WHUT = (1, 1, 5)
-CC_SHAFT = {1: 9, 2: 11, 3: 13, 4: 14, 5: 15}  # belfry shaft top (local y)
+CC_SHAFT = {1: 6, 2: 11, 3: 13, 4: 14, 5: 15}  # belfry shaft top (local y)
 
 
 def steep_gable(d, x1, z1, x2, z2, y, stairs, body, end, axis="z", overhang=1, ridge=None):
@@ -605,6 +1043,8 @@ def steep_gable(d, x1, z1, x2, z2, y, stairs, body, end, axis="z", overhang=1, r
             face = "south" if i < n / 2 else "north"
         for a in range(a1 - o, a2 + o + 1):
             x, z = (w, a) if axis == "z" else (a, w)
+            if not d.bp.inside(x, yy, z):
+                continue
             if mid:
                 d.set(x, yy - 1, z, body)
                 d.set(x, yy, z, ridge or body)
@@ -687,6 +1127,217 @@ def cc_wing(rel, L):
           needle_block=fence("dark_oak_fence"), cross=L == 5, broach=False,
           top="lightning_rod[facing=up,powered=false,waterlogged=false]" if L >= 3 else fence("dark_oak_fence"))
     return d
+
+
+def cc_log_house(d, x1, z1, w, l, kind, H=5):
+    """Log building with a river-rock footing, notched corners, steep shingled gable (ridge along z), a covered
+    porch on the north door, stone chimney on the south gable, shuttered windows with flower boxes.
+    kind: 'parsonage' (living room, kitchen, bedroom), 'hall' (parish hall: long tables, stage, hearth),
+    'store' (stabbur-like storehouse on stone piers)."""
+    x2, z2 = x1 + w - 1, z1 + l - 1
+    R, RB = "dark_oak_stairs", "dark_oak_planks"
+    fy = 2 if kind == "store" else 1                                # floor level (store sits on piers)
+    if kind == "store":
+        for x in range(x1, x2 + 1, w - 1):
+            for z in range(z1, z2 + 1, 2):
+                d.set(x, 2, z, "mossy_cobblestone")
+    d.fill(x1 + 1, fy, z1 + 1, x2 - 1, fy, z2 - 1, "spruce_planks")
+    top = fy + H
+    for y in range(fy, top + 1):
+        for x in range(x1, x2 + 1):
+            for z in range(z1, z2 + 1):
+                if not (x in (x1, x2) or z in (z1, z2)):
+                    if y > fy:
+                        d.set(x, y, z, AIR)
+                    continue
+                if y == fy and kind != "store":
+                    d.set(x, y + 0, z, "cobblestone" if (x + z) % 3 else "mossy_cobblestone")
+                    continue
+                corner = x in (x1, x2) and z in (z1, z2)
+                ax = "x" if z in (z1, z2) else "z"
+                if corner:
+                    ax = "x" if y % 2 else "z"
+                d.set(x, y, z, log("spruce_log", ax) if (y + (0 if ax == "x" else 1)) % 2 or corner
+                      else log("stripped_spruce_log", ax))
+    if kind != "store":
+        d.fill(x1 + 1, 1, z1 + 1, x2 - 1, 1, z2 - 1, "spruce_planks")
+    # windows with shutters and flower boxes
+    wy = fy + 2
+    for z in range(z1 + 2, z2 - 1, 3):
+        for x, f in ((x1, "west"), (x2, "east")):
+            d.window(x, wy, z, x, wy + 1, z)
+            ox = -1 if f == "west" else 1
+            if d.bp.inside(x + ox, wy, z) and d.air(x + ox, wy, z):
+                for dz in (-1, 1):
+                    if d.air(x + ox, wy, z + dz) and d.air(x + ox, wy + 1, z + dz):
+                        d.set(x + ox, wy, z + dz, trap("spruce_trapdoor", f, "bottom", True))
+                        d.set(x + ox, wy + 1, z + dz, trap("spruce_trapdoor", f, "bottom", True))
+                d.set(x + ox, wy - 1, z, trap("spruce_trapdoor", f, "top"))
+                d.set(x + ox, wy, z, "potted_red_tulip" if z % 2 else "potted_cornflower")
+    # door + porch on the north side
+    dx = (x1 + x2) // 2
+    d.door(dx, fy + 1, z1, "south", "spruce")
+    if kind == "store":
+        d.set(dx, 2, z1 - 1, stair("spruce_stairs", "south"))
+    else:
+        d.fill(x1, 1, z1 - 2, x2, 1, z1 - 1, "spruce_planks")
+        for x in (x1, x2):
+            d.fill(x, 2, z1 - 2, x, top - 1, z1 - 2, log("stripped_spruce_log"))
+        for x in range(x1 + 1, x2):
+            if x != dx:
+                d.set(x, 2, z1 - 2, fence("spruce_fence"))
+        for x in range(x1 - 1, x2 + 2):
+            d.set(x, top, z1 - 2, stair(R, "south"))
+            d.set(x, top, z1 - 1, RB)
+        d.set(dx - 1, top - 1, z1 - 1, lantern(True))
+        d.chair(x1 + 1, 2, z1 - 1, "north", "spruce", sit=False)
+        d.set(x2 - 1, 2, z1 - 1, "barrel[facing=up,open=false]")
+    if w <= 9:
+        rd = steep_gable(d, x1, z1, x2, z2, top + 1, R, RB, log("spruce_log", "x"), "z", 1)
+    else:
+        rd = d.gable(x1, z1, x2, z2, top + 1, "z", R, "dark_oak_slab", log("spruce_log", "x"), 1)
+    for z in range(z1 - 1, z2 + 2):                                 # ridge cap
+        if w % 2 == 1 and w > 9:
+            d.set(dx, rd, z, RB)
+            d.set(dx, rd + 1, z, slab("dark_oak_slab"))
+    # chimney on the south gable
+    if kind != "store":
+        for y in range(1, rd + 2):
+            d.set(dx, y, z2 + 1, "cobblestone" if y % 3 else "mossy_cobblestone")
+        d.set(dx, rd + 2, z2 + 1, "campfire[facing=north,lit=false,signal_fire=false,waterlogged=false]")
+        d.hearth(dx, fy + 1, z2 - 1, "north", fy + 4, "cobblestone", "campfire")
+        for y in range(fy + 4, top + 1):
+            d.set(dx, y, z2 - 1, AIR)
+    y = fy + 1
+    # interiors
+    if kind == "parsonage":
+        d.dining(x1 + 2, y, z1 + 3, 2, "z", "spruce", chairs=("e", "w"))
+        d.rug(x1 + 1, z1 + 2, x1 + 4, z1 + 5, y, ("green_carpet", "brown_carpet"))
+        d.set(x2 - 1, y, z1 + 1, "crafting_table")
+        d.item(x2 - 1, y, z1 + 2, "furnace", "west")
+        d.set(x2 - 1, y, z1 + 3, "barrel[facing=up,open=false]")
+        d.set(x2 - 1, y + 1, z1 + 3, "decorated_pot[cracked=false,facing=west,waterlogged=false]")
+        d.bed(x1 + 1, y, z2 - 1, "south", "green")
+        d.set(x1 + 2, y, z2 - 1, slab("spruce_slab", "top"))
+        d.candle(x1 + 2, y + 1, z2 - 1, 2)
+        d.set(x2 - 1, y, z2 - 2, "bookshelf")
+        d.set(x2 - 1, y + 1, z2 - 2, "bookshelf")
+        d.set(x2 - 1, y, z2 - 3, "lectern[facing=west,has_book=true,powered=false]")
+        d.chair(dx - 1, y, z2 - 3, "west", "spruce", sit=False)
+        for z in range(z1 + 2, z2, 4):
+            d.lamp(dx, top, z)
+    elif kind == "hall":
+        for xx in (x1 + 2, x2 - 2):
+            d.dining(xx, y, z1 + 3, l - 7, "z", "spruce", chairs=("e", "w"))
+        d.fill(x1 + 1, y, z2 - 3, x2 - 1, y, z2 - 2, slab("spruce_slab", "top"))          # stage
+        d.set(x1 + 1, y + 1, z2 - 2, "note_block[instrument=harp,note=0,powered=false]")
+        d.set(x2 - 1, y + 1, z2 - 2, "jukebox[has_record=false]")
+        for xx in range(x1 + 1, x2):
+            d.set(xx, top - 1, z2 - 1, "red_wall_banner[facing=north]" if xx % 2 else "white_wall_banner[facing=north]")
+        for z in range(z1 + 3, z2 - 3, 4):
+            chandelier(d, dx, z, rd - 2, top - 1)
+        d.set(x1 + 1, y, z1 + 1, "barrel[facing=up,open=false]")
+        d.set(x2 - 1, y, z1 + 1, "barrel[facing=up,open=false]")
+        d.set(x1 + 1, y + 1, z1 + 1, "potted_fern")
+    elif kind == "lodge":
+        fy2 = fy + 5
+        d.fill(x1 + 1, fy2, z1 + 1, x2 - 1, fy2, z2 - 1, "spruce_planks")
+        for i in range(4):                                           # stair up along the west wall
+            zz = z1 + 2 + i
+            d.set(x1 + 1, y + i, zz, stair("spruce_stairs", "south"))
+            if i:
+                d.fill(x1 + 1, y, zz, x1 + 1, y + i - 1, zz, "spruce_planks")
+        d.clear(x1 + 1, fy2, z1 + 2, x1 + 1, fy2, z1 + 6)
+        d.set(x1 + 1, fy2, z1 + 6, "spruce_planks")
+        d.clear(x1 + 1, fy2, z1 + 3, x1 + 1, fy2, z1 + 5)
+        d.dining(dx, y, z1 + 3, l - 6, "z", "spruce", chairs=("e", "w"))
+        d.set(x2 - 1, y, z1 + 1, "barrel[facing=up,open=false]")
+        d.set(x2 - 1, y, z1 + 2, "crafting_table")
+        d.item(x2 - 1, y, z1 + 3, "smoker", "west")
+        d.set(x2 - 1, y, z1 + 4, "barrel[facing=up,open=false]")
+        for z in range(z1 + 3, z2 - 1, 3):
+            d.lamp(dx + 2, fy2 - 1, z)
+        u = fy2 + 1                                                  # dormitory
+        for z in range(z1 + 2, z2 - 1, 2):
+            d.bed(x2 - 1, u, z, "east", "brown")
+        for z in range(z1 + 8, z2 - 1, 2):
+            d.bed(x1 + 1, u, z, "west", "green")
+        d.rug(dx - 1, z1 + 2, dx + 1, z2 - 2, u, ("brown_carpet", "green_carpet"))
+        for z in range(z1 + 3, z2 - 1, 4):
+            d.lamp(dx, top, z)
+        d.set(dx, u, z1 + 1, "barrel[facing=up,open=false]")
+    elif kind == "store":
+        for z in range(z1 + 1, z2):
+            d.set(x1 + 1, y, z, "barrel[facing=up,open=false]" if z % 2 else "hay_block[axis=y]")
+            d.set(x2 - 1, y, z, "barrel[facing=east,open=false]" if z % 2 else "white_wool")
+        d.set(x1 + 1, y + 1, z1 + 2, "barrel[facing=up,open=false]")
+        d.lamp(dx, top, (z1 + z2) // 2)
+    return rd
+
+
+def cc_lychgate(d, x1, z, x2):
+    """Roofed timber lych-gate in the churchyard fence."""
+    for x in (x1, x2):
+        d.fill(x, 2, z, x, 4, z, log("stripped_spruce_log"))
+        d.set(x, 2, z - 1, stair("spruce_stairs", "east" if x == x1 else "west"))
+    for x in range(x1, x2 + 1):
+        d.set(x, 5, z, log("spruce_log", "x"))
+        d.set(x, 6, z - 1, stair("dark_oak_stairs", "south"))
+        d.set(x, 6, z + 1, stair("dark_oak_stairs", "north"))
+        d.set(x, 6, z, "dark_oak_planks")
+        d.set(x, 7, z, slab("dark_oak_slab"))
+    for x in (x1 - 1, x2 + 1):
+        d.set(x, 5, z - 1, stair("dark_oak_stairs", "south"))
+        d.set(x, 5, z + 1, stair("dark_oak_stairs", "north"))
+        d.set(x, 5, z, "dark_oak_planks")
+    d.set((x1 + x2) // 2, 4, z, lantern(True))
+
+
+def cc_yard(d, L):
+    """Close furniture: covered walk from the church gallery to the hall porch, woodpiles, a hay wagon,
+    benches and flower beds."""
+    R = "dark_oak_stairs"
+    for x in range(22, 29):
+        d.fill(x, 1, 17, x, 1, 19, "spruce_planks")
+        for z, f, y in ((16, "south", 5), (17, "south", 6), (19, "north", 6), (20, "north", 5)):
+            d.set(x, y, z, stair(R, f))
+        d.set(x, 7, 18, slab("dark_oak_slab"))
+        d.set(x, 6, 18, "dark_oak_planks")
+        if x % 3 == 1:
+            for z in (17, 19):
+                d.fill(x, 2, z, x, 5, z, log("stripped_spruce_log"))
+        else:
+            for z in (17, 19):
+                d.set(x, 5, z, log("spruce_log", "x"))
+    d.set(25, 5, 18, lantern(True))
+    # woodpiles against the parsonage and the hall
+    for z in range(5, 14, 1):
+        d.set(28, 2, z, log("spruce_log", "x"))
+        if z % 2:
+            d.set(28, 3, z, log("spruce_log", "x"))
+    for x in range(44, 47):
+        for z in range(20, 30, 2):
+            d.set(x, 2, z, log("oak_log", "z"))
+    # hay wagon
+    for x in range(41, 46):
+        d.set(x, 2, 14, "hay_block[axis=x]")
+        d.set(x, 3, 14, "hay_block[axis=x]" if 42 <= x <= 44 else AIR)
+    for x in (41, 45):
+        d.set(x, 2, 13, "spruce_trapdoor[facing=north,half=bottom,open=true,powered=false,waterlogged=false]")
+        d.set(x, 2, 15, "spruce_trapdoor[facing=south,half=bottom,open=true,powered=false,waterlogged=false]")
+    d.set(40, 2, 14, fence("spruce_fence"))
+    # benches and flower beds along the path
+    for z in (5, 9):
+        d.chair(11, 2, z, "west", "spruce", sit=False)
+        d.chair(15, 2, z, "east", "spruce", sit=False)
+    for x in range(8, 11):
+        for z in (4, 8):
+            d.set(x, 2, z, "rose_bush[half=lower]" if x % 2 else "peony[half=lower]")
+            d.set(x, 3, z, "rose_bush[half=upper]" if x % 2 else "peony[half=upper]")
+    for x in range(16, 19):
+        for z in (4, 8):
+            d.set(x, 2, z, "lilac[half=lower]")
+            d.set(x, 3, z, "lilac[half=upper]")
 
 
 def dragon(d, x, y, z, out):
@@ -780,20 +1431,22 @@ def cc_cathedral(rel, L):
                     if ring >= 1:
                         d.set(x, y - 1, z, RB)
     # ---------------- nave (mast hall)
-    d.fill(10, 1, 12, 16, 1, 22, "spruce_planks")
+    zE = 19 if L == 1 else 23                    # nave east wall
+    WT = 10 if L == 1 else 13                    # nave wall top
+    d.fill(10, 1, 12, 16, 1, zE - 1, "spruce_planks")
     for x in range(9, 18):
-        for z in range(11, 24):
-            if x in (9, 17) or z in (11, 23):
-                d.fill(x, 2, z, x, 13, z, W)
-    for x, z in ((9, 11), (17, 11), (9, 23), (17, 23)):
-        d.fill(x, 2, z, x, 13, z, log("spruce_log"))
+        for z in range(11, zE + 1):
+            if x in (9, 17) or z in (11, zE):
+                d.fill(x, 2, z, x, WT, z, W)
+    for x, z in ((9, 11), (17, 11), (9, zE), (17, zE)):
+        d.fill(x, 2, z, x, WT, z, log("spruce_log"))
     for x in range(9, 18):
-        for z in (11, 23):
+        for z in (11, zE):
             d.set(x, 2, z, "cobblestone")
-    for z in range(11, 24):
+    for z in range(11, zE + 1):
         for x in (9, 17):
             d.set(x, 2, z, "cobblestone")
-    d.clear(10, 2, 12, 16, 13, 22)
+    d.clear(10, 2, 12, 16, WT, zE - 1)
     if L >= 2:                                     # masts and arcade toward the aisles
         for x in (9, 17):
             for z in range(12, 23):
@@ -803,12 +1456,18 @@ def cc_cathedral(rel, L):
         for z in range(12, 23, 3):
             for x in (9, 17):
                 d.set(x, 9, z, TR)
-    for z in (13, 17, 21):                         # clerestory "eye" windows
-        for x in (9, 17):
-            d.set(x, 11, z, "glass_pane")
+    for z in (13, 17, 21):                         # clerestory "eye" windows with hoods
+        if z < zE:
+            for x, f in ((9, "west"), (17, "east")):
+                d.set(x, WT - 2, z, "glass_pane")
+                ox = -1 if x == 9 else 1
+                if L == 1:
+                    d.set(x, 5, z, "glass_pane")
+                    d.set(x + ox, 6, z, stair("spruce_stairs", OPP[f], "top") if False else
+                          trap("spruce_trapdoor", f, "top"))
     for x in (11, 15):
-        d.set(x, 11, 11, "glass_pane")
-    nr = steep_gable(d, 9, 11, 17, 23, 14, R, RB, W, "z", 1)
+        d.set(x, WT - 2, 11, "glass_pane")
+    nr = steep_gable(d, 9, 11, 17, zE, WT + 1, R, RB, W, "z", 1)
     # carved west portal
     pz = 11 if L == 1 else 10
     if pz == 10:
@@ -869,26 +1528,32 @@ def cc_cathedral(rel, L):
             d.chair(15, 2, z, "east", "spruce")
         alt_z = None
     else:
-        d.set(13, 2, 22, "stripped_spruce_wood[axis=y]")
-        d.candle(13, 3, 22, 4)
-        d.set(13, 2, 21, AIR)
-        d.set(11, 2, 21, "lectern[facing=south,has_book=true,powered=false]")
-        d.set(13, 9, 23, "yellow_stained_glass_pane")
+        d.set(13, 2, zE - 1, "stripped_spruce_wood[axis=y]")
+        d.candle(13, 3, zE - 1, 4)
+        d.set(12, 2, zE - 1, "spruce_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
+        d.set(14, 2, zE - 1, "spruce_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
+        d.set(11, 2, zE - 2, "lectern[facing=south,has_book=true,powered=false]")
+        d.set(13, WT - 4, zE, "yellow_stained_glass_pane")
+        d.set(13, WT - 3, zE, "yellow_stained_glass_pane")
     # pews, hut, lighting
     d.hut(10, 2, 12)
-    d.rug(13, 12, 13, 22 if L >= 3 else 20, 2, ("red_carpet",), "plain")
-    pz = [14, 16, 18, 20] if L >= 3 else [14, 16, 18]
+    d.rug(13, 12, 13, 22 if L >= 3 else zE - 3, 2, ("red_carpet",), "plain")
+    pz = [14, 16, 18, 20] if L >= 3 else ([14, 16, 18] if L == 2 else [14, 16])
     pews(d, 10, 12, pz, 2, "spruce")
     pews(d, 14, 16, pz, 2, "spruce")
     for z in (14, 18, 22):
-        chandelier(d, 13, z, nr - 3, 10)
+        if z < zE - 1:
+            chandelier(d, 13, z, nr - 3, WT - 3)
+    for z in range(13, zE - 1, 4):                 # wall lamps and hymn boards
+        d.set(10, 4, z, "wall_torch[facing=east]")
+        d.set(16, 4, z, "wall_torch[facing=west]")
     if L >= 2:
         for z in (13, 19):
             d.lamp(8, 6, z)
             d.lamp(18, 6, z)
     # ---------------- roof turret (takrytter), stacked tiers
-    cz = 17
-    th = {1: 23, 2: 24, 3: 26, 4: 27, 5: 28}[L]
+    cz = (11 + zE) // 2
+    th = {1: nr + 2, 2: 24, 3: 26, 4: 27, 5: 28}[L]
     for y in range(nr - 2, th + 1):
         for x in range(12, 15):
             for z in range(cz - 1, cz + 2):
@@ -946,13 +1611,45 @@ def cc_cathedral(rel, L):
         for x in (11, 15):
             d.set(x, 2, 7, log("stripped_spruce_log"))
             d.set(x, 3, 7, lantern(False))
-    if L >= 5:
+    if L >= 4:
         for x in (1, 3, 23, 25):
             for z in (12, 16, 20, 24):
                 d.set(x, 2, z, "mossy_cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
                 d.set(x, 1, z - 1, "podzol")
         for x, z in ((2, 28), (24, 28), (8, 29), (18, 29)):
             yew(d, x, z, 2, "spruce_leaves", "spruce_log")
+    # ---------------- the chapel close grows: parsonage, parish hall, stabbur, sexton's and verger's cabins
+    if L >= 3:
+        cc_log_house(d, 30, 4, 8, 11, "parsonage")
+        for x in range(15, 30):
+            d.set(x, 1, 3 if x < 34 else 3, "gravel") if False else d.set(x, 1, 2, "gravel")
+    if L >= 4:
+        cc_log_house(d, 29, 19, 15, 13, "hall", H=7)
+        for z in range(2, 18):
+            d.set(36, 1, z, "gravel") if z < 2 else None
+        for z in range(15, 19):
+            d.set(36, 1, z, "gravel")
+    if L >= 3:
+        cc_log_house(d, 40, 4, 5, 7, "store", H=4)
+    if L >= 4:
+        cc_yard(d, L)
+        cc_lychgate(d, 11, 1, 15)
+        for x in list(range(0, 10)) + list(range(17, 46)):
+            if d.air(x, 2, 0) and not (0 <= x <= 6 or 20 <= x <= 26):
+                d.set(x, 2, 0, fence("spruce_fence"))
+    if L >= 5:
+        cc_log_house(d, 2, 31, 9, 9, "parsonage")
+        cc_log_house(d, 16, 32, 9, 9, "parsonage")
+        cc_log_house(d, 30, 36, 13, 11, "lodge", H=9)            # pilgrims' lodge, dormitory upstairs
+        cc_log_house(d, 0, 41, 5, 6, "store", H=4)                 # smokehouse / woodshed
+        for z in range(32, 36):
+            d.set(36, 1, z, "gravel")
+        for x, z in ((27, 36), (44, 36), (44, 14), (27, 13)):
+            yew(d, x, z, 2, "spruce_leaves", "spruce_log")
+        for x in range(0, 30, 4):
+            if d.air(x, 2, 44):
+                d.set(x, 2, 44, log("stripped_spruce_log"))
+                d.set(x, 3, 44, lantern(False))
     for tx in CC_TX:
         d.reserve(tx, 1, CC_TZ, tx + CC_TW - 1, 40, CC_TZ + CC_TW - 1)
         d.child_hut(tx + CC_WHUT[0], 1 + CC_WHUT[1], CC_TZ + CC_WHUT[2], CATH_WING)
