@@ -67,6 +67,16 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## Hand-designed military, homes and grand projects (1.20.0)
+The remaining structures are now hand-designed per pack too, with their child huts built as real parts of the
+building: barracks (castle / log stockade fort / security compound, towers = bunk-room child huts), gatehouse
+(real gates on the gate line: fence gates, MineColonies iron portcullis from L3), wall guard tower, sky tower
+(flats = child huts; Edwardian mansion block / timber lodge / glass high-rise), bunker (two underground decks
+with kitchen, clinic, school and grow-room child rooms, racked vault and archive), twin builder and the four
+grand projects (Gothic cathedral / stave church / concrete crown cathedral, colossus statues, stone, covered and
+suspension bridges, tithe barn / grain elevator / seed vault). Cascadia roofs are now dark cobbled-deepslate
+shingles that stand out from the log walls; stairwells have railings; cathedral spires taper smoothly.
+
 ## Hand-designed huts, vanilla blocks only (1.19.0)
 All 52 regular hut types are now designed by hand for each pack and every level (774 buildings,
 `tools/blueprints/neoterra/handmade/designs/`): each one reads as the real building – a coaching inn with a bar,
@@ -77,7 +87,6 @@ scattered blocks. Hearthwood, Cascadia and Neoterra each get their own form, siz
   only the architect's cutter remains where the builder's hut requires it. This also fixes walls with gaps.
 - **Full plot from level 1:** every level reserves the space of its biggest level (`plotmax.py`).
 - **Own field names:** Hearthwood/Cascadia fields no longer use `neo*` names (e.g. `cottagegarden`, `homesteadfield`).
-- Barracks, gatehouse, wall tower, sky tower, bunker, twin builder and grand projects keep their designs (now vanilla).
 
 ## Furnished interiors (1.18.0, replaced in 1.19.0)
 `furnish.py` furnishes every hut in the pack's own style – free floor spots against interior walls (about 15 % at
@@ -258,10 +267,10 @@ server with a self-test: two colonies trade a request, the Supply Depot crafts o
 Structurize (`SELFTEST PASS`).
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.19.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.20.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a NeoForge mod that carries the Trade Post and all four style packs (Neoterra, Hearthwood, Cascadia and Farmworks);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.19.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.20.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>` (compiles `mod/` with Gradle).
 
 ## Install
