@@ -67,7 +67,19 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
-## Furnished interiors (1.18.0)
+## Hand-designed huts, vanilla blocks only (1.19.0)
+All 52 regular hut types are now designed by hand for each pack and every level (774 buildings,
+`tools/blueprints/neoterra/handmade/designs/`): each one reads as the real building – a coaching inn with a bar,
+kegs and fireplace, a smithy with an open forge bay, a bakery with an oven wall and shop counter, hospital wards
+with curtained beds, classrooms with desks facing a blackboard – with interiors furnished on purpose instead of
+scattered blocks. Hearthwood, Cascadia and Neoterra each get their own form, size and roof per type.
+- **Vanilla only:** Domum Ornamentum blocks are gone from every pack (converted to vanilla, `vanillaize.py`);
+  only the architect's cutter remains where the builder's hut requires it. This also fixes walls with gaps.
+- **Full plot from level 1:** every level reserves the space of its biggest level (`plotmax.py`).
+- **Own field names:** Hearthwood/Cascadia fields no longer use `neo*` names (e.g. `cottagegarden`, `homesteadfield`).
+- Barracks, gatehouse, wall tower, sky tower, bunker, twin builder and grand projects keep their designs (now vanilla).
+
+## Furnished interiors (1.18.0, replaced in 1.19.0)
 `furnish.py` furnishes every hut in the pack's own style – free floor spots against interior walls (about 15 % at
 level 1 up to 55 % at level 5) plus rugs in the middle of bigger rooms; doors, ladders, stairs, huts, beds, racks and
 work blocks keep a clear ring, and every building is walk-checked afterwards.
@@ -78,7 +90,7 @@ work blocks keep a clear ring, and every building is walk-checked afterwards.
 
 ![Furnished interiors](docs/previews/interiors_furnished.png)
 
-## Domum Ornamentum per pack (1.17.0)
+## Domum Ornamentum per pack (1.17.0, removed in 1.19.0)
 `domumize.py` gives every pack its own set of Domum Ornamentum blocks – a little at levels 1-3, a lot at levels 4-5
 (buildings that stop at level 3 use the level 1 / 3 / 5 rules):
 
@@ -246,10 +258,10 @@ server with a self-test: two colonies trade a request, the Supply Depot crafts o
 Structurize (`SELFTEST PASS`).
 
 ## Install (CurseForge / any NeoForge 1.21.1 instance)
-- **Easiest:** put `dist/Neoterra-1.18.0.jar` into the instance's `mods` folder (CurseForge: right-click the
+- **Easiest:** put `dist/Neoterra-1.19.0.jar` into the instance's `mods` folder (CurseForge: right-click the
   profile → *Open Folder* → `mods`). It is a NeoForge mod that carries the Trade Post and all four style packs (Neoterra, Hearthwood, Cascadia and Farmworks);
   MineColonies, Structurize and Domum Ornamentum must be installed.
-- `dist/Neoterra-1.18.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
+- `dist/Neoterra-1.19.0.zip` is the download bundle: it contains the jar (extract it, then copy the jar to `mods`).
 - Rebuild both with `python3 tools/blueprints/neoterra/package.py <version>` (compiles `mod/` with Gradle).
 
 ## Install
