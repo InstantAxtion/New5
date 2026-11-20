@@ -102,8 +102,10 @@ def main():
             ok = False
             continue
         rows = []
+        growth_need = 1.5
         for pack in packs:
             row = []
+            counts = []
             for rel in hm.rels_for(base):
                 L = hm.REQ[rel]["level"]
                 try:
@@ -128,6 +130,8 @@ def main():
                 else:
                     bp_show = bp
                 probs = [] if req.get("child") else walkcheck.analyse(bp_show)[1]
+                counts.append((L, sum(1 for _x, _y, _z, st in bp_show.blocks()
+                                      if _y != d.gy and st != AIR and "substitution" not in st)))
                 bad = check_states(bp)
                 status = f"{bp.sx}x{bp.sy}x{bp.sz}" + (" (assembled with child huts)" if bp_show is not bp else "")
                 if probs:
@@ -150,6 +154,13 @@ def main():
                     render.iso(cut(bp, fy + 1), 2, p, scale=12)
                     imgs.append(Image.open(p))
                 row.append((f"{pack} L{L}", imgs))
+            if not hm.REQ[hm.rels_for(base)[0]].get("child"):
+                cs = sorted(counts)
+                line = " -> ".join(str(c) for _, c in cs)
+                bad = [f"L{a}->L{b} x{cb / ca:.2f}" for (a, ca), (b, cb) in zip(cs, cs[1:]) if cb < growth_need * ca]
+                print(f"{base} {pack} blocks per level: {line}" + (f"  GROWTH TOO SMALL: {', '.join(bad)}" if bad else "  growth ok"))
+                if bad:
+                    ok = False
             rows.append(row)
         # contact sheet
         H = 300
