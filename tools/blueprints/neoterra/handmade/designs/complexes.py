@@ -682,10 +682,16 @@ def skytower_nt(rel, L):
 
 
 # ---------------------------------------------------------------------------------------------- Hearthwood tower
-def win_hw(d, x, y, z, h=2, lintel="calcite"):
+def win_hw(d, x, y, z, h=2, lintel="calcite", out=None):
+    """Sash window with a lintel; with `out` a flower box (trapdoor + flowers) on the sill outside."""
     for k in range(h):
         d.set(x, y + k, z, "glass_pane")
     d.set(x, y + h, z, lintel)
+    if out:
+        ox, oz = x + D4[out][0], z + D4[out][1]
+        if d.bp.inside(ox, y, oz) and d.air(ox, y, oz) and d.air(ox, y - 1, oz) and y > 3:
+            d.set(ox, y - 1, oz, trap("dark_oak", out, "top"))
+            d.set(ox, y, oz, ("potted_red_tulip", "potted_blue_orchid", "potted_allium")[(x + y + z) % 3])
 
 
 def bay_hw(d, a, storeys, top):
@@ -784,12 +790,12 @@ def skytower_hw(rel, L):
         bay_hw(d, a, storeys, 16)
     for (ya, yb) in storeys:
         for x in (9, 11, 25, 27):
-            win_hw(d, x, ya + 1, Z1)
+            win_hw(d, x, ya + 1, Z1, out="north")
         for x in (3, 10, 19, 26):
-            win_hw(d, x, ya + 1, Z2)
+            win_hw(d, x, ya + 1, Z2, out="south")
         for z in (7, 14):
-            win_hw(d, X1, ya + 1, z)
-            win_hw(d, X2, ya + 1, z)
+            win_hw(d, X1, ya + 1, z, out="west")
+            win_hw(d, X2, ya + 1, z, out="east")
         if ya > 2:
             for x in (14, 15, 16):
                 win_hw(d, x, ya + 1, Z1)
@@ -1603,6 +1609,11 @@ def twin_hw(rel, L):
     for z in (6, 10, 14):
         win_hw(d, X1, 3, z, 2, "bricks")
         win_hw(d, X2, 3, z, 2, "bricks")
+        for xx, f_ in ((X1 - 1, "west"), (X2 + 1, "east")):     # shutters on the workshop windows
+            for zz in (z - 1, z + 1):
+                for yy in (3, 4):
+                    if d.air(xx, yy, zz):
+                        d.set(xx, yy, zz, trap("dark_oak", f_, "bottom", True))
     for z in (8, 13):
         d.set(X1, 8, z, "glass_pane")
         d.set(X2, 8, z, "glass_pane")

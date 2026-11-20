@@ -3431,6 +3431,9 @@ def gy_cascadia(rel, L):
             bench(d, 32, z, "south" if z == 28 else "north", 3)
         d.set(33, 2, 27, "spruce_planks")
         d.candle(33, 3, 27, 3)
+        for x in (28, 38):
+            lamp_post(d, x, 22)
+            lamp_post(d, x, 32)
     if L >= 5:                                                    # meeting hall for wakes and gatherings
         building(d, 2, 25, 22, 34, nf=2, axis="x", doors=(("north", 12), ("east", 30)), chimney=(1, 30),
                  kinds=["mess", "lounge"])
