@@ -641,7 +641,10 @@ def load_designs():
     sys.path.insert(0, str(HERE))
     for f in sorted((HERE / "designs").glob("*.py")):
         if not f.name.startswith("_"):
-            importlib.import_module(f"designs.{f.stem}")
+            try:
+                importlib.import_module(f"designs.{f.stem}")
+            except Exception as e:                       # one broken file must not block the others
+                print(f"WARNING: designs/{f.name} not loaded: {type(e).__name__}: {e}", file=sys.stderr)
     return DESIGNS
 
 
