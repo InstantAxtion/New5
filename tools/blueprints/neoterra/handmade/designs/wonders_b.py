@@ -1250,7 +1250,7 @@ def rgw_hearthwood(rel, L):
         d.set(x, H - 1, z, "dark_oak_trapdoor[facing=north,half=bottom,open=true,powered=false,waterlogged=false]") if False else None
         d.set(x, H - 1, z, AIR)
     # eaves ring + conical roof
-    top = cone(d, cx, cz, 4.0, H + 1, "deepslate_tile_stairs", "deepslate_tiles", step=0.6 if L < 3 else 0.5,
+    top = cone(d, cx, cz, 4.0, H + 1, "deepslate_tile_stairs", "deepslate_tiles", step=0.75 if L < 3 else 0.6,
                solid="deepslate_tiles")
     if L >= 4:                                             # glover (pigeon lantern) on the apex
         for x, z in ((cx - 1, cz - 1), (cx + 1, cz - 1), (cx - 1, cz + 1), (cx + 1, cz + 1)):

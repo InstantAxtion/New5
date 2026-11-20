@@ -1009,6 +1009,20 @@ D7 = ["..###..",
 D7_FOOT, D7_WALL, D7_IN = mask(D7)
 
 
+GATE_IRON = "minecolonies:gate_iron[facing=south,half=lower,hinge=left,open=false,powered=false]"
+
+
+def gate_line(d, x, z, L, wood):
+    """Real gate blocks standing on the 'gate' tag cell (x, gy, z): fence gate 1 high (L1), 2 high (L2), then the
+    MineColonies iron portcullis 4 high (L3)."""
+    if L >= 3:
+        for y in range(d.gy + 1, d.gy + 5):
+            d.set(x, y, z, GATE_IRON)
+    else:
+        for y in range(d.gy + 1, d.gy + 1 + L):
+            d.set(x, y, z, f"{wood}_fence_gate[facing=south,in_wall=false,open=false,powered=false]")
+
+
 def gate_tags(d, xs, z, kx, kz, ax, adeck, az):
     for x in xs:
         d.tag(x, d.gy, z, "gate")
@@ -1060,13 +1074,10 @@ def gh_hearthwood(rel, L):
         d.set(9, 7, z, "chiseled_stone_bricks") if z == 3 else None
     # gates on the gate line z=4
     for x in range(8, 12):
-        for y in (2, 3, 4):
-            d.set(x, y, 4, "dark_oak_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
-        if L >= 2:
-            d.set(x, 6, 4, "iron_bars")
-            d.set(x, 5, 4, "iron_bars")
-        else:
-            d.set(x, 6, 4, LOG("dark_oak_log", "x"))
+        gate_line(d, x, 4, L, "dark_oak")
+        d.set(x, 6, 4, LOG("dark_oak_log", "x"))
+        if L == 2:                                            # portcullis hanging raised behind the gates
+            d.set(x, 6, 5, "iron_bars")
     gate_tags(d, range(8, 12), 4, (8, 11), 6, (9, 10), 7, 4)
     # doors from the passage into the towers, ladders, gallery doorways
     d.door(7, 2, 7, "west", "dark_oak")
@@ -1161,15 +1172,15 @@ def gh_cascadia(rel, L):
     for x in range(7, 11):
         for z in range(1, 9):
             d.set(x, 1, z, "dirt_path")
-        for y in (2, 3, 4) if L >= 2 else (2, 3):
-            d.set(x, y, 3, "spruce_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
+        gate_line(d, x, 3, L, "spruce")
         d.set(x, 6, 2, LOG("spruce_log", "x"))
         for z in range(2, 8):
             d.set(x, 7, z, "spruce_planks")
         d.set(x, 8, 2, LOG("spruce_log", "x") if x % 2 else "spruce_fence")
         d.set(x, 8, 7, "spruce_fence")
-    for x in (7, 10):
-        d.set(x, 5, 3, ST("spruce", "east" if x == 7 else "west", "top"))
+    if L < 3:
+        for x in (7, 10):
+            d.set(x, 5, 3, ST("spruce", "east" if x == 7 else "west", "top"))
     gate_tags(d, range(7, 11), 3, (7, 10), 5, (8, 9), 7, 3)
     # doors, ladders, walkway doorways
     d.door(6, 2, 5, "west", "spruce")
@@ -1255,8 +1266,8 @@ def gh_neoterra(rel, L):
         d.set(x, 2, 3, "gray_concrete")
         d.set(x, 3, 3, "sea_lantern")
     for x in range(9, 13):
-        for y in ((2, 3) if L == 1 else (2, 3, 4)):
-            d.set(x, y, 3, "iron_bars")
+        for y in (2, 3, 4, 5):
+            d.set(x, y, 3, GATE_IRON)
     gate_tags(d, range(9, 13), 3, (8, 13), 5, (10, 11), 11, 4)
     # glazed control bridge (upper floor level) with roof terrace
     for x in range(8, 14):
