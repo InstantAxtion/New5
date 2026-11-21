@@ -999,10 +999,7 @@ def nt_upper(d, L, leg):
         ".H.H.H.H.H.",
     ], leg | {"H": BED("south", "cyan"), "N": "white_concrete"}, w=11)
     for x in (34, 36, 38, 40, 42):
-        d.set(x, y, 20, AIR) if False else None
-    for x in (34, 36, 38, 40, 42):
         pts(d, y + 1, [(x, 19)], LANT())
-    d.fill(34, y + 1, 13, 36, y + 2, 13, "black_concrete") if False else None
     hang(d, y, [(38, 16), (38, 19)], kind="sea_lantern")
     # ---------------------------------------------------------------- roof gardens on the wings
     ry = 12
@@ -1087,7 +1084,6 @@ def nt_rear(d, L, leg):
     ], leg, w=13)
     pts(d, y + 1, [(23, 27), (25, 28)], "light_blue_carpet")
     pts(d, y + 1, [(24, 27), (23, 28)], "lime_carpet")
-    pts(d, y + 1, [(25, 27), (24, 28)], "white_carpet") if False else None
     pts(d, y + 1, [(31, 25), (31, 28), (31, 31)], "end_rod[facing=up]")
     pts(d, y + 1, [(22, 32)], "potted_bamboo")
     hang(d, y, [(24, 28), (29, 25), (25, 32)], kind="sea_lantern")
@@ -1105,8 +1101,6 @@ def nt_rear(d, L, leg):
         "M...........M",
         "zMMMM...MMMMz",
     ], leg | {"v": OUTSEAT("south", "birch"), "^": OUTSEAT("north", "birch")}, w=13)
-    for x, z in ((23, 32), (29, 32)):
-        pts(d, 18, [(x, z)], "flowering_azalea") if False else None
     # roof terrace on the council block
     plan(d, 12, 19, 13, [
         "MzM.......MzM",
@@ -1303,7 +1297,6 @@ def nt_tower(d, L, leg):
     # street side additions: market stalls on the plaza, door lights
     stall_nt(d, 5, 3, "orange", "melon")
     stall_nt(d, 42, 2, "lime", "pumpkin")
-    pts(d, Y0 + 2, [(39, 41), (42, 41)], "end_rod[facing=up]") if False else None
 
 
 # ============================================================================================ CASCADIA
@@ -1448,7 +1441,6 @@ def cs_rooms(d, L):
     plan(d, Y0, 15, 7, ["v" + "." * 11 + "v"], {"v": OUTSEAT("south", W)})
     pts(d, Y0, [(16, 9), (26, 9)], "potted_fern")
     d.sign(21, 5, 9, "north", ["GRANGE", "HALL"], W)
-    pts(d, 4, [(20, 9), (22, 9)], LANT(True)) if False else None
     for x in (20, 22):
         _put(d, x, 5, 9, LANT(True))
     lamppost_cs(d, 11, 6) if L < 4 else None
@@ -1609,10 +1601,9 @@ def cs_mayor(d, L, leg):
                 if x in (48, 52) or z in (4, 8):
                     if (x, z) in ((48, 4), (52, 4), (48, 8), (52, 8)):
                         continue
-                    d.set(x, yy, z, "iron_bars" if False else (log("stripped_spruce_log", "y") if yy not in (15, 17) else "spruce_planks"))
+                    d.set(x, yy, z, log("stripped_spruce_log", "y") if yy not in (15, 17) else "spruce_planks")
     d.hip(48, 4, 52, 8, 19, "dark_oak_stairs", "dark_oak_slab", overhang=1)
     for yy in range(Y0, 13):                                         # service ladder on the street-side leg
-        d.set(50, yy, 3, "ladder[facing=north,waterlogged=false]") if False else None
 
 
 def cs_street(d, L, leg):
@@ -1635,7 +1626,6 @@ def cs_street(d, L, leg):
     ], leg | {"w": "red_wool", "F": "furnace[facing=north,lit=false]", "M": "smoker[facing=north,lit=false]",
               "c": "chest[facing=east,type=single,waterlogged=false]"}, w=11)
     pts(d, Y0 + 1, [(41, 19), (42, 19)], "barrel[facing=north,open=false]")
-    pts(d, Y0 + 1, [(41, 21), (42, 21)], "hay_block[axis=y]") if False else None
     pts(d, Y0 + 1, [(39, 24)], LANT())
     hang(d, Y0, [(39, 20), (44, 20)])
     plan(d, 7, 37, 15, [
