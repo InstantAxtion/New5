@@ -2764,6 +2764,9 @@ def rg_hearthwood(rel, L):
             d.set(53, 1, z, "gravel")
         lamppost(d, 13, 27)
         lamppost(d, 47, 27)
+        bench_pair(d, 9, 26, "south", "dark_oak")          # bench under the steward's windows
+        for x in range(48, 59):                            # malt-house yard fence with a gate
+            d.set(x, 2, 26, "oak_fence_gate[facing=north,in_wall=false,open=false,powered=false]" if x == 53 else "oak_fence")
     if L >= 5:
         # ---- Bake House: ovens on the back wall, kneading table, bread counters by the door; flour loft and
         #      the baker's bed above

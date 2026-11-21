@@ -1468,6 +1468,12 @@ def netherworker_design(pack, rel, L):
                 pl(d, 2, [(ex1 + 3, Z + 10, "barrel[facing=east,open=false]"), (ex1 + 4, Z + 10, "barrel[facing=east,open=false]")])
             else:                                                     # hides and a fur pile
                 pl(d, 2, [(ex1 + 3, Z + 10, "brown_wool"), (ex1 + 4, Z + 10, "black_wool")])
+            for x in (ex1 - 1, ex1 + 11):                             # lamps and a bench at the wing's garden door
+                if x < d.sx:
+                    lamp_post(d, x, Z + 14)
+            bench(d, ex1 + 2, Z + 14, "south", 2)
+            flowerbed(d, ex1 + 6, Z + 14, ex1 + 9, Z + 14, ("crimson_roots", "poppy", "red_tulip") if pack != "Neoterra"
+                      else ("allium", "white_tulip", "azure_bluet"))
         # ---- L5: watch tower over the gate and an ember garden ----
         if L >= 5:
             # west wing: guest cells and refectory around a small court
