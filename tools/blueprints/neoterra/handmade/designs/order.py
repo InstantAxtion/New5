@@ -556,6 +556,16 @@ def put_all(d, y, items):
                 d.set(x, y + 1, z, it[3])
 
 
+def solar(d, b, x1, x2, rows):
+    """Rooftop solar array on flat-roofed building b: panels (daylight detectors on raised slab frames) in the
+    hand-chosen rows, from x1 to x2, with walkways between the rows."""
+    y = b.top + 1
+    for z in rows:
+        for x in range(x1, x2 + 1):
+            d.set(x, y, z, "smooth_stone_slab[type=top,waterlogged=false]")
+            d.set(x, y + 1, z, "daylight_detector[inverted=false,power=0]")
+
+
 def inlay(d, x1, z1, x2, z2, y):
     """Sink the carpet mats drawn on walk layer y (x1..x2/z1..z2) into the floor as flush wool panels."""
     for x in range(x1, x2 + 1):
@@ -1235,6 +1245,7 @@ def gt_neoterra(rel, L):
     # ---- growth: a security campus
     if L >= 2:                                                    # vehicle bay / checkpoint
         b = building(d, 23, 3, 33, 10, nf=1, roof="flat", doors=(("north", 26), ("west", 7)))
+        solar(d, b, 25, 31, (5, 7))
         room(d, b, 0, ["XY       ",           # vehicle bay: a patrol rover parked inside the roller door,
                        "O   qqq  ",           # tool benches on the west wall, spares at the back
                        "G   qqq k",
@@ -1252,6 +1263,7 @@ def gt_neoterra(rel, L):
         path(d, 14, 1, 22, 2)
     if L >= 3:                                                    # command centre
         b = building(d, 23, 14, 35, 22, nf=2, roof="flat", doors=(("north", 29), ("west", 18)))
+        solar(d, b, 25, 33, (16, 18, 20)) if L >= 5 else None
         room(d, b, 0, ["NNN    NNNx",         # operations room: screen desks facing north, briefing table,
                        "sss    sss ",         # map table, files
                        "   nnn    P",
@@ -1275,6 +1287,7 @@ def gt_neoterra(rel, L):
         bench(d, 31, 12, "north", 2)
     if L >= 4:                                                    # barracks block
         b = building(d, 2, 20, 15, 29, nf=2 if L == 4 else 3, roof="flat", doors=(("north", 9), ("east", 24)))
+        solar(d, b, 4, 13, (22, 24, 26))
         room(d, b, 0, ["P N       jP",        # crew lounge: sofa facing the screen, dining corner
                        "  t     nn  ",
                        " sss    TT  ",
@@ -2014,6 +2027,7 @@ def ar_neoterra(rel, L):
             d.set(x, 2, 12, "azalea" if x % 2 else "flowering_azalea")
     if L >= 4:                                                    # residence for the archers
         b = building(d, 25, 20, 42, 30, nf=3 if L == 4 else 4, roof="flat", doors=(("north", 30), ("west", 25)))
+        solar(d, b, 27, 40, (22, 24, 26, 28))
         room(d, b, 0, ["P N       N P jP",    # residence lounge: two sofa corners and dining tables
                        "  t       t     ",
                        " sss     sss    ",
@@ -2075,6 +2089,7 @@ def ar_neoterra(rel, L):
             for y in range(2, 7):
                 d.set(x, y, fz1 - 1, "light_gray_concrete")
         b = building(d, 2, 33, 14, 44, nf=4, roof="flat", doors=(("north", 8), ("east", 38)))
+        solar(d, b, 4, 12, (35, 37, 39, 41))
         room(d, b, 0, ["MFW==  KKuc", "           ", " nnn   nnn ", " TTT   TTT ", " sss   sss ", "           ",
                        " nnn      K", " TTT      k", " sss      c", "      PP  P"],
              lights=[(2, 3), (7, 3), (2, 7)])                         # field clubhouse canteen
@@ -2803,6 +2818,7 @@ def ca_neoterra(rel, L):
         bench(d, 36, 13, "north", 3)
     if L >= 4:                                                    # athletes' residence tower
         b = building(d, 2, 24, 16, 36, nf=3 if L == 4 else 5, roof="flat", doors=(("north", 8), ("east", 30)))
+        solar(d, b, 4, 14, (26, 28, 30, 32, 34))
         room(d, b, 0, ["P N      j  P", "  t          ", " sss    nn   ", "        TT  C", "        ss  c",
                        "             ", "C           K", "g           g", "             ", "             ",
                        "      g   ggg"], lights=[(2, 2), (8, 3), (6, 7)])           # athletes' lobby
@@ -3825,6 +3841,9 @@ def al_neoterra(rel, L):
         for z in (3, 7, 11):
             d.set(30, 2, z, "smooth_quartz")
             d.set(30, 3, z, "potted_allium")
+        put_all(d, 2, [(30, 9, "composter[level=4]"), (30, 10, KEG.replace("FACE", "east"), KEG.replace("FACE", "up")),
+                       (26, 12, ST("birch", "north")), (27, 12, ST("birch", "north")), (22, 12, "potted_bamboo"),
+                       (30, 4, SL("smooth_quartz", "top"), "potted_blue_orchid")])     # potting yard beside the glasshouse
     if L >= 3:                                                    # research labs
         b = building(d, 20, 15, 34, 25, nf=2, roof="flat", doors=(("north", 26), ("west", 20)))
         room(d, b, 0, ["VpVpV   VpVpV", "             ", "  =V=V=  =V=V", "             ", "            W",
@@ -4642,7 +4661,7 @@ def ms_neoterra(rel, L):
     if L >= 2:
         for x in (1, 19):
             lamp_post(d, x, 1)
-        for z in range(14, 20, 2):
+        for z in range(12, 20, 2):
             d.set(1, 1, z, "moss_block")
             d.set(1, 2, z, "azalea")
             d.set(19, 1, z, "moss_block")

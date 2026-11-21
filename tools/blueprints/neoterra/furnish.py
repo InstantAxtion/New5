@@ -25,7 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from blueprint import load, AIR  # noqa: E402
 import walkcheck  # noqa: E402
 
-SKIP_DIRS = ("/mineshafts/", "/supplies/", "/fields/", "/walls/", "/infrastructure/", "/parks/", "/wonders/")
+SKIP_DIRS = ("/mineshafts/", "/supplies/", "/fields/", "/walls/", "/infrastructure/", "/parks/", "/wonders/", "/monuments/")
 MAX3 = ("tavern", "gatehouse", "watchtower")
 KEEP_CLEAR = ("door", "ladder", "stairs", "blockhut", "rack", "_bed", "furnace", "smoker", "crafting_table", "barrel",
               "anvil", "lectern", "bookshelf", "stonecutter", "grindstone", "loom", "cartography", "fletching",

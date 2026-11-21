@@ -55,6 +55,8 @@ python3 $T/neoterra/wonders.py "$PACK" Neoterra
 # Domum Ornamentum: Neoterra's own set (framed lights, quartz pillars), more at higher levels
 # hand-made huts (designs/*.py) replace the generated ones; vanilla blocks only
 python3 $T/neoterra/handmade/handmade.py "$PACK" Neoterra
+# Grand Projects live in the "monuments" tab (the generated wonders/ drafts are replaced by the hand-made ones)
+rm -rf "$PACK/wonders"
 python3 $T/neoterra/vanillaize.py "$PACK"
 # level 1 already reserves the plot of level 5
 python3 $T/neoterra/plotmax.py "$PACK"
@@ -98,7 +100,7 @@ for f in decorations/supplies/supplycamp decorations/supplies/supplyship decorat
 done
 python3 $T/neoterra/make_images.py "$PACK" "$PREV"
 # buildings with child huts (Skytower, barracks, bunker) are checked as assembled copies
-python3 $T/walkcheck.py $(find "$PACK" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|twinbuilder[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint|/wonders/") \
+python3 $T/walkcheck.py $(find "$PACK" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|twinbuilder[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint|/wonders/|/monuments/") \
   "$FURN"/*_furnished.blueprint >/dev/null \
   && echo "walkcheck: everything reachable"
 # Hearthwood (cozy modern) and Cascadia (Oregon / Pacific Northwest): their own shape passes (roof forms,
@@ -131,6 +133,7 @@ for STY in Hearthwood Cascadia; do
   # Domum Ornamentum: the pack's own set (shutters / timber frames / shingles / pillars), more at higher levels
   # furniture in the pack's own style, then its Domum set
   python3 $T/neoterra/handmade/handmade.py "$OUT" $STY
+  rm -rf "$OUT/wonders"
   python3 $T/neoterra/vanillaize.py "$OUT"
   python3 $T/neoterra/fields_styles.py "$OUT" $STY
   python3 $T/neoterra/plotmax.py "$OUT"
@@ -145,7 +148,7 @@ for STY in Hearthwood Cascadia; do
     for l in 1 2 3 4 5; do python3 $T/render.py "$OUT/$b$l.blueprint" "$SP/$(basename $b)$l" >/dev/null; done
   done
   python3 $T/neoterra/make_images.py "$OUT" "$SP" "$(echo $STY | tr 'A-Z' 'a-z').png"
-  python3 $T/walkcheck.py $(find "$OUT" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|twinbuilder[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint|/wonders/") >/dev/null \
+  python3 $T/walkcheck.py $(find "$OUT" -name "*.blueprint" | grep -vE "/(skytower|barracks|bunker)[a-z]*[0-9]|twinbuilder[a-z]*[0-9]|/mineshafts/miner|shaft1\.blueprint|ship\.blueprint|/wonders/|/monuments/") >/dev/null \
     && echo "$STY walkcheck: everything reachable"
 done
 # Farmworks: automatic mob and food farms + Trade Post / Supply Depot huts

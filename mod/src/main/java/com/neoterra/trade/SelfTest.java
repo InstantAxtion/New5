@@ -348,8 +348,8 @@ final class SelfTest
             {
                 for (final WonderType t : WonderType.values())
                 {
-                    list.add(new String[] {pack, "wonders/" + t.id + l, "blockhut" + t.id, "2"});
-                    list.add(new String[] {pack, "wonders/" + t.id + "wing" + l, "blockhutwonderwing", "0"});
+                    list.add(new String[] {pack, "monuments/" + t.id + l, "blockhut" + t.id, "2"});
+                    list.add(new String[] {pack, "monuments/" + t.id + "wing" + l, "blockhutwonderwing", "0"});
                 }
             }
         }

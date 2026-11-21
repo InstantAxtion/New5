@@ -29,8 +29,8 @@ import math
 
 from hm import Design, design, AIR, D4, OPP, CW
 
-CATH_WING = "wonders/cathedralwing0.blueprint"
-COLO_WING = "wonders/colossuswing0.blueprint"
+CATH_WING = "monuments/cathedralwing0.blueprint"
+COLO_WING = "monuments/colossuswing0.blueprint"
 
 
 # ------------------------------------------------------------------------------------------------ helpers

@@ -25,7 +25,7 @@ Wings are pasted without rotation at both ends, so they are drawn symmetric abou
 from hm import Design, design, AIR
 
 WATER = "water[level=0]"
-ROOT = "wonders/"
+ROOT = "monuments/"
 
 
 # ----------------------------------------------------------------------------------------------- helpers
