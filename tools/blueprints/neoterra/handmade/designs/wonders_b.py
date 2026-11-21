@@ -2118,7 +2118,7 @@ def lay_shop(r, ground):
     r.put(r.O(0), 0, "sacks", "back")
     r.put(r.A(0), 1, "pot", r.fa)
     for v in range(4, D - 2, 3):                       # display stands behind the counter
-        for k in range(1, W - 2, 3):
+        for k in range(1, r.W - 2, 3):
             r.put(r.A(k), v, "counter", "front")
             r.put(r.A(k + 1), v, "barrel", "front")
     r.lamp(r.W // 2, 1)
