@@ -2161,7 +2161,7 @@ def ca_hearthwood(rel, L):
                        "  TTT    TTT  ",
                        "  sss    sss  ",
                        "             z",
-                       "B            B",
+                       "             B",
                        "      x    CCB"], lights=[(3, 3), (10, 3)])
         room(d, b, 1, ["1lC  t  t  Cl1",      # masters' rooms and a council table
                        "2    s  s    2",
@@ -2648,6 +2648,9 @@ def ca_neoterra(rel, L):
                        "      g   g   g   g"], lights=[(5, 3), (13, 3), (9, 6)])
         wlamp(d, 32, 4, 14)
         wlamp(d, 34, 4, 14)
+        for x in (26, 30, 38, 42):                                # planters along the dojo front
+            d.set(x, 1, 13, "moss_block")
+            d.set(x, 2, 13, "flowering_azalea")
         bench(d, 26, 13, "north", 3)
         bench(d, 36, 13, "north", 3)
     if L >= 4:                                                    # athletes' residence tower
@@ -2877,18 +2880,46 @@ def en_hearthwood(rel, L):
                    (4, 8, SL("dark_oak", "top"), "candle[candles=2,lit=false,waterlogged=false]")])
     # ---- growth: a small college of lore along the lane
     if L >= 3:                                                    # scriptorium with copyists' desks, archive above
-        building(d, 26, 3, 34, 10, nf=2, axis="z", doors=(("north", 30), ("west", 7)), chimney=(35, 7))
+        b = building(d, 26, 3, 34, 10, nf=2, axis="z", doors=(("north", 30), ("west", 7)), chimney=(35, 7))
+        room(d, b, 0, [" l   l ", " s   s ", "  nnn  ", "  TTT C", "  sss B", "      z"],
+             lights=[(3, 2), (3, 4)])                                 # scriptorium: copyists' desks under the windows
+        room(d, b, 1, ["BbBBbBB", "       ", "B nnn B", "B TTT B", "      B", "      C"],
+             lights=[(3, 3)])                                         # archive above
+        wlamp(d, 29, 4, 2)
+        wlamp(d, 31, 4, 2)
         d.sign(28, 4, 2, "north", ["Scriptorium"], "dark_oak")
         flowerbed(d, 27, 0, 28, 1)
         flowerbed(d, 32, 0, 33, 1)
         lamp_post(d, 25, 1)
     if L >= 4:                                                    # star tower (observatory) with a weather vane
         t = building(d, 36, 3, 42, 9, nf=3, roof="hip", ground="stone_bricks", doors=(("north", None),))
+        room(d, t, 0, ["B   B", "     ", "x   C", "  t  ", "    k"], lights=[(2, 2)])   # star tower: charts
+        room(d, t, 1, ["B C B", "     ", "  z  "], lights=[(2, 1)])                     # almanac library
+        room(d, t, 2, ["x t x", "  s  ", "     ", "     ", "B   B"])                   # observing room
+        wlamp(d, 38, 4, 2)
         for y in range(t.ridge + 1, t.ridge + 3):
             d.set(39, y, 6, "iron_bars")
         d.set(39, t.ridge + 3, 6, ROD())
     if L >= 5:                                                    # college hall round a quad
-        building(d, 3, 22, 24, 31, nf=2, axis="x", doors=(("north", 13), ("east", 27)), chimney=(2, 27))
+        b = building(d, 3, 22, 24, 31, nf=2, axis="x", doors=(("north", 13), ("east", 27)), chimney=(2, 27))
+        room(d, b, 0, ["BBbBBbBBb  BBbBBbBBB",   # college hall library: stacks, three reading tables
+                       "                    ",
+                       "  nnn      nnn  nnn ",
+                       "  TTT      TTT  TTT ",
+                       "  sss      sss  sss ",
+                       "                    ",
+                       "                   z",
+                       "      B B B B B B  B"], lights=[(3, 3), (12, 3), (17, 3)])
+        room(d, b, 1, ["1l1l1C1l1l1C1l1l1C1l",   # scholars' dormitory
+                       "2 2 2 2 2 2 2 2 2 2 ",
+                       "c                  c",
+                       "     nnn   nnn     K",
+                       "     TTT   TTT      ",
+                       "     sss   sss      ",
+                       "      4 4 4 4 4 4 4 ",
+                       "      3l3l3l3l3l3l3 "], lights=[(4, 3), (14, 3)])
+        wlamp(d, 12, 4, 21)
+        wlamp(d, 14, 4, 21)
         for x in range(26, 43):
             for z in range(13, 21):
                 d.set(x, 1, z, "grass_block[snowy=false]" if (x + z) % 7 else "gravel")
@@ -2966,12 +2997,17 @@ def en_cascadia(rel, L):
     put_all(d, 2, [(5, 4, SL("spruce", "top"), "potted_fern"), (11, 4, KEG.replace("FACE", "north"), "lantern[hanging=false,waterlogged=false]"), (4, 6, CHISEL.replace("FACE", "east")), (12, 6, CHISEL.replace("FACE", "west"))])
     # ---- growth: a mountain retreat of scholars
     if L >= 2:                                                    # scribe's cabin (L3: loft)
-        building(d, 20, 3, 28, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 24), ("west", 6)),
-                 chimney=(29, 6))
+        b = building(d, 20, 3, 28, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 24), ("west", 6)),
+                     chimney=(29, 6))
+        room(d, b, 0, ["Cl   lC", " s   s ", "   n   ", "   T  K", "      c"], lights=[(3, 2)])   # scribe's room
+        room(d, b, 1, ["1l1 1l1", "2 2 2 2", "c     K"], lights=[(3, 1)])
+        wlamp(d, 23, 4, 2)
         bench(d, 21, 2, "south", 2)
         lamp_post(d, 18, 1)
     if L >= 3:                                                    # bindery with a drying porch
-        building(d, 20, 13, 30, 20, nf=1, axis="z", doors=(("north", 25),))
+        b = building(d, 20, 13, 30, 20, nf=1, axis="z", doors=(("north", 25),))
+        room(d, b, 0, ["XO     BB", "         ", "  ===  K ", "  s s  k ", "        B", "m  KK  Kc"],
+             lights=[(4, 2)])                                         # bindery: cutter, sewing bench, paper stock
         for z in range(13, 21):
             d.set(31, 1, z, "spruce_planks")
             d.set(32, 1, z, "spruce_planks")
@@ -2980,6 +3016,10 @@ def en_cascadia(rel, L):
         drying_beam(d, 31, 31, 16, 4, "stripped_spruce_log") if False else None
     if L >= 4:                                                    # star-gazing lookout
         t = building(d, 34, 3, 40, 9, nf=4, roof="hip", doors=(("north", None),))
+        room(d, t, 0, ["B   B", "     ", "x   C", "  t  "], lights=[(2, 2)])    # star lookout: chart room,
+        room(d, t, 1, ["B C B", "     ", "  z  "], lights=[(2, 1)])             # almanacs,
+        room(d, t, 2, ["1l1  ", "2 2 c", "     "], lights=[(2, 2)])             # watchers' bunks,
+        room(d, t, 3, ["x t x", "  s  ", "K   K"])                              # observing room
         for y in range(t.ridge + 1, t.ridge + 3):
             d.set(37, y, 6, "spruce_fence")
         d.set(37, t.ridge + 3, 6, "lantern[hanging=false,waterlogged=false]")
@@ -2989,7 +3029,14 @@ def en_cascadia(rel, L):
             d.set(x, 2, 12, "spruce_fence")
         d.set(37, 2, 12, AIR)
     if L >= 5:                                                    # guest lodge for visiting scholars
-        building(d, 20, 23, 38, 31, nf=2, axis="x", doors=(("north", 29), ("west", 27)), chimney=(39, 27))
+        b = building(d, 20, 23, 38, 31, nf=2, axis="x", doors=(("north", 29), ("west", 27)), chimney=(39, 27))
+        room(d, b, 0, ["BC f        f CBP", "   t         t   ", "  sss       sss  ", "                 ",
+                       "     nnn nnn    K", "     TTT TTT    c", "      ss sss    K"],
+             lights=[(4, 2), (12, 2), (8, 5)])                       # guest lodge lounge and dining
+        room(d, b, 1, ["1l1l1C1l1l1C1l1l1", "2 2 2 2 2 2 2 2 2", "c  nn   nn      c", "   TT   TT      K",
+                       "                 ", "      4 4 4 4 4  ", "      3l3l3l3l3  "], lights=[(4, 2), (12, 2)])
+        wlamp(d, 28, 4, 22)
+        wlamp(d, 30, 4, 22)
         for z in range(12, 33, 5):
             tree(d, 42, 2, z, "spruce_log", "spruce_leaves", 7, 2, cone=True)
     return d

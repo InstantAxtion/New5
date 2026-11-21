@@ -634,14 +634,6 @@ def shutter_pair(d, x, y, z, facing, wood="spruce", h=2):
             d.set(x + ox + sx, y + k, z + oz + sz, tr(wood, sd, "bottom", True))
 
 
-def furnish(*a, **k):          # TEMP
-    return 0
-
-
-def furnish_all(*a, **k):      # TEMP
-    return None
-
-
 WOOD = {"Neoterra": "birch", "Hearthwood": "dark_oak", "Cascadia": "spruce"}
 RUG = {"Neoterra": ("light_gray_carpet", "cyan_carpet"), "Hearthwood": ("red_carpet", "orange_carpet"),
        "Cascadia": ("brown_carpet", "green_carpet")}
@@ -965,8 +957,7 @@ def builder_hw(rel, L):
                     ("L", 25, 25)])
         d.sign(26, 5, 20, "north", ["Builders'", "Guild"], "dark_oak")
         for x in range(16, 33):
-            if d.air(x, y0, 29):
-                d.set(x, y0, 29, "cobblestone_wall")
+            d.set(x, y0, 29, "cobblestone_wall")
     # yard: stacks, saw horse, hoist, water butt, bench
     yz = 13
     log_pile(d, 17, 22, 18, 27, y0, 2, "oak_log", "z") if L >= 3 else log_pile(d, 18, 5, 20, 9, y0, 2, "oak_log", "z")
@@ -985,7 +976,7 @@ def builder_hw(rel, L):
             if z % 4 == 3:
                 d.fill(33, y0, z, 33, 5, z, lg("stripped_dark_oak_log", "y"))
         log_pile(d, 31, 4, 32, 18, y0, 2, "dark_oak_log", "z")
-        for z in range(5, 19, 4):
+        for z in (5, 9, 13, 17):
             d.set(32, 5, z, LANT)
         # front garden wall with piers, a well in the yard
         for x in range(2, 18):
@@ -1096,7 +1087,7 @@ def builder_cas(rel, L):
             d.set(sx1, 7, z, lg("stripped_spruce_log", "z"))
             d.set(sx2, 7, z, lg("stripped_spruce_log", "z"))
         d.gable(sx1, sz1, sx2, sz2, 8, "x", "dark_oak_stairs", "dark_oak_slab", "spruce_planks")
-        for z in range(sz1 + 2, sz2 - 1, 4):
+        for z in (6, 10, 14):
             for x in range(sx1 + 1, sx2):
                 d.set(x, 7, z, lg("stripped_spruce_log", "x"))
             d.set(25, 6, z, LANT)
@@ -1511,7 +1502,7 @@ def saw_cas(rel, L):
     for z in range(z1, z2 + 1):
         d.set(x1, 6, z, lg("stripped_spruce_log", "z"))
         d.set(x2, 6, z, lg("stripped_spruce_log", "z"))
-    for x in range(x1 + 4, x2, 4):
+    for x in ((8, 12) if x2 == 15 else (8, 12, 16, 20)):
         for z in range(z1 + 1, z2):
             d.set(x, 6, z, lg("stripped_spruce_log", "z"))
         d.set(x, 5, 10, LANT)
@@ -1522,11 +1513,10 @@ def saw_cas(rel, L):
     saw_line(d, [(x, 10) for x in range(x1 + 3, x1 + 5 + n)], y0, n, "stripped_spruce_log", "x")
     d.hut(x1 + 1, y0, z1 + 1)
     d.item(x1 + 2, y0, z2 - 1, "crafting_table")
-    rack_line(d, [(x, z2 - 1) for x in range(x1 + 4, x2, 2)], y0, L, 1, "north")
-    for x in range(x1 + 5, x2, 2):
-        if d.air(x, y0, z2 - 1):
-            d.set(x, y0, z2 - 1, "spruce_planks")
-            d.set(x, y0 + 1, z2 - 1, sl("spruce"))
+    rack_line(d, [(x, z2 - 1) for x in (8, 10, 12, 14, 16)], y0, L, 1, "north")   # board racks
+    for x in ((9, 11, 13) if x2 == 15 else (9, 11, 13, 15, 17, 19)):            # plank stacks between them
+        d.set(x, y0, z2 - 1, "spruce_planks")
+        d.set(x, y0 + 1, z2 - 1, sl("spruce"))
     log_pile(d, 0, z1 + 1, 2, z2 - 1, y0, 2, "spruce_log", "z")
     for x in range(x1 + 2, x1 + 6):
         d.set(x, y0, z1 - 2, "stripped_spruce_wood[axis=x]")
@@ -1609,12 +1599,12 @@ def saw_cas(rel, L):
             d.set(x, 6, lz1, lg("stripped_spruce_log", "x"))
             d.set(x, 6, lz2, lg("stripped_spruce_log", "x"))
         d.gable(lx1, lz1, lx2, lz2, 7, "x", "dark_prismarine_stairs", "dark_prismarine_slab", "dark_oak_planks")
-        for x in range(lx1 + 1, lx2, 3):
+        for x in (4, 7, 10, 13, 16, 19, 22):
             for z in (lz1 + 1, lz1 + 2, lz2 - 2, lz2 - 1):
                 for k in range(3 if z in (lz1 + 1, lz2 - 1) else 2):
                     d.set(x, y0 + k, z, "spruce_planks" if k % 2 == 0 else "stripped_spruce_wood[axis=x]")
                     d.set(x + 1, y0 + k, z, "dark_oak_planks" if k % 2 == 0 else "stripped_spruce_wood[axis=x]")
-        for x in range(lx1 + 2, lx2, 4):
+        for x in (5, 9, 13, 17, 21):
             d.set(x, 6, 35, lg("stripped_spruce_log", "z")) if False else None
             d.set(x, 6, 35, LANT) if False else None
     return d
@@ -2765,14 +2755,6 @@ DLV = {1: 8, 2: 31, 3: 41, 4: 41, 5: 41}
 DSEAT = {1: 0, 2: 3, 3: 6, 4: 6, 5: 6}
 
 
-def dl_need(L, barrels_done=0):
-    """Deliveryman requirements for furnish_all."""
-    items = ["crafting_table", "cartography_table"] + (["lectern"] if L >= 2 else []) + \
-        (["cartography_table", "lectern"] if L >= 3 else []) + (["ender_chest"] if L >= 5 else [])
-    return dict(items=items, barrels=DLV[L] - barrels_done, books=12 if L >= 3 else 0, seats=DSEAT[L],
-                beds=1 if L >= 4 else 0)
-
-
 def dl_neo(rel, L):
     d = Design("Neoterra", rel, (36, 26, 30), paving="smooth_stone")
     P, y0 = "Neoterra", 2
@@ -3140,7 +3122,10 @@ def cp_neo(rel, L):
     a.door(8, 9, "north")
     d.sign(6, 4, 8, "north", ["RECYCLE", "& COMPOST"], "cherry", glow=True, color="lime")
     d.hut(4, y0, 10)
-    furnish(a.room(0, back="south"), "workshop", ["composter"], racks=min(L, 3), wood="cherry")   # potting room
+    # potting room: composter and potting bench on the back wall, seed racks, sacks of compost by the door
+    fit(d, y0, [("i", 4, 13, "composter")] + [("r", x, 14, 1) for x in (10, 11, 12)[:min(L, 3)]] +
+        [("s", x, 14, sl("cherry", "top")) for x in (5, 6, 7, 8)] + [("o", 5, 14, pot(0)), ("o", 7, 14, pot(4)),
+         ("s", 12, 10, "brown_wool"), ("s", 11, 10, "brown_wool"), ("G", 8, 12, "sea_lantern", 5)], "cherry")
     neo_roof(d, a, [(5, 11, 11, MOSS), (5, 11, 12, 'azalea'), (5, 11, 13, MOSS)])
     for i in range(min(CBAR[L], 2)):
         bin_bay(d, 3 + i * 4, 4, y0, "light_gray_concrete")
@@ -3153,11 +3138,14 @@ def cp_neo(rel, L):
     if L >= 2:
         s_ = build(d, 17, 9, 25, 15, 1, roof="flat")
         s_.opening(20, 9, 22, 9, 3, "lime_concrete")
-        rs = s_.room(0, back="south")
+        pass
         for x in (20, 22):                                            # sorting hoppers
             d.set(x, y0, 12, "hopper[enabled=true,facing=down]")
         d.set(21, y0, 12, sl("smooth_quartz", "top"))
-        furnish(rs, "store", racks=L - 3 if L > 3 else 0)
+        fit(d, y0, [("r", x, 14, 1) for x in (18, 19)[:max(0, L - 3)]] + [
+            ("s", 23, 14, "barrel[facing=up,open=false]"), ("s", 24, 14, "barrel[facing=up,open=false]"),
+            ("o", 23, 14, "white_wool"), ("s", 24, 10, "chest[facing=west,type=single,waterlogged=false]"),
+            ("G", 21, 11, "sea_lantern", 5)])
         neo_roof(d, s_, [(19, 23, 11, SOLAR), (19, 23, 13, SOLAR)])
         for i in range(CBAR[L] - 2):
             bin_bay(d, 17 + i * 4, 4, y0, "light_gray_concrete")
@@ -3180,10 +3168,17 @@ def cp_neo(rel, L):
     if L >= 4:
         e = build(d, 17, 18, 27, 26, 2 if L == 4 else 3, roof="flat", core=(25, 19), street_glass=True)
         e.door(20, 18, "north", double=True)
-        furnish(e.room(0, back="south"), "lounge", seats=4, sit=False, wood="cherry")     # visitor foyer
-        furnish(e.room(1, back="west"), "library", books=6, seats=2, sit=False, wood="cherry")  # classroom
+        # eco centre: visitor foyer with a sofa; classroom with shelves and pupils' desks; staff office on top
+        fit(d, y0, [("c", x, 23, "south", False) for x in (19, 20, 21, 22)] + [
+            ("s", 20, 21, sl("smooth_quartz", "top")), ("s", 21, 21, sl("smooth_quartz", "top")), ("rug", 19, 20, 22, 22, "lime_carpet"),
+            ("s", 18, 25, pot(3)), ("s", 23, 25, pot(0)), ("G", 21, 22, "pearlescent_froglight[axis=y]", 5)], "cherry")
+        fit(d, 6, [("k", 18, z, 2) for z in range(20, 25)] + [("s", 20, 23, sl("cherry", "top")), ("c", 20, 22, "north", False),
+                  ("s", 22, 23, sl("cherry", "top")), ("c", 22, 22, "north", False), ("s", 21, 25, "black_concrete"),
+                  ("G", 21, 22, "pearlescent_froglight[axis=y]" if L >= 5 else "sea_lantern", 9)], "cherry")
         if L >= 5:
-            furnish(e.room(2, back="south"), "office", seats=2, sit=False, wood="cherry")
+            fit(d, 10, [("s", 20, 25, sl("smooth_quartz", "top")), ("c", 20, 24, "north", False),
+                       ("s", 22, 25, sl("smooth_quartz", "top")), ("c", 22, 24, "north", False), ("s", 18, 19, pot(3)),
+                       ("G", 21, 22, "sea_lantern", 13)], "cherry")
         neo_roof(d, e, [(19, 25, 20, MOSS), (19, 25, 21, 'azalea'), (19, 25, 23, MOSS), (19, 25, 24, 'azalea')])
     # ---- biogas digesters (L5)
     if L >= 5:
@@ -3263,7 +3258,9 @@ def cp_hw(rel, L):
     a = build(d, 3, 10, 10, 14, 1, roof="gable", axis="x")
     a.door(6, 10, "north")
     d.hut(4, y0, 11)
-    furnish(a.room(0, back="south"), "store", ["composter"], racks=min(L, 3), wood="oak")   # potting shed shelves
+    # potting shed: compost seed racks along the back, potting bench, composter by the window
+    fit(d, y0, [("i", 9, 12, "composter")] + [("r", x, 13, 1) for x in (5, 6, 7)[:min(L, 3)]] + [
+        ("s", 8, 13, sl("oak", "top")), ("o", 8, 13, pot(2)), ("L", 5, 12)], "oak")
     for i in range(CBAR[L]):
         bx = 11 + (i % 2) * 4
         bz = 5 + (i // 2) * 5
@@ -3310,14 +3307,20 @@ def cp_hw(rel, L):
         for x in (8,):
             d.set(x, y0, wz2, AIR)
             d.set(x, y0 + 1, wz2, AIR)
-        furnish(c.room(0, back="west"), "lounge", racks=max(0, L - 3), wood="oak")   # parlour by the fire
+        # gardener's parlour: settle by the hearth, dresser racks, kitchen corner
+        fit(d, y0, [("r", x, 28, 1) for x in (6, 7)[:max(0, L - 3)]] + [("c", 6, z, "east", False) for z in (25, 27)] + [
+            ("s", 9, 28, "water_cauldron[level=3]"), ("s", 10, 28, sl("oak", "top")), ("o", 10, 28, pot(4)),
+            ("s", 5, 23, pot(1)), ("L", 8, 25)], "oak")
         if L >= 4:
-            furnish(c.room(1, back="south"), "dorm", beds=1, wood="oak")
+            fit(d, 6, [("bed", 7, 28, "south", "green"), ("s", 8, 28, sl("oak", "top")),
+                      ("s", 5, 23, "chest[facing=south,type=single,waterlogged=false]"), ("L", 8, 25)], "oak")
     # ---- leaf-mould barn (L4, loft L5) and orchard (L5)
     if L >= 5:
         bo = build(d, 27, 21, 33, 28, 1, roof="gable", axis="z", chimney=(32, 25, "west"))
         bo.door(27, 24, "west")
-        furnish(bo.room(0, back="east"), "dorm", beds=1, wood="oak")    # gardeners' bothy
+        fit(d, y0, [("bed", 29, 27, "south"), ("s", 30, 27, sl("oak", "top")), ("s", 31, 22, sl("oak", "top")),
+                    ("c", 30, 22, "west", False), ("s", 28, 22, "chest[facing=east,type=single,waterlogged=false]"),
+                    ("L", 30, 23)], "oak")
         for x in (18, 22, 24):
             d.set(x, y0, 31, "beehive[facing=north,honey_level=0]")
         lamp_post(d, 25, 21, y0, P)
@@ -3325,14 +3328,15 @@ def cp_hw(rel, L):
         for x in (16, 20, 24) if False else (16, 20):
             for z in (22, 26, 30):
                 tree(d, x, z, y0, "oak", 3, 1)
-                d.set(x + 1, y0 + 4, z, "flowering_azalea_leaves[distance=1,persistent=true,waterlogged=false]") \
-                    if d.air(x + 1, y0 + 4, z) else None
+                d.set(x + 1, y0 + 4, z, "flowering_azalea_leaves[distance=1,persistent=true,waterlogged=false]")
     if L >= 4:
         b = build(d, 26, 3, 33, 18, 2 if L >= 5 else 1, roof="gable", axis="z", core=(31, 5) if L >= 5 else None)
         b.opening(26, 9, 26, 11, 3, lg("stripped_oak_log", "z"))
-        furnish(b.room(0, back="east"), "loft")
+        fit(d, y0, [("s", x, z, "podzol[snowy=false]" if (x + z) % 2 else "rooted_dirt") for x in (28, 29, 30) for z in (14, 15, 16)] +
+            [("s", 28, 5, "brown_wool"), ("s", 29, 5, "brown_wool"), ("s", 32, 17, "hay_block[axis=y]"), ("L", 29, 13)])
         if L >= 5:
-            furnish(b.room(1, back="east"), "loft")
+            fit(d, 6, [("s", x, 17, "hay_block[axis=y]") for x in (28, 29, 30)] + [("o", 28, 17, "hay_block[axis=y]"),
+                                                                                     ("L", 29, 13)])
             hedge(d, [(x, 32) for x in range(0, 34)], y0, "oak")
             hedge(d, [(0, z) for z in range(4, 32)], y0, "oak")
     return d
@@ -3346,30 +3350,25 @@ def cp_cas(rel, L):
     for x in range(x1, x2 + 1):
         for z in range(z1, z2 + 1):
             d.set(x, 1, z, "packed_mud")
-    for x in list(range(x1, x2 + 1, 3)) + [x2]:
+    posts = set(range(x1, x2 + 1, 3)) | {x2}                        # pole posts every 3 (structure)
+    for x in posts:
         for z in (z1, z2):
             d.fill(x, y0, z, x, 4, z, lg("spruce_log", "y"))
             d.set(x, 1, z, "cobblestone")
     for x in range(x1, x2 + 1):
         d.set(x, 5, z1, lg("stripped_spruce_log", "x"))
         d.set(x, 5, z2, lg("stripped_spruce_log", "x"))
-        if d.air(x, y0, z2):
+        if x not in posts:
             d.set(x, y0, z2, "mossy_cobblestone")
             d.set(x, y0 + 1, z2, "cobblestone")
     d.gable(x1, z1, x2, z2, 6, "x", "dark_oak_stairs", "dark_oak_slab", "spruce_planks")
-    for x in range(x1, x2 + 1):
-        for k, z in enumerate(range(z1 - 1, (z1 + z2) // 2)):
-            y = 6 + k
-            if (x + k) % 3 == 0 and d.air(x, y, z):
-                d.set(x, y, z, "moss_carpet")
     d.hut(x1 + 1, y0, z1 + 1)
     d.item(x1 + 1, y0, z2 - 1, "composter")
-    rack_line(d, [(x1 + 2, z2 - 1)] + [(x, z2 - 1) for x in range(x1 + 4, x2, 3)], y0, min(L, 2), 1)
+    rack_line(d, [(x1 + 2, z2 - 1), (7, z2 - 1)], y0, min(L, 2), 1)
     for i in range(CBAR[L]):
         bx = x1 + 2 + i * 3
         d.item(bx, y0, z2 - 2, "minecolonies:barrel_block", "north")
-        if d.air(bx - 1, y0, z2 - 2):
-            d.set(bx - 1, y0, z2 - 2, lg("spruce_log", "z"))
+        d.set(bx - 1, y0, z2 - 2, lg("spruce_log", "z"))
     d.set(x1 + 3, 4, (z1 + z2) // 2, LANT)
     d.set(x2 + 2, y0, 6, "composter[level=4]")
     for z in range(2, 13):
@@ -3387,7 +3386,7 @@ def cp_cas(rel, L):
         for x, z in ((5, 19), (6, 19), (8, 19), (9, 19)):            # mushroom beds
             d.set(x, y0, z, "podzol[snowy=false]")
             d.set(x, y0 + 1, z, "brown_mushroom" if (x + z) % 2 else "red_mushroom")
-        furnish(m.room(0, back="south"), "store", racks=L - 2)
+        fit(d, y0, [("r", x, z, 1) for x, z in ((8, 21), (9, 21), (10, 19))[:L - 2]] + [("L", 7, 19)])
         d.set(7, y0, 15, AIR)
     # ---- worm barn (L4, two storeys at L5), greenhouse (L5)
     if L >= 4:
@@ -3395,9 +3394,11 @@ def cp_cas(rel, L):
         w.door(22, 6, "north", double=True)
         for z in range(9, 14):                                        # worm beds down the middle
             d.set(23, y0, z, "podzol[snowy=false]" if z % 2 else "rooted_dirt")
-        furnish(w.room(0, back="east"), "loft")
+        fit(d, y0, [("s", 19, 15, "brown_wool"), ("s", 20, 15, "brown_wool"), ("s", 27, 15, "hay_block[axis=y]"),
+                    ("s", 19, 7, "chest[facing=east,type=single,waterlogged=false]"), ("L", 21, 12)])
         if L >= 5:
-            furnish(w.room(1, back="east"), "loft")
+            fit(d, 6, [("s", x, 15, "hay_block[axis=y]") for x in (19, 20, 21)] + [("o", 19, 15, "hay_block[axis=y]"),
+                                                                                     ("L", 21, 12)])
     if L >= 5:
         gx1, gz1, gx2, gz2 = 15, 19, 27, 27
         d.box(gx1, y0, gz1, gx2, 4, gz2, "glass", floor="spruce_planks")

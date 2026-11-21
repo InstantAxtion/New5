@@ -93,20 +93,15 @@ def connect_walls(d):
                             f"up={up},waterlogged=false,west={sides['west']}]")
 
 
-def river(d, x1, x2, bed=("gravel", "clay", "sand"), weir="mossy_stone_bricks", lily=0):
+def river(d, x1, x2, bed=("gravel", "clay", "sand"), weir="mossy_stone_bricks", lily=()):
     """River channel along z between x1..x2: water in the ground layer, riverbed below, low weirs at the plot ends
     so the water stays inside the plot."""
     for x in range(x1, x2 + 1):
         for z in range(d.sz):
             d.set(x, 0, z, "structurize:blocksolidsubstitution")
             d.set(x, 1, z, weir if z in (0, d.sz - 1) else WATER)
-    if lily:
-        import random
-        rnd = random.Random(lily)
-        for _ in range(lily):
-            x, z = rnd.randint(x1, x2), rnd.randint(2, d.sz - 3)
-            if d.get(x, 1, z).startswith("minecraft:water") and d.air(x, 2, z):
-                d.set(x, 2, z, "lily_pad")
+    for x, z in lily:                                     # lily pads at hand-picked spots
+        d.set(x, 2, z, "lily_pad")
 
 
 def tree(d, x, z, y=2, h=4, log="oak_log", leaves="oak_leaves", r=2):
@@ -177,7 +172,7 @@ def core_gb_hearthwood(rel, L):
     zr1, zr2 = zc - 1, zc + 1                         # roadway
     zb1, zb2 = zc - 2, zc + 2                         # bridge body (parapets on these rows)
     stone, sst, sslab, swall = "stone_bricks", "stone_brick_stairs", "stone_brick_slab", "stone_brick_wall"
-    river(d, 9, 23, lily=6 if L >= 3 else 0)
+    river(d, 9, 23, lily=((10, 3), (12, 5), (21, 2), (20, 18), (11, 19), (22, 20)) if L >= 3 else ())
     # banks: stone quay edge, gravel road to the towers
     for z in range(1, d.sz - 1):
         for x in (8, 24):
@@ -462,7 +457,7 @@ def core_gb_cascadia(rel, L):
     Y = CA_DECK
     log, slog, pl = "spruce_log", "stripped_spruce_log", "spruce_planks"
     river(d, 11, 21, bed=("gravel", "cobblestone", "gravel", "mossy_cobblestone"), weir="mossy_cobblestone",
-          lily=0)
+          lily=())
     for z in range(1, d.sz - 1):
         for x in (10, 22):
             d.set(x, 1, z, ("cobblestone", "mossy_cobblestone", "andesite", "tuff")[(z * 3 + x) % 4])
@@ -617,9 +612,8 @@ def core_gb_cascadia(rel, L):
     if L >= 4:
         for x, z in ((8, 3), (24, 17)):
             lamppost(d, x, z, post="spruce_fence")
-        for x in range(11, 22):
-            if x % 3 == 1:
-                d.set(x, 2, 2, "lily_pad") if d.get(x, 1, 2).startswith("minecraft:water") else None
+        for x in (13, 16, 19):
+            d.set(x, 2, 2, "lily_pad")
     if L >= 5:
         for x, z in ((5, 2), (27, 18), (6, 18)):
             d.keg(x, 2, z, "east")
@@ -741,7 +735,7 @@ def core_gb_neoterra(rel, L):
     d = Design("Neoterra", rel, g["size"], gy=1, paving="grass_block[snowy=false]")
     zc = g["zc"]
     ze1, ze2 = zc - 3, zc + 3                            # deck edges (glass rails)
-    river(d, 10, 22, bed=("sand", "gravel", "clay"), weir="smooth_stone", lily=0)
+    river(d, 10, 22, bed=("sand", "gravel", "clay"), weir="smooth_stone", lily=())
     for z in range(1, d.sz - 1):
         for x in (9, 23):
             d.set(x, 1, z, "smooth_stone")
@@ -1634,13 +1628,12 @@ def core_rg_neoterra(rel, L):
         d.set(5, 2, z1, AIR)
         d.set(5, 3, z1, AIR)
         d.door(5, 2, z1, "north", "birch")
-        for x in range(x1 + 1, x2):
-            for z in range(z1 + 1, z2):
-                if x != 5 and (x + z) % 2 == 0:
-                    d.set(x, 2, z, ("wheat[age=7]", "carrots[age=5]", "potatoes[age=7]", "beetroots[age=3]")[(x + z) % 4])
+        # trial beds either side of the centre walk: one crop per bed, chosen by hand
+        for (xa, xb), crop in (((x1 + 1, 4), "wheat[age=7]"), ((6, x2 - 1), "carrots[age=5]")):
+            for x in range(xa, xb + 1):
+                for z in (z1 + 1, z1 + 2, z1 + 4, z1 + 5):
                     d.set(x, 1, z, "farmland[moisture=7]")
-                elif x != 5:
-                    d.set(x, 1, z, "farmland[moisture=7]")
+                    d.set(x, 2, z, crop if z < z1 + 3 else ("potatoes[age=7]" if crop.startswith("wheat") else "beetroots[age=3]"))
     if L >= 5:                                             # reflecting pools and flag poles on the plaza
         for x0 in (9, 20):
             for x in range(x0, x0 + 4):
@@ -2863,28 +2856,136 @@ def rg_cascadia(rel, L):
         d.set(x, 2, 2, "rail[shape=east_west,waterlogged=false]")
         if x % 2 == 0:
             d.set(x, 1, 2, "spruce_planks")
-    if L >= 2:                                             # scale house
-        building(d, 2, 6, 10, 12, ["office"], door="north", name=["Scale", "House"], pal=3)
-        for x in range(3, 10):
+    if L >= 2:
+        # ---- Scale House: the weighmaster's ledger lectern, desk by the stove, sacks waiting to be weighed
+        b = building(d, 2, 6, 10, 12, 1, door="north", hearth=(9, 9, "west"), pal=3)
+        plan(d, b, 0, ["9Q...b.",
+                       ".......",
+                       "..d2...",
+                       "R@R....",
+                       "pRR.s.b"], face={"Q": "south"})
+        put(d, b["S"], [(6, 4, 5, "sign", ("north", ["Scale", "House"])), (5, 4, 5, "torch", "north")])
+        for x in range(3, 10):                             # the wagon scale plate in front
             d.set(x, 1, 4, "smooth_stone")
-    if L >= 3:                                             # warehouse with a loading dock on the siding
-        building(d, 45, 6, 55, 14, ["store", "store"], door="north", name=["Feed &", "Seed"], chimney=False, pal=4)
+    if L >= 3:
+        # ---- Feed & Seed: rack bays of barrels and sacks on two floors, loading dock on the siding
+        b = building(d, 45, 6, 55, 14, 2, door="north", ladder=(54, 13, "north"), pal=4)
+        plan(d, b, 0, ["Bs.....sB",
+                       "....l....",
+                       "B.B...B.B",
+                       "s.s...s.s",
+                       "B.B...B.B",
+                       "....l....",
+                       "hhsWs.B.."])
+        plan(d, b, 1, ["WsWsWsWsW",
+                       ".........",
+                       "h.h...h.h",
+                       "h.s...s.h",
+                       "s.h...h.s",
+                       "....l....",
+                       "hshs.Bs.."])
         for x in range(45, 56):
             d.set(x, 1, 5, "spruce_planks")
             d.set(x, 1, 4, "spruce_planks")
-        for x in (46, 48, 53):
-            d.set(x, 2, 4, "barrel[facing=up,open=false]")
-        d.set(54, 2, 4, "white_wool")
-        d.set(54, 3, 4, "white_wool")
-    if L >= 4:                                             # feed mill and bunkhouse behind
-        building(d, 2, 33, 12, 42, ["mill", "workshop"], door="north", name=["Feed", "Mill"], chimney=False, pal=5)
-        building(d, 44, 33, 54, 42, ["kitchen", "home"], door="north", name=["Bunk", "House"], pal=6)
+        put(d, b["S"], [(50, 4, 5, "sign", ("north", ["Feed &", "Seed"])), (46, 2, 4, "barrel", None),
+                        (48, 2, 4, "barrel", None), (53, 2, 4, "barrel", None), (54, 2, 4, "sacks", "white_wool")])
+    if L >= 4:
+        # ---- Feed Mill: millstones and mixing tub on the ground floor, repair shop above
+        b = building(d, 2, 33, 12, 42, 2, door="north", ladder=(11, 41, "north"), pal=5)
+        plan(d, b, 0, ["sB.....Bs",
+                       ".........",
+                       "s.GVG...s",
+                       "h.......h",
+                       "s...l...s",
+                       "k..C.....",
+                       ".........",
+                       "hss.WsB.."], face={"G": "north", "V": "north"})
+        plan(d, b, 1, ["kwG...Bbb",
+                       ".........",
+                       "6..A....8",
+                       ".........",
+                       "6...l...8",
+                       ".........",
+                       "XX.......",
+                       "bsk...B.."], face={"G": "south", "A": "north"})
+        put(d, b["S"], [(7, 4, 32, "sign", ("north", ["Feed", "Mill"])), (6, 4, 32, "torch", "north")])
+        # ---- Bunk House: kitchen, card table and fireside chair below, rows of bunks above
+        b = building(d, 44, 33, 54, 42, 2, door="north", ladder=(53, 41, "north"), hearth=(45, 37, "east"), pal=6)
+        plan(d, b, 0, ["KFCc...bp",
+                       ".........",
+                       ".......xx",
+                       "..2..1...",
+                       "....4T2..",
+                       ".....3...",
+                       "6........",
+                       "b.B.s.B.."], face={"K": "south", "F": "south"})
+        plan(d, b, 1, ["vjvjvjvjv",
+                       ".........",
+                       "...R@R...",
+                       ".........",
+                       ".........",
+                       "^j^j^j^..",
+                       ".........",
+                       "b4t2..B.."])
+        put(d, b["S"], [(49, 4, 32, "sign", ("north", ["Bunk", "House"])), (48, 4, 32, "torch", "north")])
         for x, z in ((1, 30), (55, 30), (28, 48)):
             tree(d, x, z, h=6, log="spruce_log", leaves="spruce_leaves", r=2)
-    if L >= 5:                                             # co-op hall and grain sheds
-        building(d, 18, 36, 30, 46, ["shop", "office", "home"], door="north", name=["Grain", "Co-op Hall"], pal=7)
-        building(d, 35, 38, 42, 46, ["granary", "store"], door="west", name=["Grain", "Shed"], chimney=False, pal=8)
-        building(d, 4, 45, 12, 50, ["store"], door="east", name=["Tool", "Shed"], chimney=False, pal=9)
+    if L >= 5:
+        # ---- Grain Co-op Hall: co-op store, board room with the long table, manager's flat at the top
+        b = building(d, 18, 36, 30, 46, 3, door="north", ladder=(29, 45, "north"), hearth=(19, 41, "east"), pal=7)
+        plan(d, b, 0, ["bB.......Bb",
+                       "...l...l...",
+                       ".cec...cdc.",
+                       "...........",
+                       "..2........",
+                       "...B.B.B.B.",
+                       "6.........8",
+                       "6...l.....8",
+                       "sWsBsWs.h.."])
+        plan(d, b, 1, ["979..m..979",
+                       "...........",
+                       "..d..d..d..",
+                       "..3..3..3..",
+                       "...........",
+                       "..1111111..",
+                       ".4TTtTtTT2.",
+                       "..3333333..",
+                       "pQ.....B..."], face={"Q": "north"})
+        plan(d, b, 2, ["jv.9..vjv.7",
+                       "...........",
+                       "...R@R....8",
+                       "...RoR....8",
+                       "6..........",
+                       "6.4t2......",
+                       "...........",
+                       "KFCc..4T2..",
+                       "b.....B...."], face={"K": "north", "F": "north"})
+        put(d, b["S"], [(24, 4, 35, "sign", ("north", ["Grain", "Co-op Hall"])), (23, 4, 35, "torch", "north"),
+                        (25, 4, 35, "torch", "north")])
+        # ---- Grain Shed: bulk sacks and bales on two floors
+        b = building(d, 35, 38, 42, 46, 2, door="west", ladder=(41, 39, "south"), pal=8)
+        plan(d, b, 0, ["hhsW..",
+                       "......",
+                       "s.h..h",
+                       "...l.s",
+                       "s.h..h",
+                       "......",
+                       "hsWshh"])
+        plan(d, b, 1, ["sWs...",
+                       "......",
+                       "h.s..s",
+                       "h..l.h",
+                       "s.h..s",
+                       "......",
+                       "BhsWsB"])
+        put(d, b["S"], [(34, 4, 42, "sign", ("west", ["Grain", "Shed"]))])
+        # ---- Tool Shed: workbench, grindstone, anvil, timber
+        b = building(d, 4, 45, 12, 50, 1, door="east", pal=9)
+        plan(d, b, 0, ["kGwAbBb",
+                       ".......",
+                       "h..l...",
+                       "hsXXX.b"], face={"G": "south", "A": "south"})
+        put(d, b["S"], [(13, 4, 47, "sign", ("east", ["Tool", "Shed"]))])
         for x in (16, 32):
             lamppost(d, x, 34, post="spruce_fence")
         for x, z in ((14, 48), (43, 48), (55, 48)):
@@ -2902,28 +3003,146 @@ def rg_neoterra(rel, L):
     for x in list(range(0, OX)) + list(range(OX + 33, d.sx)):
         for z in range(0, 5):
             d.set(x, 1, z, "smooth_stone" if (x + z) % 4 else "light_gray_concrete")
-    if L >= 2:                                             # security gatehouse
-        building(d, 2, 7, 11, 14, ["office", "office"], door="north", name=["SECURITY", "GATE"], pal=3)
-        for x in range(1, 13, 3):
+    if L >= 2:
+        # ---- Security Gate: guard desk and lockers below, monitor wall and briefing table above
+        b = building(d, 2, 7, 11, 14, 2, door="north", ladder=(10, 13, "north"), pal=3)
+        plan(d, b, 0, ["9Q....cd",
+                       "...l....",
+                       "..d2....",
+                       "........",
+                       "6......B",
+                       "bbB.r..."], face={"Q": "south"})
+        plan(d, b, 1, ["m.Q.Q..9",
+                       "..3.3...",
+                       "........",
+                       "4TT2....",
+                       "........",
+                       "z..l..B."], face={"Q": "south"})
+        put(d, b["S"], [(6, 4, 6, "sign", ("north", ["SECURITY", "GATE"]))])
+        for x in (1, 4, 7, 10):
             d.set(x, 2, 5, "smooth_quartz")
             d.set(x, 3, 5, "sea_lantern")
-    if L >= 3:                                             # genetics lab
-        building(d, 48, 5, 58, 13, ["lab", "office"], door="north", name=["GENE", "LAB"], pal=4)
-        flowerbed(d, 48, 15, 58, 16, ("azure_bluet", "white_tulip", "allium"), "moss_block")
-    if L >= 4:                                             # greenhouse research wing and logistics centre
-        building(d, 2, 34, 12, 44, ["lab", "lab"], door="north", name=["CROP", "RESEARCH"], pal=5)
-        building(d, 48, 34, 58, 44, ["store", "office"], door="north", name=["LOGISTICS"], pal=6)
+    if L >= 3:
+        # ---- Gene Lab: wet lab with island benches, data office upstairs
+        b = building(d, 48, 5, 58, 13, 2, door="north", ladder=(57, 12, "north"), pal=4)
+        plan(d, b, 0, ["rCr.....7",
+                       ".........",
+                       "6.rc.rc.8",
+                       "....l....",
+                       "6.rc.cr.8",
+                       ".........",
+                       "kQ..B.b.."], face={"Q": "north"})
+        plan(d, b, 1, ["979.m.979",
+                       ".........",
+                       ".d..d..d.",
+                       ".3..3..3.",
+                       ".........",
+                       "4t2......",
+                       "z...l.B.."])
+        put(d, b["S"], [(53, 4, 4, "sign", ("north", ["GENE", "LAB"]))])
+        flowerrow(d, [(48, 15, "azure_bluet"), (49, 15, "white_tulip"), (50, 15, "allium"), (52, 15, "azure_bluet"),
+                      (54, 15, "white_tulip"), (56, 15, "allium"), (57, 15, "azure_bluet"), (58, 15, "white_tulip")],
+                  "moss_block")
+    if L >= 4:
+        # ---- Crop Research: seed-tray benches below, seed analysis lab above
+        b = building(d, 2, 34, 12, 44, 2, door="north", ladder=(11, 43, "north"), pal=5)
+        plan(d, b, 0, ["rcg...gcr",
+                       ".........",
+                       "6.iii.gg.",
+                       ".........",
+                       "6.ggg.ii.",
+                       "....l....",
+                       "C.iii.gg.",
+                       ".........",
+                       "kQ.B..b.."], face={"Q": "north"})
+        plan(d, b, 1, ["rCr..rcr7",
+                       ".........",
+                       "6.rc.cr.8",
+                       ".........",
+                       "6.cr.rc.8",
+                       "....l....",
+                       ".d..d..d.",
+                       ".3..3..3.",
+                       "bB....b.."])
+        put(d, b["S"], [(7, 4, 33, "sign", ("north", ["CROP", "RESEARCH"]))])
+        # ---- Logistics: rack aisles below, dispatch office above
+        b = building(d, 48, 34, 58, 44, 2, door="north", ladder=(57, 43, "north"), pal=6)
+        plan(d, b, 0, ["Bb.....bB",
+                       ".........",
+                       "B.B...B.B",
+                       "B.B...B.B",
+                       "s.s...s.s",
+                       "B.B.l.B.B",
+                       "B.B...B.B",
+                       ".........",
+                       "hsW..sB.."])
+        plan(d, b, 1, ["979.m.979",
+                       "....l....",
+                       ".d..d..d.",
+                       ".3..3..3.",
+                       ".........",
+                       ".d..d..d.",
+                       ".3..3..3.",
+                       "6.......8",
+                       "kQz...B.."], face={"Q": "north"})
+        put(d, b["S"], [(53, 4, 33, "sign", ("north", ["LOGISTICS"]))])
         for z in range(14, 34):
             d.set(7, 1, z, "smooth_stone")
             d.set(53, 1, z, "smooth_stone")
-    if L >= 5:                                             # visitor centre tower and park
-        building(d, 22, 40, 38, 50, ["shop", "office", "office", "office", "office"], door="west",
-                 name=["VISITOR", "CENTRE"], pal=7)
+    if L >= 5:
+        # ---- Visitor Centre: gift shop lobby, seed exhibition, auditorium, offices, roof-level cafe
+        b = building(d, 22, 40, 38, 50, 5, door="west", ladder=(37, 41, "south"), pal=7)
+        plan(d, b, 0, ["7z7z7z7z7z7.9..",
+                       "...............",
+                       "..cec.....cdc..",
+                       "...............",
+                       ".....l.....l...",
+                       "..B.B.....B.B..",
+                       "...............",
+                       "..4T2.....4T2..",
+                       "a.............a"])
+        plan(d, b, 1, ["9.9.9.9.9.9.9..",
+                       "...............",
+                       ".eee.iii.ggg...",
+                       "...............",
+                       ".......l.......",
+                       ".ggg.eee.iii...",
+                       "...............",
+                       "6.............8",
+                       "a.....Q.....a.."], face={"Q": "north"})
+        plan(d, b, 2, ["...............",
+                       "....2.2.2.2....",
+                       "....2.2.2.2....",
+                       "....2.2.2.2....",
+                       ".Q..........l..",
+                       "....2.2.2.2....",
+                       "....2.2.2.2....",
+                       "....2.2.2.2....",
+                       "a.............a"], face={"Q": "east"})
+        plan(d, b, 3, ["979.m.979.979..",
+                       "...............",
+                       ".d..d..d..d..d.",
+                       ".3..3..3..3..3.",
+                       "......l........",
+                       ".d..d..d..d..d.",
+                       ".3..3..3..3..3.",
+                       "...............",
+                       "kQz.....B...b.."], face={"Q": "north"})
+        plan(d, b, 4, ["KcrecC.........",
+                       "...............",
+                       "4T2..4T2..4T2..",
+                       "...............",
+                       ".....l....l....",
+                       "4T2..4T2..4T2..",
+                       "...............",
+                       "...............",
+                       "z.....9.9....z."], face={"K": "south"})
+        put(d, b["S"], [(21, 4, 45, "sign", ("west", ["VISITOR", "CENTRE"]))])
         for z in range(30, 52):
             d.set(20, 1, z, "smooth_stone")
         for x, z in ((1, 18), (59, 18), (1, 50), (59, 50), (44, 52)):
             tree(d, x, z, h=5, log="birch_log", leaves="birch_leaves", r=2)
-        for x in range(40, 47, 3):
+        for x in (40, 43, 46):
             d.set(x, 2, 47, "smooth_quartz")
             d.set(x, 3, 47, "sea_lantern")
     connect_walls(d)

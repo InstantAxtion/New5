@@ -2090,7 +2090,7 @@ def glassblower_hw(rel, L):
 
 
 def glassblower_cas(rel, L):
-    d = Design("Cascadia", rel, (54, 42, 44), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (54, 42, 43), paving="coarse_dirt")
     y0, y1 = 2, 5
     x1, z1, z2 = 3, 7, 14
     x2 = 13 if L < 3 else 20
