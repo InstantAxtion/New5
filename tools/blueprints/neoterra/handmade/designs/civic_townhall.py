@@ -186,11 +186,13 @@ def _put(d, x, y, z, block, te=None):
     d.set(x, y, z, block, te)
 
 
-def plan(d, y, x0, z0, rows, leg):
+def plan(d, y, x0, z0, rows, leg, w=None):
     """Stamp a hand-drawn floor plan: rows run north->south from z0, characters west->east from x0.
     ' ' and '.' leave the cell alone (walkway); every other character is looked up in `leg`: a block state
     string, or a function f(d, x, y, z) for counted pieces (chairs, beds, work blocks, shelves)."""
     for dz, row in enumerate(rows):
+        if w is not None and len(row) != w:
+            raise PlanError(f"plan row {dz} at ({x0},{y},{z0}) has {len(row)} cells, expected {w}: {row!r}")
         for dx, ch in enumerate(row):
             if ch in " .":
                 continue
@@ -861,8 +863,447 @@ def th_neoterra(rel, L):
     return d
 
 
+def lamppost_nt(d, x, z):
+    pts(d, Y0, [(x, z)], "light_gray_concrete")
+    pts(d, Y0 + 1, [(x, z)], "birch_fence")
+    pts(d, Y0 + 2, [(x, z)], "birch_fence")
+    pts(d, Y0 + 3, [(x, z)], "sea_lantern")
+
+
 def nt_rooms(d, L, B):
-    pass
+    W = "birch"
+    leg = base_leg(d, W, plant="potted_bamboo") | {"G": STK(*(["light_gray_stained_glass_pane"] * 3)),
+                                                  "s": "light_gray_shulker_box[facing=up]",
+                                                  "u": "water_cauldron[level=3]", "z": "flowering_azalea",
+                                                  "M": "moss_block", "S": "daylight_detector[inverted=false,power=0]",
+                                                  "e": "end_rod[facing=up]"}
+    sl = lambda y: y + 4                                             # noqa: E731
+    # ---------------------------------------------------------------- lobby (core ground)
+    lg = leg | {"K": BAR("east"), "C": IT("crafting_table"), "F": IT("furnace", "east"), "Z": BED("east", "cyan"),
+                "N": "white_concrete"}
+    plan(d, Y0, 19, 13, [
+        " ._.........p",        # reception counter beside the hut block, staff seat behind it
+        "p<_..........",
+        "K._.....^^...",        # file barrels on the west wall; meeting table for four
+        "K......<TT>..",
+        ".......<TT>..",
+        "C.......vv...",        # staff kitchenette: workbench + two ovens
+        "F.._.........",        # coffee table in front of the waiting sofa
+        "F.vvv.......N",
+        ("p...........Z" if L <= 2 else "." + "     " + "......Z"),   # night porter's bed (SE)
+    ], lg, w=13)
+    pts(d, Y0 + 1, [(21, 13)], "end_rod[facing=up]")
+    pts(d, Y0 + 1, [(22, 19), (28, 16)], "potted_bamboo")
+    pts(d, Y0 + 1, [(31, 20)], LANT())
+    hang(d, Y0, [(22, 15), (27, 16), (24, 19), (29, 20)], kind="sea_lantern")
+    # ---------------------------------------------------------------- plaza
+    for x in range(10, 41):
+        for z in range(1, 11):
+            d.set(x, 1, z, "polished_diorite" if z in (3, 7) or 24 <= x <= 25 else "smooth_stone")
+    lamppost_nt(d, 20, 4)
+    lamppost_nt(d, 30, 4)
+    for x in (16, 34):
+        pts(d, Y0, [(x, 9)], "moss_block")
+        pts(d, Y0 + 1, [(x, 9)], "flowering_azalea")
+    if L >= 2:
+        nt_wings(d, L, leg)
+    if L >= 3:
+        nt_upper(d, L, leg)
+    if L >= 4:
+        nt_rear(d, L, leg)
+    if L >= 5:
+        nt_tower(d, L, leg)
+
+
+def nt_wings(d, L, leg):
+    # ---------------------------------------------------------------- maker space (west wing)
+    lg = leg | {"S": IT("blast_furnace", "south"), "C": IT("crafting_table"), "O": IT("stonecutter", "south"),
+                "X": IT("fletching_table"), "P": IT("cartography_table"), "N": IT("loom", "south"),
+                "Y": IT("smithing_table"), "A": IT("anvil", "east"), "R": IT("grindstone", "east"),
+                "H": IT("smoker", "north"), "F": IT("furnace", "north"), "V": IT("brewing_stand"),
+                "Q": IT("water_cauldron[level=3]"), "w": "white_wool", "j": "cyan_wool"}
+    plan(d, Y0, 7, 13, [
+        "S.COX.PN..j",          # bench wall: cutter, fletching, plotter (cartography), loom
+        "Y..........",
+        "A..______..",          # assembly island
+        ("A" if L >= 3 else ".") + "...v.v....",
+        "...........",          # aisle door to door
+        "R..........",
+        ("R" if L >= 3 else ".") + "........ww",
+        "...........",
+        ".HF.VQ.....",          # lab / food side
+    ], lg, w=11)
+    pts(d, Y0 + 1, [(10, 15), (15, 15)], "end_rod[facing=up]")
+    pts(d, Y0 + 1, [(12, 15)], "potted_bamboo")
+    hang(d, Y0, [(9, 17), (15, 17)], kind="sea_lantern")
+    # ---------------------------------------------------------------- stores (east wing)
+    nb = need(d, "barrel") - 4
+    north = {5: ".KKKKK.sss.", 9: ".KKKKKKKKK."}[(nb + 1) // 2]
+    plan(d, Y0, 33, 13, [
+        north,
+        ".........<_",          # store clerk by the loading doors
+        "...........",
+        "...........",
+        "...........",
+        "...........",
+        "...........",
+        "...........",
+        "ss.ss..ssj.",
+    ], leg | {"K": BAR("south"), "j": "cyan_shulker_box[facing=up]"}, w=11)
+    pts(d, Y0 + 1, [(43, 14)], "end_rod[facing=up]")
+    pts(d, Y0 + 1, [(33, 21), (36, 21)], "light_gray_shulker_box[facing=up]")
+    hang(d, Y0, [(36, 17), (40, 17)], kind="sea_lantern")
+
+
+def nt_upper(d, L, leg):
+    y = 7
+    # ---------------------------------------------------------------- council chamber (core upper)
+    plan(d, y, 19, 13, [
+        "p.....I....." + ("J" if L >= 4 else "p"),
+        ".............",
+        "..<T.....T>..",          # horseshoe council table open toward the lectern
+        "..<T.....T>..",
+        "..<T.....T>..",
+        "..<TTTTTTT>..",
+        "...vvvvvvv...",
+        "     ........",
+        "      .......",
+    ], leg | {"I": IT("lectern", "south"), "J": IT("jukebox")}, w=13)
+    pts(d, y + 1, [(22, 15), (28, 15)], "potted_bamboo")
+    pts(d, y + 1, [(25, 18)], "end_rod[facing=up]")
+    hang(d, y, [(25, 16), (25, 19)], kind="sea_lantern")
+    # ---------------------------------------------------------------- archive (west upper)
+    plan(d, y, 7, 13, [
+        "B..p....p..",
+        "B..........",
+        "B.bbbbbb...",          # free-standing record stack
+        "B..........",
+        "B..........",
+        "B...E......",
+        "B..........",
+        "B.^..^..^..",
+        "B._.._.._..",          # study carrels under the south glazing
+    ], leg | {"E": IT("enchanting_table")}, w=11)
+    pts(d, y + 1, [(9, 21), (12, 21), (15, 21)], LANT())
+    hang(d, y, [(10, 17), (14, 17)], kind="sea_lantern")
+    # ---------------------------------------------------------------- guest rooms (east upper)
+    plan(d, y, 33, 13, [
+        "p.........p",
+        "...........",
+        "..vvv......",            # sofa facing the media wall
+        "..._.......",
+        "...........",
+        "...........",
+        ".N.N.N.N.N.",            # bed pods with low partitions
+        "...........",
+        ".H.H.H.H.H.",
+    ], leg | {"H": BED("south", "cyan"), "N": "white_concrete"}, w=11)
+    for x in (34, 36, 38, 40, 42):
+        d.set(x, y, 20, AIR) if False else None
+    for x in (34, 36, 38, 40, 42):
+        pts(d, y + 1, [(x, 19)], LANT())
+    d.fill(34, y + 1, 13, 36, y + 2, 13, "black_concrete") if False else None
+    hang(d, y, [(38, 16), (38, 19)], kind="sea_lantern")
+    # ---------------------------------------------------------------- roof gardens on the wings
+    ry = 12
+    plan(d, ry, 7, 13, [
+        "zM.......Mz",
+        "M..p...p..M",
+        "...........",
+        ".zz.....zz.",
+        "...........",
+        "M..p...p..M",
+        "zM.......Mz",
+        "...........",
+        ".V.......R.",
+    ], leg | {"V": STK("smooth_stone", "iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]"),
+              "R": "lightning_rod[facing=up,powered=false,waterlogged=false]"}, w=11)
+    plan(d, ry, 33, 13, [
+        "...........",
+        ".SSSSSSSSS.",
+        ".SSSSSSSSS.",
+        "...........",
+        ".SSSSSSSSS.",
+        ".SSSSSSSSS.",
+        "...........",
+        ".SSSSSSSSS.",
+        "V.........R",
+    ], leg | {"V": STK("smooth_stone", "iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]"),
+              "R": "lightning_rod[facing=up,powered=false,waterlogged=false]"}, w=11)
+
+
+def nt_rear(d, L, leg):
+    # ---------------------------------------------------------------- canteen (rear ground)
+    plan(d, Y0, 19, 23, [
+        ".....p.p.....",
+        "............ ",
+        "..^^^^^^^^.. ",
+        ".<TTTTTTTT>. ",
+        "..vvvvvvvv.. ",
+        "............ ",
+        "..^^^^^^^^...",
+        ".<TTTTTTTT>..",
+        "..vvvvvvvv...",
+        ".............",
+        "__H_u___j___c",          # servery along the south wall
+    ], leg | {"H": "smoker[facing=north,lit=false]", "j": "cyan_shulker_box[facing=up]",
+              "c": "chest[facing=north,type=single,waterlogged=false]"}, w=13)
+    pts(d, Y0 + 1, [(22, 26), (27, 30)], "potted_bamboo")
+    pts(d, Y0 + 1, [(25, 26), (24, 30)], LANT())
+    pts(d, Y0 + 1, [(20, 33)], "cake[bites=0]")
+    hang(d, Y0, [(23, 26), (27, 26), (23, 30), (27, 30)], kind="sea_lantern")
+    # ---------------------------------------------------------------- open-plan offices (rear floor 2)
+    y = 7
+    plan(d, y, 19, 23, [
+        "p.........u..",
+        "............ ",
+        "..<__><__>.  ",          # four-desk pods
+        "..<__><__>.  ",
+        "..........   ",
+        " ............",
+        " .<__><__>...",
+        " .<__><__>...",
+        " ............",
+        " ............",
+        ".sss...p..._E",          # filing cabinets, the town safe (ender chest)
+    ], leg | {"E": IT("ender_chest", "west")}, w=13)
+    pts(d, y + 1, [(22, 25), (27, 26), (23, 30), (26, 29)], "potted_bamboo")
+    pts(d, y + 1, [(30, 33)], "end_rod[facing=up]")
+    hang(d, y, [(24, 26), (24, 30), (28, 31)], kind="sea_lantern")
+    # ---------------------------------------------------------------- planning studio (rear floor 3)
+    y = 12
+    plan(d, y, 19, 23, [
+        "p...bbbbbb..p",
+        ".............",
+        "...........<_",          # drafting desks on the east glazing
+        "....^^^......",
+        "...<TTT>.....",          # city model table
+        "...<TTT>...<_",
+        "  ..vvv......",
+        "  ...........",
+        "  .........<_",
+        " ..._........",
+        "..vvv....p..p",          # lounge sofa
+    ], leg, w=13)
+    pts(d, y + 1, [(23, 27), (25, 28)], "light_blue_carpet")
+    pts(d, y + 1, [(24, 27), (23, 28)], "lime_carpet")
+    pts(d, y + 1, [(25, 27), (24, 28)], "white_carpet") if False else None
+    pts(d, y + 1, [(31, 25), (31, 28), (31, 31)], "end_rod[facing=up]")
+    pts(d, y + 1, [(22, 32)], "potted_bamboo")
+    hang(d, y, [(24, 28), (29, 25), (25, 32)], kind="sea_lantern")
+    # ---------------------------------------------------------------- sky garden on the rear block
+    plan(d, 17, 19, 23, [
+        "zMMM.....MMMz",
+        "M...........M",
+        "M..v.v.v.v..M",
+        "...._._._....",
+        "M...........M",
+        "M.....e.....M",
+        "M...........M",
+        "....^.^.^....",
+        "M...........M",
+        "M...........M",
+        "zMMMM...MMMMz",
+    ], leg | {"v": OUTSEAT("south", "birch"), "^": OUTSEAT("north", "birch")}, w=13)
+    for x, z in ((23, 32), (29, 32)):
+        pts(d, 18, [(x, z)], "flowering_azalea") if False else None
+    # roof terrace on the council block
+    plan(d, 12, 19, 13, [
+        "MzM.......MzM",
+        ".............",
+        "..S.S.S.S.S..",
+        "..S.S.S.S.S..",
+        ".............",
+        "..S.S.S.S.S..",
+        "..S.S.S.S.S..",
+        ".............",
+        "MzM...V...MzM",
+    ], leg | {"V": STK("smooth_stone", "iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")}, w=13)
+    # ---------------------------------------------------------------- fountain plaza
+    for x in range(23, 28):
+        for z in range(2, 7):
+            ring = x in (23, 27) or z in (2, 6)
+            d.set(x, 1, z, "smooth_quartz" if ring else "light_blue_concrete")
+            d.set(x, Y0, z, slab("smooth_quartz_slab") if ring else "water[level=0]")
+    d.set(25, Y0, 4, "smooth_quartz")
+    d.set(25, Y0 + 1, 4, "end_rod[facing=up]")
+    d.set(25, Y0 + 2, 4, "sea_lantern")
+    for x, z in ((12, 3), (38, 3), (12, 8), (38, 8)):
+        oak(d, x, z, "birch_log", "birch_leaves", 4)
+    plan(d, Y0, 15, 5, ["^^"], {"^": OUTSEAT("north", "birch")})
+    plan(d, Y0, 33, 5, ["^^"], {"^": OUTSEAT("north", "birch")})
+
+
+def stall_nt(d, x, z, color, goods):
+    for dx in (0, 2):
+        for yy in (2, 3, 4):
+            _put(d, x + dx, yy, z, "birch_fence")
+            _put(d, x + dx, yy, z + 2, "birch_fence")
+    for dx in range(3):
+        for dz in range(3):
+            _put(d, x + dx, 5, z + dz, f"{color}_concrete" if dx != 1 else "white_concrete")
+    _put(d, x + 1, 2, z, slab("smooth_quartz_slab", "top"))
+    _put(d, x + 1, 3, z, goods)
+    _put(d, x + 1, 2, z + 2, "composter[level=8]")
+
+
+def nt_tower(d, L, leg):
+    X = 35
+    # F0 city lobby
+    plan(d, Y0, X, 25, [
+        " p.......p.",
+        " ..........",
+        " ..<TT>....",            # city model
+        " ..<TT>....",
+        " ..........",
+        "...........",
+        "...........",
+        "...^.^.....",            # reception
+        "..._____...",
+        "...........",
+        ".._....._..",
+        ".vvv...vvv.",            # waiting sofas
+        "...........",
+        "p.........p",
+        "...........",
+    ], leg, w=11)
+    pts(d, Y0 + 1, [(39, 27), (40, 28)], "light_blue_carpet")
+    pts(d, Y0 + 1, [(40, 27), (39, 28)], "lime_carpet")
+    pts(d, Y0 + 1, [(39, 33)], "end_rod[facing=up]")
+    pts(d, Y0 + 1, [(41, 33), (37, 35), (43, 35)], "potted_bamboo")
+    hang(d, Y0, [(38, 30), (42, 30), (40, 36), (40, 26)], kind="sea_lantern")
+    # F1 planning office
+    y = 7
+    plan(d, y, X, 25, [
+        " ..........",
+        "  <__><__>.",
+        "  <__><__>.",
+        "  .........",
+        " ..........",
+        "...........",
+        ".<__><__>..",
+        ".<__><__>..",
+        "...........",
+        "c..........",
+        ".......... ",
+        "..^^^..... ",
+        ".<TTT>.... ",            # breakout table
+        "..vvv..... ",
+        "p........p ",
+    ], leg | {"c": "chest[facing=east,type=single,waterlogged=false]"}, w=11)
+    pts(d, y + 1, [(38, 26), (43, 27), (37, 32), (42, 31)], "potted_bamboo")
+    pts(d, y + 1, [(39, 37)], "end_rod[facing=up]")
+    hang(d, y, [(40, 27), (40, 31), (39, 37)], kind="sea_lantern")
+    # F2 records hall
+    y = 12
+    plan(d, y, X, 25, [
+        " BBBBBBBBB.",
+        " ..........",
+        " .BBBBBBB..",
+        " ..........",
+        " .BBBBBBB..",
+        "...........",
+        "...........",
+        ".^^^...^^^.",
+        ".TTT...TTT.",
+        ".vvv...vvv.",
+        ".......... ",
+        "B........  ",
+        "B..I.....  ",
+        "B........  ",
+        "B.......p. ",
+    ], leg | {"I": "lectern[facing=east,has_book=false,powered=false]"}, w=11)
+    pts(d, y + 1, [(37, 33), (43, 33)], LANT())
+    hang(d, y, [(40, 26), (40, 28), (40, 31)], kind="sea_lantern")
+    # F3 meeting rooms
+    y = 17
+    plan(d, y, X, 25, [
+        " ..........",
+        "  .........",
+        "  ..^^^^^..",
+        "  .<TTTTT>.",
+        "  .<TTTTT>.",
+        "....vvvvv..",
+        "...........",
+        "GGGGG.GGGGG",            # glass partition
+        "...........",
+        "....^^^....",
+        "...<TTT>.. ",
+        "....vvv... ",
+        ".......... ",
+        "s......... ",
+        ".........p ",
+    ], leg, w=11)
+    pts(d, y + 1, [(41, 28), (40, 35)], "potted_bamboo")
+    hang(d, y, [(41, 29), (40, 35)], kind="sea_lantern")
+    # F4 staff canteen
+    y = 22
+    plan(d, y, X, 25, [
+        " _M_u___c..",
+        " ..........",
+        " ..........",
+        " .^^...^^..",
+        " <TT><TT>..",
+        " .vv...vv..",
+        "...........",
+        "..^^...^^..",
+        ".<TT><TT>..",
+        "..vv...vv..",
+        ".......... ",
+        "p........  ",
+        ".........  ",
+        "._.......  ",
+        "vvv.....p. ",
+    ], leg | {"M": "smoker[facing=south,lit=false]", "c": "chest[facing=south,type=single,waterlogged=false]"}, w=11)
+    pts(d, y + 1, [(37, 29), (42, 33)], "potted_bamboo")
+    pts(d, y + 1, [(36, 25)], "cake[bites=0]")
+    hang(d, y, [(39, 29), (39, 33), (37, 37)], kind="sea_lantern")
+    # F5 mayor's sky office and lounge
+    y = 27
+    plan(d, y, X, 25, [
+        " .bb...bb..",
+        "  .........",
+        "  ...^.....",            # mayor's desk facing the door
+        "  ..___....",
+        " ...v.v....",
+        "...........",
+        "..aaaaaaa..",
+        "...........",
+        "...........",
+        "p.........p",
+        "...^^^.....",
+        "..<___>....",            # lounge
+        "...vvv.....",
+        "^^^^^......",            # bar stools
+        "_____....pp",
+    ], leg, w=11)
+    pts(d, y + 1, [(39, 28)], LANT())
+    pts(d, y + 1, [(41, 28), (38, 39), (40, 36)], "potted_bamboo")
+    pts(d, y + 1, [(36, 39)], "brewing_stand[has_bottle_0=false,has_bottle_1=false,has_bottle_2=false]")
+    hang(d, y, [(40, 28), (40, 36), (37, 31)], kind="sea_lantern")
+    # roof: helipad and solar field
+    plan(d, 32, X, 25, [
+        "SSSSS.SSSSS",
+        "...........",
+        "SSSSS.SSSSS",
+        "...........",
+        "..yyyyyyy..",
+        "..y.....y..",
+        "..y.w.w.y..",
+        "..y.www.y..",
+        "..y.w.w.y..",
+        "..y.....y..",
+        "..yyyyyyy..",
+        "...........",
+        "SSSSS.SSSSS",
+        "...........",
+        "MV.......RM",
+    ], leg | {"V": STK("smooth_stone", "iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]"),
+              "R": "lightning_rod[facing=up,powered=false,waterlogged=false]", "w": "white_carpet"}, w=11)
+    # street side additions: market stalls on the plaza, door lights
+    stall_nt(d, 5, 3, "orange", "melon")
+    stall_nt(d, 42, 2, "lime", "pumpkin")
+    pts(d, Y0 + 2, [(39, 41), (42, 41)], "end_rod[facing=up]") if False else None
 
 
 @design("townhall")

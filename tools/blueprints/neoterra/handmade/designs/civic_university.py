@@ -945,186 +945,310 @@ def uni_neoterra(rel, L):
 
 
 
-# OLD (to convert)
-globals().update({k: v for k, v in vars(__import__('designs._civic_common', fromlist=['x'])).items() if not k.startswith('__') and k not in globals()})
-
+# ============================================================================================ Cascadia
 def uni_cascadia(rel, L):
-    """Timber college: lodges round a quad joined by covered boardwalks."""
+    """Timber college: study lodge with a porch (L1) -> chemistry cabin & covered boardwalk (L2) -> lecture
+    lodge and the campfire quad (L3) -> reading lodge, bunkhouse, lodge loft (L4) -> mess hall, fire lookout,
+    faculty lodge and a boardwalk round the whole quad (L5)."""
     d = new("Cascadia", rel, (53, 30, 55), paving="coarse_dirt")
-    st_nf = 2 if L >= 4 else 1
-    b = bldg(d, 6, 6, 18, 14, st_nf, "gable", "x")
-    ext_door(d, 12, Y0, 6, "south")
-    d.fill(5, 1, 2, 19, 1, 5, "spruce_planks")                     # porch
-    for x in (5, 19, 9, 15):
+    lg = legend(d, h=_bed("north"), u="cauldron", q="cake[bites=0]", m="potted_red_mushroom",
+                d="decorated_pot[cracked=false,facing=north,waterlogged=false]", U="water_cauldron[level=3]",
+                v="brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]",
+                Z="smoker[facing=south,lit=true]", O="furnace[facing=south,lit=false]", C=chest("south"),
+                P="cartography_table")
+    lg["<"] = _bed("west")
+    LOGY = log("spruce_log")
+
+    # ---------------------------------------------------------------- study lodge with porch (loft at L4)
+    loft = L >= 4
+    b = shell(d, 6, 6, 18, 14, 2 if loft else 1, "gable", "x", ties=(10, 14))
+    entrance(d, 12, Y0, 6, "south")
+    d.fill(5, 1, 2, 19, 1, 5, "spruce_planks")                       # porch deck, posts, lean-to roof
+    for x in (5, 9, 15, 19):
         for y in range(Y0, 6):
-            put(d, x, y, 2, log("spruce_log"))
+            d.set(x, y, 2, LOGY)
     for x in range(4, 21):
         d.set(x, 6, 1, st("spruce_stairs", "south"))
         for z in range(2, 6):
             d.set(x, 6, z, slab("spruce_slab"))
+    for x in (6, 7, 8, 16, 17, 18):                                   # porch rail between the posts
+        d.set(x, Y0, 2, "spruce_fence")
+    d.set(12, 5, 4, "lantern[hanging=true,waterlogged=false]")
+    d.set(7, 5, 4, "lantern[hanging=true,waterlogged=false]")
+    d.set(17, 5, 4, "lantern[hanging=true,waterlogged=false]")
+    d.chair(14, Y0, 5, "north", "spruce", sit=False)                  # porch bench by the door
+    d.chair(15, Y0, 5, "north", "spruce", sit=False)
+    d.set(16, Y0, 5, "barrel[facing=up,open=false]")
+    d.set(8, Y0, 5, "potted_fern")
     d.sign(12, 5, 5, "north", ["TIMBERLINE", "COLLEGE"], "spruce")
-    d.hut(7, Y0, 7)
-    keep(d, 8, Y0, 7)
-    d.item(17, Y0, 7, "lectern", "west")
-    keep(d, 16, Y0, 7)
-    d.rack(7, Y0, 13, "north")
-    keep(d, 7, Y0, 12)
-    d.item(17, Y0, 13, "furnace", "west")
-    keep(d, 16, Y0, 13)
     d.hearth(12, Y0, 13, "north", b["ridge"] + 1, "cobblestone", "campfire")
     chimney(d, 12, 14, Y0, b["ridge"] + 1)
-    if st_nf > 1:
-        stair_up(d, 16, 8, Y0, 7, "south")
-    for x in range(10, 15):
-        d.table(x, Y0, 9, "spruce", "block", "stripped_spruce_wood[axis=y]")
-        d.chair(x, Y0, 8, "north", "spruce")
-        d.chair(x, Y0, 10, "south", "spruce")
-    d.chair(11, Y0, 11, "south", "spruce", arms=True) if False else None
-    shelf_wall(d, (7, 7, 17, 13), "w", Y0, 3, skip=[(7, 7), (7, 13)])
-    shelf_wall(d, (7, 7, 17, 13), "e", Y0, 2, skip=[(17, 7), (17, 13)])
-    rug_in(d, (9, 11, 15, 12), Y0, ("brown_carpet",), inset=0, pattern="plain")
-    if st_nf > 1:
-        dorm(d, (7, 7, 17, 13), 7, 4, head="n")
+    keep(d, 8, Y0, 7)
+    keep(d, 16, Y0, 7)
+    keep(d, 7, Y0, 12)
+    keep(d, 16, Y0, 13)
+    lg.update(Y=_hut(), Q=_it("lectern", "west"), R=_rack("north"), F=_it("furnace", "west"))
+    if loft:
+        stairs(d, 16, 8, Y0, 7, "south", rails=[(16, 7, 8), (15, 7, 9), (15, 7, 10), (15, 7, 11),
+                                                 (17, 7, 9), (17, 7, 10), (17, 7, 11)])
+    sc = " " if loft else "."
+    west = "B" if L >= 2 else "."
+    # common room: long study table, two chairs at the fire, lectern, rack, stove and books
+    plan(d, 7, 7, Y0, [
+        ["Y.p.....p.Q",
+         west + ".nnn.nnn" + sc + ".",
+         west + ".TTTTTTT" + sc + ".",
+         west + ".sssssss" + sc + ".",
+         west + "...n.n.." + sc + ".",
+         "...=====" + "." + sc + ".",
+         "R.BB   BB.F"],
+        ["",
+         "",
+         "   c   c",
+         "",
+         "",
+         "",
+         "  BB   BB  " if L >= 2 else ""],
+        [],
+        ["", "", "", "   L   L"]], lg)
+    if loft:                                                          # sleeping loft for first-years
+        plan(d, 7, 7, 7, [
+            ["hthChthC...",
+             " . . . .. .",
+             "........   ",
+             ".=====..   ",
+             "........   ",
+             "te....... .",
+             "XBB.. .BB p"],
+            [" k   k", "", "", "", "", "o", " BB   BB"],
+            [], [],
+            ["", "", "", "   L   L"]], lg)
+    bed_of(d, 1, 3, 3, 5, ("fern", "blue_orchid", "fern", "lily_of_the_valley"))
+    post_lamp(d, 21, 4)
+
+    # ---------------------------------------------------------------- L2: chemistry cabin + boardwalk
     if L >= 2:
-        c_nf = 1
-        b2 = bldg(d, 30, 6, 42, 14, c_nf, "gable", "x")
-        ext_door(d, 36, Y0, 6, "south")
+        b2 = shell(d, 30, 6, 42, 14, 1, "gable", "x", ties=(34, 38))
+        entrance(d, 36, Y0, 6, "south")
         d.sign(36, 5, 5, "north", ["CHEMISTRY"], "spruce")
         chimney(d, 42, 10, Y0, b2["ridge"] + 1)
-        fur = max(0, need(d, "furnace") - 1)
-        reqs = [("brewing_stand", 41, 8, None), ("water_cauldron", 41, 9, None), ("crafting_table", 41, 10, None)]
-        reqs += [("furnace", 41, 11 + i, "west") for i in range(fur)]
-        for it, x, z, f in reqs:
-            keep(d, x - 1, Y0, z)
-        lab(d, (31, 7, 41, 13), Y0, req=reqs)
-        shelf_wall(d, (31, 7, 41, 13), "s", Y0, 2, skip=[(31, 13), (41, 13)])
-        # covered boardwalk
+        for z in range(8, 13):
+            keep(d, 40, Y0, z)
+        hot = need(d, "furnace") > 1
+        cl = dict(lg, V=_it("brewing_stand"), K=_it("crafting_table"), F=_it("furnace", "west"))
+        cl["U"] = _it("water_cauldron")
+        plan(d, 31, 7, Y0, [
+            ["utu...BBB.p",
+             "..........V",
+             "..........U",
+             "..TTTTT...K",
+             "..s.s.s..." + ("F" if hot else "."),
+             ".........." + ("F" if hot else "p"),
+             "BBBBBBB...p"],
+            [" m    oko  ",
+             "", "",
+             "  vdcko",
+             "", "",
+             "BBBBBBB"],
+            [],
+            ["", "", "", "   L   L"]], cl)
+        # covered boardwalk between the two cabins
         for x in range(19, 30):
             for z in range(8, 13):
                 d.set(x, 1, z, "spruce_planks")
                 d.set(x, 6, z, slab("spruce_slab"))
+        for x in range(19, 30):
             for z in (8, 12):
-                if x % 3 == 1:
-                    for y in range(Y0, 6):
-                        d.set(x, y, z, log("spruce_log"))
-                else:
-                    d.set(x, Y0, z, "spruce_fence")
-        for x0 in (18, 30):
-            link(d, x0, Y0, 10, "east" if x0 == 18 else "west")
-        for x in range(20, 30, 4):
+                d.set(x, Y0, z, "spruce_fence")
+        for x in (19, 22, 25, 28):
+            for z in (8, 12):
+                for y in range(Y0, 6):
+                    d.set(x, y, z, LOGY)
+        for z in (8, 12):                                             # side openings onto the yard
+            d.set(24, Y0, z, AIR)
+        link(d, 18, Y0, 10, "east")
+        link(d, 30, Y0, 10, "west")
+        for x in (21, 24, 27):
             d.set(x, 5, 10, "lantern[hanging=true,waterlogged=false]")
-        for x in (24,):
-            d.set(x, Y0, 8, AIR)
-            d.set(x, Y0, 12, AIR)
-        for x, z in ((22, 3), (27, 3), (46, 4)):
+        trees = [(22, 3), (27, 3)] + ([(46, 4)] if L < 5 else [])
+        for x, z in trees:
             plant_tree(d, x, z)
+
+    # ---------------------------------------------------------------- L3: lecture lodge + campfire quad
     if L >= 3:
-        lec = bldg(d, 12, 38, 38, 46, 1, "gable", "x", wh=5)
-        ext_door(d, 25, Y0, 38, "north", double=True)
-        lecture(d, (13, 39, 37, 45), Y0, "w", h=5)
-        shelf_wall(d, (13, 39, 37, 45), "e", Y0, 3)
-        chimney(d, 12, 42, Y0, lec["ridge"] + 1)
-        lawn(d, 6, 16, 46, 36, "grass_block[snowy=false]")
-        for x in range(6, 47):
-            for z in range(16, 37):
-                if (x * 7 + z * 3) % 11 == 0:
-                    d.set(x, 1, z, "moss_block")
-        path(d, 24, 15, 26, 37, "spruce_planks", border=False)
-        cx, cz = 15, 26
+        lawn(d, 6, 16, 46, 36)
+        for x, z in ((8, 18), (9, 18), (12, 31), (13, 31), (30, 19), (31, 19), (31, 20), (40, 33), (41, 33),
+                     (36, 21), (44, 29), (19, 34), (20, 34)):
+            d.set(x, 1, z, "moss_block")
+        pave(d, 24, 15, 26, 37, "spruce_planks")
+        cx, cz = 19, 26                                               # campfire ring with log seats
+        d.fill(cx - 1, 1, cz - 1, cx + 1, 1, cz + 1, "gravel")
         d.set(cx, 1, cz, "cobblestone")
         d.set(cx, Y0, cz, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
-        for x in range(cx - 1, cx + 2):
-            for z in range(cz - 1, cz + 2):
-                if (x, z) != (cx, cz):
-                    d.set(x, 1, z, "gravel")
         for (x, z, ax) in ((cx - 3, cz, "z"), (cx + 3, cz, "z"), (cx, cz - 3, "x"), (cx, cz + 3, "x"),
                            (cx - 3, cz - 1, "z"), (cx + 3, cz + 1, "z")):
             d.set(x, Y0, z, log("stripped_spruce_log", ax))
-        for x, z in ((cx - 2, cz - 2), (cx + 2, cz - 2), (cx - 2, cz + 2), (cx + 2, cz + 2), (32, 22), (36, 28),
-                     (25, 20), (25, 32)):
+        for x, z in ((17, 24), (21, 24), (17, 28), (21, 28), (32, 22), (36, 28), (25, 20), (25, 32)):
             d.spot(x, Y0, z, "leisure")
             keep(d, x, Y0, z)
-        for x, z in ((34, 18), (42, 24), (30, 33), (9, 33), (20, 18)):
+        trees = [(34, 18), (20, 18)]
+        if L < 4:
+            trees += [(9, 33), (42, 24)]
+        if L < 5:
+            trees += [(30, 33)]
+        for x, z in trees:
             plant_tree(d, x, z)
+        lec = shell(d, 12, 38, 38, 46, 1, "gable", "x", wh=5, ties=(17, 23, 29, 35))
+        entrance(d, 25, Y0, 38, "south", double=True)
+        d.hearth(37, Y0, 42, "west", 7, "cobblestone", "campfire")
+        chimney(d, 38, 42, Y0, lec["ridge"] + 1)
+        for z in range(40, 45):                                       # chalkboard on the west wall
+            d.set(13, Y0 + 1, z, "black_concrete")
+            d.set(13, Y0 + 2, z, "black_concrete")
+            d.set(13, Y0, z, trap("spruce", "east"))
+        cols = "e.e.e.e...e.e.e.e.e"
+        plan(d, 13, 39, Y0, [
+            ["p...." + cols + "B",
+             " ...." + cols + "B",
+             " ...." + cols + " ",
+             " .T.." + "." * 19 + " ",
+             " ...." + cols + " ",
+             " ...." + cols + "B",
+             "p...." + cols + "B"],
+            ["                        B", "                        B", "", "  l", "", "                        B",
+             "                        B"],
+            ["                        B", "                        B", "", "", "", "                        B",
+             "                        B"],
+            [],
+            ["", "", "", "    L     L     L     L"]], lg)
+
+    # ---------------------------------------------------------------- L4: reading lodge + bunkhouse
     if L >= 4:
-        rl = bldg(d, 6, 17, 13, 34, 2, "gable", "z")
-        ext_door(d, 13, Y0, 25, "west")
-        r1 = (7, 18, 12, 33)
-        stair_up(d, 12, 33, Y0, 7, "north") if False else stair_up(d, 8, 22, Y0, 7, "south")
-        shelf_wall(d, r1, "w", Y0, 3)
-        for z in range(19, 33, 4):
-            desk(d, 11, Y0, z, "west")
-        shelf_wall(d, r1, "w", 7, 2)
-        shelf_wall(d, r1, "e", 7, 1)
-        lights(d, r1, Y0)
-        rug_in(d, r1, Y0, ("green_carpet",), pattern="plain")
-        table_set(d, (8, 19, 11, 32), 7, "dining")
-    if L >= 4:
-        bk_nf = 2 if L >= 5 else 1
-        bk = bldg(d, 38, 17, 46, 34, bk_nf, "gable", "z")
-        ext_door(d, 38, Y0, 25, "east")
-        if bk_nf > 1:
-            stair_up(d, 45, 19, Y0, 7, "south")
-            dorm(d, (39, 18, 45, 33), 7, 7, head="e")
-        dorm(d, (39, 18, 45, 33), Y0, 7, head="e")
+        shell(d, 6, 17, 13, 34, 2, "gable", "z", ties=(20, 25, 30))
+        entrance(d, 13, Y0, 25, "west")
+        stairs(d, 8, 22, Y0, 7, "south", rails=[(8, 7, 22), (7, 7, 23), (7, 7, 24), (7, 7, 25),
+                                                 (9, 7, 23), (9, 7, 24), (9, 7, 25)])
+        plan(d, 7, 18, Y0, [
+            ["B....p", "B...wt", "B.....", "B...wt", "B ....", "B ..wt", "B ....", "B ....", "B ....",
+             "B.....", "BwTewt", "BwTe..", "BwTewt", "BwTe..", "B...wt", "BB..pX"],
+            ["B", "B    k", "B", "B    o", "B", "B    k", "B", "B", "B", "B", "B c  o", "B", "B o  k", "B c",
+             "B    k", "BB"],
+            ["B", "B", "B", "B", "B", "B", "B", "B", "B", "B", "B", "B", "B", "B", "B", "B"],
+            ["", "", "   L", "", "", "", "", "", "   L", "", "", "", "", "   L"]], lg)
+        plan(d, 7, 18, 7, [
+            ["BB..BB", "...P..", "...s..", "......", ". ....", "   ...", "   ...", "   ...", ". ....",
+             ". ....", "...wTe", "...wTe", "...wTe", "...wTe", "...wTe", "BB.pBB"],
+            ["BB  BB", "", "", "", "", "", "", "", "", "", "    c", "    o", "    c", "    o", "    c",
+             "BB  BB"],
+            [],
+            ["", "", "   L", "", "", "", "", "   L", "", "", "", "", "   L"]], lg)
+        bunk2 = L >= 5
+        bk = shell(d, 38, 17, 46, 34, 2 if bunk2 else 1, "gable", "z", ties=(21, 29))
+        entrance(d, 38, Y0, 25, "east")
+        d.hearth(45, Y0, 30, "west", bk["ridge"] + 1, "cobblestone", "campfire")
         chimney(d, 46, 30, Y0, bk["ridge"] + 1)
+        if bunk2:
+            stairs(d, 45, 19, Y0, 7, "south", rails=[(45, 7, 19), (44, 7, 20), (44, 7, 21), (44, 7, 22)])
+            east = [".", " ", " ", " ", " ", " "]
+        else:
+            east = ["C", "C", "C", "X", "C", "p"]
+        rows = ["t....." + east[0], "< ...." + east[1], "t....." + east[2], "< ...." + east[3],
+                "t....." + east[4], "< ...." + east[5], "t......", ".......", "C.....X", "< .....",
+                "t......", "< ..w. ", "t...w. ", "< ..w. ", "t......", "< ...XX"]
+        bl = dict(lg, C=chest("east"))
+        plan(d, 39, 18, Y0, [rows,
+                             ["k", "", "k", "", "k", "", "k", "", "", "", "k", "", "k", "", "k"],
+                             [],
+                             ["", "", "", "   L", "", "", "", "", "", "", "", "   L"]], bl)
+        if bunk2:
+            plan(d, 39, 18, 7, [
+                ["B.t.t..", "B.s.s. ", "B....  ", "p....  ", "B....  ", "B..... ", "...... ", ".......",
+                 "< ....C", "t......", "< .....", "t......", "< .... ", "t......", "< .....", "t...XXC"],
+                ["B k o", "", "B", "", "B", "B", "", "", "", "k", "", "k", "", "k", "", "k"],
+                [],
+                ["", "", "", "   L", "", "", "", "", "", "", "", "   L"]], bl)
+
+    # ---------------------------------------------------------------- L5: mess hall, lookout, faculty lodge
     if L >= 5:
-        # mess hall lodge on the street, east of the chemistry cabin
-        mh = bldg(d, 44, 4, 52, 15, 1, "gable", "z")
-        ext_door(d, 48, Y0, 4, "south")
-        kitchen(d, (45, 5, 51, 8), Y0)
-        table_set(d, (45, 9, 51, 14), Y0, "dining")
-        chimney(d, 52, 12, Y0, mh["ridge"] + 1)
-        # fire-lookout tower at the quad corner
-        tx1, tz1 = 31, 30
+        mh = shell(d, 44, 4, 52, 15, 1, "gable", "z", ties=(8, 12))
+        entrance(d, 48, Y0, 4, "south")
+        d.sign(48, 5, 3, "north", ["MESS HALL"], "spruce")
+        d.hearth(48, Y0, 14, "north", mh["ridge"] + 1, "cobblestone", "campfire")
+        chimney(d, 48, 15, Y0, mh["ridge"] + 1)
+        plan(d, 45, 5, Y0, [
+            ["ZtU.tOX", ".......", ".TT....", ".......", ".......", "wTe.wTe", "wTe.wTe", "wTe.wTe",
+             "wTe.wTe", "p.   .p"],
+            [" o  k", "", " qo", "", "", " c   o", " o   c", " c   o", " o   c"],
+            [],
+            ["", "", "", "   L", "", "", "", "   L"]], lg)
+        tx1, tz1 = 31, 30                                             # fire-lookout tower at the quad corner
         for x, z in ((tx1, tz1), (tx1 + 4, tz1), (tx1, tz1 + 4), (tx1 + 4, tz1 + 4)):
             for y in range(Y0, 16):
-                d.set(x, y, z, log("spruce_log"))
+                d.set(x, y, z, LOGY)
         for y in (7, 12):
             for a in range(1, 4):
-                for (x, z, ax) in ((tx1 + a, tz1, "x"), (tx1 + a, tz1 + 4, "x"), (tx1, tz1 + a, "z"), (tx1 + 4, tz1 + a, "z")):
+                for (x, z, ax) in ((tx1 + a, tz1, "x"), (tx1 + a, tz1 + 4, "x"), (tx1, tz1 + a, "z"),
+                                   (tx1 + 4, tz1 + a, "z")):
                     d.set(x, y, z, log("spruce_log", ax))
         d.fill(tx1, 15, tz1, tx1 + 4, 15, tz1 + 4, "spruce_planks")
         for x in range(tx1, tx1 + 5):
-            for z in range(tz1, tz1 + 5):
-                if x in (tx1, tx1 + 4) or z in (tz1, tz1 + 4):
-                    d.set(x, 16, z, "spruce_fence")
+            for z in (tz1, tz1 + 4):
+                d.set(x, 16, z, "spruce_fence")
+        for z in range(tz1 + 1, tz1 + 4):
+            for x in (tx1, tx1 + 4):
+                d.set(x, 16, z, "spruce_fence")
         d.hip(tx1, tz1, tx1 + 4, tz1 + 4, 19, "dark_oak_stairs", "dark_oak_slab", overhang=1)
         for x, z in ((tx1, tz1), (tx1 + 4, tz1), (tx1, tz1 + 4), (tx1 + 4, tz1 + 4)):
             for y in range(16, 19):
-                d.set(x, y, z, log("spruce_log"))
+                d.set(x, y, z, LOGY)
         d.set(tx1 + 2, 19, tz1 + 2, "spruce_planks")
         bell(d, tx1 + 2, 18, tz1 + 2)
-        # faculty lodge (two storeys) in the south-east corner
-        fl = bldg(d, 40, 39, 52, 51, 2, "gable", "x")
-        ext_door(d, 48, Y0, 39, "south")
-        stair_up(d, 42, 50, Y0, 7, "east")
-        office(d, (41, 40, 45, 45), Y0)
-        office(d, (47, 40, 51, 45), Y0, desk_side="s")
-        lounge(d, (41, 46, 51, 50), Y0) if False else table_set(d, (46, 46, 51, 50), Y0, "dining")
-        d.fill(46, Y0, 40, 46, 5, 45, "spruce_planks")
+        d.set(tx1 + 2, Y0, tz1 + 2, "hay_block[axis=y]")              # water barrel & hay at its foot
+        d.set(tx1 + 1, Y0, tz1 + 1, "barrel[facing=up,open=false]")
+        # faculty lodge: two studies either side of a board wall, common room with a fire, bedrooms above
+        fl = shell(d, 40, 39, 52, 51, 2, "gable", "x", ties=(44, 48))
+        entrance(d, 48, Y0, 39, "south")
+        d.hearth(51, Y0, 48, "west", fl["ridge"] + 2, "cobblestone", "campfire")
+        chimney(d, 52, 48, Y0, fl["ridge"] + 1)
+        stairs(d, 42, 50, Y0, 7, "east", rails=[(42, 7, 50), (43, 7, 49), (44, 7, 49), (45, 7, 49)])
         arch(d, 46, Y0, 42, "east")
-        dorm(d, (41, 40, 51, 50), 7, 8, head="n")
-        chimney(d, 52, 45, Y0, fl["ridge"] + 1)
-        # covered boardwalk round the quad (posts, rail, slab roof)
+        fw = dict(lg, **{"#": "spruce_planks"})
+        plan(d, 41, 40, Y0, [
+            ["BttBp#p..tB", ".s...#...sB", "..........B", "wte..#.....", ".....#.....", "p...X#C...p",
+             "...........", "...nnnnn.. ", "...TTTTT.. ", "...sssss.. ", ".     .BBpX"],
+            ["BkoB #   kB", "     #    B", "          B", " o   #", "     #", "     #", "", "", "    c c",
+             "", "       BB"],
+            ["     #", "     #", "", "     #", "     #", "     #"],
+            ["     #", "     #", "     #", "  L  #  L", "     #", "     #", "", "     L"]], fw)
+        plan(d, 41, 40, 7, [
+            ["Cht.ht.ht.h", ". .. .. .. ", "...........", ".=========.", "...........", "...........",
+             "te.........", "te.........", ".......... ", "X.   ......", "X      .BBp"],
+            ["  k  k  k", "", "", "", "", "", "o", "k", "", "", "        BB"],
+            [],
+            ["", "", "", "", "", "   L   L"]], fw)
+        # covered boardwalk round the quad
         for x in range(14, 38):
             for z in (15, 37):
                 d.set(x, 1, z, "spruce_planks")
                 d.set(x, 6, z, slab("spruce_slab"))
-                if x % 4 == 2:
-                    for y in range(Y0, 6):
-                        d.set(x, y, z, log("spruce_log"))
-                    d.set(x, 5, z + (1 if z == 15 else -1), "lantern[hanging=false,waterlogged=false]") if False else None
         for z in range(15, 38):
             for x in (14, 37):
                 d.set(x, 1, z, "spruce_planks")
                 d.set(x, 6, z, slab("spruce_slab"))
-                if z % 4 == 3:
-                    for y in range(Y0, 6):
-                        d.set(x, y, z, log("spruce_log"))
-        for x in range(16, 37, 4):
+        for x in (14, 18, 22, 30, 34, 37):
+            for z in (15, 37):
+                for y in range(Y0, 6):
+                    d.set(x, y, z, LOGY)
+        for z in (19, 23, 27, 31):
+            for x in (14, 37):
+                for y in range(Y0, 6):
+                    d.set(x, y, z, LOGY)
+        for x in (16, 20, 28, 32):
             d.set(x, 5, 15, "lantern[hanging=true,waterlogged=false]")
             d.set(x, 5, 37, "lantern[hanging=true,waterlogged=false]")
+        for z in (21, 29):
+            d.set(14, 5, z, "lantern[hanging=true,waterlogged=false]")
+            d.set(37, 5, z, "lantern[hanging=true,waterlogged=false]")
     return d
 
 

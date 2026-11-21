@@ -573,7 +573,7 @@ def sch_hearthwood(rel, L):
         ground(d, 3, 4, 6, 5, "grass_block[snowy=false]")
         ground(d, 10, 4, 13, 5, "grass_block[snowy=false]")
         flowers(d, [(3, 4), (4, 4), (5, 4), (6, 4), (3, 5), (5, 5), (10, 4), (11, 4), (12, 4), (13, 4), (11, 5),
-                    (13, 5)], ["poppy", "lilac[half=lower]", "oxeye_daisy", "cornflower", "lavender" if False else
+                    (13, 5)], ["poppy", "lilac[half=lower]", "oxeye_daisy", "cornflower",
                                "allium", "red_tulip", "azure_bluet", "peony[half=lower]", "dandelion", "poppy",
                                "lily_of_the_valley", "oxeye_daisy"])
         d.set(4, 3, 4, "lilac[half=upper]")
@@ -614,7 +614,6 @@ def sch_hearthwood(rel, L):
             d.set(x, 7, 31, "chain[axis=y,waterlogged=false]")
             d.set(x, 6, 31, LANT)
         d.sign(22, 6, 37, "south", ["SCHOOL", "HALL"], "oak")
-        d.set(26, 4, 25, "wall_torch[facing=north]") if False else None
         d.wall_torch(29, 4, 25, "north")
         ground(d, 27, 17, 28, 25, "gravel")
 
@@ -644,7 +643,6 @@ def sch_hearthwood(rel, L):
         d.set(3, 3, 23, "bookshelf")
         d.set(3, 3, 24, "potted_cactus")
         d.set(6, 3, 34, candle(1))
-        d.banner(3, 4, 30, "east", "yellow") if False else None
         for z in (27, 31):
             d.set(7, 5, z, LANT)
         # music room (upstairs): choir risers facing the conductor's stand, piano, jukebox, drum
@@ -674,10 +672,8 @@ def sch_hearthwood(rel, L):
             d.chair(x, 8, 32, "south", OAK)
             d.set(x, 8, 33, "oak_planks")
             d.chair(x, 9, 33, "south", OAK)
-        d.set(5, 8, 31, stair("oak_stairs", "south")) if False else None
         for x in range(5, 10):
             d.set(x, 7, 31, stair("oak_stairs", "south"))
-        d.banner(6, 9, 35, "north", "yellow") if False else None
         for z in (26, 32):
             d.set(7, 10, z, LANT)
         d.sign(7, 5, 21, "north", ["JUNIOR", "SCHOOL"], "oak")
@@ -706,7 +702,7 @@ def sch_hearthwood(rel, L):
         d.set(39, 2, 36, tslab("smooth_stone_slab"))
         plan(d, Y0 + 1, 33, 33, [".......", ".......", "i......", "...p...", ".......", "c......"],
              {"i": candle(3), "p": "cake[bites=0]", "c": "flower_pot"})
-        d.set(36, 3, 33, "bread" if False else "flower_pot")
+        d.set(36, 3, 33, "flower_pot")
         for z in (34, 38):
             d.set(35, 5, z, LANT)
         # staff room: settle and armchairs round the fire, tea table, notice board, a sick-bay cot
@@ -731,8 +727,6 @@ def sch_hearthwood(rel, L):
         d.set(39, 8, 36, "bricks")
         d.set(39, 8, 37, "bricks")
         d.bed(35, 7, 39, "east", "white")
-        d.set(36, 7, 39, AIR) if False else None
-        d.set(33, 8, 39, "potted_oxeye_daisy") if False else None
         for z in (35, 38):
             d.set(35, 10, z, LANT)
         chimney(d, 40, 36, 7, 17)
@@ -749,8 +743,6 @@ def sch_hearthwood(rel, L):
                 for y in (2, 3, 4):
                     d.set(gx, y, z, "white_concrete")
             d.fill(gx, 5, 42, gx, 5, 46, "white_concrete")
-            for z in (43, 44, 45):
-                d.set(gx + (1 if gx == 3 else -1) * 0, 4, z, "cobweb") if False else None
         for x in range(42, 48):
             for z in range(32, 47):
                 if x in (42, 47) or z in (32, 46):
@@ -763,6 +755,11 @@ def sch_hearthwood(rel, L):
                                     43: "wheat[age=7]", 44: "wheat[age=7]"}[z])
                 else:
                     d.set(x, 1, z, "coarse_dirt")
+        for z in range(40, 49):                                         # hedge between field and garden
+            d.set(29, 2, z, leaves("oak"))
+        for x in (7, 8, 9, 21, 22, 23):                                 # spectators' benches by the touchline
+            d.chair(x, Y0, 40, "north", OAK, sit=False)
+        lamp_post(d, 15, 39)
         d.set(41, 2, 34, "composter[level=4]")
         d.set(41, 2, 35, "composter[level=7]")
         d.set(44, 1, 32, "gravel")
@@ -827,7 +824,6 @@ def sch_neoterra(rel, L):
     plan(d, Y0 + 1, 7, 10, ["B", "B", "B"], {"B": shelf})
     d.set(12, Y0 + 1, 13, "flower_pot")
     d.set(13, Y0 + 1, 13, candle(1, "lime"))
-    d.set(8, Y0 + 1, 10, "potted_cactus") if False else None
     for x, z in ((9, 10), (13, 10), (17, 10), (12, 13)):                 # ceiling light panels
         d.set(x, 6, z, SL)
     for x in (8, 17):                                                   # street planters and lamps
@@ -840,7 +836,6 @@ def sch_neoterra(rel, L):
     lamp_post(d, 4, 4)
     lamp_post(d, 22, 4)
     ground(d, 12, 0, 13, 4, "polished_andesite")
-    d.chair(5, Y0, 9, "west", B, sit=False) if False else None
     if pnf > 1:                                                         # upper floor: media and language room
         stairs(d, 14, 7, Y0, 7, "east")
         rails(d, 7, [(15, 8), (16, 8), (17, 8), (14, 7)])
@@ -951,8 +946,6 @@ def sch_neoterra(rel, L):
             for y in range(2, 5):
                 d.set(x, y, z, "yellow_concrete")
         d.fill(45, 5, 31, 48, 5, 34, "orange_concrete")
-        for z in (32, 33):
-            d.set(44, 2, z, "ladder[facing=west,waterlogged=false]") if False else None
         for k, z in enumerate((35, 36, 37)):
             d.set(46, 4 - k, z, stair("smooth_quartz_stairs", "north"))
         d.set(46, 1, 38, "white_concrete")
@@ -1034,8 +1027,6 @@ def sch_neoterra(rel, L):
              {"b": "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]", "p": "flower_pot",
               "i": candle(2, "lime")})
         d.set(41, 3, 21, "glass")
-        for x in range(41, 46):
-            d.set(x, 4, 21, "glass") if False else None
         d.set(49, 3, 21, "potted_cactus")
         for x, z in ((42, 11), (47, 11), (42, 16), (47, 16), (44, 21)):
             d.set(x, 6, z, SL)
@@ -1084,7 +1075,6 @@ def sch_neoterra(rel, L):
                 d.set(x, 17, z, "daylight_detector[inverted=false,power=0]")
         d.set(46, 17, 20, "smooth_stone")
         d.set(46, 18, 20, "lightning_rod[facing=up,powered=false,waterlogged=false]")
-        d.set(41, 17, 20, "iron_block") if False else None
         for x, z in ((40, 22), (48, 22), (40, 17), (48, 17)):
             d.set(x, 17, z, "moss_block")
             d.set(x, 18, z, "flowering_azalea")
@@ -1179,13 +1169,11 @@ def sch_cascadia(rel, L):
         if x != mid:
             d.set(x, 2, Z1 - 3, "spruce_fence")
     d.sign(mid, 6, Z1 - 1, "north", ["SCHOOL", "DIST. No. 7"], S)
-    d.set(mid, 6, Z1 - 2, LANT) if False else None
     d.set(mid - 2, 6, Z1 - 2, LANT)
     d.set(mid + 2, 6, Z1 - 2, LANT)
     for x in (19, 20):                                                  # porch bench
-        sit_out(d, x, Y0, Z1 - 1, "north", S) if False else d.chair(x, Y0, Z1 - 1, "south", S, sit=False)
+        d.chair(x, Y0, Z1 - 1, "south", S, sit=False)
     d.set(27, Y0, Z1 - 1, "barrel[facing=up,open=false]")
-    d.set(26, Y0, Z1 - 1, "spruce_log[axis=x]") if False else None
     d.hut(X1 + 1, Y0, Z1 + 1)
     keep(d, X1 + 2, Y0, Z1 + 1)
     board(d, [(19, 13), (19, 14), (19, 15)], Y0 + 1, "east", ledge=S)
@@ -1247,7 +1235,6 @@ def sch_cascadia(rel, L):
         d.set(5, 4, 12, LANT_S)
         d.bed(13, Y0, 15, "south", "brown")
         d.set(12, 3, 15, candle(1))
-        d.set(13, 3, 14, "potted_fern") if False else None
         d.set(9, 5, 12, LANT)
         chimney(d, 4, 12, Y0, 13)
         for x in range(3, 16):
@@ -1299,7 +1286,6 @@ def sch_cascadia(rel, L):
         d.fill(45, 3, 17, 45, 3, 19, "cobblestone")
         d.set(40, 3, 17, candle(1))
         d.set(41, 3, 17, "flower_pot")
-        d.set(45, 3, 9, "potted_fern") if False else None
         for z in (11, 15):
             d.set(41, 6, z, LANT)
         chimney(d, 46, 18, Y0, c2["ridge"])
@@ -1327,8 +1313,6 @@ def sch_cascadia(rel, L):
         for z in (28, 30, 32, 34):                                      # climbing ropes / wall ladders
             for y in range(2, 8):
                 d.set(39, y, z, "ladder[facing=west,waterlogged=false]") if z in (28, 34) else None
-        for y in range(3, 9):
-            d.set(25, y, 33, "chain[axis=y,waterlogged=false]") if False else None
         d.set(11, 2, 35, "barrel[facing=up,open=false]")
         d.set(11, 2, 34, "hay_block[axis=y]")
         d.set(11, 3, 35, "target[power=0]")
@@ -1355,7 +1339,6 @@ def sch_cascadia(rel, L):
         ground(d, 5, 36, 7, 38, "sand")
         for z in (31, 33):
             d.set(7, 2, z, log("spruce_log"))
-        plant_tree(d, 6, 32, "spruce") if False else None
 
     # ------------------------------------------------------------------ L5: lunch hall, garden, woodshop, shed
     if L >= 5:
@@ -1441,7 +1424,6 @@ def sch_cascadia(rel, L):
             "C": "crafting_table", "B": "barrel[facing=up,open=false]"})
         d.set(45, 3, 47, "stripped_spruce_log[axis=x]")
         d.set(46, 3, 47, "stripped_spruce_log[axis=x]")
-        d.set(50, 3, 46, "flower_pot") if False else None
         d.set(48, 5, 45, LANT)
         d.sign(48, 5, 41, "north", ["WOOD", "SHOP"], S)
         # wagon shed: hay along the walls, a farm cart

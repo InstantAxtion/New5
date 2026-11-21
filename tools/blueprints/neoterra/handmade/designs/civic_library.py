@@ -581,6 +581,7 @@ def lib_neoterra(rel, L):
         d.set(22, y, 20, "note_block[instrument=harp,note=0,powered=false]")
         seats(d, [(20, 22, "south"), (24, 22, "south")], y, M)
         press(d, 19, 23, 28, y, 3)
+        d.rug(19, 23, 25, 25, y, ("cyan_carpet", "light_gray_carpet"))   # listening area in front of the jukeboxes
         panel(d, [(22, 24)], 16)
         # floor 3: quiet study carrels
         y = 17
@@ -588,6 +589,10 @@ def lib_neoterra(rel, L):
         seats(d, [(18, 27, "east"), (18, 29, "east"), (18, 31, "east")], y, M)
         press(d, 20, 24, 21, y, 3)
         press(d, 20, 24, 23, y, 3)
+        for x in range(20, 25):                                       # silent study table
+            d.table(x, y, 28, B, "block", Q)
+            d.chair(x, y, 27, "north", M)
+            d.chair(x, y, 29, "south", M)
         panel(d, [(22, 27)], 21)
         # floor 4: sky reading room facing the south glass
         y = 22
@@ -595,6 +600,11 @@ def lib_neoterra(rel, L):
         tops(d, [(20, 30), (22, 30)], y, "smooth_quartz_slab")
         press(d, 18, 26, 19, y, 1)
         d.set(18, y, 30, "potted_bamboo")
+        d.rug(19, 24, 24, 27, y, ("orange_carpet", "white_carpet"))
+        seats(d, [(25, 21, "west"), (25, 23, "west")], y, B)          # armchairs facing the east glass
+        tops(d, [(25, 22)], y, "smooth_quartz_slab")
+        d.set(25, y + 1, 22, "potted_azure_bluet")
+        d.set(18, y, 24, "potted_bamboo")
         panel(d, [(22, 25)], 26)
         for (x, z) in ((19, 21), (20, 21), (25, 29), (25, 30)):        # roof planters
             d.set(x, 27, z, "moss_block")
