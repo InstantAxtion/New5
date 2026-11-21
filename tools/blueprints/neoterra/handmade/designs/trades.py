@@ -777,7 +777,7 @@ def furnish(r, kind, items=(), racks=0, rack_h=1, books=0, beds=0, seats=0, barr
         racks -= n
         for u, v in ((0, 0), (W - 1, 0)):
             r.put(u, v, "chest[facing=%s,type=single,waterlogged=false]" % r.out())
-        bench = [(0, v) for v in range(1, D)] + [(W - 1, v) for v in range(1, D)]
+        bench = [(0, v) for v in range(1, D - 1)] + [(W - 1, v) for v in range(1, D - 1)]
     elif kind == "sorting":                                 # pigeonhole wall of barrels + sorting table
         n = 0
         for u, v in [(u, 0) for u in range(1, W - 1)] + [(0, v) for v in range(1, D - 1)] + \
@@ -872,7 +872,7 @@ def furnish(r, kind, items=(), racks=0, rack_h=1, books=0, beds=0, seats=0, barr
             r.put(u, 0, _pot(u))
         r.put(0, D - 1, _pot(2))
         r.put(W - 1, D - 1, _pot(3))
-        bench = [(u, 0) for u in range(2, W - 1, 3)] + [(0, v) for v in range(0, 2)]
+        bench = [(u, 0) for u in range(2, W - 1, 3)] + [(0, v) for v in range(1, 2)]
     elif kind == "kiosk":
         r.put(1, 0, sl(wood, "top"))
         chairs_at([(1, 1)], "front")
@@ -882,7 +882,7 @@ def furnish(r, kind, items=(), racks=0, rack_h=1, books=0, beds=0, seats=0, barr
         raise ValueError(kind)
 
     # ---- required blocks in the layout's working positions ---------------------------------------
-    for (u, v) in bench + [(0, v) for v in range(D)] + [(W - 1, v) for v in range(D)]:
+    for (u, v) in bench + [(0, v) for v in range(1, D - 1)] + [(W - 1, v) for v in range(1, D - 1)]:
         if not items:
             break
         if r.put_item(u, v, items[0]):
