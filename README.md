@@ -67,6 +67,15 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## Every block placed by hand (1.22.0)
+No building uses automatic furniture or decoration any more. Every bed, table, chair, shelf, lamp, flower box,
+shutter and fence in all 73 hut types × 3 packs × every level is placed at a chosen spot by its designer: rooms laid
+out like the real thing (kitchens with stove, sink and counters; workshops with benches and tool walls; dormitories
+with nightstands), no stray blocks. Levels 1–3 use expensive materials (quartz, copper, prismarine, sea lanterns,
+blackstone, …) only sparingly – at most 10 / 15 / 20 % of the blocks – so early buildings stay affordable. All
+levels are still checked to grow by at least 1.5x, every bed, rack and work block is reachable on foot, and the
+in-game self-test loads every hut through Structurize.
+
 ## New logos and build-menu icons (1.21.1)
 Each pack has its own crest – Neoterra a cyan skyline tile, Hearthwood a heraldic shield with a Tudor cottage,
 Cascadia a timber-ringed badge with snow peaks and firs, Farmworks a barn sign – and every build-tool category and
