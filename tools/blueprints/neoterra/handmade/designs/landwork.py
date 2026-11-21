@@ -2183,7 +2183,7 @@ def planter_row(d, x1, x2, z, y, crops=("wheat[age=7]", "carrots[age=7]", "potat
 
 def lean_glass(d, xa, xb, za, zb, ends=(True, True)):
     """Victorian lean-to glasshouse along x: brick back wall at za (street), glass slope down to a low brick wall at
-    zb (south, toward the beds). Inside: a staging bench along the back wall and an aisle."""
+    zb (south, toward the beds). The staging inside is placed per glasshouse by the caller."""
     depth = zb - za                                                   # rows za+1..zb
     top = 4 + depth                                                   # back wall height
     for x in range(xa, xb + 1):
@@ -2205,10 +2205,6 @@ def lean_glass(d, xa, xb, za, zb, ends=(True, True)):
             for y in range(2, 5 + i):
                 d.set(x, y, z, "bricks")
     d.fill(xa, 1, za + 1, xb, 1, zb - 1, "bricks")
-    for x in range(xa + 1, xb):                                      # staging bench with seedlings
-        if d.air(x, 2, za + 1):
-            d.set(x, 2, za + 1, "dark_oak_slab[type=top,waterlogged=false]")
-            d.set(x, 3, za + 1, ("potted_cactus", "potted_fern", "potted_bamboo", "potted_red_tulip")[x % 4])
     d.fill(xa, 2 + 0, za, xb, 2, za, "bricks")
 
 
@@ -2337,6 +2333,17 @@ def plantation_hearthwood(rel, L):
     if L >= 2:
         xb = 22 if L == 2 else 28
         lean_glass(d, 16, xb, 1, 5, ends=(False, True))
+        # east glasshouse staging: seedlings on the back bench, a watering trough and potting stool by the door
+        for x, pot in ((18, "potted_fern"), (19, "potted_cactus"), (20, "potted_red_tulip"), (21, "potted_bamboo")):
+            d.set(x, 2, 2, "dark_oak_slab[type=top,waterlogged=false]")
+            d.set(x, 3, 2, pot)
+        d.set(17, 2, 4, "water_cauldron[level=3]")
+        if L >= 3:                                                    # the extended house: tomatoes and a vine
+            for x, pot in ((23, "potted_poppy"), (24, "potted_fern"), (26, "potted_orange_tulip"), (27, "potted_cactus")):
+                d.set(x, 2, 2, "dark_oak_slab[type=top,waterlogged=false]")
+                d.set(x, 3, 2, pot)
+            d.set(25, 2, 2, "composter[level=6]")
+            d.set(27, 2, 4, "sweet_berry_bush[age=3]")
         d.door(16, 2, 3, "east", "oak")
         door_cells(d).update({(15, 2, 3), (17, 2, 3)})
         rack_bay(d, ps, "w", 2, 6)
@@ -2390,6 +2397,12 @@ def plantation_hearthwood(rel, L):
     # ---- L4: west glasshouse, bothy for the garden boys ----
     if L >= 4:
         lean_glass(d, 2, 11, 1, 5, ends=(True, False))
+        # west glasshouse: orchids and ferns on staging, a fern bed along the front
+        for x, pot in ((3, "potted_blue_orchid"), (4, "potted_allium"), (5, "potted_fern"), (7, "potted_blue_orchid"), (8, "potted_fern")):
+            d.set(x, 2, 2, "spruce_slab[type=top,waterlogged=false]")
+            d.set(x, 3, 2, pot)
+        for x in (3, 5, 7, 9):
+            d.set(x, 2, 4, "fern")
         d.door(11, 2, 3, "west", "oak")
         door_cells(d).update({(10, 2, 3), (12, 2, 3)})
         bo = bld(d, 31, 14, 40, 21, floors=1, axis="x", doors=[(35, 14, "n")], chimney=(31, 17),

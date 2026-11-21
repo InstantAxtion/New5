@@ -27,7 +27,7 @@ from __future__ import annotations
 from types import SimpleNamespace as NS
 
 from hm import Design, design, AIR, D4, OPP, CW, SOLID, KEEP
-from designs._bunker_plans import ROOMPLANS, CHILD_PLANS, CORR_LIGHTS
+from designs._bunker_plans import ROOMPLANS, CHILD_PLANS, CORR_LIGHTS, FLOORS
 
 GY = 24
 SW = GY + 1                                  # surface walk level
@@ -377,9 +377,6 @@ def ribs(d, pack, sp):
                     for y in range(fy + 1, top + 1):
                         d.set(x, y, z, "gray_concrete")
             elif pack == "Hearthwood":
-                if wall_here and d.air(ix, top, iz):
-                    d.set(ix, top, iz, st("stone_brick_stairs", OPP[INTO[fac]] if False else fac_to_wall(fac),
-                                          "top"))
                 if on and wall_here:
                     for y in range(fy + 1, top + 1):
                         d.set(x, y, z, "chiseled_stone_bricks" if y == top else "stone_bricks")
@@ -894,6 +891,39 @@ def bunker_common(d, pack, L):
     return spaces
 
 
+def furnish(d, name, x1, z1, L):
+    """Stamp each storey of a surface building from its hand-drawn plans (FLOORS)."""
+    for k, rows in enumerate(FLOORS[d.pack][name]):
+        stamp_floor(d, x1 + 1, z1 + 1, rows, GY + 4 * k, L)
+
+
+def porch(d, x, z, out, slab_block, lamp="lantern[hanging=true,waterlogged=false]"):
+    """One door canopy: a 3-wide slab hood over the door at (x, z) (opening to `out`) with two hanging lamps."""
+    ox, oz = D4[out]
+    sx, sz = (1, 0) if ox == 0 else (0, 1)
+    for k in (-1, 0, 1):
+        d.set(x + ox + sx * k, SW + 3, z + oz + sz * k, slab_block)
+    for k in (-1, 1):
+        d.set(x + ox + sx * k, SW + 2, z + oz + sz * k, lamp)
+
+
+def window_box(d, x, y, z, out, wood, flower):
+    """One flower box under the window at (x, y, z) of an outer wall facing `out`."""
+    ox, oz = D4[out]
+    d.set(x + ox, y - 2, z + oz, f"{wood}_trapdoor[facing={out},half=top,open=false,powered=false,waterlogged=false]")
+    d.set(x + ox, y - 1, z + oz, flower)
+
+
+def shutters(d, x, y, z, out, wood):
+    """Pair of open shutters either side of the window at (x, y, z) on a wall facing `out`."""
+    ox, oz = D4[out]
+    sx, sz = (1, 0) if ox == 0 else (0, 1)
+    for sgn, f in ((1, next(k for k, v in D4.items() if v == (sx, sz))), (-1, next(k for k, v in D4.items()
+                                                                                  if v == (-sx, -sz)))):
+        d.set(x + ox + sx * sgn, y, z + oz + sz * sgn,
+              f"{wood}_trapdoor[facing={f},half=top,open=true,powered=false,waterlogged=false]")
+
+
 def tree(d, x, z, base, kind="birch", h=4):
     for y in range(base, base + h):
         d.set(x, y, z, f"{kind}_log[axis=y]")
@@ -1007,6 +1037,9 @@ def neoterra(rel, L):
                    glass="light_gray_stained_glass_pane", door="birch", stairs="polished_andesite_stairs",
                    rail="birch_fence", shutter="birch")
         building(d, pal, 38, 3, 46, 11, 3, (42, 3, "north"), L, "modern")
+        furnish(d, "guard", 38, 3, L)
+        porch(d, 42, 3, "north", "smooth_stone_slab[type=bottom,waterlogged=false]")
+        place(d, [(40, SW, 2, "potted_bamboo"), (44, SW, 2, "potted_bamboo"), (39, SW + 1, 2, "andesite_wall")])
         lamp_post(d, 37, 1, "andesite_wall", "sea_lantern", 2)
         d.set(44, SW + 9, 7, "redstone_lamp[lit=true]")
         d.fill(47, GY, 2, 52, GY, 12, "smooth_stone")
@@ -1018,6 +1051,9 @@ def neoterra(rel, L):
                    accent="cyan_terracotta", fin="cyan_concrete", glass="glass_pane", door="mangrove",
                    stairs="polished_blackstone_stairs", rail="iron_bars", shutter="iron")
         building(d, pal, 3, 30, 19, 42, 3, (11, 30, "north"), L, "modern")
+        furnish(d, "depot", 3, 30, L)
+        porch(d, 11, 30, "north", "cut_copper_slab[type=bottom,waterlogged=false]" if L >= 5 else "smooth_stone_slab[type=bottom,waterlogged=false]")
+        place(d, [(5, SW, 29, "barrel[facing=up,open=false]"), (6, SW, 29, "barrel[facing=north,open=false]"), (17, SW, 29, "andesite_wall"), (17, SW + 1, 29, "lantern[hanging=false,waterlogged=false]")])
         d.fill(3, GY, 26, 19, GY, 29, "polished_andesite")
         for x in range(4, 19, 3):
             d.set(x, GY, 27, "yellow_concrete")
@@ -1027,6 +1063,9 @@ def neoterra(rel, L):
                     glass="glass_pane", door="mangrove", stairs="mangrove_stairs", rail="mangrove_fence",
                     shutter="mangrove")
         building(d, pal2, 3, 3, 11, 11, 3, (7, 11, "south"), L, "modern")
+        furnish(d, "comms", 3, 3, L)
+        porch(d, 7, 11, "south", "deepslate_tile_slab[type=bottom,waterlogged=false]")
+        place(d, [(5, SW, 12, "potted_bamboo"), (9, SW, 12, "potted_bamboo")])
         for x in range(0, sx):                               # perimeter fence with gaps for the gates
             if 18 <= x <= 36:
                 continue
@@ -1041,11 +1080,16 @@ def neoterra(rel, L):
                    stairs="smooth_quartz_stairs", rail="birch_fence", shutter="birch")
         building(d, pal, 32, 32, 50, 48, 6, (41, 32, "north"), L,
                  "modern")
+        furnish(d, "hq", 32, 32, L)
+        porch(d, 41, 32, "north", "smooth_quartz_slab[type=bottom,waterlogged=false]", "lantern[hanging=true,waterlogged=false]")
+        place(d, [(38, SW, 31, "potted_bamboo"), (44, SW, 31, "potted_bamboo"), (36, SW, 31, "andesite_wall"), (46, SW, 31, "andesite_wall")])
         pal3 = dict(wall="white_terracotta", wall2="brown_terracotta", plinth="polished_deepslate",
                     trim="polished_deepslate", floor="birch_planks", roof="deepslate_tile", roofblock="deepslate_tiles",
                     parapet="polished_deepslate", accent="yellow_terracotta", fin="yellow_concrete",
                     glass="glass_pane", door="cherry", stairs="birch_stairs", rail="birch_fence", shutter="cherry")
         building(d, pal3, 3, 45, 17, 53, 3, (10, 45, "north"), L, "modern")
+        furnish(d, "barracks", 3, 45, L)
+        porch(d, 10, 45, "north", "deepslate_tile_slab[type=bottom,waterlogged=false]")
         for x in range(4, 17, 3):
             if x != 10:
                 d.set(x, SW, 44, "potted_bamboo" if x % 2 else "andesite_wall")
@@ -1197,6 +1241,11 @@ def hearthwood(rel, L):
                    shutter="warped", chimney="bricks")
         building(d, pal, 40, 3, 50, 11, 2, (45, 11, "south"), L, "tudor", "gable",
                  chimney=(51, 7))
+        furnish(d, "cottage", 40, 3, L)
+        porch(d, 45, 11, "south", "deepslate_tile_slab[type=bottom,waterlogged=false]")
+        window_box(d, 43, GY + 6, 3, "north", "warped", "potted_red_tulip")
+        window_box(d, 47, GY + 6, 3, "north", "warped", "potted_allium")
+        shutters(d, 45, GY + 6, 3, "north", "warped")
         flowerbed(d, 41, 12, 44, 13, 1)
         flowerbed(d, 47, 12, 50, 13, 2)
         for x in range(39, 52):
@@ -1209,6 +1258,12 @@ def hearthwood(rel, L):
                    chimney="bricks")
         building(d, pal, 3, 21, 21, 29, 3, (12, 21, "north"), L, "tudor", "gable",
                  chimney=(2, 25))
+        furnish(d, "almshouse", 3, 21, L)
+        porch(d, 12, 21, "north", "brick_slab[type=bottom,waterlogged=false]")
+        window_box(d, 7, GY + 6, 21, "north", "bamboo", "potted_oxeye_daisy")
+        window_box(d, 17, GY + 6, 21, "north", "bamboo", "potted_azure_bluet")
+        shutters(d, 9, GY + 10, 21, "north", "bamboo")
+        shutters(d, 15, GY + 10, 21, "north", "bamboo")
         flowerbed(d, 4, 19, 10, 19, 3)
         flowerbed(d, 14, 19, 20, 19, 4)
         for x in (3, 21):
@@ -1218,6 +1273,8 @@ def hearthwood(rel, L):
                    floor="cobblestone", roof="spruce", gable="oak_planks", accent="oak_planks", glass="glass_pane",
                    door="oak", stairs="oak_stairs", rail="oak_fence", shutter="bamboo", chimney="cobblestone")
         building(d, pal, 44, 46, 56, 53, 2, (50, 46, "north"), L, "tudor", "gable", chimney=(57, 49))
+        furnish(d, "smithy", 44, 46, L)
+        porch(d, 50, 46, "north", "spruce_slab[type=bottom,waterlogged=false]")
         d.set(42, SW, 47, "anvil[facing=north]")
         d.set(42, SW, 49, "water_cauldron[level=3]")
         for z in range(19, 54):                            # dry-stone wall along the lane, lamps and benches
@@ -1235,12 +1292,21 @@ def hearthwood(rel, L):
                    rail="dark_oak_fence", shutter="warped", chimney="bricks")
         building(d, pal, 3, 41, 15, 51, 3, (9, 41, "north"), L, "tudor", "gable",
                  chimney=(2, 46))
+        furnish(d, "vicarage", 3, 41, L)
+        porch(d, 9, 41, "north", "granite_slab[type=bottom,waterlogged=false]")
+        window_box(d, 5, GY + 6, 41, "north", "warped", "potted_red_tulip")
+        window_box(d, 13, GY + 6, 41, "north", "warped", "potted_pink_tulip")
+        shutters(d, 7, GY + 10, 41, "north", "warped")
+        shutters(d, 11, GY + 10, 41, "north", "warped")
         pal = dict(wall="yellow_terracotta", wall2="yellow_terracotta", plinth="stone_bricks", trim="stripped_oak_log",
                    floor="oak_planks", roof="dark_prismarine", gable="yellow_terracotta", accent="oak_planks",
                    glass="glass_pane", door="warped", stairs="oak_stairs", rail="oak_fence", shutter="mangrove",
                    chimney="bricks")
         building(d, pal, 52, 3, 59, 12, 3, (55, 12, "south"), L, "tudor", "gable",
                  chimney=(60, 7))
+        furnish(d, "lodge", 52, 3, L)
+        porch(d, 55, 12, "south", "dark_prismarine_slab[type=bottom,waterlogged=false]")
+        shutters(d, 57, GY + 6, 12, "south", "mangrove")
         flowerbed(d, 52, 13, 54, 14, 7)
         flowerbed(d, 57, 13, 59, 14, 8)
         for x in range(1, 20):                             # churchyard hedge and yews round the vicarage garden
@@ -1260,6 +1326,9 @@ def hearthwood(rel, L):
                    shutter="crimson", chimney="cobblestone")
         building(d, pal, 40, 32, 56, 42, 4, (48, 32, "north"), L, "tudor",
                  "gable")
+        furnish(d, "barn", 40, 32, L)
+        porch(d, 48, 32, "north", "mud_brick_slab[type=bottom,waterlogged=false]")
+        place(d, [(44, SW, 31, "hay_block[axis=y]"), (45, SW, 31, "hay_block[axis=x]"), (52, SW, 31, "barrel[facing=up,open=false]")])
         for (tx, tz) in ((44, 15), (50, 15), (56, 18), (20, 47), (24, 52), (28, 47), (28, 52), (58, 50), (58, 26)):
             tree(d, tx, tz, SW, "oak" if tx % 2 else "birch", 4)
         tx, tz = 6, 34
@@ -1369,6 +1438,8 @@ def cascadia(rel, L):
                    floor="spruce_planks", roof="spruce", gable="spruce_planks", accent="spruce_planks",
                    glass="glass_pane", door="spruce", stairs="spruce_stairs", rail="spruce_fence", shutter="spruce")
         building(d, pal, 2, 18, 9, 25, 1, (5, 18, "north"), L, "timber", "gable")
+        furnish(d, "shed", 2, 18, L)
+        place(d, [(4, SW + 2, 17, "lantern[hanging=false,waterlogged=false]") if False else (3, SW, 17, "spruce_log[axis=y]")])
     if L >= 2:              # ore carts, lamp posts, a split-rail fence
         for (cx, cz) in ((x0 + 1, 0),):
             d.set(cx + 2, SW, cz, "barrel[facing=up,open=false]")
@@ -1385,6 +1456,9 @@ def cascadia(rel, L):
                    shutter="mangrove", chimney="cobblestone")
         building(d, pal, 2, 3, 12, 13, 3, (7, 3, "north"), L, "timber", "gable",
                  chimney=(1, 8))
+        furnish(d, "bunkhouse", 2, 3, L)
+        shutters(d, 5, GY + 6, 3, "north", "mangrove")
+        shutters(d, 9, GY + 6, 3, "north", "mangrove")
         for x in range(3, 12):
             d.set(x, GY, 2, "spruce_planks")
             d.set(x, GY, 1, "spruce_planks")
@@ -1415,6 +1489,9 @@ def cascadia(rel, L):
                    chimney="cobblestone")
         building(d, pal, 42, 2, 53, 12, 3, (47, 2, "north"), L, "timber", "gable",
                  chimney=(54, 7))
+        furnish(d, "cookhouse", 42, 2, L)
+        porch(d, 47, 2, "north", "dark_prismarine_slab[type=bottom,waterlogged=false]" if L >= 4 else "spruce_slab[type=bottom,waterlogged=false]")
+        place(d, [(44, SW, 1, "barrel[facing=up,open=false]"), (50, SW, 1, "water_cauldron[level=3]")])
         # headframe over the old shaft: timber A-frame with sheave
         hx, hz = 47, 22
         for y in range(SW, SW + 12):
@@ -1435,6 +1512,8 @@ def cascadia(rel, L):
                    floor="stone", roof="stone_brick", gable="cobblestone", accent="red_terracotta",
                    glass="iron_bars", door="mangrove", stairs="stone_stairs", rail="spruce_fence", shutter="mangrove")
         building(d, pal, 2, 28, 9, 35, 2, (5, 28, "north"), L, "timber", "gable")
+        furnish(d, "magazine", 2, 28, L)
+        place(d, [(4, SW + 2, 27, "red_terracotta"), (6, SW + 2, 27, "red_terracotta")])
         for (bx, bz) in ((41, 19), (41, 25)):              # ore bins by the headframe
             for ax in range(3):
                 for y in range(SW, SW + 3):
@@ -1469,6 +1548,8 @@ def cascadia(rel, L):
                    chimney="cobblestone")
         building(d, pal, 42, 27, 52, 35, 4, (47, 27, "north"), L, "timber",
                  "gable")
+        furnish(d, "hoist", 42, 27, L)
+        porch(d, 47, 27, "north", "deepslate_tile_slab[type=bottom,waterlogged=false]")
     if L >= 5:              # general store & assay office: rose cherry siding, red cedar roof, green trim
         pal = dict(wall="cherry_planks", wall2="stripped_spruce_log", plinth="mossy_cobblestone",
                    trim="spruce_log", floor="spruce_planks", roof="mangrove", gable="cherry_planks",
@@ -1476,6 +1557,9 @@ def cascadia(rel, L):
                    rail="spruce_fence", shutter="spruce", chimney="cobblestone")
         building(d, pal, 38, 44, 52, 56, 4, (45, 44, "north"), L, "timber", "gable",
                  chimney=(53, 50))
+        furnish(d, "store", 38, 44, L)
+        porch(d, 45, 44, "north", "mangrove_slab[type=bottom,waterlogged=false]")
+        place(d, [(42, SW, 43, "barrel[facing=up,open=false]"), (43, SW, 43, "hay_block[axis=y]"), (48, SW, 43, "spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]")])
         for x in range(38, 53):
             d.set(x, GY, 42, "spruce_planks")
             d.set(x, GY, 43, "spruce_planks")
@@ -1487,6 +1571,9 @@ def cascadia(rel, L):
                    glass="glass_pane", door="spruce", stairs="spruce_stairs", rail="spruce_fence",
                    shutter="bamboo", chimney="cobblestone")
         building(d, pal, 2, 42, 16, 54, 4, (9, 42, "north"), L, "timber", "gable")
+        furnish(d, "mill", 2, 42, L)
+        porch(d, 9, 42, "north", "spruce_slab[type=bottom,waterlogged=false]")
+        place(d, [(5, SW, 41, "white_wool"), (6, SW, 41, "white_wool"), (13, SW, 41, "barrel[facing=up,open=false]")])
         # meeting hall: stripped logs with dark-oak trim under a teal (weathered copper look) roof
         pal = dict(wall="stripped_spruce_log", wall2="dark_oak_planks", plinth="tuff", trim="dark_oak_log",
                    floor="spruce_planks", roof="warped", gable="stripped_spruce_log", accent="dark_oak_planks",
@@ -1494,6 +1581,8 @@ def cascadia(rel, L):
                    shutter="dark_oak", chimney="cobblestone")
         building(d, pal, 19, 40, 35, 54, 3, (27, 40, "north"), L, "timber", "gable",
                  chimney=(36, 47))
+        furnish(d, "hall", 19, 40, L)
+        porch(d, 27, 40, "north", "warped_slab[type=bottom,waterlogged=false]")
         for x in range(19, 36):
             d.set(x, GY, 38, "spruce_planks")
             d.set(x, GY, 39, "spruce_planks")

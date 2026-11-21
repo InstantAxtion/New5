@@ -3214,7 +3214,7 @@ def ph_hall(d, x1, z1, x2, z2, h=6, hearths=True):
     return zc
 
 def ph_vault(d, x1, z1, x2, z2, h=4):
-    """Storehouse: barrel shelving three high along the walls and back-to-back down the middle."""
+    """Storehouse shell; the shelving is placed by hand at the call site."""
     p = d.pack
     W = SHELL[p]["wood"]
     y0 = d.gy + 1
@@ -3228,20 +3228,8 @@ def ph_vault(d, x1, z1, x2, z2, h=4):
         rb = SHELL[p]["roof"]
         d.gable(x1, z1, x2, z2, yt + 1, "x", f"{rb}_stairs", f"{rb}_slab",
                 "stone_bricks" if p == "Hearthwood" else "spruce_planks")
-    door = (x1 + x2) // 2
-    d.double_door(door, y0, z1, "x", "south", W)
-    for x in range(x1 + 1, x2):
-        if abs(x - door) > 1:
-            for k in range(3):
-                d.set(x, y0 + k, z2 - 1, "barrel[facing=north,open=false]")
-    mid = (z1 + z2) // 2
-    for x in range(x1 + 3, x2 - 2):
-        for k in range(3):
-            d.set(x, y0 + k, mid, "barrel[facing=north,open=false]")
-    for z in range(z1 + 2, z2 - 1):
-        d.set(x1 + 1, y0, z, "chest[facing=east,type=single,waterlogged=false]")
-    for x in range(x1 + 3, x2 - 2, 4):
-        d.set(x, yt, z1 + 2, lantern(True) if p != "Neoterra" else "sea_lantern")
+    d.double_door((x1 + x2) // 2, y0, z1, "x", "south", W)
+    return d
 
 
 # ============================================================================================ compositions: PLAYER HOUSE
@@ -3301,6 +3289,19 @@ def player_estate(rel, L):
         for x in (HALL[0], HALL[2]):
             lamp_post(d, x, HALL[1] - 2 if HALL[1] > 3 else HALL[3] + 2, 1, lamp)
         ph_vault(d, *VAULT, h=4)
+        # shelving: a back bay of barrels three high (gap opposite the doors), an island bay down the middle,
+        # chests along the west wall, two lanterns over the aisles
+        xe = VAULT[2] - 1                                   # 23 (HW, CA) / 25 (NT)
+        dx = (VAULT[0] + VAULT[2]) // 2                     # door column 13 / 14
+        for x in [x for x in range(3, xe + 1) if abs(x - dx) > 1]:
+            for k in range(3):
+                d.set(x, 2 + k, 45, BRL("north"))
+        for x in range(5, xe - 1):
+            for k in range(3):
+                d.set(x, 2 + k, 40, BRL("north"))
+        fit(d, [(3, 2, z, CHEST("east")) for z in (36, 37, 38, 42, 43, 44)]
+            + ([(8, 5, 37, LANT), (18, 5, 37, LANT)] if pack != "Neoterra" else
+               [(8, 6, 37, "sea_lantern"), (18, 6, 37, "sea_lantern")]))
         recolor(d, pal_vault, (VAULT[0] - 1, VAULT[1] - 1, VAULT[2] + 1, VAULT[3] + 1, 2))
         for x in range(VAULT[0], VAULT[2] + 1, 6):
             lamp_post(d, x, VAULT[1] - 2, 1, lamp)
@@ -3956,7 +3957,6 @@ def cottage_retreat_ca(rel, L):
             d.dining(tx, 2, 15, 2, "x", "spruce", ("n", "s"), sit=False)
         d.set(46, 1, 15, "cobblestone")
         d.set(46, 2, 15, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
-        tree(d, 22, 27, 2, "spruce", 6, 2)
         tree(d, 57, 31, 2, "spruce", 6, 2)
     if L >= 4:
         for tx, tz in ((3, 31), (8, 34), (13, 30), (18, 35), (5, 37)):
@@ -3971,6 +3971,7 @@ def cottage_retreat_ca(rel, L):
                 (25, 2, 30, log("spruce_log", "z")), (25, 2, 31, log("spruce_log", "z")),
                 (23, 2, 33, log("spruce_log", "x")), (24, 2, 33, log("spruce_log", "x"))])
         lamp_post(d, 34, 23, 1, "ca")
+        tree(d, 22, 27, 2, "spruce", 6, 2)
         addon(d, 42, 24, 52, 31, "workshop")
         fit(d, [(44, 2, 28, fence("spruce")), (48, 2, 28, fence("spruce"))]                    # canoe workshop
             + [(x, 3, 28, slab("spruce")) for x in (44, 45, 46, 47, 48)]
