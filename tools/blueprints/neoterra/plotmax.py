@@ -1,4 +1,8 @@
 """
+Full plot from level 1, tight to the building: every level of an upgradable building gets the plot of its biggest
+level, which is the area its blocks actually use plus ONE free block all round (MARGIN). Empty plot space the
+design left around the building is cut away.
+
 Full plot from level 1: every level of an upgradable building gets the size of its biggest level.
 
 For each hut series (name1..name5 in one folder) the extent of all levels around the hut block is merged (MineColonies
@@ -26,6 +30,8 @@ from blueprint import Blueprint, load, AIR  # noqa: E402
 SOLID = "structurize:blocksolidsubstitution"
 CHILD = re.compile(r"(wing|annex|flat|barrackstower|bunkerkitchen|bunkerschool|bunkerclinic|bunkerfarm)\d\.blueprint$")
 SKIP_DIRS = ("/mineshafts/",)
+MARGIN = 1
+GROUND_KEEP = ("water", "lava", "farmland", "composted", "hut", "substitution")
 
 
 def hut_info(bp):
@@ -42,6 +48,47 @@ def ground_y(bp, te):
         if any(str(n["tagName"]) == "groundlevel" for n in t["tagNameList"]):
             return int(t["tagPos"]["y"]) + hy
     return 1
+
+
+def tag_cells(te):
+    out = []
+    for t in te["blueprintDataProvider"].get("posTagMap", []):
+        p = t["tagPos"]
+        out.append((int(p["x"]), int(p["y"]), int(p["z"])))
+    return out
+
+
+def content_box(bp):
+    """Horizontal extent (hut-relative) of what the building uses: everything above the ground layer, ground cells
+    that are not plain paving (water, fields, hut blocks, reserved child space), anything dug or built below the
+    ground, tile entities and tags."""
+    te = hut_info(bp)
+    gy = ground_y(bp, te)
+    hx, hy, hz = bp.primary_offset
+    xs, zs = [], []
+    for y in range(bp.sy):
+        layer = bp.grid[y]
+        if y > gy:
+            fill = AIR
+        else:
+            fill = Counter(st for row in layer for st in row).most_common(1)[0][0]
+        for z in range(bp.sz):
+            row = layer[z]
+            for x in range(bp.sx):
+                st = row[x]
+                if st == fill:
+                    continue
+                if y == gy and not any(k in st for k in GROUND_KEEP):
+                    continue
+                xs.append(x)
+                zs.append(z)
+    for (x, _y, z) in bp.tile_entities:
+        xs.append(x)
+        zs.append(z)
+    for (x, _y, z) in tag_cells(te):
+        xs.append(x + hx)
+        zs.append(z + hz)
+    return min(xs) - hx, max(xs) - hx, min(zs) - hz, max(zs) - hz
 
 
 def pad(bp, box):
@@ -73,11 +120,15 @@ def pad(bp, box):
                 row[x] = fill
     for y in range(bp.sy):
         for z in range(bp.sz):
+            if not 0 <= z + dz < sz:
+                continue
             src = bp.grid[y][z]
             dst = nb.grid[y + dy][z + dz]
             for x in range(bp.sx):
-                dst[x + dx] = src[x]
-    nb.tile_entities = {(x + dx, y + dy, z + dz): t for (x, y, z), t in bp.tile_entities.items()}
+                if 0 <= x + dx < sx:
+                    dst[x + dx] = src[x]
+    nb.tile_entities = {(x + dx, y + dy, z + dz): t for (x, y, z), t in bp.tile_entities.items()
+                        if 0 <= x + dx < sx and 0 <= z + dz < sz}
     nb.primary_offset = (hx + dx, hy + dy, hz + dz)
     nb.architects = getattr(bp, "architects", [])
     hut = nb.tile_entities[nb.primary_offset]
@@ -99,7 +150,7 @@ def main():
         series[(f.parent, m.group(1))][int(m.group(2))] = f
     padded = 0
     for (folder, base), levels in sorted(series.items()):
-        if len(levels) < 2:
+        if not levels:
             continue
         bps = {}
         for L, f in levels.items():
@@ -108,19 +159,20 @@ def main():
                 bps = {}
                 break
             bps[L] = bp
-        if len(bps) < 2:
+        if not bps:
             continue
         box = [0, 0, 0, 0, 0, 0]
         for bp in bps.values():
             hx, hy, hz = bp.primary_offset
-            box = [min(box[0], -hx), min(box[1], -hy), min(box[2], -hz),
-                   max(box[3], bp.sx - 1 - hx), max(box[4], bp.sy - 1 - hy), max(box[5], bp.sz - 1 - hz)]
+            x1, x2, z1, z2 = content_box(bp)
+            box = [min(box[0], x1 - MARGIN), min(box[1], -hy), min(box[2], z1 - MARGIN),
+                   max(box[3], x2 + MARGIN), max(box[4], bp.sy - 1 - hy), max(box[5], z2 + MARGIN)]
         for L, bp in bps.items():
             nb = pad(bp, box)
             if nb:
                 nb.save(levels[L])
                 padded += 1
-    print(f"{root.name}: {padded} levels padded to their building's full plot")
+    print(f"{root.name}: {padded} levels fitted to their building's plot (+1 block margin)")
 
 
 if __name__ == "__main__":

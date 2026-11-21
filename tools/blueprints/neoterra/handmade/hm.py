@@ -570,8 +570,20 @@ class Design:
         self.child_positions.append((x, y, z, path))
 
     def hut(self, x, y, z, facing="north"):
-        """The hut block. Must stay at the same place relative to the building on every level."""
-        self.set(x, y, z, f"{self.req['hut']}[facing={facing}]")
+        """The hut block. Must stay at the same place relative to the building on every level.
+        For parks, watchtowers, piers and stops (pieces with a decoration controller) this places the controller."""
+        if self.req.get("hut") is None:
+            raise RequirementError(f"{self.rel}: plain piece has no hut / controller block - use d.anchor(x, y, z)")
+        if "decorationcontroller" in self.req["hut"]:
+            self.set(x, y, z, f"{self.req['hut']}[facing={facing},mirror=false,waterlogged=false]")
+        else:
+            self.set(x, y, z, f"{self.req['hut']}[facing={facing}]")
+        self.hut_pos = (x, y, z)
+
+    def anchor(self, x, y, z):
+        """Plain pieces (walls, roads, rails, canals, bridges, subway, boardwalk, cliff climb): the placement anchor
+        (the cell the build tool's cursor sits on). No block is placed. Keep it where the pack's other pieces of the
+        same family have theirs so pieces line up."""
         self.hut_pos = (x, y, z)
 
     def tag(self, x, y, z, name):
@@ -632,8 +644,8 @@ class Design:
         p["items"] = {k: min(v, real["items"].get(k, 0)) for k, v in p["items"].items()}
         miss = []
         if self.hut_pos is None:
-            miss.append("hut block")
-        elif not self.bp.get(*self.hut_pos).startswith(self.req["hut"]):
+            miss.append("hut block" if r.get("hut") else "anchor (d.anchor)")
+        elif r.get("hut") and not self.bp.get(*self.hut_pos).startswith(self.req["hut"]):
             miss.append(f"hut block at {self.hut_pos} was overwritten ({self.bp.get(*self.hut_pos)})")
         if p["beds"] < r["beds"]:
             miss.append(f"beds {p['beds']}/{r['beds']}")
@@ -700,6 +712,28 @@ class Design:
         for q, ns in self.tags.items():
             tags.setdefault(q, []).extend(ns)
         name = Path(self.rel).stem
+        if self.req.get("piece"):
+            bp.primary_offset = self.hut_pos
+            bp.architects = [self.pack]
+            bp.name = f"{name}.blueprint"
+            if self.req.get("hut") is None:          # plain piece: no controller, no tags
+                return bp
+            bp.tile_entities[self.hut_pos] = T.Compound({
+                "id": T.String("minecolonies:decorationcontroller"), "path": T.String(self.rel),
+                "name": T.String(name), "pack": T.String(self.pack), "Item": T.String(""),
+                "mirror": T.Byte(0), "rotation": T.Int(0),
+                "blueprintDataProvider": T.Compound({
+                    "corner1": pos(-hx, -hy, -hz),
+                    "corner2": pos(bp.sx - 1 - hx, bp.sy - 1 - hy, bp.sz - 1 - hz),
+                    "path": T.String(self.rel), "schematicName": T.String(name), "pack": T.String(self.pack),
+                    "posTagMap": T.List[T.Compound]([
+                        T.Compound({"tagPos": pos(x - hx, y - hy, z - hz),
+                                    "tagNameList": T.List[T.Compound]([T.Compound({"tagName": T.String(n)})
+                                                                        for n in ns])})
+                        for (x, y, z), ns in sorted(tags.items())]),
+                }),
+            })
+            return bp
         te = T.Compound({
             "id": T.String("minecolonies:colonybuilding"), "mirror": T.Byte(0), "inWarehouse": T.Byte(0),
             "colony": T.Int(1), "type": T.String("minecraft:"), "version": T.Int(0), "tagSIze": T.Int(0),
