@@ -107,6 +107,24 @@ def cs_walls(d, x1, z1, x2, z2, y1, y2, log="spruce_log", corner="stripped_spruc
 RIVER = ["cobblestone", "mossy_cobblestone", "andesite", "cobblestone", "tuff", "mossy_cobblestone"]
 
 
+
+def trim(d, x, z, y1, y2, face, span=1):
+    """Cascadia window trim for ONE window: a stripped-log lintel over it (one log wider each side, set into
+    the horizontal log wall) and a board sill (top trapdoor) outside under it. (x, z) = first window column,
+    span = columns along the wall, y1..y2 = pane rows, face = outward side of the wall."""
+    fx, fz = {"north": (0, -1), "south": (0, 1), "west": (-1, 0), "east": (1, 0)}[face]
+    ax, az = (1, 0) if fz else (0, 1)
+    for k in range(-1, span + 1):
+        cx, cz = x + ax * k, z + az * k
+        b = d.get(cx, y2 + 1, cz)
+        if b.startswith("minecraft:spruce_log") or b.startswith("minecraft:spruce_planks"):
+            d.set(cx, y2 + 1, cz, LOG("stripped_spruce_log", "x" if fz else "z"))
+    for k in range(span):
+        cx, cz = x + ax * k + fx, z + az * k + fz
+        if d.air(cx, y1 - 1, cz):
+            d.set(cx, y1 - 1, cz, f"spruce_trapdoor[facing={face},half=top,open=false,powered=false,waterlogged=false]")
+
+
 def cs_roof(d, x1, z1, x2, z2, y, axis, end="spruce_planks", o=1, tiles="deepslate_tile"):
     """Cascadia roof: dark deepslate-tile slopes, a stripped-log ridge beam and light spruce barge boards /
     fascia along the gable edges and the eaves. Returns the ridge height."""
@@ -833,6 +851,10 @@ def gt_cascadia(rel, L):
     d.window(x2, 3, 9, x2, 4, 9)
     d.window(6, 3, z2, 6, 4, z2)
     ridge = cs_roof(d, x1, z1, x2, z2, 6, "x", "spruce_planks")
+    trim(d, 4, z1, 3, 4, "north")                                 # window trims, by hand
+    trim(d, 8, z1, 3, 4, "north")
+    trim(d, x2, 9, 3, 4, "east")
+    trim(d, 6, z2, 3, 4, "south")
     d.fill(x1 + 1, 6, z1 + 1, x2 - 1, 6, z2 - 1, "spruce_planks")
     # stone chimney on the west gable
     d.hearth(x1 + 1, 2, 9, "east", 6, "cobblestone", "campfire")
@@ -1525,8 +1547,13 @@ def ar_cascadia(rel, L):
     d.window(6, 8, z1, 6, 9, z1)
     for z in range(z1 + 3, Z2, 3):
         d.window(x1, 3, z, x1, 4, z)
+        trim(d, x1, z, 3, 4, "west")
     d.door(x2, 2, z1 + 3, "east", "spruce")
     d.window(x2, 3, z1 + 1, x2, 4, z1 + 1)
+    trim(d, 4, z1, 3, 5, "north")                                 # window trims, by hand
+    trim(d, 8, z1, 3, 5, "north")
+    trim(d, 6, z1, 8, 9, "north")
+    trim(d, x2, z1 + 1, 3, 4, "east")
     d.set(5, 4, z1 - 1, "wall_torch[facing=north]") if False else None
     # elk antlers over the door: dead bushes on a bracket
     d.set(6, 5, z1 - 1, "spruce_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
@@ -1732,7 +1759,7 @@ def ar_cascadia(rel, L):
         wlamp(d, 37, 4, 23)
         wlamp(d, 39, 4, 23)
         for z in range(24, 29):                                   # firewood stacked against the lodge
-            for y in (2, 3):
+            for y in (2, 3, 4):
                 d.set(31, y, z, LOG("spruce_log" if (y + z) % 2 else "birch_log", "z"))
         lamp_post(d, 31, 22)
         lamp_post(d, 31, 31)
@@ -2254,6 +2281,9 @@ def ca_cascadia(rel, L):
     for z in range(z1 + 2, Z2 - 2, 5):                            # grouped windows, three wide
         for x in (x1, x2):
             d.window(x, 4, z, x, 5, z + 2)
+            trim(d, x, z, 4, 5, "west" if x == x1 else "east", span=3)
+    trim(d, mid - 4, z1, 3, 5, "north")                           # front window trims, by hand
+    trim(d, mid + 4, z1, 3, 5, "north")
     # lean-to woodshed porch along the west wall
     for z in range(z1 + 2, Z2 - 1):
         for x in (0, 1, 2):
@@ -3415,7 +3445,9 @@ def al_cascadia(rel, L):
     for x in range(x1 + 2, X2 - 1, 4):
         if x != door:
             d.window(x, 3, z1, x + 1 if x + 1 != door else x, 4, z1)
+            trim(d, x, z1, 3, 4, "north", span=2 if x + 1 != door else 1)
     d.window(x1, 3, 9, x1, 4, 9)
+    trim(d, x1, 9, 3, 4, "west")
     d.sign(door + 1, 4, z1 - 1, "north", ["HERBS &", "TONICS"], "spruce")
     d.set(door - 1, 4, z1 - 1, LANT) if False else None
     # hearth with the cauldron over the fire, chimney through the roof
@@ -3889,6 +3921,9 @@ def gy_cascadia(rel, L):
     d.window(8, 3, z1, 8, 4, z1)
     d.window(x2, 3, 9, x2, 4, 10)
     d.window(6, 3, z2, 7, 4, z2, "yellow_stained_glass_pane")
+    trim(d, 8, z1, 3, 4, "north")                                 # window trims, by hand
+    trim(d, x2, 9, 3, 4, "east", span=2)
+    trim(d, 6, z2, 3, 4, "south", span=2)
     # porch with bench
     for x in range(x1, x2 + 1):
         for z in (z1 - 2, z1 - 1):
@@ -3970,6 +4005,8 @@ def gy_cascadia(rel, L):
             bench(d, 32, z, "south" if z == 28 else "north", 3)
         d.set(33, 2, 27, "spruce_planks")
         d.candle(33, 3, 27, 3)
+        d.set(32, 2, 27, "potted_white_tulip")                    # flowers either side of the memorial candles
+        d.set(34, 2, 27, "potted_lily_of_the_valley")
         for x in (28, 38):
             lamp_post(d, x, 22)
             lamp_post(d, x, 32)
