@@ -716,7 +716,7 @@ def _pot(i):
 
 
 def furnish(r, kind, items=(), racks=0, rack_h=1, books=0, beds=0, seats=0, barrels=0, sit=True, wood=None,
-            lights=True):
+            lights=True, soft=False):
     """Lay a room out for its purpose at fixed positions of the room frame (u along the back wall, v into the
     room). Kind-specific furniture first, then the room's required blocks in that layout's working positions:
     work blocks on the bench / cabinet run, rack columns as shelving bays, bookcases on the side wall, beds with
@@ -927,11 +927,42 @@ def furnish(r, kind, items=(), racks=0, rack_h=1, books=0, beds=0, seats=0, barr
     if lights and P != "Neoterra":
         for fu in ((W // 2,) if W < 10 else (W // 4, 3 * W // 4)):
             r.hang(fu, max(1, D // 2))
+    if soft:
+        return dict(items=items, racks=racks, books=books, beds=beds, seats=max(0, seats), barrels=barrels,
+                    got=st_["got"])
     left = [x for x in (items and items or [], racks > 0 and "racks", barrels > 0 and "barrels") if x]
     if left or (seats > 0 and sit):
         raise RuntimeError(f"{d.rel} [{P}] {kind} room at {r.x1},{r.z1}..{r.x2},{r.z2}: left over "
                            f"{left} seats={seats}")
     return st_["got"]
+
+
+def furnish_all(specs, items=(), barrels=0, books=0, seats=0, beds=0, racks=0):
+    """Lay out several rooms (room, kind) in order; the building's required blocks go to the rooms whose
+    layout has a place for them (barrels to sorting rooms, books to libraries, beds to dormitories ...)."""
+    need = dict(items=list(items), barrels=barrels, books=books, seats=seats, beds=beds, racks=racks)
+    for r, kind in specs:
+        kw = dict(items=need["items"])
+        if kind == "sorting":
+            kw["barrels"] = need["barrels"]
+        if kind == "library":
+            kw["books"] = need["books"]
+        if kind in ("office", "library", "lounge", "canteen", "kiosk"):
+            kw["seats"] = need["seats"]
+        if kind == "dorm":
+            kw["beds"] = need["beds"]
+        if kind == "store":
+            kw["racks"] = need["racks"]
+        left = furnish(r, kind, soft=True, **kw)
+        need["items"] = left["items"]
+        for k in ("barrels", "books", "beds", "racks"):
+            if k in kw:
+                need[k] = left[k]
+        if "seats" in kw:
+            need["seats"] = max(0, need["seats"] - left["got"])
+    bad = {k: v for k, v in need.items() if v}
+    if bad:
+        raise RuntimeError(f"rooms could not take {bad}")
 
 
 WOOD = {"Neoterra": "birch", "Hearthwood": "dark_oak", "Cascadia": "spruce"}
@@ -2677,34 +2708,12 @@ DLV = {1: 8, 2: 31, 3: 41, 4: 41, 5: 41}
 DSEAT = {1: 0, 2: 3, 3: 6, 4: 6, 5: 6}
 
 
-def dl_reqs(rooms, L, wood, barrels_done=0):
-    """Place deliveryman requirements across rooms (in order). Returns barrels placed."""
-    want = ["crafting_table", "cartography_table"] + (["lectern"] if L >= 2 else []) + \
+def dl_need(L, barrels_done=0):
+    """Deliveryman requirements for furnish_all."""
+    items = ["crafting_table", "cartography_table"] + (["lectern"] if L >= 2 else []) + \
         (["cartography_table", "lectern"] if L >= 3 else []) + (["ender_chest"] if L >= 5 else [])
-    for it in want:
-        for r in rooms:
-            if r.item(it):
-                break
-    n = barrels_done
-    for r in rooms:
-        if n >= DLV[L]:
-            break
-        n += r.barrels(DLV[L] - n, 3, sides=("south", "west", "east"))
-    books = 12 if L >= 3 else 0
-    for r in rooms:
-        if books <= 0:
-            break
-        books -= r.books(books, 2, sides=("west", "north", "east", "south"))
-    seats = DSEAT[L]
-    for r in rooms:
-        if seats <= 0:
-            break
-        seats -= r.chairs_desk(seats, wood)
-    if L >= 4:
-        for r in rooms[::-1]:
-            if r.bed(wood):
-                break
-    return n
+    return dict(items=items, barrels=DLV[L] - barrels_done, books=12 if L >= 3 else 0, seats=DSEAT[L],
+                beds=1 if L >= 4 else 0)
 
 
 def dl_neo(rel, L):
@@ -2718,27 +2727,21 @@ def dl_neo(rel, L):
     d.sign(10, 6, 3, "north", ["NEO", "COURIER"], "birch", glow=True, color="orange") if sto > 1 else \
         d.sign(10, 5, 2, "north", ["NEO", "COURIER"], "birch", glow=True, color="orange")
     d.hut(4, y0, 5)
-    r0 = a.room(0)
-    for x in range(5, 11):                                           # customer counter
-        d.set(x, y0, 8, sl("smooth_quartz", "top") if x != 5 else "quartz_block")
-        r0.used.add((x, 8))
-    rooms = [r0]
+    # parcel shop: sorting wall behind the counter, waiting seats; sorting floor / archive upstairs
+    specs = [(a.room(0, back="south"), "sorting")]
     if sto > 1:
-        rooms.append(a.room(1))
+        specs.append((a.room(1, back="south"), "library" if L >= 3 else "sorting"))
     b = None
     if L >= 3:
         b = build(d, 18, 4, 32, 14, 3 if L >= 4 else 1, H=4, roof="flat", core=(30, 6) if L >= 4 else None)
         b.opening(22, 4, 24, 4, 3, "orange_concrete")
-        rb = b.room(0)
         for x in range(20, 29):                                      # parcel conveyor
             d.set(x, y0, 9, sl("smooth_stone", "top") if x % 3 else "hopper[enabled=true,facing=down]")
-            rb.used.add((x, 9))
-        rooms.append(rb)
+        specs.append((b.room(0, back="south"), "sorting"))
         if L >= 4:
-            rooms += [b.room(1), b.room(2)]
-    dl_reqs(rooms, L, "birch")
-    for r in rooms:
-        r.fill(["crate", "bamboo", "shelf_quartz"])
+            specs += [(b.room(1, back="south"), "dorm"), (b.room(2, back="south"), "lounge")]
+    specs.append((a.room(0, back="north"), "office"))                # waiting seats by the window
+    furnish_all(specs, **dl_need(L))
     neo_roof(d, a, "solar")
     if b:
         neo_roof(d, b, "hvac")
@@ -2761,19 +2764,13 @@ def dl_neo(rel, L):
     if L >= 5:
         g = build(d, 18, 17, 32, 27, 3, roof="flat", core=(30, 19))
         g.opening(21, 17, 25, 17, 3, "orange_concrete")
-        rg = g.room(0)
-        for x in (21, 25):
+        for x in (21, 25):                                           # parked delivery vans
             for z in range(20, 25):
                 d.set(x, y0, z, "white_concrete" if z % 2 else "orange_concrete")
                 d.set(x, y0 + 1, z, "glass" if z in (21, 22, 23) else sl("smooth_quartz"))
-                rg.used.add((x, z))
-        rg.fill(["crate", "shelf_quartz"])
-        rg2 = g.room(1)
-        rg2.table_group("birch", 4, "slab", rug="orange_carpet", sit=False)
-        rg2.fill(["crate", "bamboo"])
-        rg3 = g.room(2)
-        rg3.chairs_desk(3, "birch", top=sl("smooth_quartz", "top"), sit=False)
-        rg3.fill(["shelf_quartz", "bamboo"])
+        furnish(g.room(0, back="north"), "workshop")
+        furnish(g.room(1, back="south"), "canteen", sit=False)
+        furnish(g.room(2, back="south"), "office", seats=3, sit=False)
         yy = g.yr + 1
         for x in range(21, 30):
             for z in range(19, 26):

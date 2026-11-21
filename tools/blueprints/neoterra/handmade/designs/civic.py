@@ -3787,6 +3787,8 @@ def col_cascadia(rel, L):
             put(d, 35, Y0, z, "spruce_fence")
         for x in range(37, 50, 4):                                   # lanterns on the bunkhouse back wall
             put(d, x, 4, 41, "wall_torch[facing=south]") if False else put(d, x, 5, 41, "lantern[hanging=true,waterlogged=false]") if False else None
+        for z in (30, 34, 38):
+            post_lamp(d, 52, z)
         for z in (32, 36):
             put(d, 34, Y0, z, "spruce_fence")
             put(d, 34, Y0 + 1, z, "lantern[hanging=false,waterlogged=false]")
