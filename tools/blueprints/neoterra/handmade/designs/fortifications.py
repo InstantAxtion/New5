@@ -1861,10 +1861,30 @@ def nt_bar_east(d, L):
         for x in (37, 38):
             put(d, x, 18, 24, ST("birch", "north"))
         roof_units(d, [(35, 25), (40, 23)], 18)
+        for x, z in ((39, 24), (42, 24), (39, 26), (42, 26)):  # pergola over the roof lounge
+            put(d, x, 18, z, "birch_fence")
+            put(d, x, 19, z, "birch_fence")
+        for x in range(39, 43):
+            for z in (24, 25, 26):
+                put(d, x, 20, z, "birch_slab[type=bottom,waterlogged=false]")
+        put(d, 40, 18, 25, ST("birch", "west"))
+        put(d, 41, 18, 25, ST("birch", "east"))
         # solar array on the garage roof
         for x in range(31, 45):
             for z in (5, 6, 7):
                 put(d, x, 8, z, "daylight_detector[inverted=false,power=0]")
+        for x in range(44, 48):                               # break shelter by the vehicle bays
+            for z in range(11, 16):
+                put(d, x, 5, z, "smooth_stone_slab[type=bottom,waterlogged=false]")
+        for x, z in ((44, 11), (47, 11), (44, 15), (47, 15)):
+            for y in (2, 3, 4):
+                put(d, x, y, z, "light_gray_concrete")
+        for z in (12, 13, 14):
+            put(d, 47, 2, z, ST("birch", "east"))
+        put(d, 45, 2, 13, "birch_fence")
+        put(d, 45, 3, 13, "birch_pressure_plate[powered=false]")
+        put(d, 44, 2, 13, LOCK)
+        tree(d, 46, 28, 4)
         for x in (44, 46):                                    # flag masts at the training centre door
             for y in range(2, 10):
                 put(d, x, y, 17, "iron_bars")

@@ -2289,6 +2289,2210 @@ CA_BARN = dict(wall="red_terracotta", trim="white_terracotta", band="white_terra
 CA_SOUTH = dict(wall="spruce_log", trim="stripped_spruce_log", band="dark_oak_planks", roof="deepslate_tile",
                 gable="spruce_planks", shutter="mangrove", door="dark_oak")
 
+# ---------------------------------------------------------------------------------------------- hand-made plans
+def _row(op, pts, rest=""):
+    """Lines for pieces I list one by one (pts = explicit (x, z) pairs)."""
+    return "\n".join(f"{op} {x} {z} {rest}".rstrip() for x, z in pts)
+
+
+# Neoterra sky tower – west residents' club (9 x 13 rooms, stair on the east side lx 6-8 / lz 0-6, door lx 4 lz 0)
+NT_CLUB_PLANS = {
+    "gym": """
+        X 0 1 andesite
+        X 0 1 plate 1
+        X 0 2 andesite
+        X 0 2 plate 1
+        X 0 3 sslab
+        X 0 5 sslab
+        X 0 6 sslab
+        R 2 4 4 6 lime
+        X 3 9 target 1
+        X 3 9 chain 2
+        X 3 9 chain 3
+        X 0 9 chest:e
+        X 0 10 chest:e
+        X 0 11 chest:e
+        S 0 12 wool
+        X 1 12 black_carpet
+        X 2 12 black_carpet
+        X 3 12 black_carpet
+        X 6 12 sink
+        S 7 12 wool
+        P 8 12 potted_bamboo
+        P 0 0 potted_bamboo
+        P 2 0 potted_bamboo
+        G 0 7 e
+        L 2 3
+        L 2 9
+        L 7 10
+    """,
+    "lounge": """
+        F 0 5 e
+        K 0 3
+        K 0 7
+        T 2 5 potted_bamboo
+        C 3 4 e
+        C 3 5 e
+        C 3 6 e
+        C 2 3 n
+        C 2 7 s
+        R 1 4 3 6 cyan
+        P 0 0 potted_bamboo
+        P 0 12 potted_white_tulip
+        T 5 11 lamp
+        C 4 12 s
+        C 6 9 n
+        C 7 9 n
+        T 7 11 potted_azure_bluet
+        X 8 12 jukebox
+        G 0 9 e
+        L 2 5
+        L 5 10
+        L 7 10
+    """,
+    "library": """
+        %s
+        %s
+        T 3 5 lamp
+        T 3 6 candle
+        C 2 5 w
+        C 2 6 w
+        C 4 5 e
+        C 4 6 e
+        X 5 1 lectern:w
+        C 7 11 e
+        T 8 11 candle
+        P 6 12 potted_bamboo
+        R 2 4 4 7 light_gray
+        L 3 3
+        L 3 9
+        L 7 10
+    """ % (_row("K", [(0, z) for z in range(1, 12)]), _row("K", [(x, 12) for x in range(1, 6)])),
+    "bar": """
+        %s
+        %s
+        %s
+        X 0 10 mangrove_planks
+        X 1 10 mangrove_planks
+        X 2 10 mangrove_planks
+        X 3 10 mangrove_planks
+        C 0 9 n
+        C 1 9 n
+        C 2 9 n
+        C 3 9 n
+        C 0 2 n
+        T 0 3 candle
+        C 0 4 s
+        C 0 5 n
+        T 0 6 candle
+        C 0 7 s
+        X 8 12 jukebox
+        P 6 12 potted_bamboo
+        P 5 0 potted_bamboo
+        L 2 4
+        L 2 11
+        L 7 10
+    """ % (_row("X", [(x, 12) for x in range(0, 5)], "barrel:n"), _row("X", [(x, 12) for x in range(0, 5)], "counter 1"),
+           _row("X", [(x, 12) for x in range(0, 5)], "brew 2")),
+    "office": """
+        Q 0 1 e 2
+        Q 0 2 e 2
+        X 0 3 barrel:e
+        X 0 4 chest:e
+        T 2 5 lamp
+        T 3 5
+        C 2 4 n
+        C 3 6 s
+        T 2 9
+        T 3 9 lamp
+        C 2 8 n
+        C 3 10 s
+        X 0 12 carto
+        X 1 12 lectern:n
+        P 5 12 potted_bamboo
+        T 7 11 candle
+        C 6 11 w
+        C 8 11 e
+        P 0 0 potted_bamboo
+        L 2 3
+        L 2 9
+        L 7 10
+    """,
+    "cinema": """
+        X 0 4 white_wool 1
+        X 0 5 white_wool 1
+        X 0 6 white_wool 1
+        X 0 4 white_wool 2
+        X 0 5 white_wool 2
+        X 0 6 white_wool 2
+        %s
+        %s
+        R 1 3 2 8 red
+        X 0 12 jukebox
+        S 1 12 pot
+        X 2 12 smoker:n
+        P 5 12 potted_bamboo
+        P 8 12 potted_bamboo
+        C 7 10 n
+        C 8 10 n
+        L 4 10
+        L 7 11
+    """ % (_row("C", [(3, z) for z in range(3, 9)], "e"), _row("C", [(5, z) for z in range(3, 9)], "e")),
+}
+NT_CLUB_FLOORS = ["gym", "lounge", "library", "bar", "office", "cinema", "lounge"]
+
+# Neoterra sky tower – east club tower B (9 x 13, same frame as the club but its own rooms)
+NT_B_PLANS = {
+    "restaurant": """
+        C 0 3 w
+        T 1 3 candle
+        C 2 3 e
+        C 0 6 w
+        T 1 6 candle
+        C 2 6 e
+        C 0 9 w
+        T 1 9 candle
+        C 2 9 e
+        T 4 5 candle
+        C 4 4 n
+        C 4 6 s
+        T 4 9
+        C 4 8 n
+        C 4 10 s
+        X 1 1 lectern:s
+        %s
+        X 6 12 barrel:n
+        T 7 10 candle
+        C 6 10 w
+        C 8 10 e
+        P 8 12 potted_bamboo
+        P 0 0 potted_bamboo
+        R 3 3 5 11 cyan
+        L 1 4
+        L 1 9
+        L 4 7
+        L 7 10
+    """ % _row("X", [(x, 12) for x in range(0, 6)], "counter"),
+    "kitchen": """
+        X 0 1 furnace:e
+        X 0 2 smoker:e
+        X 0 3 furnace:e
+        X 0 4 sink
+        S 0 5 pot
+        S 0 6 pot
+        X 2 8 counter
+        X 3 8 counter
+        X 4 8 counter
+        X 2 8 pot 1
+        X 0 9 barrel:e
+        X 0 10 barrel:e
+        X 0 11 chest:e
+        X 0 12 bwool
+        X 5 12 cauldron
+        T 7 11 candle
+        C 6 11 w
+        C 8 11 e
+        L 2 3
+        L 3 9
+        L 7 10
+    """,
+    "office": """
+        Q 0 2 e 2
+        Q 0 3 e 2
+        X 0 4 barrel:e
+        X 0 5 chest:e
+        T 3 3 lamp
+        C 3 2 n
+        T 3 7
+        T 3 8 lamp
+        C 2 7 w
+        C 2 8 w
+        C 4 7 e
+        C 4 8 e
+        X 0 12 carto
+        X 1 12 lectern:n
+        S 2 12 pot
+        P 5 12 potted_bamboo
+        C 7 10 n
+        C 8 10 n
+        T 7 12 potted_white_tulip
+        L 3 3
+        L 3 8
+        L 7 11
+    """,
+    "cowork": """
+        %s
+        %s
+        %s
+        P 0 2 potted_bamboo
+        S 0 10 pot
+        S 0 11 candle
+        X 0 12 barrel:e
+        T 4 10
+        T 5 10 lamp
+        C 4 9 n
+        C 5 9 n
+        C 4 11 s
+        C 5 11 s
+        X 7 12 carto
+        P 8 12 potted_bamboo
+        L 1 6
+        L 4 10
+        L 7 10
+    """ % (_row("T", [(1, z) for z in range(4, 9)]), _row("C", [(0, z) for z in range(4, 9)], "w"),
+           _row("C", [(2, z) for z in range(4, 9)], "e")),
+    "sky": """
+        F 0 6 e
+        T 2 6 potted_bamboo
+        C 3 5 e
+        C 3 6 e
+        C 3 7 e
+        C 2 4 n
+        C 2 8 s
+        R 1 5 3 7 gray
+        P 0 2 potted_bamboo
+        P 0 10 potted_bamboo
+        T 5 11 lamp
+        C 6 12 s
+        C 7 12 s
+        C 8 12 s
+        T 7 10 potted_white_tulip
+        L 2 6
+        L 7 10
+    """,
+    "bar": """
+        X 2 6 counter
+        X 3 6 counter
+        X 4 6 counter
+        C 2 5 n
+        C 3 5 n
+        C 4 5 n
+        C 2 7 s
+        C 3 7 s
+        C 4 7 s
+        %s
+        %s
+        C 6 10 w
+        T 7 10 candle
+        C 8 10 e
+        C 6 12 w
+        T 7 12
+        C 8 12 e
+        P 0 12 potted_bamboo
+        P 5 12 potted_bamboo
+        X 0 1 jukebox
+        L 3 3
+        L 3 9
+        L 7 11
+    """ % (_row("X", [(0, z) for z in range(4, 9)], "barrel:e"), _row("X", [(0, z) for z in range(4, 9)], "brew 1")),
+}
+
+
+def nt_b_floors(n):
+    mid = (["office", "cowork"] * 9)[:max(0, n - 4)]
+    return (["restaurant", "kitchen"] + mid + ["sky", "bar"])[:n] if n >= 4 else ["restaurant", "kitchen", "sky"][:n]
+
+
+# Neoterra sky tower – south garden-pavilion tower C (11 x 13, stair lx 8-10 / lz 0-6, door lx 5 lz 0)
+NT_C_PLANS = {
+    "cafe": """
+        X 0 2 counter
+        X 0 2 brew 1
+        X 0 3 counter
+        X 0 4 counter
+        X 0 4 pot 1
+        X 0 5 smoker:e
+        X 0 6 barrel:e
+        C 1 3 e
+        C 1 4 e
+        T 4 4 candle
+        C 3 4 w
+        C 5 4 e
+        T 4 8 candle
+        C 3 8 w
+        C 5 8 e
+        T 2 10
+        C 1 10 w
+        C 3 10 e
+        T 9 9
+        C 8 9 w
+        C 10 9 e
+        T 9 12 potted_white_tulip
+        C 8 12 w
+        C 10 12 e
+        P 0 12 potted_bamboo
+        P 7 0 potted_bamboo
+        P 0 0 potted_bamboo
+        L 1 4
+        L 4 6
+        L 4 10
+        L 9 10
+    """,
+    "studio": """
+        X 0 2 loom:e
+        X 0 4 carto
+        X 2 3 lectern:s
+        C 2 4 s
+        X 2 7 lectern:s
+        C 2 8 s
+        X 5 5 white_wool
+        X 5 5 pot 1
+        S 0 10 pot
+        S 0 11 candle
+        X 0 12 chest:e
+        R 4 9 6 11 magenta
+        X 9 12 barrel
+        P 10 12 potted_bamboo
+        T 9 9 candle
+        C 9 8 n
+        L 2 5
+        L 5 10
+        L 9 10
+    """,
+    "library": """
+        %s
+        %s
+        T 3 4 lamp
+        T 4 4
+        C 3 3 n
+        C 4 3 n
+        C 3 5 s
+        C 4 5 s
+        T 3 8
+        T 4 8 lamp
+        C 3 7 n
+        C 4 7 n
+        C 3 9 s
+        C 4 9 s
+        C 9 11 s
+        T 10 11 lamp
+        P 10 12 potted_bamboo
+        P 8 12 potted_bamboo
+        X 7 1 lectern:w
+        L 3 4
+        L 3 8
+        L 9 10
+    """ % (_row("K", [(0, z) for z in range(1, 13)]), _row("K", [(x, 12) for x in range(1, 7)])),
+    "yoga": """
+        R 1 2 6 5 lime
+        R 1 7 6 10 lime
+        X 0 12 chest:e
+        S 1 12 wool
+        S 2 12 wool
+        X 3 12 sink
+        P 0 0 potted_bamboo
+        P 0 6 potted_bamboo
+        P 7 0 potted_bamboo
+        P 7 12 potted_bamboo
+        P 10 12 potted_bamboo
+        X 9 9 bell
+        C 9 11 s
+        C 10 11 s
+        L 3 3
+        L 3 9
+        L 9 10
+    """,
+    "lounge": """
+        F 0 6 e
+        K 0 4
+        K 0 8
+        T 2 6 pot
+        C 3 5 e
+        C 3 6 e
+        C 3 7 e
+        C 2 4 n
+        C 2 8 s
+        R 1 5 3 7 white
+        T 6 10 lamp
+        C 5 10 w
+        C 7 10 e
+        C 9 8 n
+        C 10 8 n
+        T 9 10 potted_white_tulip
+        C 9 12 s
+        C 10 12 s
+        X 0 12 jukebox
+        P 0 0 potted_bamboo
+        P 7 0 potted_bamboo
+        L 2 6
+        L 6 10
+        L 9 10
+    """,
+    "bar": """
+        %s
+        %s
+        X 2 2 counter
+        X 2 3 counter
+        X 2 4 counter
+        X 2 5 counter
+        C 3 2 e
+        C 3 3 e
+        C 3 4 e
+        C 3 5 e
+        T 6 9 candle
+        C 5 9 w
+        C 7 9 e
+        T 9 10 candle
+        C 8 10 w
+        C 10 10 e
+        T 6 12
+        C 5 12 w
+        C 7 12 e
+        P 0 12 potted_bamboo
+        P 7 0 potted_bamboo
+        L 2 4
+        L 6 10
+        L 9 10
+    """ % (_row("X", [(0, z) for z in range(1, 7)], "barrel:e"), _row("X", [(0, z) for z in range(1, 7)], "brew 1")),
+}
+
+
+def nt_c_floors(n):
+    mid = (["studio", "library", "yoga", "lounge"] * 5)[:max(0, n - 2)]
+    return (["cafe"] + mid + ["bar"])[:n]
+
+
+# Hearthwood sky tower – west wing "Albion Club" (11 x 23, stair lx 8-10 / lz 0-6, door lx 5 lz 0, a partition at
+# lz 11 makes two rooms per floor; lz 21-22 at lx 4-6 stays free for the door into the link range)
+HW_W_PLANS = {
+    "dining": """
+        W 0 11 10 11
+        D 3 11 s
+        R 5 2 5 10 red
+        X 0 1 barrel:e
+        C 0 3 w
+        T 0 5 lamp
+        C 0 7 w
+        X 0 9 fence
+        X 0 9 lamp 1
+        K 7 3
+        K 7 4
+        P 7 9 potted_fern
+        P 0 10 potted_red_tulip
+        G 0 5 e
+        L 5 4
+        L 5 8
+        %s
+        %s
+        %s
+        C 3 14 n
+        C 3 20 s
+        X 0 13 chest:e
+        S 0 15 pot
+        S 0 16 candle
+        S 0 17 pot
+        X 0 21 chest:e
+        F 10 17 w
+        C 8 15 w
+        C 8 19 w
+        P 10 22 potted_fern
+        P 10 12 potted_allium
+        R 2 14 4 20 red
+        L 3 14
+        L 3 20
+        L 8 17
+    """ % (_row("T", [(3, z) for z in range(15, 20)], "candle"), _row("C", [(2, z) for z in range(15, 20)], "w"),
+           _row("C", [(4, z) for z in range(15, 20)], "e")),
+    "library": """
+        W 0 11 10 11
+        D 3 11 s
+        %s
+        T 3 4 lamp
+        T 4 4
+        C 3 3 n
+        C 4 5 s
+        X 7 9 lectern:w
+        P 7 10 potted_fern
+        P 0 10 potted_fern
+        L 3 5
+        %s
+        K 1 22
+        K 2 22
+        K 3 22
+        K 7 22
+        K 8 22
+        K 9 22
+        K 10 22
+        F 10 16 w
+        T 8 16 candle
+        C 8 15 w
+        C 8 17 w
+        T 3 17 lamp
+        T 4 17
+        C 3 16 n
+        C 4 16 n
+        C 3 18 s
+        C 4 18 s
+        R 7 14 9 18 orange
+        L 3 17
+        L 8 13
+        L 8 20
+    """ % (_row("K", [(0, z) for z in range(1, 10)]), _row("K", [(0, z) for z in range(12, 23)])),
+    "lounge": """
+        W 0 11 10 11
+        D 3 11 s
+        F 0 5 e
+        K 0 3
+        K 0 7
+        T 2 5 potted_red_tulip
+        C 3 4 e
+        C 3 5 e
+        C 3 6 e
+        C 2 3 n
+        C 2 7 s
+        R 1 4 3 6 red
+        T 6 9 lamp
+        C 5 9 w
+        C 7 9 e
+        P 0 10 potted_fern
+        P 7 1 potted_allium
+        L 2 5
+        L 6 8
+        X 1 14 note
+        X 2 14 note
+        X 3 14 note
+        C 2 15 s
+        C 5 18 s
+        C 6 18 s
+        C 7 18 s
+        C 5 20 s
+        C 6 20 s
+        C 7 20 s
+        X 0 22 jukebox
+        P 10 12 potted_fern
+        P 10 22 potted_fern
+        S 0 12 candle
+        G 0 17 e
+        L 3 15
+        L 6 19
+    """,
+    "cards": """
+        W 0 11 10 11
+        D 3 11 s
+        T 2 4 candle
+        C 1 4 w
+        C 3 4 e
+        C 2 3 n
+        C 2 5 s
+        T 2 8
+        C 1 8 w
+        C 3 8 e
+        C 2 7 n
+        C 2 9 s
+        T 6 8 candle
+        C 5 8 w
+        C 7 8 e
+        S 0 1 pot
+        X 0 10 chest:e
+        P 7 1 potted_red_tulip
+        L 2 6
+        L 6 8
+        F 0 17 e
+        C 2 16 e
+        C 2 18 e
+        K 0 13
+        K 0 21
+        T 8 15 lamp
+        C 8 14 n
+        C 8 16 s
+        T 8 20 candle
+        C 7 20 w
+        C 9 20 e
+        X 3 22 barrel:n
+        P 10 22 potted_fern
+        G 0 15 e
+        L 3 17
+        L 8 17
+    """,
+    "guest": """
+        W 0 11 10 11
+        D 3 11 s
+        T 0 3 lamp
+        C 1 3 e
+        T 0 7 candle
+        C 1 7 e
+        X 0 1 chest:e
+        X 0 9 lectern:e
+        K 7 1
+        K 7 2
+        P 7 10 potted_allium
+        L 2 5
+        C 1 14 n
+        C 2 14 n
+        C 3 14 n
+        T 2 16 potted_allium
+        C 1 18 s
+        C 2 18 s
+        C 3 18 s
+        P 0 12 potted_fern
+        P 0 22 potted_fern
+        P 10 22 potted_red_tulip
+        P 10 12 potted_fern
+        T 8 17 lamp
+        C 8 16 n
+        C 8 18 s
+        R 1 15 3 17 orange
+        L 2 16
+        L 8 17
+    """,
+}
+HW_W_FLOORS = ["dining", "library", "lounge", "cards", "guest"]
+
+# Hearthwood sky tower – east wing (billiards, smoking & map rooms, reading rooms, trophy room, tea room)
+HW_E_PLANS = {
+    "billiard": """
+        W 0 12 10 12
+        D 2 12 s
+        X 2 4 green_wool
+        X 3 4 green_wool
+        X 2 5 green_wool
+        X 3 5 green_wool
+        X 2 6 green_wool
+        X 3 6 green_wool
+        X 2 7 green_wool
+        X 3 7 green_wool
+        X 0 3 fence
+        X 0 4 fence
+        C 0 7 w
+        C 0 8 w
+        S 0 10 candle
+        X 7 1 barrel
+        P 7 11 potted_fern
+        L 2 5
+        L 3 7
+        %s
+        %s
+        %s
+        %s
+        P 10 13 potted_fern
+        T 8 20 candle
+        C 7 20 w
+        C 9 20 e
+        X 2 22 jukebox
+        L 2 16
+        L 8 19
+    """ % (_row("X", [(0, z) for z in range(14, 19)], "barrel:e"), _row("X", [(0, z) for z in range(14, 19)], "brew 1"),
+           _row("X", [(2, z) for z in range(14, 19)], "planks"), _row("C", [(3, z) for z in range(14, 19)], "e")),
+    "smoking": """
+        W 0 12 10 12
+        D 2 12 s
+        F 0 6 e
+        C 2 5 e
+        C 2 7 e
+        R 1 5 2 7 orange
+        K 0 2
+        K 0 3
+        K 0 9
+        K 0 10
+        T 6 9 lamp
+        C 6 8 n
+        C 6 10 s
+        P 7 1 potted_fern
+        L 2 6
+        L 6 9
+        X 2 16 carto
+        X 3 16 carto
+        C 2 15 n
+        C 3 17 s
+        X 0 14 lectern:e
+        X 0 20 chest:e
+        X 0 21 chest:e
+        G 0 17 e
+        K 10 14
+        K 10 15
+        K 10 18
+        K 10 19
+        P 10 22 potted_allium
+        T 8 21 candle
+        L 3 16
+        L 8 18
+    """,
+    "reading": """
+        W 0 12 10 12
+        D 2 12 s
+        %s
+        T 4 4 lamp
+        C 4 3 n
+        C 4 5 s
+        T 4 8 lamp
+        C 4 7 n
+        C 4 9 s
+        X 7 1 lectern:w
+        P 7 11 potted_fern
+        L 4 6
+        X 0 14 lectern:e
+        X 0 16 lectern:e
+        X 0 18 lectern:e
+        C 3 15 e
+        C 3 17 e
+        T 7 17 candle
+        C 6 17 w
+        C 8 17 e
+        C 7 16 n
+        C 7 18 s
+        P 10 13 potted_fern
+        P 0 22 potted_red_tulip
+        K 10 20
+        K 10 21
+        K 10 22
+        L 3 16
+        L 7 17
+    """ % _row("K", [(0, z) for z in range(1, 12)]),
+    "trophy": """
+        W 0 12 10 12
+        D 2 12 s
+        G 0 2 e
+        G 0 5 e
+        G 0 8 e
+        S 0 4 pot
+        S 0 7 candle
+        S 7 1 skull:n
+        C 3 5 n
+        C 4 5 n
+        T 3 7
+        T 4 7 candle
+        C 3 9 s
+        C 4 9 s
+        L 3 7
+        X 0 14 barrel:e
+        X 0 15 barrel:e
+        X 0 16 chest:e
+        X 0 18 fence
+        X 0 19 fence
+        X 0 20 fence
+        T 5 17 lamp
+        C 5 16 n
+        C 5 18 s
+        P 10 13 potted_fern
+        P 10 22 potted_fern
+        G 10 17 w
+        L 3 17
+        L 8 17
+    """,
+    "tea": """
+        W 0 12 10 12
+        D 2 12 s
+        T 3 5 candle
+        T 4 5
+        C 3 4 n
+        C 4 4 n
+        C 3 6 s
+        C 4 6 s
+        C 2 5 w
+        C 5 5 e
+        S 0 1 pot
+        S 0 9 candle
+        P 7 1 potted_red_tulip
+        P 0 11 potted_fern
+        L 3 5
+        T 2 16 candle
+        C 1 16 w
+        C 3 16 e
+        T 2 20
+        C 1 20 w
+        C 3 20 e
+        T 7 18 potted_allium
+        C 6 18 w
+        C 8 18 e
+        X 0 13 furnace:e
+        X 0 14 sink
+        S 0 15 pot
+        P 10 13 potted_fern
+        P 10 22 potted_fern
+        L 2 18
+        L 7 18
+    """,
+}
+HW_E_FLOORS = ["billiard", "smoking", "reading", "trophy", "tea"]
+
+# Hearthwood sky tower – south range (57 x 11 per floor, partitions at lx 18 and 38 make three rooms; stair on
+# the east end lx 54-56 / lz 0-6; ground doors at lx 9, 28, 47)
+_HW_S_PART = """
+        W 18 0 18 10
+        D 18 5 e
+        W 38 0 38 10
+        D 38 5 e
+"""
+HW_S_PLANS = {
+    "ground": _HW_S_PART + """
+        R 9 2 9 10 red
+        C 0 3 w
+        C 0 4 w
+        T 0 5 lamp
+        C 0 6 w
+        C 0 7 w
+        X 0 1 barrel:e
+        X 17 1 fence
+        X 17 1 lamp 1
+        T 13 9 lamp
+        P 12 10 potted_fern
+        P 14 10 potted_fern
+        K 17 8
+        K 17 9
+        G 0 9 e
+        P 5 10 potted_allium
+        P 0 10 potted_red_tulip
+        L 5 5
+        L 13 5
+        %s
+        %s
+        %s
+        C 22 5 w
+        C 34 5 e
+        F 28 10 n
+        X 19 1 chest:s
+        S 20 10 pot
+        S 21 10 candle
+        S 35 10 pot
+        S 36 10 candle
+        P 19 10 potted_fern
+        P 37 10 potted_fern
+        P 37 1 potted_fern
+        G 19 8 e
+        G 37 8 w
+        L 23 5
+        L 28 5
+        L 33 5
+        X 39 10 furnace:n
+        X 40 10 smoker:n
+        X 41 10 furnace:n
+        X 42 10 sink
+        S 43 10 pot
+        S 44 10 pot
+        X 45 10 barrel:n
+        S 46 10 pot
+        X 42 5 counter
+        X 43 5 counter
+        X 44 5 counter
+        X 42 5 pot 1
+        X 39 1 barrel:e
+        X 39 2 barrel:e
+        X 39 3 chest:e
+        X 39 7 bwool
+        X 39 8 wool
+        T 50 8
+        C 49 8 w
+        C 51 8 e
+        P 56 10 potted_fern
+        P 53 1 potted_allium
+        L 42 3
+        L 44 7
+        L 50 8
+    """ % (_row("T", [(x, 5) for x in range(23, 34)], "candle"), _row("C", [(x, 4) for x in range(23, 34)], "n"),
+           _row("C", [(x, 6) for x in range(23, 34)], "s")),
+    "first": _HW_S_PART + """
+        %s
+        %s
+        T 6 5 lamp
+        T 7 5
+        T 8 5 candle
+        C 6 4 n
+        C 7 4 n
+        C 8 4 n
+        C 6 6 s
+        C 7 6 s
+        C 8 6 s
+        T 13 8 lamp
+        C 12 8 w
+        C 14 8 e
+        X 17 1 lectern:w
+        L 7 5
+        L 13 8
+        %s
+        %s
+        X 26 0 note
+        X 27 0 note
+        X 29 0 note
+        X 30 0 note
+        C 28 1 s
+        G 19 5 e
+        G 37 5 w
+        R 23 3 33 7 orange
+        L 23 5
+        L 28 5
+        L 33 5
+        X 40 2 note
+        X 41 2 note
+        X 42 2 note
+        C 41 3 s
+        C 44 6 s
+        C 45 6 s
+        C 46 6 s
+        C 44 8 s
+        C 45 8 s
+        C 46 8 s
+        X 39 10 jukebox
+        S 40 10 candle
+        P 53 10 potted_fern
+        P 50 1 potted_fern
+        L 42 4
+        L 45 7
+    """ % (_row("K", [(0, z) for z in range(1, 10)]), _row("K", [(x, 10) for x in range(1, 18)]),
+           _row("C", [(19, z) for z in range(1, 10) if z != 5], "w"),
+           _row("C", [(37, z) for z in range(1, 10) if z != 5], "e")),
+    "second": _HW_S_PART + """
+        Q 0 1 e 2
+        Q 0 2 e 2
+        X 0 3 chest:e
+        X 0 4 chest:e
+        T 5 5 lamp
+        T 6 5
+        C 5 4 n
+        C 6 6 s
+        X 1 10 carto
+        X 2 10 lectern:n
+        T 12 6 candle
+        T 13 6
+        C 12 5 n
+        C 13 5 n
+        C 12 7 s
+        C 13 7 s
+        P 17 1 potted_fern
+        P 17 10 potted_fern
+        L 5 5
+        L 12 6
+        X 28 1 lectern:s
+        X 27 0 candle
+        X 29 0 candle
+        %s
+        %s
+        R 28 2 28 10 red
+        G 19 3 e
+        G 37 3 w
+        L 24 5
+        L 32 5
+        %s
+        X 39 10 cauldron
+        X 40 10 sink
+        S 41 10 wool
+        S 42 10 wool
+        X 45 4 fence
+        X 46 4 fence
+        X 47 4 fence
+        X 48 4 fence
+        P 53 10 potted_fern
+        L 43 5
+        L 50 8
+    """ % (_row("C", [(x, z) for z in (4, 6, 8) for x in (22, 23, 24, 25)], "s"),
+           _row("C", [(x, z) for z in (4, 6, 8) for x in (31, 32, 33, 34)], "s"),
+           _row("X", [(39, z) for z in (1, 2, 3, 7, 8, 9)], "chest:e")),
+    "third": _HW_S_PART + """
+        R 2 2 8 7 light_blue
+        X 1 1 chest:e
+        X 0 3 hay
+        X 0 4 note
+        T 5 4 candle
+        C 4 4 w
+        C 6 4 e
+        X 12 10 bell
+        P 0 10 potted_allium
+        P 17 1 potted_red_tulip
+        X 15 6 carved_pumpkin[facing=west]
+        L 5 5
+        L 13 5
+        %s
+        %s
+        X 28 3 white_wool
+        X 28 3 pot 1
+        X 28 7 white_wool
+        X 28 7 skull:n 1
+        C 24 5 n
+        C 32 5 n
+        L 23 5
+        L 33 5
+        T 43 4 candle
+        C 42 4 w
+        C 44 4 e
+        C 43 3 n
+        C 43 5 s
+        T 47 8
+        C 46 8 w
+        C 48 8 e
+        X 39 1 barrel:e
+        S 39 10 pot
+        P 53 10 potted_fern
+        L 43 5
+        L 48 8
+    """ % (_row("G", [(19, z) for z in (2, 4, 7, 9)], "e"), _row("G", [(37, z) for z in (2, 4, 7, 9)], "w")),
+    "fourth": _HW_S_PART + """
+        X 0 1 barrel:e
+        X 0 2 barrel:e
+        X 0 3 chest:e
+        X 0 7 chest:e
+        X 0 8 barrel:e
+        X 0 9 barrel:e
+        X 4 10 hay
+        X 5 10 bwool
+        X 6 10 wool
+        X 12 3 chest:s
+        X 13 3 chest:s
+        X 12 7 barrel
+        X 13 7 barrel
+        L 6 5
+        L 13 5
+        X 28 5 lectern:n
+        C 27 7 s
+        C 28 7 s
+        C 29 7 s
+        T 23 4 candle
+        C 22 4 w
+        C 24 4 e
+        T 33 4 lamp
+        C 32 4 w
+        C 34 4 e
+        P 19 10 potted_fern
+        P 37 10 potted_fern
+        L 28 5
+        X 39 10 craft
+        X 40 10 smith
+        X 41 10 anvil:e
+        X 42 10 grind:n
+        X 43 10 barrel:n
+        X 39 2 fence
+        X 39 3 fence
+        T 46 6 lamp
+        T 47 6
+        P 53 10 potted_fern
+        L 43 5
+        L 49 8
+    """,
+}
+HW_S_FLOORS = ["ground", "first", "second", "third", "fourth"]
+
+# Hearthwood sky tower – the two link ranges (11 x 6, no stair; reached through the wings; door lx 5 lz 0)
+HW_LW_PLANS = {
+    "tack": """
+        X 0 0 fence
+        X 0 1 fence
+        X 0 2 fence
+        X 1 5 hay
+        X 2 5 hay
+        X 3 5 chest:n
+        X 7 5 barrel:n
+        X 8 5 barrel:n
+        P 0 5 potted_fern
+        L 3 2
+        L 8 2
+    """,
+    "laundry": """
+        X 0 1 sink
+        X 0 2 sink
+        X 0 3 cauldron
+        S 0 5 wool
+        S 1 5 wool
+        X 2 5 chest:n
+        X 8 5 barrel:n
+        T 7 2
+        T 8 2 lamp
+        L 3 3
+        L 8 3
+    """,
+    "linen": """
+        X 0 1 chest:e
+        X 0 2 chest:e
+        X 0 3 chest:e
+        X 0 4 chest:e
+        S 2 5 wool
+        S 3 5 wool
+        S 7 5 wool
+        X 9 5 barrel:n
+        X 10 5 barrel:n
+        L 3 3
+        L 8 3
+    """,
+    "box": """
+        X 0 1 chest:e
+        X 0 4 chest:e
+        X 1 5 barrel:n
+        X 2 5 barrel:n
+        T 8 2 candle
+        C 8 3 s
+        X 10 5 bell
+        L 3 3
+        L 8 3
+    """,
+    "lumber": """
+        X 0 1 barrel:e
+        X 0 2 barrel:e
+        X 0 3 chest:e
+        X 2 5 hay
+        X 3 5 hay
+        X 8 5 log
+        X 9 5 log
+        X 10 5 log
+        L 3 3
+        L 8 3
+    """,
+}
+
+HW_LE_PLANS = {
+    "boots": """
+        X 2 0 fence
+        C 3 1 n
+        X 0 5 chest:n
+        X 1 5 barrel:n
+        S 2 5 pot
+        X 9 1 fence
+        X 10 1 fence
+        X 10 2 fence
+        P 10 5 potted_fern
+        L 3 3
+        L 8 3
+    """,
+    "ironing": """
+        T 2 3
+        T 3 3
+        X 0 1 sink
+        X 0 4 chest:e
+        S 0 5 wool
+        S 1 5 wool
+        X 9 5 barrel:n
+        C 8 2 n
+        L 3 3
+        L 8 3
+    """,
+    "servants": """
+        T 2 3 candle
+        T 3 3
+        T 4 3 candle
+        C 2 2 n
+        C 3 2 n
+        C 2 4 s
+        C 3 4 s
+        C 4 4 s
+        F 10 3 w
+        X 0 5 chest:n
+        S 8 5 pot
+        L 3 3
+        L 8 3
+    """,
+    "sewing": """
+        X 0 1 loom:e
+        X 0 3 loom:e
+        C 1 2 e
+        T 3 5 candle
+        X 8 5 chest:n
+        S 9 5 wool
+        S 10 5 wool
+        C 8 2 n
+        L 3 3
+        L 8 3
+    """,
+    "storage": """
+        X 0 1 barrel:e
+        X 0 2 barrel:e
+        X 0 3 barrel:e
+        X 0 4 chest:e
+        X 2 5 hay
+        X 8 5 chest:n
+        X 9 5 chest:n
+        X 10 5 barrel:n
+        L 3 3
+        L 8 3
+    """,
+}
+HW_LW_FLOORS = ["tack", "laundry", "linen", "box", "lumber"]
+HW_LE_FLOORS = ["boots", "ironing", "servants", "sewing", "storage"]
+
+
+# Cascadia sky tower – great hall chalet (13 x 17, stair lx 10-12 / lz 0-6, door lx 6 lz 0)
+CA_HALL_PLANS = {
+    "dining": """
+        F 6 16 n
+        K 4 16 1
+        K 8 16 1
+        %s
+        %s
+        %s
+        %s
+        %s
+        %s
+        X 0 1 barrel:e
+        X 0 2 barrel:e
+        S 0 15 pot
+        S 0 16 candle
+        X 12 16 chest:w
+        P 0 0 potted_fern
+        P 12 10 potted_fern
+        G 0 8 e
+        G 12 12 w
+        R 5 14 7 15 brown
+        L 2 8
+        L 9 8
+        L 6 13
+    """ % (_row("T", [(2, z) for z in range(5, 13)], "candle"), _row("C", [(1, z) for z in range(5, 13)], "w"),
+           _row("C", [(3, z) for z in range(5, 13)], "e"), _row("T", [(8, z) for z in range(8, 13)], "candle"),
+           _row("C", [(7, z) for z in range(8, 13)], "w"), _row("C", [(9, z) for z in range(8, 13)], "e")),
+    "loft": """
+        F 0 8 e
+        C 2 7 e
+        C 2 9 e
+        R 1 7 2 9 green
+        K 0 5
+        K 0 11
+        C 5 2 n
+        C 6 2 n
+        T 5 4 potted_fern
+        C 5 6 s
+        C 6 6 s
+        X 0 16 jukebox
+        X 1 16 note
+        C 6 14 w
+        T 7 14 candle
+        C 8 14 e
+        T 11 12 lamp
+        C 11 11 n
+        P 12 16 potted_spruce_sapling
+        P 0 0 potted_fern
+        L 2 8
+        L 6 4
+        L 7 13
+    """,
+    "gallery": """
+        %s
+        T 5 8 lamp
+        T 6 8
+        C 5 7 n
+        C 6 7 n
+        C 5 9 s
+        C 6 9 s
+        X 12 14 lectern:w
+        C 10 14 e
+        P 12 10 potted_fern
+        P 0 16 potted_fern
+        L 3 8
+        L 9 12
+    """ % _row("K", [(0, z) for z in range(1, 16)]),
+}
+CA_HALL_FLOORS = ["dining", "loft", "gallery"]
+
+# Cascadia sky tower – east wing (11 x 23; doors lx 5 lz 0 and lx 0 lz 11; a partition at lz 14)
+CA_E_PLANS = {
+    "games": """
+        W 0 14 10 14
+        D 3 14 s
+        X 2 3 green_wool
+        X 3 3 green_wool
+        X 2 4 green_wool
+        X 3 4 green_wool
+        X 2 5 green_wool
+        X 3 5 green_wool
+        X 0 2 fence
+        X 0 3 fence
+        T 6 9 candle
+        C 5 9 w
+        C 7 9 e
+        C 6 8 n
+        C 6 10 s
+        X 0 7 barrel:e
+        P 7 1 potted_fern
+        P 0 13 potted_fern
+        L 3 4
+        L 6 9
+        F 10 18 w
+        C 8 17 w
+        C 8 19 w
+        R 7 17 9 19 brown
+        T 3 18 candle
+        C 2 18 w
+        C 4 18 e
+        X 0 22 jukebox
+        S 0 16 pot
+        P 10 22 potted_fern
+        L 3 18
+        L 8 18
+    """,
+    "library": """
+        W 0 14 10 14
+        D 3 14 s
+        %s
+        T 4 5 lamp
+        C 4 4 n
+        C 4 6 s
+        X 7 1 lectern:w
+        T 6 10
+        C 5 10 w
+        C 7 10 e
+        L 4 6
+        %s
+        T 5 19 lamp
+        T 6 19
+        C 5 18 n
+        C 6 18 n
+        C 5 20 s
+        C 6 20 s
+        F 10 17 w
+        P 10 22 potted_fern
+        L 5 19
+        L 8 17
+    """ % (_row("K", [(0, z) for z in range(1, 14)]), _row("K", [(x, 22) for x in range(0, 9)])),
+    "lounge": """
+        W 0 14 10 14
+        D 3 14 s
+        F 0 7 e
+        C 2 6 e
+        C 2 8 e
+        T 4 7 potted_fern
+        C 5 6 n
+        C 5 8 s
+        R 1 6 3 8 green
+        K 0 3
+        K 0 11
+        P 7 1 potted_spruce_sapling
+        L 3 7
+        X 0 16 bwool
+        X 0 17 bwool
+        C 2 19 n
+        C 3 19 n
+        T 2 21 candle
+        C 7 18 w
+        T 8 18 lamp
+        C 9 18 e
+        X 10 22 chest:w
+        P 0 22 potted_fern
+        L 3 19
+        L 8 19
+    """,
+    "attic": """
+        W 0 14 10 14
+        D 3 14 s
+        X 0 1 chest:e
+        X 0 2 chest:e
+        X 0 3 barrel:e
+        X 4 7 hay
+        T 6 10 candle
+        C 6 9 n
+        P 7 1 potted_fern
+        L 4 6
+        X 0 16 barrel:e
+        X 0 17 barrel:e
+        X 0 18 chest:e
+        X 8 22 hay
+        X 9 22 hay
+        T 5 19
+        C 5 20 s
+        L 4 18
+    """,
+}
+CA_E_FLOORS = ["games", "library", "lounge", "attic"]
+
+# Cascadia sky tower – lookout tower (7 x 9; stair lx 4-6 / lz 0-6, door lx 3 lz 0)
+CA_T_PLANS = {
+    "ski": """
+        X 0 1 fence
+        X 0 2 fence
+        X 0 3 fence
+        X 0 5 chest:e
+        C 1 6 w
+        X 3 8 barrel:n
+        X 4 8 bwool
+        P 6 8 potted_fern
+        L 2 4
+        L 5 8
+    """,
+    "map": """
+        X 0 1 carto
+        C 1 1 e
+        X 0 3 lectern:e
+        Q 0 5 e 2
+        T 2 7 candle
+        C 3 7 e
+        P 6 8 potted_fern
+        L 2 4
+        L 5 8
+    """,
+    "tea": """
+        T 1 3 candle
+        C 1 2 n
+        C 1 4 s
+        C 0 3 w
+        X 0 7 furnace:e
+        S 0 8 pot
+        C 4 8 s
+        P 6 8 potted_spruce_sapling
+        L 2 4
+        L 5 8
+    """,
+    "lookout": """
+        X 0 2 lectern:e
+        C 1 4 w
+        C 1 5 w
+        T 2 7 lamp
+        X 0 8 chest:e
+        C 5 8 s
+        P 6 7 potted_fern
+        L 2 4
+        L 5 8
+    """,
+    "store": """
+        X 0 1 barrel:e
+        X 0 2 barrel:e
+        X 0 3 chest:e
+        X 0 7 hay
+        X 1 8 barrel:n
+        P 6 8 potted_fern
+        L 2 4
+        L 5 8
+    """,
+}
+
+
+def ca_t_floors(n):
+    return (["ski"] + ["map", "tea", "store", "map", "tea", "store", "map", "tea", "store"][:max(0, n - 2)]
+            + ["lookout"])[:n]
+
+
+# Cascadia sky tower – bathhouse (13 x 13; stair lx 10-12; door lx 6 lz 0)
+CA_B_PLANS = {
+    "pool": """
+        %s
+        %s
+        C 0 3 w
+        C 0 5 w
+        C 0 7 w
+        S 0 11 wool
+        S 0 12 wool
+        X 1 12 chest:n
+        P 12 12 potted_fern
+        P 9 12 potted_fern
+        L 6 5
+        L 6 9
+    """ % (_row("X", [(x, z) for x in range(3, 10) for z in range(3, 11) if x in (3, 9) or z in (3, 10)],
+                "cobblestone_slab[type=top,waterlogged=false]"),
+           _row("X", [(x, z) for x in range(4, 9) for z in range(4, 10)], "water")),
+    "sauna": """
+        W 0 6 6 6 spruce_planks
+        D 3 6 s
+        %s
+        %s
+        X 3 2 campfire[facing=south,lit=true,signal_fire=false,waterlogged=false]
+        X 3 1 cobblestone
+        C 1 10 n
+        C 2 10 n
+        T 1 12 candle
+        S 7 12 wool
+        S 8 12 wool
+        X 12 12 chest:w
+        P 9 9 potted_fern
+        L 3 3
+        L 4 10
+        L 9 11
+    """ % (_row("X", [(0, z) for z in range(0, 6)], "spruce_slab[type=bottom,waterlogged=false]"),
+           _row("X", [(6, z) for z in range(0, 6)], "spruce_slab[type=bottom,waterlogged=false]")),
+}
+
+# Cascadia sky tower – red barn (13 x 11; stair lx 10-12; door lx 6 lz 0)
+CA_N_PLANS = {
+    "stable": """
+        X 3 7 fence
+        X 3 8 fence
+        X 3 9 fence
+        X 3 10 fence
+        X 6 7 fence
+        X 6 8 fence
+        X 6 9 fence
+        X 6 10 fence
+        X 1 10 hay
+        X 4 10 hay
+        X 7 10 hay
+        X 1 9 composter
+        X 4 9 sink
+        X 0 1 fence
+        X 0 2 fence
+        X 0 4 chest:e
+        X 9 10 barrel:n
+        X 12 10 hay
+        L 2 8
+        L 5 8
+        L 9 8
+    """,
+    "hayloft": """
+        %s
+        %s
+        X 0 9 chest:e
+        X 6 6 barrel
+        X 8 9 hay
+        L 3 5
+        L 8 8
+    """ % (_row("X", [(x, z) for x in (0, 1, 2) for z in (1, 2, 3, 4)], "hay"),
+           _row("X", [(x, 10) for x in range(0, 6)], "hay")),
+}
+
+# Cascadia sky tower – south chalet wing (19 x 15; stair lx 16-18; door lx 9 lz 0; partition lx 7)
+CA_S_PLANS = {
+    "dining": """
+        W 7 0 7 14
+        D 7 8 e
+        F 0 7 e
+        C 2 6 e
+        C 2 8 e
+        K 0 4
+        K 0 10
+        T 4 3 candle
+        C 4 2 n
+        T 4 12 candle
+        C 4 13 s
+        P 0 0 potted_fern
+        P 0 14 potted_fern
+        L 3 7
+        %s
+        %s
+        %s
+        X 15 14 chest:n
+        S 8 14 pot
+        S 9 14 candle
+        P 15 10 potted_fern
+        L 11 7
+        L 11 12
+    """ % (_row("T", [(11, z) for z in range(4, 13)], "candle"), _row("C", [(10, z) for z in range(4, 13)], "w"),
+           _row("C", [(12, z) for z in range(4, 13)], "e")),
+    "lounge": """
+        W 7 0 7 14
+        D 7 8 e
+        T 3 7 lamp
+        C 2 6 n
+        C 3 6 n
+        C 4 6 n
+        C 2 8 s
+        C 3 8 s
+        C 4 8 s
+        X 0 1 jukebox
+        P 0 14 potted_fern
+        L 3 7
+        F 15 12 w
+        C 13 11 w
+        C 13 13 w
+        R 12 11 14 13 brown
+        T 10 4 candle
+        C 9 4 w
+        C 11 4 e
+        S 8 14 pot
+        L 11 9
+    """,
+    "library": """
+        W 7 0 7 14
+        D 7 8 e
+        %s
+        T 3 7 lamp
+        C 3 6 n
+        C 3 8 s
+        L 3 7
+        %s
+        T 11 10 lamp
+        T 12 10
+        C 11 9 n
+        C 12 9 n
+        C 11 11 s
+        C 12 11 s
+        X 15 8 lectern:w
+        L 11 10
+    """ % (_row("K", [(0, z) for z in range(0, 15)]), _row("K", [(x, 14) for x in range(8, 16)])),
+    "bar": """
+        W 7 0 7 14
+        D 7 8 e
+        %s
+        %s
+        T 4 4 candle
+        C 4 3 n
+        C 4 5 s
+        T 4 10 candle
+        C 4 9 n
+        C 4 11 s
+        L 3 7
+        X 9 13 barrel:n
+        X 10 13 barrel:n
+        X 11 13 barrel:n
+        X 12 13 barrel:n
+        X 9 11 planks
+        X 10 11 planks
+        X 11 11 planks
+        X 12 11 planks
+        C 9 10 n
+        C 10 10 n
+        C 11 10 n
+        C 12 10 n
+        P 15 14 potted_fern
+        L 11 9
+    """ % (_row("X", [(0, z) for z in range(2, 13)], "barrel:e"), _row("X", [(0, z) for z in range(2, 13)], "pot 1")),
+    "hall": """
+        W 7 0 7 14
+        D 7 8 e
+        X 0 2 chest:e
+        X 0 3 chest:e
+        X 0 4 barrel:e
+        X 0 10 hay
+        X 0 11 bwool
+        T 3 7 candle
+        C 3 8 s
+        L 3 7
+        X 9 14 bell
+        C 10 9 s
+        C 11 9 s
+        C 12 9 s
+        C 10 11 s
+        C 11 11 s
+        C 12 11 s
+        X 11 6 lectern:s
+        L 11 9
+    """,
+}
+CA_S_FLOORS = ["dining", "lounge", "library", "bar", "hall"]
+
+
+# Neoterra twin builder – materials store (13 x 11, 6 high, no stair; door lx 6, roller doors lx 2-3 and 10-11)
+NT_STORE_PLAN = """
+        %s
+        %s
+        %s
+        %s
+        X 0 9 chest:e
+        X 0 10 chest:e
+        X 12 9 chest:w
+        X 12 10 chest:w
+        X 6 10 hay
+        X 7 10 white_wool
+        X 5 10 white_wool
+        X 3 10 smooth_stone
+        X 9 10 bricks
+        L 3 6
+        L 9 6
+"""
+NT_STORE_PLAN = NT_STORE_PLAN % (
+    _row("X", [(x, 4) for x in (1, 2, 3, 4, 8, 9, 10, 11)], "barrel"),
+    _row("X", [(x, 4) for x in (1, 2, 3, 4, 8, 9, 10, 11)], "barrel 1"),
+    _row("X", [(x, 7) for x in (1, 2, 3, 4, 8, 9, 10, 11)], "chest:n"),
+    _row("X", [(x, 7) for x in (1, 2, 3, 4, 8, 9, 10, 11)], "barrel 1"))
+
+# Neoterra twin builder – site management offices (13 x 9; stair lx 10-12; door lx 6)
+NT_OFFICE_PLANS = {
+    "reception": """
+        X 2 4 counter
+        X 3 4 counter
+        X 4 4 counter
+        C 3 5 s
+        X 0 1 chest:e
+        Q 0 2 e 2
+        C 1 7 w
+        C 2 7 w
+        T 3 7 potted_bamboo
+        P 0 8 potted_bamboo
+        X 10 8 carto
+        C 9 8 w
+        G 0 5 e
+        L 3 4
+        L 10 8
+    """,
+    "plans": """
+        X 0 1 carto
+        C 1 1 e
+        X 0 3 carto
+        C 1 3 e
+        X 0 5 carto
+        C 1 5 e
+        T 4 4 pot
+        T 5 4
+        T 6 4 candle
+        C 5 5 s
+        X 0 8 chest:e
+        X 1 8 chest:n
+        Q 2 8 n
+        X 11 8 lectern:w
+        L 2 3
+        L 5 4
+        L 10 8
+    """,
+    "meeting": """
+        %s
+        %s
+        %s
+        C 2 4 w
+        C 8 4 e
+        X 0 8 jukebox
+        S 1 8 pot
+        P 10 8 potted_bamboo
+        P 0 0 potted_bamboo
+        L 3 4
+        L 7 4
+    """ % (_row("T", [(x, 4) for x in range(3, 8)]), _row("C", [(x, 3) for x in range(3, 8)], "n"),
+           _row("C", [(x, 5) for x in range(3, 8)], "s")),
+}
+
+# Neoterra twin builder – precast works hall (27 x 14, 6 high; stair lx 24-26 / lz 0-7; doors lx 13 lz 0, lx 0 lz 6)
+NT_HALL_PLANS = {
+    "casting": """
+        %s
+        %s
+        X 20 11 cauldron
+        X 21 11 gray_concrete_powder
+        X 22 11 light_gray_concrete_powder
+        X 20 12 hopper[enabled=true,facing=down]
+        %s
+        X 0 1 chest:e
+        X 0 2 barrel:e
+        X 0 10 craft
+        X 0 11 smith
+        X 0 12 anvil:e
+        X 26 13 barrel:w
+        L 5 7
+        L 13 7
+        L 20 9
+    """ % (_row("X", [(x, z) for x in range(3, 11) for z in (3, 4)], "smooth_stone_slab[type=bottom,waterlogged=false]"),
+           _row("X", [(x, z) for x in range(3, 11) for z in (8, 9)], "smooth_stone_slab[type=bottom,waterlogged=false]"),
+           _row("X", [(x, 13) for x in range(4, 16)], "white_concrete")),
+    "finishing": """
+        %s
+        X 4 6 grind:n
+        X 6 6 cutter:n
+        X 8 6 grind:n
+        C 4 7 s
+        C 8 7 s
+        X 0 1 chest:e
+        X 0 2 chest:e
+        Q 0 4 e 2
+        %s
+        X 20 12 lectern:n
+        T 15 4 candle
+        T 16 4
+        C 15 3 n
+        C 16 5 s
+        P 26 13 potted_bamboo
+        L 5 4
+        L 15 4
+        L 12 11
+    """ % (_row("X", [(x, 5) for x in range(3, 11)], "counter"), _row("X", [(x, 13) for x in range(2, 18)], "barrel:n")),
+}
+
+# Neoterra twin builder – workers' canteen block (14 x 17; stair lx 11-13; door lx 6)
+NT_CANTEEN_PLANS = {
+    "canteen": """
+        %s
+        %s
+        %s
+        %s
+        %s
+        %s
+        %s
+        X 0 1 counter
+        X 0 2 counter
+        X 0 3 counter
+        X 0 1 pot 1
+        P 13 16 potted_bamboo
+        P 0 16 potted_bamboo
+        L 3 6
+        L 3 12
+        L 9 12
+    """ % (_row("T", [(3, z) for z in range(5, 13)]), _row("C", [(2, z) for z in range(5, 13)], "w"),
+           _row("C", [(4, z) for z in range(5, 13)], "e"), _row("T", [(9, z) for z in range(8, 15)]),
+           _row("C", [(8, z) for z in range(8, 15)], "w"), _row("C", [(10, z) for z in range(8, 15)], "e"),
+           _row("X", [(x, 16) for x in range(2, 8)], "counter")),
+    "kitchen": """
+        X 0 1 furnace:e
+        X 0 2 smoker:e
+        X 0 3 furnace:e
+        X 0 4 sink
+        S 0 5 pot
+        X 0 6 barrel:e
+        X 0 7 barrel:e
+        X 4 4 counter
+        X 5 4 counter
+        X 6 4 counter
+        X 4 8 counter
+        X 5 8 counter
+        X 6 8 counter
+        %s
+        X 13 16 chest:w
+        T 9 12 candle
+        C 8 12 w
+        C 10 12 e
+        L 3 4
+        L 5 10
+        L 10 12
+    """ % _row("X", [(x, 16) for x in range(0, 10)], "barrel:n"),
+    "lockers": """
+        %s
+        %s
+        C 4 5 w
+        C 4 6 w
+        C 4 7 w
+        C 4 10 w
+        C 4 11 w
+        C 4 12 w
+        X 0 16 sink
+        X 1 16 sink
+        S 2 16 wool
+        X 12 12 lectern:w
+        P 13 16 potted_bamboo
+        L 3 6
+        L 3 12
+        L 10 12
+    """ % (_row("X", [(0, z) for z in range(2, 15)], "chest:e"), _row("X", [(0, z) for z in range(2, 15)], "chest:e 1")),
+    "gym": """
+        X 0 1 andesite
+        X 0 1 plate 1
+        X 0 2 andesite
+        X 0 2 plate 1
+        X 0 3 sslab
+        R 3 3 6 6 lime
+        X 3 10 target 1
+        X 3 10 chain 2
+        X 3 10 chain 3
+        X 8 10 target 1
+        X 8 10 chain 2
+        X 8 10 chain 3
+        X 0 16 sink
+        S 1 16 wool
+        X 3 16 black_carpet
+        X 4 16 black_carpet
+        X 5 16 black_carpet
+        P 13 16 potted_bamboo
+        L 4 4
+        L 5 10
+        L 10 13
+    """,
+    "training": """
+        X 5 1 lectern:s
+        X 4 0 white_wool 1
+        X 5 0 white_wool 1
+        X 6 0 white_wool 1
+        %s
+        X 0 16 chest:e
+        Q 0 15 e 2
+        X 13 16 carto
+        P 0 8 potted_bamboo
+        L 4 6
+        L 4 12
+        L 10 12
+    """ % _row("C", [(x, z) for z in (4, 6, 8, 10, 12) for x in (2, 3, 4, 5, 6, 7)], "s"),
+}
+NT_CANTEEN_FLOORS = ["canteen", "kitchen", "lockers", "gym", "training"]
+
+# Hearthwood twin builder – timber seasoning barn (9 x 13; stair lx 6-8; door lx 4)
+HW_BARN_PLANS = {
+    "timber": """
+        %s
+        %s
+        X 0 12 chest:e
+        X 1 12 barrel:n
+        X 5 12 hay
+        L 2 5
+        L 4 10
+    """ % (_row("X", [(0, z) for z in range(1, 11)], "log"), _row("X", [(0, z) for z in range(1, 11)], "log 1")),
+    "loft": """
+        %s
+        X 3 10 barrel
+        X 3 11 barrel
+        X 7 12 chest:w
+        L 3 5
+        L 5 10
+    """ % _row("X", [(x, z) for x in (0, 1) for z in range(2, 12)], "hay"),
+}
+
+# Hearthwood twin builder – clerk of works (11 x 9; stair lx 8-10; door on the south side lx 5 lz 8)
+HW_CLERK_PLANS = {
+    "clerk": """
+        T 1 2 lamp
+        T 2 2
+        C 1 1 n
+        C 2 3 s
+        Q 0 4 e 2
+        X 0 5 chest:e
+        X 0 7 barrel:e
+        P 7 0 potted_red_tulip
+        C 3 6 w
+        G 0 2 e
+        L 2 3
+        L 6 6
+    """,
+    "drawing": """
+        X 0 1 carto
+        C 1 1 e
+        X 0 3 carto
+        C 1 3 e
+        X 0 5 carto
+        C 1 5 e
+        T 4 3 pot
+        T 5 3 candle
+        C 4 2 n
+        X 0 8 chest:e
+        X 1 8 chest:n
+        X 7 8 lectern:n
+        L 3 3
+        L 6 7
+    """,
+    "archive": """
+        %s
+        %s
+        T 4 4 lamp
+        C 4 5 s
+        P 7 0 potted_fern
+        L 3 4
+        L 7 7
+    """ % (_row("Q", [(0, z) for z in range(0, 9)], "e 2"), _row("K", [(x, 8) for x in range(1, 8)])),
+}
+
+# Hearthwood twin builder – joinery (19 x 13; stair lx 16-18; doors lx 9 lz 0 and lx 0 lz 6)
+HW_JOIN_PLANS = {
+    "bench": """
+        %s
+        X 2 12 grind:n
+        X 4 12 cutter:n
+        X 6 12 smith
+        X 8 12 anvil:e
+        X 10 12 craft
+        %s
+        X 5 6 lamp 1
+        %s
+        X 15 12 barrel:n
+        X 14 12 chest:n
+        L 4 6
+        L 9 9
+        L 14 9
+    """ % (_row("X", [(x, 6) for x in range(3, 8)], "counter"),
+           _row("X", [(x, 8) for x in (12, 13, 14)], "counter"),
+           _row("X", [(0, z) for z in (1, 2, 3, 9, 10, 11)], "log")),
+    "store": """
+        %s
+        %s
+        %s
+        X 15 12 chest:n
+        L 4 6
+        L 12 8
+    """ % (_row("X", [(x, z) for z in (2, 5, 8, 11) for x in range(1, 13) if x != 7], "log"),
+           _row("X", [(x, z) for z in (2, 5, 8, 11) for x in range(1, 13) if x != 7], "log 1"),
+           _row("X", [(0, z) for z in (3, 4, 6, 7, 9, 10)], "barrel:e")),
+}
+
+# Hearthwood twin builder – masons' hall (27 x 11; stair lx 24-26; doors lx 13 lz 0 and lx 26 lz 8)
+HW_MASON_PLANS = {
+    "banker": """
+        %s
+        %s
+        X 0 1 chest:e
+        X 0 2 barrel:e
+        X 0 9 cutter:e
+        X 0 10 grind:e
+        %s
+        X 20 10 craft
+        X 21 10 anvil:e
+        L 5 5
+        L 13 5
+        L 20 7
+    """ % (_row("X", [(x, 4) for x in (3, 6, 9, 16, 19)], "stone_bricks"),
+           _row("X", [(x, 4) for x in (3, 6, 9, 16, 19)], "chiseled_stone_bricks 1"),
+           _row("X", [(x, 10) for x in range(3, 18)], "stone_bricks")),
+    "mess": """
+        %s
+        %s
+        %s
+        F 0 5 e
+        X 0 1 furnace:e
+        X 0 2 sink
+        X 0 9 barrel:e
+        X 0 10 chest:e
+        P 20 10 potted_fern
+        L 8 5
+        L 16 5
+    """ % (_row("T", [(x, 5) for x in range(5, 20)], "candle"), _row("C", [(x, 4) for x in range(5, 20)], "n"),
+           _row("C", [(x, 6) for x in range(5, 20)], "s")),
+    "tracing": """
+        %s
+        X 6 6 carto
+        X 8 6 carto
+        X 10 6 carto
+        C 6 7 s
+        C 8 7 s
+        C 10 7 s
+        X 0 1 chest:e
+        X 0 2 chest:e
+        Q 0 4 e 2
+        X 20 10 lectern:n
+        L 8 5
+        L 18 6
+    """ % _row("X", [(x, 1) for x in range(4, 16)], "white_wool 1"),
+}
+
+# Hearthwood twin builder – tool shed (5 x 5, door lx 2) and cart shed / wheelwright (10 x 7, door lx 4)
+HW_TOOL_PLAN = """
+        X 0 1 fence
+        X 0 2 fence
+        X 0 3 barrel:e
+        X 4 1 chest:w
+        X 4 2 grind:w
+        X 4 3 fence
+        X 2 4 barrel:n
+        L 2 2
+"""
+HW_CART_PLAN = """
+        X 1 3 spruce_slab[type=top,waterlogged=false]
+        X 2 3 spruce_slab[type=top,waterlogged=false]
+        X 3 3 spruce_slab[type=top,waterlogged=false]
+        X 0 3 fence
+        X 1 6 anvil:e
+        X 3 6 grind:n
+        X 5 6 craft
+        X 7 6 barrel:n
+        X 9 1 log
+        X 9 2 log
+        X 9 1 log 1
+        L 2 3
+        L 7 3
+"""
+
+# Cascadia twin builder – lumber drying shed (15 x 9; doors lx 7 lz 0 and lz 8)
+CA_SHED_PLAN = """
+        %s
+        %s
+        %s
+        %s
+        X 14 4 chest:w
+        X 0 4 barrel:e
+        L 3 4
+        L 11 4
+"""
+CA_SHED_PLAN = CA_SHED_PLAN % (
+    _row("X", [(x, z) for x in range(1, 6) for z in (2, 6)], "log"),
+    _row("X", [(x, z) for x in range(1, 6) for z in (2, 6)], "log 1"),
+    _row("X", [(x, z) for x in range(9, 14) for z in (2, 6)], "log"),
+    _row("X", [(x, z) for x in range(9, 14) for z in (2, 6)], "log 1"))
+
+# Cascadia twin builder – framers' bunkhouse office (11 x 10; stair lx 8-10; door lx 5)
+CA_BUNK_PLANS = {
+    "office": """
+        T 1 3 lamp
+        T 2 3
+        C 1 2 n
+        C 2 4 s
+        X 0 6 carto
+        C 1 6 e
+        Q 0 8 e 2
+        X 0 9 chest:e
+        X 7 9 barrel:n
+        X 8 9 barrel:n
+        P 3 9 potted_fern
+        G 0 1 e
+        L 2 3
+        L 6 8
+    """,
+    "mess": """
+        F 0 5 e
+        C 2 4 e
+        C 2 6 e
+        T 5 8 candle
+        T 6 8
+        C 5 7 n
+        C 6 7 n
+        C 5 9 s
+        C 6 9 s
+        X 0 9 chest:e
+        X 0 1 barrel:e
+        X 10 9 bwool
+        L 3 5
+        L 6 8
+    """,
+}
+
+# Cascadia twin builder – sawmill (21 x 13; stair lx 18-20; doors lx 10 lz 0 and lx 20 lz 10)
+CA_MILL_PLANS = {
+    "saw": """
+        %s
+        X 8 6 cutter:n
+        X 12 6 cutter:n
+        %s
+        X 0 1 grind:e
+        X 0 2 anvil:e
+        X 0 3 chest:e
+        %s
+        X 17 12 barrel:n
+        L 5 6
+        L 10 6
+        L 15 9
+    """ % (_row("X", [(x, 6) for x in range(2, 8)], "log"), _row("X", [(x, 6) for x in range(13, 18)], "log"),
+           _row("X", [(x, 12) for x in range(2, 12)], "spruce_planks")),
+    "filing": """
+        X 2 11 grind:n
+        X 4 11 grind:n
+        X 6 11 anvil:e
+        C 2 10 s
+        C 4 10 s
+        %s
+        %s
+        X 0 1 chest:e
+        X 0 2 barrel:e
+        T 12 5 lamp
+        C 12 4 n
+        L 4 8
+        L 12 6
+        L 15 10
+    """ % (_row("X", [(x, z) for x in (9, 10, 11) for z in (9, 10, 11)], "planks"),
+           _row("X", [(x, 12) for x in range(9, 17)], "barrel:n")),
+}
+
+# Cascadia twin builder – cookhouse (19 x 13; stair lx 16-18; door lx 9)
+CA_COOK_PLANS = {
+    "dining": """
+        %s
+        %s
+        %s
+        %s
+        %s
+        %s
+        F 0 6 e
+        S 15 12 pot
+        P 0 12 potted_fern
+        L 4 6
+        L 12 6
+        L 8 10
+    """ % (_row("T", [(x, 4) for x in range(3, 15)], "candle"), _row("C", [(x, 3) for x in range(3, 15)], "n"),
+           _row("C", [(x, 5) for x in range(3, 15)], "s"), _row("T", [(x, 9) for x in range(3, 15)], "candle"),
+           _row("C", [(x, 8) for x in range(3, 15)], "n"), _row("C", [(x, 10) for x in range(3, 15)], "s")),
+    "kitchen": """
+        X 0 1 furnace:e
+        X 0 2 smoker:e
+        X 0 3 furnace:e
+        X 0 4 sink
+        S 0 5 pot
+        %s
+        X 5 6 counter
+        X 6 6 counter
+        X 7 6 counter
+        X 5 6 pot 1
+        X 15 12 chest:n
+        T 12 9 candle
+        C 11 9 w
+        C 13 9 e
+        L 3 4
+        L 7 8
+        L 12 9
+    """ % _row("X", [(x, 12) for x in range(0, 12)], "barrel:n"),
+    "lounge": """
+        F 0 6 e
+        C 2 5 e
+        C 2 7 e
+        R 1 5 2 7 brown
+        T 7 4 candle
+        C 6 4 w
+        C 8 4 e
+        T 7 9 candle
+        C 6 9 w
+        C 8 9 e
+        X 15 12 jukebox
+        X 0 12 bwool
+        X 1 12 bwool
+        P 15 8 potted_fern
+        L 3 6
+        L 8 6
+        L 13 10
+    """,
+}
+
+
+def raise_building(d, pack, rect, y0, n, plans, floors, wd, tt, H=5, extra=(), **kw):
+    """Shell of one add-on building plus its own hand-written floor plans."""
+    levels, origin, forbid = shell(d, pack, *rect, y0, n, H=H, **kw)
+    fit_floors(d, pack, levels, origin, forbid, H, plans, floors, wd, tt, extra)
+    return levels
+
+
 # ---------------------------------------------------------------------------------------------- sky tower growth
 def _door_through(d, x, y, z, facing, wood, clear_in=None):
     """Door in an existing wall; clears the cell (and 2 above) on the inner side `clear_in` (dx, dz)."""
@@ -2307,16 +4511,15 @@ def grow_sky_nt(d, L):
     for x in range(0, 51):
         d.set(x, 1, 0, "polished_andesite")
         d.set(x, 1, 1, "smooth_stone" if x % 4 else "light_gray_concrete")
-    for x in range(2, 50, 6):
-        if not 21 <= x <= 29:
-            lamp_post(d, x, 2, 2, P, 4)
+    for x in (2, 8, 14, 32, 38, 44):
+        lamp_post(d, x, 2, 2, P, 4)
     for x in (4, 10, 40, 46):
         flowerbed(d, x, 4, x + 2, 5, 2, P)
     bench(d, 8, 3, 2, P, "south")
     bench(d, 41, 3, 2, P, "south")
     if L >= 2:                                        # west residents' club: gym, lounge, library (+ bar)
-        lv += wing(d, P, 2, 8, 12, 22, 2, {2: 5, 3: 5, 4: 6, 5: 7}[L], ["gym", "lounge", "library", "bar", "office"],
-                   doors=[(7, 8, "north")], st=NT_CLUB)
+        lv += raise_building(d, P, (2, 8, 12, 22), 2, {2: 5, 3: 5, 4: 6, 5: 7}[L], NT_CLUB_PLANS, NT_CLUB_FLOORS,
+                             "mangrove", "mangrove", doors=[(7, 8, "north")], st=NT_CLUB)
         for x in range(5, 10):                         # mangrove canopy over the club entrance
             d.set(x, 6, 7, slab("mangrove", "top"))
             d.set(x, 6, 6, slab("mangrove", "top"))
@@ -2328,8 +4531,8 @@ def grow_sky_nt(d, L):
             tree(d, x, 25, 2, h=5)
     if L >= 3:                                        # east tower B: restaurant, offices, lounges, sky bar
         nB = {3: 8, 4: 13, 5: 18}[L]
-        lv += wing(d, P, 39, 8, 49, 22, 3, nB, ["dining", "office", "lounge", "library", "gym", "bar", "office"],
-                   doors=[(44, 8, "north")], st=NT_TOWER_B)
+        lv += raise_building(d, P, (39, 8, 49, 22), 3, nB, NT_B_PLANS, nt_b_floors(nB), "dark_oak",
+                             "polished_andesite", doors=[(44, 8, "north")], st=NT_TOWER_B)
         d.set(44, 2, 7, stair("smooth_quartz", "south"))
         d.sign(44, 7, 7, "north", ["SKYLINE", "CLUB"], "birch", glow=True, color="cyan")
         # pool garden behind the towers
@@ -2354,13 +4557,14 @@ def grow_sky_nt(d, L):
                 d.set(x, y, 18, "light_blue_stained_glass_pane")
                 d.set(x, y, 20, "light_blue_stained_glass_pane")
                 d.set(x, y, 19, AIR)
-            d.set(x, 26, 19, endrod("down")) if x % 2 == 0 else None
+        for x in (34, 36, 38):
+            d.set(x, 26, 19, endrod("down"))
         _door_through(d, 33, 23, 19, "east", "birch", (-1, 0))
         _door_through(d, 39, 23, 19, "west", "birch", (1, 0))
         d.set(32, 23, 19, AIR)
         nC = {4: 6, 5: 18}[L]
-        lv += wing(d, P, 20, 29, 32, 43, 2, nC, ["dining", "lounge", "office", "library", "gym", "bar"],
-                   doors=[(26, 29, "north")], st=NT_TOWER_C)
+        lv += raise_building(d, P, (20, 29, 32, 43), 2, nC, NT_C_PLANS, nt_c_floors(nC), "cherry", "cherry",
+                             doors=[(26, 29, "north")], st=NT_TOWER_C)
         d.sign(26, 6, 28, "north", ["GARDEN", "PAVILION"], "birch", glow=True, color="cyan")
         for x in range(25, 28):
             for z in range(23, 29):
@@ -2390,24 +4594,24 @@ def grow_sky_hw(d, L):
     lv = [7, 12, 17]
     for x in range(0, 63):                            # street pavement with lamps
         d.set(x, 1, 0, "stone_bricks")
-    for x in range(3, 62, 8):
-        if not 28 <= x <= 34:
-            lamp_post(d, x, 1, 2, P, 3)
+    for x in (3, 11, 19, 43, 51, 59):
+        lamp_post(d, x, 1, 2, P, 3)
     if L >= 2:                                        # west wing: residents' dining hall, library, guest lounge
-        lv += wing(d, P, 2, 5, 14, 29, 2, {2: 3, 3: 4, 4: 4, 5: 5}[L], ["dining", "library", "lounge", "hall"],
-                   roof="gable", axis="z", doors=[(8, 5, "north")], st=HW_WEST)
+        lv += raise_building(d, P, (2, 5, 14, 29), 2, {2: 3, 3: 4, 4: 4, 5: 5}[L], HW_W_PLANS, HW_W_FLOORS, "oak",
+                             "oak", extra=[(x, z) for x in (4, 5, 6) for z in (21, 22)], roof="gable", axis="z", doors=[(8, 5, "north")], st=HW_WEST)
         d.sign(8, 5, 4, "north", ["Albion", "Club"], "dark_oak") if d.air(8, 5, 4) else None
         flowerbed(d, 3, 1, 6, 3, 2, P)
         flowerbed(d, 10, 1, 13, 3, 2, P)
     if L >= 3:                                        # east wing: billiard room, smoking room, reading room
-        lv += wing(d, P, 48, 5, 60, 29, 2, {3: 3, 4: 4, 5: 5}[L], ["bar", "lounge", "library", "hall"],
-                   roof="gable", axis="z", doors=[(54, 5, "north")],
+        lv += raise_building(d, P, (48, 5, 60, 29), 2, {3: 3, 4: 4, 5: 5}[L], HW_E_PLANS, HW_E_FLOORS, "dark_oak",
+                             "dark_oak", extra=[(x, z) for x in (4, 5, 6) for z in (21, 22)], roof="gable", axis="z", doors=[(54, 5, "north")],
                    st=HW_EAST if L >= 4 else dict(HW_EAST, roof="deepslate_tile"))
         flowerbed(d, 49, 1, 52, 3, 2, P)
         flowerbed(d, 56, 1, 59, 3, 2, P)
     if L >= 4:                                        # south range closing a garden court
-        lv += wing(d, P, 2, 38, 60, 50, 2, {4: 3, 5: 5}[L], ["dining", "lounge", "library", "office"],
-                   roof="gable", axis="x", doors=[(31, 38, "north"), (12, 38, "north"), (50, 38, "north")], st=HW_SOUTH)
+        lv += raise_building(d, P, (2, 38, 60, 50), 2, {4: 3, 5: 5}[L], HW_S_PLANS, HW_S_FLOORS, "spruce", "spruce",
+                             roof="gable", axis="x", doors=[(31, 38, "north"), (12, 38, "north"), (50, 38, "north")],
+                             st=HW_SOUTH)
         for x, z in cells(16, 26, 46, 36):
             d.set(x, 1, z, "grass_block[snowy=false]")
         path_line(d, [(31, z) for z in range(25, 38)], 1, "gravel")
@@ -2425,10 +4629,10 @@ def grow_sky_hw(d, L):
         bench(d, 26, 31, 2, P, "west")
         bench(d, 36, 31, 2, P, "east")
     if L >= 5:                                        # link ranges (coach houses) closing the court corners
-        lv += wing(d, P, 2, 30, 14, 37, 2, 5, ["store", "office", "lounge", "library", "dining"], roof="gable", axis="z",
-                   doors=[(14, 33, "east")], stair=False, chimneys=False, st=HW_LINK)
-        lv += wing(d, P, 48, 30, 60, 37, 2, 5, ["store", "office", "lounge", "library", "dining"], roof="gable", axis="z",
-                   doors=[(48, 33, "west")], stair=False, chimneys=False, st=HW_LINK)
+        lv += raise_building(d, P, (2, 30, 14, 37), 2, 5, HW_LW_PLANS, HW_LW_FLOORS, "jungle", "jungle", extra=[(x, z) for x in (4, 5, 6) for z in (0, 1)],
+                             roof="gable", axis="z", doors=[(14, 33, "east")], stair=False, chimneys=False, st=HW_LINK)
+        lv += raise_building(d, P, (48, 30, 60, 37), 2, 5, HW_LE_PLANS, HW_LE_FLOORS, "jungle", "jungle", extra=[(x, z) for x in (4, 5, 6) for z in (0, 1)],
+                             roof="gable", axis="z", doors=[(48, 33, "west")], stair=False, chimneys=False, st=HW_LINK)
         for Y in (2, 7, 12, 17, 22):                  # through-doors from the wings into the link ranges
             for xx in (8, 54):
                 for zz, fc in ((29, "south"), (30, "south")):
@@ -2490,8 +4694,8 @@ def grow_sky_ca(d, L):
     for x in (4, 12, 48, 56):
         lamp_post(d, x, 2, 2, P, 3)
     if L >= 2:                                        # great hall chalet (restaurant + loft lounge)
-        lv += wing(d, P, 2, 6, 16, 24, 2, 2 if L < 5 else 3, ["dining", "lounge", "library"], roof="gable", axis="z",
-                   doors=[(9, 6, "north")], st=CA_HALL)
+        lv += raise_building(d, P, (2, 6, 16, 24), 2, 2 if L < 5 else 3, CA_HALL_PLANS, CA_HALL_FLOORS, "mangrove",
+                             "spruce", roof="gable", axis="z", doors=[(9, 6, "north")], st=CA_HALL)
         for x in range(2, 17):                         # covered porch
             d.set(x, 6, 3, slab("dark_oak"))
             d.set(x, 6, 4, slab("dark_oak"))
@@ -2505,8 +4709,8 @@ def grow_sky_ca(d, L):
         for x in (4, 14):
             tree(d, x, 28, 2, "spruce_log", "spruce_leaves", 6)
     if L >= 3:                                        # east wing: game room, library, guest lounge
-        lv += wing(d, P, 46, 4, 58, 28, 2, {3: 3, 4: 3, 5: 4}[L], ["bar", "library", "lounge", "hall"],
-                   roof="gable", axis="z", doors=[(52, 4, "north"), (46, 16, "west")], st=CA_EAST)
+        lv += raise_building(d, P, (46, 4, 58, 28), 2, {3: 3, 4: 3, 5: 4}[L], CA_E_PLANS, CA_E_FLOORS, "birch", "birch",
+                             roof="gable", axis="z", doors=[(52, 4, "north"), (46, 16, "west")], st=CA_EAST)
         for x in range(41, 46):                        # covered walkway to the lodge
             for z in (15, 16, 17):
                 d.set(x, 1, z, "spruce_planks")
@@ -2528,18 +4732,19 @@ def grow_sky_ca(d, L):
             d.set(59, 5, z, slab("spruce"))
             d.set(59, 5, z + 1, slab("spruce"))
     if L >= 4:                                        # lookout tower and the bathhouse
-        lv += wing(d, P, 22, 40, 30, 50, 2, {4: 7, 5: 11}[L], ["store", "lounge", "library", "office", "bar"],
-                   roof="hip", doors=[(26, 40, "north")], st=CA_TOWER)
-        lv += wing(d, P, 2, 32, 16, 46, 2, 2, ["spa", "lounge"], roof="gable", axis="x", doors=[(9, 32, "north")],
-                   st=CA_BATH)
-        lv += wing(d, P, 2, 50, 16, 62, 2, 2, ["store", "store"], roof="gable", axis="x", doors=[(9, 50, "north")],
-                   st=CA_BARN)
+        nT = {4: 7, 5: 11}[L]
+        lv += raise_building(d, P, (22, 40, 30, 50), 2, nT, CA_T_PLANS, ca_t_floors(nT), "dark_oak", "dark_oak",
+                             roof="hip", doors=[(26, 40, "north")], st=CA_TOWER)
+        lv += raise_building(d, P, (2, 32, 16, 46), 2, 2, CA_B_PLANS, ["pool", "sauna"], "spruce", "spruce",
+                             roof="gable", axis="x", doors=[(9, 32, "north")], st=CA_BATH)
+        lv += raise_building(d, P, (2, 50, 16, 62), 2, 2, CA_N_PLANS, ["stable", "hayloft"], "spruce", "spruce",
+                             roof="gable", axis="x", doors=[(9, 50, "north")], st=CA_BARN)
         path_line(d, [(9, z) for z in range(47, 50)], 1, "gravel")
         path_line(d, [(26, z) for z in range(31, 40)], 1, "gravel")
         path_line(d, [(9, z) for z in range(25, 32)], 1, "gravel")
     if L >= 5:                                        # south chalet wing: dining room, suites lounge, library
-        lv += wing(d, P, 38, 36, 58, 52, 2, 5, ["dining", "lounge", "library", "bar", "hall"], roof="gable", axis="x",
-                   doors=[(48, 36, "north")], st=CA_SOUTH)
+        lv += raise_building(d, P, (38, 36, 58, 52), 2, 5, CA_S_PLANS, CA_S_FLOORS, "spruce", "dark_oak",
+                             roof="gable", axis="x", doors=[(48, 36, "north")], st=CA_SOUTH)
         for x, z in ((34, 56), (20, 56), (44, 58), (58, 58)):
             tree(d, x, z, 2, "spruce_log", "spruce_leaves", 7)
     return d
@@ -2632,10 +4837,12 @@ def grow_twin_nt(d, L):
     lv = [2]
     for x, z in cells(33, 0, 51, 55):
         d.set(x, 1, z, "smooth_stone" if (x // 3 + z // 3) % 2 else "light_gray_concrete")
-    for x in range(0, 52, 7):
-        lamp_post(d, x, 0, 2, P, 4) if not 14 <= x <= 18 else None
+    for x in (0, 7, 21, 28, 35, 42, 49):
+        lamp_post(d, x, 0, 2, P, 4)
     if L >= 2:                                        # materials store hall with roller doors and a dock
-        lv += wing(d, P, 34, 4, 48, 16, 2, 1, ["store"], H=6, doors=[(41, 4, "north")], st=NT_DEPOT_STORE)
+        lv += raise_building(d, P, (34, 4, 48, 16), 2, 1, {"store": NT_STORE_PLAN}, ["store"], "spruce", "smooth_stone",
+                             H=6, extra=[(x, z) for x in (1, 2, 3, 4, 9, 10, 11, 12) for z in (0, 1)],
+                             doors=[(41, 4, "north")], st=NT_DEPOT_STORE)
         for x in (37, 45):
             d.clear(x, 2, 4, x + 1, 4, 4)
             for xx in (x - 1, x + 2):
@@ -2646,8 +4853,8 @@ def grow_twin_nt(d, L):
         for x, z in cells(35, 18, 38, 18):
             pallet_stack(d, x, z, 2, ("bricks", "white_concrete", "glass", "smooth_stone")[x % 4], 2)
     if L >= 3:                                        # site management offices (plans room, offices, lounge)
-        lv += wing(d, P, 34, 21, 48, 31, 2, 3, ["office", "drawing", "lounge"], doors=[(41, 21, "north")],
-                   st=NT_DEPOT_OFFICE)
+        lv += raise_building(d, P, (34, 21, 48, 31), 2, 3, NT_OFFICE_PLANS, ["reception", "plans", "meeting"], "birch",
+                             "birch", doors=[(41, 21, "north")], st=NT_DEPOT_OFFICE)
         d.sign(41, 6, 20, "north", ["SITE", "MANAGEMENT"], "birch", glow=True, color="cyan")
         for x in (36, 46):
             tree(d, x, 19, 2, h=4)
@@ -2655,21 +4862,22 @@ def grow_twin_nt(d, L):
         for x in range(14, 19):
             d.set(x, 2, 26, AIR)
             d.set(x, 3, 26, AIR)
-        lv += wing(d, P, 2, 29, 30, 44, 2, 2, ["workshop", "store"], H=6, roof="gable", axis="x", chimneys=False,
-                   doors=[(16, 29, "north"), (2, 36, "west")], st=NT_DEPOT_HALL)
-        for x in range(8, 26, 5):                      # gantry rail along the hall front
+        lv += raise_building(d, P, (2, 29, 30, 44), 2, 2, NT_HALL_PLANS, ["casting", "finishing"], "dark_oak",
+                             "polished_andesite", H=6, roof="gable", axis="x", chimneys=False,
+                             doors=[(16, 29, "north"), (2, 36, "west")], st=NT_DEPOT_HALL)
+        for x in (8, 13, 18, 23):                      # gantry rail along the hall front
             for y in range(2, 9):
                 d.set(x, y, 27, "yellow_concrete" if y % 3 == 2 else "iron_bars")
         for x in range(7, 27):
             d.set(x, 9, 27, "yellow_concrete")
         d.sign(16, 8, 28, "north", ["PRECAST", "WORKS"], "birch", glow=True, color="yellow")
     if L >= 5:                                        # workers' canteen, lockers and gym; second crane
-        lv += wing(d, P, 34, 35, 49, 53, 2, 5, ["dining", "kitchen", "gym", "lounge", "office"], doors=[(41, 35, "north")],
-                   st=NT_DEPOT_CANTEEN)
+        lv += raise_building(d, P, (34, 35, 49, 53), 2, 5, NT_CANTEEN_PLANS, NT_CANTEEN_FLOORS, "cherry", "birch",
+                             doors=[(41, 35, "north")], st=NT_DEPOT_CANTEEN)
         d.sign(41, 6, 34, "north", ["CANTEEN"], "birch", glow=True, color="magenta")
         for x, z in cells(2, 47, 30, 54):
             d.set(x, 1, z, "gray_concrete")
-        for x in range(4, 30, 6):                      # plant yard: excavator stand-ins and skips
+        for x in (4, 10, 16, 22, 28):                  # plant yard: excavator stand-ins and skips
             for z in (49, 52):
                 d.set(x, 2, z, "yellow_concrete")
                 d.set(x + 1, 2, z, "yellow_concrete")
@@ -2692,32 +4900,32 @@ def grow_twin_hw(d, L):
     regrid(d, 56, 54, 0, 0, 34)
     lv = [2, 7]
     path_line(d, [(x, 0) for x in range(0, 56)], 1, "gravel")
-    for x in range(1, 56, 9):
-        lamp_post(d, x, 0, 2, P, 3) if d.air(x, 2, 0) else None
+    for x in (1, 10, 19, 28, 37, 46, 55):
+        lamp_post(d, x, 0, 2, P, 3)
     if L >= 2:                                        # timber seasoning barn behind the workshop
-        lv += wing(d, P, 2, 21, 12, 35, 2, 2, ["store", "store"], roof="gable", axis="z", chimneys=False,
-                   doors=[(7, 21, "north")], st=HW_YARD_BARN)
+        lv += raise_building(d, P, (2, 21, 12, 35), 2, 2, HW_BARN_PLANS, ["timber", "loft"], "spruce", "oak",
+                             roof="gable", axis="z", chimneys=False, doors=[(7, 21, "north")], st=HW_YARD_BARN)
         for z in range(37, 41):                        # log pile outside
             for x in range(3, 11):
                 d.set(x, 2, z, log("oak_log", "x"))
                 if z < 40:
                     d.set(x, 3, z, log("oak_log", "x"))
     if L >= 3:                                        # clerk of works' office and drawing room
-        lv += wing(d, P, 33, 2, 45, 12, 2, 3, ["drawing", "office", "library"], roof="gable", axis="x",
-                   doors=[(39, 12, "south")], st=HW_YARD_OFFICE)
+        lv += raise_building(d, P, (33, 2, 45, 12), 2, 3, HW_CLERK_PLANS, ["clerk", "drawing", "archive"], "oak", "oak",
+                             roof="gable", axis="x", doors=[(39, 12, "south")], st=HW_YARD_OFFICE)
         flowerbed(d, 34, 14, 37, 15, 2, P)
         flowerbed(d, 41, 14, 44, 15, 2, P)
         d.sign(39, 5, 13, "south", ["Clerk of", "Works"], "dark_oak")
     if L >= 4:                                        # joinery shop with timber store above
-        lv += wing(d, P, 33, 17, 53, 31, 2, 2, ["workshop", "store"], roof="gable", axis="x",
-                   doors=[(43, 17, "north"), (33, 24, "west")], st=HW_YARD_JOINERY)
+        lv += raise_building(d, P, (33, 17, 53, 31), 2, 2, HW_JOIN_PLANS, ["bench", "store"], "dark_oak", "oak",
+                             roof="gable", axis="x", doors=[(43, 17, "north"), (33, 24, "west")], st=HW_YARD_JOINERY)
         d.sign(43, 5, 16, "north", ["Joinery"], "dark_oak")
         for x in range(35, 52, 2):                     # seasoned boards stacked on bearers by the shop
             pallet_stack(d, x, 33, 2, "oak_planks" if x % 4 == 1 else "spruce_planks", 5,
                          "oak_slab[type=bottom,waterlogged=false]")
         lamp_post(d, 33, 33, 2, P, 3)
-        lv += wing(d, P, 47, 34, 53, 40, 2, 1, ["store"], roof="gable", axis="z", stair=False, chimneys=False,
-                   doors=[(50, 34, "north")], st=dict(HW_YARD_BARN, roof="dark_oak"))
+        lv += raise_building(d, P, (47, 34, 53, 40), 2, 1, {"tools": HW_TOOL_PLAN}, ["tools"], "oak", "oak",
+                             roof="gable", axis="z", stair=False, chimneys=False, doors=[(50, 34, "north")], st=dict(HW_YARD_BARN, roof="dark_oak"))
         for x in range(36, 46, 3):                     # sawhorses with a plank across
             d.set(x, 2, 35, fence("oak"))
             d.set(x + 1, 2, 35, fence("oak"))
@@ -2727,19 +4935,14 @@ def grow_twin_hw(d, L):
             for z in range(14, 33):
                 d.set(x, 1, z, "gravel")
     if L >= 5:                                        # masons' hall with the workers' mess upstairs
-        lv += wing(d, P, 2, 39, 30, 51, 2, 3, ["workshop", "dining", "lounge"], roof="gable", axis="x",
-                   doors=[(16, 39, "north"), (30, 45, "east")], st=HW_YARD_MASONS)
-        for z in range(37, 41):                        # move the log pile out of the way of the hall
-            for x in range(3, 11):
-                for y in (2, 3):
-                    if d.get(x, y, z).startswith("minecraft:oak_log"):
-                        d.set(x, y, z, AIR)
-        lv += wing(d, P, 34, 43, 45, 51, 2, 1, ["workshop"], roof="gable", axis="x", stair=False, chimneys=False,
-                   doors=[(39, 43, "north")], st=HW_YARD_OFFICE)
-        for x, z in cells(34, 34, 52, 50):
-            if (x + z) % 7 == 0 and d.air(x, 2, z) and not (33 <= x <= 46 and 42 <= z <= 52):
-                pallet_stack(d, x, z, 2, ("stone_bricks", "bricks", "cobblestone")[x % 3], 2,
-                             "oak_slab[type=bottom,waterlogged=false]")
+        lv += raise_building(d, P, (2, 39, 30, 51), 2, 3, HW_MASON_PLANS, ["banker", "mess", "tracing"], "jungle", "spruce",
+                             roof="gable", axis="x", doors=[(16, 39, "north"), (30, 48, "east")], st=HW_YARD_MASONS)
+        lv += raise_building(d, P, (34, 43, 45, 51), 2, 1, {"cart": HW_CART_PLAN}, ["cart"], "spruce", "spruce",
+                             roof="gable", axis="x", stair=False, chimneys=False, doors=[(39, 43, "north")], st=HW_YARD_OFFICE)
+        for i, (x, z) in enumerate(((47, 42), (49, 42), (51, 42), (47, 46), (49, 46), (51, 46), (47, 50), (49, 50),
+                                    (51, 50))):           # dressed stone waiting on pallets
+            pallet_stack(d, x, z, 2, ("stone_bricks", "bricks", "cobblestone")[i % 3], 2,
+                         "oak_slab[type=bottom,waterlogged=false]")
         for x in (14, 18):
             for y in range(2, 9):
                 d.set(x, y, 36, log("dark_oak_log", "y"))
@@ -2760,14 +4963,14 @@ def grow_twin_ca(d, L):
     for x, z in cells(0, 31, 32, 53):
         d.set(x, 1, z, "coarse_dirt" if (x + z) % 5 else "gravel")
     if L >= 2:                                        # open-sided lumber drying shed (birch board ends)
-        lv += wing(d, P, 34, 3, 50, 13, 2, 1, ["store"], roof="gable", axis="x", chimneys=False,
-                   doors=[(42, 13, "south"), (42, 3, "north")], st=CA_YARD_SHED)
+        lv += raise_building(d, P, (34, 3, 50, 13), 2, 1, {"drying": CA_SHED_PLAN}, ["drying"], "spruce", "spruce",
+                             roof="gable", axis="x", chimneys=False, doors=[(42, 13, "south"), (42, 3, "north")], st=CA_YARD_SHED)
         for x in list(range(35, 40)) + list(range(45, 50)):    # stickered lumber outside
             for y in (2, 3):
                 d.set(x, y, 15, log("stripped_spruce_log", "x"))
     if L >= 3:                                        # framers' bunkhouse and office
-        lv += wing(d, P, 36, 18, 48, 29, 2, 2, ["office", "lounge"], roof="gable", axis="x",
-                   doors=[(42, 18, "north")], st=CA_YARD_BUNK)
+        lv += raise_building(d, P, (36, 18, 48, 29), 2, 2, CA_BUNK_PLANS, ["office", "mess"], "mangrove", "spruce",
+                             roof="gable", axis="x", doors=[(42, 18, "north")], st=CA_YARD_BUNK)
         for x in range(36, 49):                         # porch
             d.set(x, 6, 16, slab("spruce"))
             d.set(x, 6, 17, slab("spruce"))
@@ -2777,16 +4980,16 @@ def grow_twin_ca(d, L):
         d.chair(38, 2, 17, "west", "spruce", sit=False)
         d.chair(46, 2, 17, "east", "spruce", sit=False)
     if L >= 4:                                        # sawmill hall with log deck and chute
-        lv += wing(d, P, 2, 33, 24, 47, 2, 2, ["workshop", "store"], roof="gable", axis="x",
-                   doors=[(13, 33, "north"), (24, 40, "east")], st=CA_YARD_MILL)
+        lv += raise_building(d, P, (2, 33, 24, 47), 2, 2, CA_MILL_PLANS, ["saw", "filing"], "dark_oak", "spruce",
+                             roof="gable", axis="x", doors=[(13, 33, "north"), (24, 44, "east")], st=CA_YARD_MILL)
         for x in range(4, 22):
             for y in (2, 3):
                 d.set(x, y, 50, log("spruce_log", "x"))
             d.set(x, 4, 50, log("spruce_log", "x")) if x % 2 else None
         d.sign(13, 6, 32, "north", ["SAWMILL"], "spruce")
     if L >= 5:                                        # cookhouse with dining hall and a log water tower
-        lv += wing(d, P, 30, 34, 50, 48, 2, 3, ["dining", "kitchen", "lounge"], roof="gable", axis="x",
-                   doors=[(40, 34, "north")], st=CA_YARD_COOK)
+        lv += raise_building(d, P, (30, 34, 50, 48), 2, 3, CA_COOK_PLANS, ["dining", "kitchen", "lounge"], "spruce", "spruce",
+                             roof="gable", axis="x", doors=[(40, 34, "north")], st=CA_YARD_COOK)
         for x, z in ((52, 36), (54, 36), (52, 38), (54, 38)):
             for y in range(2, 10):
                 d.set(x, y, z, log("spruce_log", "y"))

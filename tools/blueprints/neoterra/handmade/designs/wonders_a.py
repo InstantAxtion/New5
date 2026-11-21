@@ -680,6 +680,11 @@ def hc_cloister(d, L):
     for dx, dz in ((-1, -1), (1, 1)):
         d.set(cx + dx, 3, cz + dz, fence("dark_oak_fence"))
         d.set(cx + dx, 4, cz + dz, fence("dark_oak_fence"))
+    for x, z, back in ((34, 8, "west"), (34, 9, "west"), (34, 10, "west"), (40, 8, "east"), (40, 9, "east"),
+                       (40, 10, "east")):
+        d.chair(x, 2, z, back, "dark_oak", sit=False)                  # stone-garth benches facing the well
+    lamp_post(d, 33, 6, "polished_andesite", fence("dark_oak_fence"), h=1)
+    lamp_post(d, 41, 12, "polished_andesite", fence("dark_oak_fence"), h=1)
     d.fill(cx - 1, 5, cz - 1, cx + 1, 5, cz + 1, slab("dark_oak_slab"))
     d.set(cx, 4, cz, "chain[axis=y,waterlogged=false]")
     for x, z in ((a1 + 2, b1 + 2), (a2 - 2, b1 + 2), (a1 + 2, b2 - 2), (a2 - 2, b2 - 2)):
@@ -1058,6 +1063,14 @@ def hc_close(d, L):
         d.chair(x, 2, 0, "north", "dark_oak")
     lamp_post(d, 35, 19, "polished_andesite", fence("dark_oak_fence"))       # lamps at the chapter-house door
     lamp_post(d, 41, 19, "polished_andesite", fence("dark_oak_fence"))
+    for x, z in ((32, 17), (46, 17), (31, 24), (31, 28)):                   # lamps along the close paths
+        lamp_post(d, x, z, "polished_andesite", fence("dark_oak_fence"))
+    lamp_post(d, 33, 41, "polished_andesite", fence("dark_oak_fence"))
+    d.chair(45, 2, 30, "east", "dark_oak", sit=False)
+    d.chair(45, 2, 31, "east", "dark_oak", sit=False)
+    for x, z in ((39, 35), (39, 38), (45, 35), (45, 38), (42, 41), (36, 41)):   # more headstones
+        d.set(x, 2, z, "cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
+        d.set(x, 1, z + 1, "podzol")
     d.chair(44, 2, 22, "east", "dark_oak", sit=False)                         # bench under the chapter house
     d.chair(44, 2, 23, "east", "dark_oak", sit=False)
     # churchyard wall with coping along the street and the east side, lych-gate on the street
