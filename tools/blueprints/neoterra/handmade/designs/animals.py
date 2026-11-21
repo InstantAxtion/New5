@@ -2465,6 +2465,7 @@ def cottage(d, pack, x1, z1, w=9, kind="poultry"):
                 for y in (2, 3, 4):
                     d.set(x1 - 1, y, z, "spruce_log[axis=x]")
             d.set(x1 - 2, 2, z1 + 3, "stripped_spruce_log[axis=y]")    # chopping block
+            d.set(x1 - 2, 3, z1 + 3, "spruce_pressure_plate[powered=false]")   # a round waiting to be split
             d.set(x1 - 1, 2, z2 + 1, "water_cauldron[level=3]")         # rain butt and compost bin
             d.set(x1, 2, z2 + 1, "composter[level=4]")
     else:

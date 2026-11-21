@@ -471,6 +471,22 @@ def neo_ring(d, cx, y, z, big=False):
     d.set(cx, y + 4, z, "cyan_terracotta")
 
 
+def solar_tree(d, x, z):
+    """Neoterra 'solar tree': white trunk with a lit collar, a canopy of daylight-sensor panels, and four
+    seats round its foot facing outward."""
+    d.set(x, 2, z, "polished_andesite")
+    for y in range(3, 7):
+        d.set(x, y, z, "white_concrete")
+    d.set(x, 7, z, "sea_lantern")
+    for dx in (-1, 0, 1):
+        for dz in (-1, 0, 1):
+            d.set(x + dx, 8, z + dz, "smooth_stone" if (dx, dz) == (0, 0) else slab("smooth_stone", "top"))
+            d.set(x + dx, 9, z + dz, "daylight_detector[inverted=false,power=0]")
+    for dx, dz, b in ((1, 0, "west"), (-1, 0, "east"), (0, 1, "north"), (0, -1, "south")):
+        d.set(x + dx, 2, z + dz, stairs("birch", b))
+        d.tag(x + dx, 2, z + dz, "sit_out")
+
+
 def neo_smallpark(d):
     """Pocket park: path to a small paved square with the Ring sculpture on a plinth, two birch-slat benches
     facing it, raised moss beds with azaleas and alliums, birches in concrete planters at the four corners."""
@@ -716,9 +732,14 @@ def neo_parklarge(d):
         d.tag(x, 2, 22, "sit_out")
     d.set(12, 2, 22, "light_gray_concrete")
     d.set(12, 3, 22, "potted_azalea_bush")
-    # south-east lawn: birch and an allium meadow
-    birch(d, 21, 21, h=6)
-    for x, z, f in ((18, 20, "allium"), (19, 22, "white_tulip"), (23, 20, "allium"), (18, 23, "cornflower"),
+    # south-east lawn: a solar tree with a ring of seats in an allium meadow, reached from the pavilion
+    for x in (17, 18, 19):
+        d.set(x, 1, 20, "smooth_stone")
+    paint_cells = ((20, 20), (21, 20), (22, 20), (20, 21), (22, 21), (20, 22), (21, 22), (22, 22))
+    for x, z in paint_cells:
+        d.set(x, 1, z, "polished_diorite")
+    solar_tree(d, 21, 21)
+    for x, z, f in ((18, 22, "allium"), (19, 23, "white_tulip"), (23, 20, "allium"), (18, 23, "cornflower"),
                     (23, 23, "allium"), (20, 19, "white_tulip"), (22, 23, "short_grass")):
         d.set(x, 2, z, f)
     for x, z in ((8, 3), (16, 3), (9, 9), (15, 9), (9, 15), (15, 15), (16, 5), (16, 17)):
@@ -939,6 +960,10 @@ def hw_plaza(d):
         d.tag(x, 2, 15, "sit_out")
     d.set(6, 2, 15, trap("dark_oak", "west"))
     d.set(12, 2, 15, trap("dark_oak", "east"))
+    # red pillar box by the entrance
+    d.set(13, 2, 1, "red_concrete")
+    d.set(13, 3, 1, "red_concrete")
+    d.set(13, 4, 1, slab("deepslate_tile"))
     # corner oaks in brick-ringed beds, flower tubs, lamps
     for x, z in ((3, 2), (15, 2)):
         oak(d, x, z)
@@ -993,6 +1018,8 @@ def hw_parklarge(d):
     paint(g, 3, 11, 5, 13, "g")                          # maypole circle
     g[12][2] = g[12][6] = g[10][4] = g[14][4] = "g"
     paint(g, 7, 12, 7, 12, "g")
+    paint(g, 4, 15, 4, 17, "g")                          # maypole -> tea garden
+    paint(g, 1, 18, 7, 22, "g")                          # tea garden under the south-west oak
     plan(d, 1, rows_of(g), dict(HW, M="mossy_cobblestone", s="sand"))
     for z, (a, b) in pond.items():
         d.fill(a, 0, z, b, 0, z, "clay")
@@ -1058,6 +1085,21 @@ def hw_parklarge(d):
     oak(d, 4, 4)
     oak(d, 20, 4)
     oak(d, 4, 20)
+    # tea garden: two tables with chairs under the oak, herbaceous border along the south hedge
+    for x, z in ((2, 21), (6, 19)):
+        d.set(x, 2, z, "dark_oak_fence")
+        d.set(x, 3, z, "dark_oak_pressure_plate[powered=false]")
+    for x, z, b in ((2, 20, "north"), (2, 22, "south"), (1, 21, "west"), (3, 21, "east"),
+                    (6, 18, "north"), (6, 20, "south"), (5, 19, "west"), (7, 19, "east")):
+        d.set(x, 2, z, stairs("oak", b))
+        d.tag(x, 2, z, "sit_out")
+    plan(d, 2, ["lprpl1prl2l"], HW, x0=1, z0=23)
+    plan(d, 3, ["LPRPL.PRL.L"], HW, x0=1, z0=23)
+    for z in range(1, 24):
+        d.set(0, 2, z, leaves("oak"))
+        d.set(24, 2, z, leaves("oak"))
+    for x in range(25):
+        d.set(x, 2, 24, leaves("oak"))
     for x, z, f in ((1, 8, "poppy"), (7, 3, "oxeye_daisy"), (18, 9, "dandelion"), (22, 8, "poppy"),
                     (9, 18, "cornflower"), (7, 22, "oxeye_daisy"), (1, 16, "azure_bluet"), (10, 20, "poppy")):
         d.set(x, 2, z, f)
@@ -1220,7 +1262,7 @@ def cas_mediumpark(d):
         d.set(x, 3, z, "sugar_cane[age=0]")
     for x, z in ((2, 12), (3, 10), (11, 12)):
         d.set(x, 2, z, LILY)
-    for x, z, h in ((1, 16 - 1, 6), (13, 15, 7), (16, 8, 5), (10, 1, 5), (16, 1, 6), (0, 8, 5)):
+    for x, z, h in ((1, 15, 6), (13, 15, 6), (15, 8, 5), (11, 1, 5), (15, 1, 6), (1, 8, 5)):
         fir(d, x, z, h=h)
     boulder(d, 5, 15, big=True)
     boulder(d, 11, 8)
@@ -1230,3 +1272,293 @@ def cas_mediumpark(d):
     cas_lamp(d, 9, 2, arm=(-1, 0))
     cas_lamp(d, 7, 14, arm=(1, 0))
     d.tag(8, 1, 2, "stand_out")
+
+
+def cas_plaza(d):
+    """Lodge commons: a spruce deck framed by stripped logs, a flagstone hearth court in front of a big
+    river-rock outdoor fireplace with a timber mantel and chimney, log benches in a horseshoe facing the fire,
+    a roofed notice board, a hitching rail with a water trough, potted ferns on stumps, firs and boulders in
+    the corners, gallows lamps at the entrance."""
+    g = grid(19, "P")
+    for i in range(19):
+        g[0][i] = g[18][i] = "g"
+        g[i][0] = g[i][18] = "g"
+    paint(g, 7, 0, 11, 0, "P")
+    for x in range(1, 18):
+        g[1][x] = "X"
+        g[17][x] = "X"
+    for z in range(2, 17):
+        g[z][1] = "Z"
+        g[z][17] = "Z"
+    paint(g, 0, 14, 3, 18, "g")                          # back corners: fir islands
+    paint(g, 15, 14, 18, 18, "g")
+    g[14][3] = g[14][15] = "p"
+    flag = ["omaoTomao",
+            "aoTmoaToo",
+            "mooaomaTo",
+            "oTmoaoomo"]
+    rows = rows_of(g)
+    for z in range(11, 15):
+        rows[z] = rows[z][:5] + flag[z - 11] + rows[z][14:]
+    plan(d, 1, rows, CAS)
+    # outdoor fireplace: river-rock body, timber mantel, campfire on the hearth, chimney
+    for x in range(7, 12):
+        for z in (15, 16, 17):
+            for y in (2, 3, 4):
+                d.set(x, y, z, ("mossy_cobblestone" if (x + y + z) % 3 == 0 else
+                                "andesite" if (x + y + z) % 3 == 1 else "cobblestone"))
+    for x in (8, 9, 10):
+        for y in (2, 3):
+            d.set(x, y, 15, AIR)
+            d.set(x, y, 16, AIR)
+        d.set(x, 4, 15, log("stripped_spruce_log", "x"))
+    d.set(9, 2, 16, CAMPFIRE)
+    d.set(8, 2, 16, "cobblestone")
+    d.set(10, 2, 16, "cobblestone")
+    for x in range(7, 12):
+        d.set(x, 1, 15, "cobblestone")
+        d.set(x, 1, 16, "cobblestone")
+    for y in (5, 6):
+        for x in (8, 9, 10):
+            d.set(x, y, 16, "cobblestone" if x != 9 else "mossy_cobblestone")
+            d.set(x, y, 17, "andesite" if x != 9 else "cobblestone")
+    for y in (7, 8, 9):
+        d.set(9, y, 16, "cobblestone" if y % 2 else "mossy_cobblestone")
+        d.set(9, y, 17, "andesite")
+    d.set(9, 10, 16, slab("cobblestone"))
+    d.set(8, 5, 15, "potted_fern")
+    d.set(10, 5, 15, LANTERN)
+    # horseshoe of log benches facing the fire
+    for x in (6, 7, 8, 10, 11, 12):
+        d.set(x, 2, 11, stairs("spruce", "north"))
+        d.tag(x, 2, 11, "sit_out")
+    for z in (12, 13):
+        d.set(5, 2, z, stairs("spruce", "west"))
+        d.tag(5, 2, z, "sit_out")
+        d.set(13, 2, z, stairs("spruce", "east"))
+        d.tag(13, 2, z, "sit_out")
+    for x, z in ((5, 11), (13, 11), (5, 14), (13, 14)):
+        d.set(x, 2, z, log("spruce_log"))
+    d.set(5, 3, 11, LANTERN)
+    d.set(13, 3, 11, LANTERN)
+    # notice board under a little shake roof (north-west)
+    for x in (3, 5):
+        for y in (2, 3, 4):
+            d.set(x, y, 4, log("spruce_log"))
+    d.set(4, 3, 4, "spruce_planks")
+    d.set(4, 4, 4, "spruce_planks")
+    for x in range(2, 7):
+        d.set(x, 5, 4, slab("spruce"))
+        d.set(x, 5, 3, stairs("spruce", "south"))
+        d.set(x, 5, 5, stairs("spruce", "north"))
+    d.sign(4, 3, 3, "north", ["CASCADIA", "COMMONS", "", ""], wood="spruce")
+    d.sign(4, 4, 3, "north", ["Logging bee", "Saturday", "", ""], wood="spruce")
+    # hitching rail and trough (north-east)
+    d.set(13, 2, 4, log("spruce_log"))
+    d.set(16, 2, 4, log("spruce_log"))
+    for x in (14, 15):
+        d.set(x, 2, 4, "spruce_fence")
+    for x in (14, 15):
+        d.set(x, 2, 5, "water_cauldron[level=3]")
+    d.set(13, 3, 4, LANTERN)
+    d.set(16, 2, 6, "hay_block[axis=y]")
+    d.set(16, 2, 7, "barrel[facing=up,open=false]")
+    # stumps with potted ferns along the deck, firs and boulders in the corners
+    for x, z in ((3, 8), (15, 8), (3, 12), (15, 12)):
+        d.set(x, 2, z, log("spruce_log"))
+        d.set(x, 3, z, "potted_fern")
+    fir(d, 2, 16, h=8)
+    fir(d, 16, 16, h=7)
+    for x, z, b in ((4, 17, "mossy_cobblestone"), (0, 13, "andesite"), (18, 13, "mossy_cobblestone"),
+                    (14, 16, "fern"), (4, 15, "fern"), (0, 5, "fern"), (18, 6, "sweet_berry_bush[age=3]"),
+                    (0, 9, "sweet_berry_bush[age=3]"), (18, 10, "fern"), (15, 18, "fern")):
+        d.set(x, 2, z, b)
+    d.set(4, 3, 17, slab("mossy_cobblestone"))
+    # log gateway with a hanging sign over the entrance
+    for x in (6, 12):
+        for y in range(2, 6):
+            d.set(x, y, 0, log("spruce_log"))
+    for x in range(5, 14):
+        d.set(x, 6, 0, log("stripped_spruce_log", "x"))
+    d.set(6, 6, 0, log("spruce_log"))
+    d.set(12, 6, 0, log("spruce_log"))
+    d.set(9, 5, 0, "spruce_hanging_sign[attached=false,rotation=8,waterlogged=false]")
+    d.sign(9, 5, 0, "north", ["", "COMMONS", "", ""], wood="spruce", hanging=True)
+    te = d.bp.tile_entities.get((9, 5, 0))
+    d.set(9, 5, 0, "spruce_hanging_sign[attached=false,rotation=8,waterlogged=false]", te)
+    # woodpile beside the fireplace, fern beds in the deck
+    for z in (15, 16, 17):
+        for x in (12, 13):
+            d.set(x, 2, z, log("spruce_log", "z"))
+        d.set(12, 3, z, log("spruce_log", "z"))
+    d.set(13, 3, 16, slab("spruce"))
+    for x, z, f in ((2, 9, "fern"), (2, 10, "sweet_berry_bush[age=3]"), (16, 9, "sweet_berry_bush[age=3]"),
+                    (16, 10, "fern")):
+        d.set(x, 1, z, "podzol")
+        d.set(x, 2, z, f)
+    cas_lamp(d, 6, 1, arm=(1, 0))
+    cas_lamp(d, 12, 1, arm=(-1, 0))
+    cas_lamp(d, 1, 9)
+    cas_lamp(d, 17, 9)
+    d.tag(9, 1, 6, "stand_out")
+
+
+def cas_parklarge(d):
+    """Falls park: a winding trail from the street past a trailhead board, a log lean-to facing a fire circle,
+    an overlook bench at a pond fed by a waterfall spilling from a mossy rock bluff, a creek with a railed
+    footbridge running west into a marsh with reeds, a picnic table under the firs, boulders, ferns, berries."""
+    g = grid(25, "g")
+    trail = [(12, z) for z in range(0, 5)] + [(11, z) for z in range(4, 9)] + [(10, z) for z in range(8, 14)] \
+        + [(11, z) for z in range(13, 19)] + [(12, z) for z in range(18, 22)] + [(13, 21), (14, 21)]
+    for x, z in trail:
+        g[z][x] = "d"
+    for x, z in ((13, 1), (11, 3), (12, 6), (10, 7), (9, 10), (11, 11), (12, 17), (13, 19), (11, 20)):
+        g[z][x] = "c"
+    pond = {8: (16, 21), 9: (15, 22), 10: (14, 22), 11: (14, 21), 12: (14, 21), 13: (15, 20), 14: (14, 18)}
+    for z, (a, b) in pond.items():
+        paint(g, a, z, b, z, "W")
+    paint(g, 3, 15, 15, 16, "W")                         # creek
+    marsh = {14: (2, 5), 15: (1, 3), 16: (1, 3), 17: (1, 6), 18: (2, 5)}
+    for z, (a, b) in marsh.items():
+        paint(g, a, z, b, z, "W")
+    for x, z in ((4, 16), (5, 15), (13, 14), (6, 16)):
+        g[z][x] = "W"
+    paint(g, 2, 4, 7, 9, "P")                            # lean-to floor
+    paint(g, 7, 5, 9, 9, "c")                            # fire clearing
+    paint(g, 15, 19, 20, 23, "c")                        # picnic clearing
+    for x, z in ((3, 22), (7, 20), (21, 16), (1, 11), (23, 12), (8, 22)):
+        g[z][x] = "p"
+    plan(d, 1, rows_of(g), CAS)
+    for z, (a, b) in list(pond.items()) + list(marsh.items()):
+        d.fill(a, 0, z, b, 0, z, "gravel")
+    d.fill(3, 0, 15, 15, 0, 16, "gravel")
+    for x, z in ((4, 16), (5, 15), (13, 14), (6, 16)):
+        d.set(x, 0, z, "gravel")
+    # rock bluff with the falls (north-east): hand-laid courses
+    plan(d, 2, ["mooaTmo",
+                "oamoaom",
+                "maoTomo",
+                "oTmaomo",
+                "amooTam",
+                "omamoao",
+                ".m.o.a."], CAS, x0=17, z0=1)
+    plan(d, 3, [".omaoTm",
+                ".maoomo",
+                ".oTmaoa",
+                ".moaomo",
+                "..aomTo",
+                "..omaom",
+                "...o..."], CAS, x0=17, z0=1)
+    plan(d, 4, ["..moaom",
+                "..oamTo",
+                "..mooma",
+                "..aomoo",
+                "...moa.",
+                "...o.m.",
+                "...m..."], CAS, x0=17, z0=1)
+    plan(d, 5, ["...mmo.",
+                "...oam.",
+                "...amo.",
+                "...mo..",
+                "...o...",
+                "...m...",
+                "...~..."], dict(CAS, **{"~": WATER}), x0=17, z0=1)
+    d.set(19, 5, 6, "mossy_cobblestone")
+    d.set(21, 5, 7, "cobblestone")
+    d.set(19, 5, 7, "mossy_cobblestone")
+    d.set(20, 6, 6, slab("mossy_cobblestone"))
+    for x, y, z, f in ((19, 4, 3, "fern"), (18, 3, 5, "fern"), (17, 2, 7, "fern"), (23, 6, 4, "fern")):
+        if d.air(x, y, z):
+            d.set(x, y, z, f)
+    fir(d, 22, 2, y=6, h=5)
+    # lean-to: log back and side walls, shed roof falling to the front posts, bench facing the fire
+    for z in range(4, 10):
+        for y in (2, 3, 4, 5):
+            d.set(2, y, z, log("spruce_log", "z") if y in (3, 5) else log("stripped_spruce_log", "z"))
+    for x in range(3, 7):
+        for z in (4, 9):
+            for y in (2, 3):
+                d.set(x, y, z, log("spruce_log", "x"))
+    for z in (4, 9):
+        d.set(6, 4, z, log("spruce_log"))
+    for z in range(3, 11):
+        d.set(2, 6, z, stairs("spruce", "west"))
+        d.set(3, 6, z, stairs("spruce", "west"))
+        d.set(4, 5, z, stairs("spruce", "west"))
+        d.set(5, 5, z, stairs("spruce", "west"))
+        d.set(6, 5, z, slab("spruce"))
+        d.set(7, 4, z, stairs("spruce", "west"))
+    for z in (5, 6, 7, 8):
+        d.set(3, 2, z, stairs("spruce", "west"))
+        d.tag(3, 2, z, "sit_out")
+    d.set(4, 4, 6, HANGING)
+    d.set(3, 3, 5, AIR)
+    # fire circle in front of the lean-to
+    fire_pit(d, 8, 7)
+    for x in (7, 9):
+        d.set(x, 2, 5, log("spruce_log", "x"))
+    d.set(8, 2, 5, stairs("spruce", "north"))
+    d.tag(8, 2, 5, "sit_out")
+    d.set(8, 2, 9, stairs("spruce", "south"))
+    d.tag(8, 2, 9, "sit_out")
+    # overlook bench at the pond's west shore, facing the falls
+    for z in (9, 10, 11):
+        d.set(13, 2, z, stairs("spruce", "west"))
+        d.tag(13, 2, z, "sit_out")
+    d.set(13, 2, 8, log("spruce_log"))
+    d.set(13, 3, 8, LANTERN)
+    # footbridge over the creek
+    for x in (10, 11, 12):
+        for z in (14, 15, 16, 17):
+            d.set(x, 2, z, slab("spruce"))
+    for z in (15, 16):
+        d.set(10, 3, z, "spruce_fence")
+        d.set(12, 3, z, "spruce_fence")
+    for x, z in ((10, 14), (12, 14), (10, 17), (12, 17)):
+        d.set(x, 2, z, log("spruce_log"))
+        d.set(x, 3, z, "spruce_fence")
+    d.set(10, 4, 14, LANTERN)
+    d.set(12, 4, 17, LANTERN)
+    # marsh: reeds, lilies; pond lilies
+    for x, z in ((0, 15), (0, 16), (6, 14), (7, 17), (4, 19), (2, 13)):
+        d.set(x, 2, z, "sugar_cane[age=0]")
+        d.set(x, 3, z, "sugar_cane[age=0]")
+    for x, z in ((2, 16), (4, 17), (8, 15), (17, 11), (20, 12), (16, 9)):
+        d.set(x, 2, z, LILY)
+    # picnic table in the clearing to the south-east
+    for x in (16, 17, 18, 19):
+        d.set(x, 2, 21, slab("spruce", "top"))
+        d.set(x, 2, 20, stairs("spruce", "north"))
+        d.tag(x, 2, 20, "sit_out")
+        d.set(x, 2, 22, stairs("spruce", "south"))
+        d.tag(x, 2, 22, "sit_out")
+    d.set(17, 3, 21, "potted_fern")
+    # trailhead board
+    for x in (14, 16):
+        for y in (2, 3, 4):
+            d.set(x, y, 2, log("spruce_log"))
+    d.set(15, 3, 2, "spruce_planks")
+    d.set(15, 4, 2, "spruce_planks")
+    for x in (13, 14, 15, 16, 17):
+        d.set(x, 5, 2, slab("spruce"))
+    d.sign(15, 3, 1, "north", ["CASCADE FALLS", "PARK", "", ""], wood="spruce")
+    d.sign(15, 4, 1, "north", ["falls  ->", "lean-to  <-", "", ""], wood="spruce")
+    # forest: firs placed around the clearings, boulders, ferns, berries
+    for x, z, h in ((1, 1, 6), (6, 1, 6), (2, 20, 8), (5, 22, 7), (9, 20, 6), (22, 20, 8), (23, 15, 6),
+                    (16, 16, 6), (8, 12, 5), (1, 11, 6), (20, 23, 5)):
+        fir(d, x, z, h=h)
+    for x, z, big in ((14, 6, True), (5, 12, False), (21, 17, True), (8, 23, False), (17, 6, False)):
+        boulder(d, x, z, big=big)
+    for x, z, f in ((4, 2, "fern"), (9, 3, "fern"), (15, 4, "fern"), (13, 6, "large_fern"), (6, 11, "fern"),
+                    (9, 17, "fern"), (14, 18, "sweet_berry_bush[age=3]"), (3, 23, "sweet_berry_bush[age=3]"),
+                    (11, 23, "fern"), (23, 22, "fern"), (19, 17, "fern"), (24, 10, "fern"),
+                    (8, 2, "short_grass"), (16, 0, "short_grass")):
+        if f == "large_fern":
+            d.set(x, 2, z, tall("large_fern", "lower"))
+            d.set(x, 3, z, tall("large_fern", "upper"))
+        else:
+            d.set(x, 2, z, f)
+    cas_lamp(d, 13, 3, arm=(-1, 0))
+    cas_lamp(d, 9, 11, arm=(1, 0))
+    cas_lamp(d, 13, 19, arm=(-1, 0))
+    d.tag(12, 1, 3, "stand_out")

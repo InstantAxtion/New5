@@ -2682,6 +2682,19 @@ def gb_neoterra(rel, L):
             d.set(x, 1, 27, "smooth_stone")
         for z in (31, 34, 37, 40, 43):
             d.set(39, 1, z, "smooth_stone")
+        # riverside seating steps on the west bank, facing the water and the bridge
+        for k, x in enumerate((21, 20, 19)):
+            for z in range(38, 44):
+                for y in range(2, 2 + k):
+                    d.set(x, y, z, "smooth_stone")
+                d.set(x, 2 + k, z, stair("smooth_quartz_stairs", "west"))
+        for z in (37, 44):
+            for x in (19, 20, 21):
+                d.set(x, 1, z, "smooth_stone")
+            d.set(19, 2, z, "moss_block")
+            d.set(19, 3, z, "flowering_azalea")
+            d.set(21, 2, z, "smooth_quartz")
+            d.set(21, 3, z, "sea_lantern")
     if L >= 5:
         # ---- Skyline Residences: lobby, three different apartments, a co-working floor on top
         b = building(d, 50, 29, 60, 39, 5, door="north", ladder=(59, 38, "north"), pal=4)
@@ -2731,7 +2744,7 @@ def gb_neoterra(rel, L):
                        "6...l....",
                        "kQz...B.."], face={"Q": "north"})
         put(d, b["S"], [(55, 4, 28, "sign", ("north", ["SKYLINE", "RESIDENCES"]))])
-        for x, z in ((2, 2), (14, 3), (61, 2), (48, 42), (20, 41)):
+        for x, z in ((14, 3), (48, 42), (13, 41)):          # shade trees by the cafe, the kayak hire, the steps
             tree(d, x, z, h=5, log="birch_log", leaves="birch_leaves", r=2)
         for x, z in ((14, 17), (14, 27), (48, 17), (48, 27)):
             d.set(x, 2, z, "smooth_quartz")
@@ -3061,6 +3074,8 @@ def rg_cascadia(rel, L):
             d.set(x, 3, z, "hay_block[axis=x]")
         d.set(4, 4, 14, "hay_block[axis=x]")
         lamppost(d, 12, 13, post="spruce_fence")
+        for x in (1, 11):                                  # lamps at the ends of the wagon scale
+            lamppost(d, x, 4, post="spruce_fence")
     if L >= 3:
         # ---- Feed & Seed: rack bays of barrels and sacks on two floors, loading dock on the siding
         b = building(d, 45, 6, 55, 14, 2, door="north", ladder=(54, 13, "north"), pal=4)
@@ -3270,6 +3285,26 @@ def rg_neoterra(rel, L):
         for x in (1, 4, 7, 10):
             d.set(x, 2, 5, "smooth_quartz")
             d.set(x, 3, 5, "sea_lantern")
+        for x, z in ((1, 16), (4, 16), (9, 16), (12, 16)):     # planter boxes along the gate's back walk
+            d.set(x, 1, z, "moss_block")
+            d.set(x, 2, z, "flowering_azalea" if x in (1, 12) else "azalea")
+        for x in (2, 10):
+            d.set(x, 2, 16, "smooth_quartz_slab[type=bottom,waterlogged=false]")
+            d.set(x + 1, 2, 16, "smooth_quartz_slab[type=bottom,waterlogged=false]")
+        for x in range(1, 13):
+            d.set(x, 1, 15, "smooth_stone")
+        # covered bike shelter for the guards, behind the planters
+        for x in (2, 8):
+            for z in (18, 20):
+                for y in (2, 3, 4):
+                    d.set(x, y, z, "light_gray_concrete")
+        for x in range(2, 9):
+            for z in range(18, 21):
+                d.set(x, 5, z, "smooth_quartz_slab[type=bottom,waterlogged=false]")
+                d.set(x, 1, z, "smooth_stone")
+        for x in (3, 5, 7):
+            d.set(x, 2, 19, "iron_bars")
+        d.set(5, 4, 19, lantern(True))
     if L >= 3:
         # ---- Gene Lab: wet lab with island benches, data office upstairs
         b = building(d, 48, 5, 58, 13, 2, door="north", ladder=(57, 12, "north"), pal=4)
@@ -3393,6 +3428,11 @@ def rg_neoterra(rel, L):
         for x in (40, 43, 46):
             d.set(x, 2, 47, "smooth_quartz")
             d.set(x, 3, 47, "sea_lantern")
+        # solar arrays on the lab and logistics roofs (three rows each inside the parapets)
+        for (xa, xb), zs in (((3, 11), (36, 38, 40, 42)), ((49, 57), (36, 38, 40, 42)), ((49, 57), (7, 9, 11))):
+            for z in zs:
+                for x in range(xa, xb + 1):
+                    d.set(x, 12, z, "daylight_detector[inverted=false,power=0]")
     connect_walls(d)
     return d
 

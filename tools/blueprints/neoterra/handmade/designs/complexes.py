@@ -4465,7 +4465,7 @@ HW_S_PLANS["fourth"] += """
         X 12 0 chest:s
         X 13 0 chest:s
         X 14 0 barrel:s
-        R 26 4 30 6 red
+        R 27 4 29 5 red
         G 28 0 s
         C 46 7 s
         C 47 7 s
