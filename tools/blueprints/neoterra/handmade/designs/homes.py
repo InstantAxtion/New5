@@ -3054,10 +3054,12 @@ def ph_shell(d, x1, z1, x2, z2, y1, y2, part="wall"):
         nt_box(d, x1, z1, x2, z2, y1, y2, "white_concrete", "polished_blackstone")
 
 
-def ph_tower(d, x1, z1, floors, uses):
-    """7x7 tower of `floors` storeys joined by a ladder, door in the north wall; `uses` per floor:
-    library / alchemy / study / armory / observatory. Pyramid roof (flat glazed lantern in Neoterra)."""
+def ph_tower(d, x1, z1, rooms):
+    """7x7 tower, one storey per entry of `rooms` (each a hand-written list of (dx, dy, dz, block) relative to the
+    tower's north-west corner and that floor's walking level), joined by a ladder in the north-west corner,
+    door in the north wall. The last floor is glazed all round. Pyramid roof (flat glazed lantern in Neoterra)."""
     p = d.pack
+    floors = len(rooms)
     x2, z2 = x1 + 6, z1 + 6
     W = SHELL[p]["wood"]
     H = 4
@@ -3068,65 +3070,20 @@ def ph_tower(d, x1, z1, floors, uses):
         d.fill(x1 + 1, Y - 1, z1 + 1, x2 - 1, Y - 1, z2 - 1, f"{W}_planks" if p != "Neoterra" else "polished_diorite")
         d.clear(x1 + 1, Y, z1 + 1, x2 - 1, Y + H - 1, z2 - 1)
         for x in (x1 + 2, x1 + 4):
-            d.window(x, Y + 1, z1, x, Y + 2, z1) if f else None
+            if f:
+                d.window(x, Y + 1, z1, x, Y + 2, z1)
             d.window(x, Y + 1, z2, x, Y + 2, z2)
         d.window(x1, Y + 1, z1 + 3, x1, Y + 2, z1 + 3)
         d.window(x2, Y + 1, z1 + 3, x2, Y + 2, z1 + 3)
-        use = uses[f % len(uses)]
-        if use == "library":
-            for z in range(z1 + 1, z2):
-                for k in range(3):
-                    d.set(x2 - 1, Y + k, z, "bookshelf" if (z + k) % 3 else
-                          "chiseled_bookshelf[facing=west,slot_0_occupied=true,slot_1_occupied=true,slot_2_occupied="
-                          "false,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
-            d.set(x1 + 3, Y, z2 - 1, "lectern[facing=north,has_book=false,powered=false]")
-            d.set(x1 + 2, Y, z1 + 3, slab(W, "top"))
-            d.chair(x1 + 2, Y, z1 + 4, "south", W, sit=False)
-            rugc(d, x1 + 2, z1 + 2, x1 + 4, z1 + 4, Y, "purple")
-        elif use == "alchemy":
-            for z in range(z1 + 2, z2):
-                d.set(x2 - 1, Y, z, slab(W, "top") if z % 2 else "water_cauldron[level=3]")
-                d.set(x2 - 1, Y + 1, z, "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]"
-                      if z % 2 else AIR)
-            d.set(x1 + 3, Y, z2 - 1, "cauldron")
-            d.set(x1 + 2, Y, z2 - 1, "barrel[facing=north,open=false]")
-            d.set(x1 + 4, Y, z2 - 1, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
-            rugc(d, x1 + 2, z1 + 2, x1 + 4, z1 + 3, Y, "green")
-        elif use == "armory":
-            for z in range(z1 + 1, z2):
-                d.set(x2 - 1, Y, z, "smithing_table" if z == z1 + 3 else f"{W}_planks")
-                d.set(x2 - 1, Y + 1, z, ("red_wall_banner[facing=west]" if z % 2 else
-                                         "iron_bars"))
-            d.set(x1 + 3, Y, z2 - 1, "grindstone[face=floor,facing=north]")
-            d.set(x1 + 2, Y, z2 - 1, "chest[facing=north,type=single,waterlogged=false]")
-            d.set(x1 + 4, Y, z2 - 1, "anvil[facing=east]")
-        elif use == "study":
-            d.set(x2 - 1, Y, z1 + 2, slab(W, "top"))
-            d.set(x2 - 1, Y, z1 + 3, slab(W, "top"))
-            d.set(x2 - 1, Y + 1, z1 + 2, "candle[candles=3,lit=false,waterlogged=false]")
-            d.chair(x2 - 2, Y, z1 + 3, "west", W, sit=False)
-            d.set(x2 - 1, Y, z2 - 1, "cartography_table")
-            d.set(x1 + 3, Y, z2 - 1, "chest[facing=north,type=single,waterlogged=false]")
-            d.set(x2 - 1, Y, z1 + 4, "bookshelf")
-            rugc(d, x1 + 2, z1 + 2, x1 + 4, z1 + 4, Y, "blue")
-        elif use == "observatory":
-            d.set(x1 + 3, Y, z1 + 3, fence(W))
-            d.set(x1 + 3, Y + 1, z1 + 3, "end_rod[facing=north]")
-            d.set(x1 + 2, Y, z2 - 1, "cartography_table")
-            d.chair(x1 + 4, Y, z2 - 1, "south", W, sit=False)
-            for x in range(x1 + 1, x2):
+        if f == floors - 1:                                  # lantern room glazed on all sides
+            for x in (x1 + 1, x1 + 3, x1 + 5):
                 for z in (z1, z2):
-                    if x % 2:
-                        d.set(x, Y + 1, z, "glass_pane")
-                        d.set(x, Y + 2, z, "glass_pane")
-        # light on chains
-        d.set(x1 + 3, Y + H - 2, z1 + 3, lantern(True) if p != "Neoterra" else "sea_lantern") if use != "observatory" \
-            else None
-    # ladder up in the north-west corner through every floor
+                    d.window(x, Y + 1, z, x, Y + 2, z)
+        for dx, dy, dz, b in rooms[f]:
+            d.set(x1 + dx, Y + dy, z1 + dz, b)
     for y in range(d.gy + 1, d.gy + 1 + H * (floors - 1) + 1):
         d.set(x1 + 1, y, z1 + 1, "ladder[facing=east,waterlogged=false]")
     d.door(x1 + 3, d.gy + 1, z1, "south", W)
-    # roof
     if p == "Neoterra":
         d.flat(x1, z1, x2, z2, top, "smooth_quartz", "glass", "smooth_quartz_slab")
         d.set(x1 + 3, top + 1, z1 + 3, "lightning_rod[facing=up,powered=false,waterlogged=false]")
@@ -3136,6 +3093,61 @@ def ph_tower(d, x1, z1, floors, uses):
         _spire(d, x1, z1, x2, z2, top, rb)
     return top
 
+
+def tower_rooms(W, which):
+    """Hand-written floor programmes for the estate towers (interior dx/dz 1..5, ladder at (1,1), door (3,0))."""
+    TS = slab(W, "top")
+    light = (3, 2, 3, LANT)
+    shelf = lambda dx, dz: [(dx, dy, dz, "bookshelf") for dy in (0, 1, 2)]
+    if which == "lore":           # library tower: library, still-room, study, star room
+        return [
+            shelf(5, 1) + shelf(5, 2) + shelf(5, 4) + shelf(5, 5) + [
+                (5, 0, 3, "lectern[facing=west,has_book=false,powered=false]"), (2, 0, 3, TS), (2, 0, 4, stair(W, "south")),
+                (2, 1, 3, "candle[candles=3,lit=false,waterlogged=false]"), (3, 0, 5, "potted_fern"),
+                (3, 0, 2, "purple_carpet"), (3, 0, 3, "purple_carpet"), (4, 0, 3, "purple_carpet"), light],
+            [(5, 0, 2, TS), (5, 1, 2, "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]"),
+             (5, 0, 3, CAUL), (5, 0, 4, TS), (5, 1, 4, "brewing_stand[has_bottle_0=false,has_bottle_1=true,has_bottle_2=true]"),
+             (5, 0, 5, BRL("west")), (3, 0, 5, "cauldron"), (2, 0, 5, BRL("north")), (4, 0, 5, POT),
+             (3, 0, 3, "green_carpet"), (4, 0, 3, "green_carpet"), light],
+            [(5, 0, 2, TS), (5, 0, 3, TS), (5, 1, 2, "candle[candles=2,lit=false,waterlogged=false]"),
+             (4, 0, 3, stair(W, "west")), (5, 0, 5, "cartography_table"), (3, 0, 5, CHEST("north")),
+             (5, 0, 4, "bookshelf"), (2, 0, 3, "blue_carpet"), (3, 0, 3, "blue_carpet"), light],
+            [(3, 0, 3, fence(W)), (3, 1, 3, "end_rod[facing=north]"), (4, 0, 5, stair(W, "south")),
+             (2, 0, 5, "cartography_table"), (5, 0, 5, CHEST("west"))]]
+    if which == "guard":          # armoury tower: armoury, archive, map room, still-room, beacon room
+        return [
+            [(5, 0, 2, "smithing_table"), (5, 0, 3, "anvil[facing=north]"), (5, 0, 4, GRIND("west")),
+             (5, 1, 2, "red_wall_banner[facing=west]"), (5, 1, 4, "red_wall_banner[facing=west]"),
+             (3, 0, 5, CHEST("north")), (2, 0, 5, BRL("north")), (4, 0, 5, BRL("north")), light],
+            shelf(5, 2) + shelf(5, 3) + shelf(5, 4) + [(2, 0, 5, CHEST("north")), (3, 0, 5, CHEST("north")),
+                                                     (4, 0, 5, CHEST("north")), (3, 0, 3, "brown_carpet"), light],
+            [(4, 0, 3, "cartography_table"), (4, 0, 4, stair(W, "south")),
+             (5, 0, 2, "lectern[facing=west,has_book=false,powered=false]"), (5, 1, 4, "blue_wall_banner[facing=west]"),
+             (2, 0, 5, "potted_fern"), (3, 0, 2, "white_carpet"), (3, 0, 3, "white_carpet"), light],
+            [(5, 0, 3, CAUL), (5, 0, 4, TS), (5, 1, 4, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]"),
+             (2, 0, 5, BRL("north")), (3, 0, 5, BRL("north")), (4, 0, 5, "composter[level=5]"), light],
+            [(3, 0, 3, fence(W)), (3, 1, 3, "end_rod[facing=south]"), (2, 0, 2, stair(W, "west")),
+             (5, 0, 5, "cartography_table")]]
+    if which == "rest":           # garden tower: guest bedroom, sitting room, music room, belvedere
+        return [
+            [(5, 0, 5, "red_bed[facing=east,occupied=false,part=head]"),
+             (4, 0, 5, "red_bed[facing=east,occupied=false,part=foot]"), (5, 0, 4, TS),
+             (5, 1, 4, "candle[candles=1,lit=false,waterlogged=false]"), (2, 0, 5, CHEST("north")),
+             (3, 0, 3, "red_carpet"), (4, 0, 3, "red_carpet"), light],
+            [(4, 0, 4, stair(W, "south")), (5, 0, 4, stair(W, "south")), (4, 0, 2, slab(W)), (2, 0, 5, "bookshelf"),
+             (3, 0, 5, "potted_azalea_bush"), (3, 0, 3, "green_carpet"), light],
+            [(4, 0, 4, "note_block[instrument=harp,note=5,powered=false]"), (3, 0, 4, stair(W, "east")),
+             (5, 0, 2, "jukebox"), (2, 0, 5, "potted_fern"), light],
+            [(2, 0, 5, stair(W, "south")), (4, 0, 5, stair(W, "south")), (3, 0, 5, slab(W, "top")),
+             (3, 1, 5, "potted_red_tulip")]]
+    return [                      # watch tower: trophy room, guard room, lookout
+        [(5, 0, 2, BRL("west")),
+         (5, 1, 3, "green_wall_banner[facing=west]"), (5, 0, 4, CHEST("west")), (3, 0, 5, stair(W, "south")),
+         (2, 0, 5, "potted_fern"), (3, 0, 3, "brown_carpet"), light],
+        [(5, 0, 5, "brown_bed[facing=south,occupied=false,part=head]"),
+         (5, 0, 4, "brown_bed[facing=south,occupied=false,part=foot]"), (4, 0, 5, TS), (2, 0, 5, BRL("north")),
+         (3, 0, 3, slab(W, "top")), (3, 0, 4, stair(W, "south")), light],
+        [(3, 0, 5, stair(W, "south")), (5, 0, 3, fence(W)), (5, 1, 3, LANTF)]]
 
 def _spire(d, x1, z1, x2, z2, y, rb):
     """Steep pyramid roof: rings of stairs, two layers per ring, finial on top."""
@@ -3161,9 +3173,9 @@ def _spire(d, x1, z1, x2, z2, y, rb):
         yy += 2
 
 
-def ph_hall(d, x1, z1, x2, z2, h=6):
-    """Great hall: tall single room with long tables and benches, hearths at both ends, banners,
-    chandeliers on chains; door in the north wall."""
+def ph_hall(d, x1, z1, x2, z2, h=6, hearths=True):
+    """Shell of a tall hall: walls, tall windows, roof with tie beams, double door in the north wall and (optionally)
+    a hearth at each end. Furnished by hand at the call site."""
     p = d.pack
     W = SHELL[p]["wood"]
     y0 = d.gy + 1
@@ -3195,31 +3207,10 @@ def ph_hall(d, x1, z1, x2, z2, h=6):
     zc = (z1 + z2) // 2
     fire = "soul_campfire" if p == "Neoterra" else "campfire"
     frame = {"Hearthwood": "stone_bricks", "Cascadia": "cobblestone", "Neoterra": "polished_blackstone_bricks"}[p]
-    fireplace(d, x1, zc, y0, "east", yt + 4, frame, frame, fire)
-    fireplace(d, x2, zc, y0, "west", yt + 4, frame, frame, fire)
-    # long tables with benches
-    for tz in (zc - 2, zc + 2):
-        if tz - 1 <= z1 or tz + 1 >= z2:
-            continue
-        for x in range(x1 + 4, x2 - 3):
-            d.table(x, y0, tz, W, "slab")
-            d.chair(x, y0, tz - 1, "north", W, sit=False)
-            d.chair(x, y0, tz + 1, "south", W, sit=False)
-            if x in (x1 + 4, (x1 + x2) // 2, x2 - 4):
-                d.candle(x, y0 + 1, tz, 3)
-    # three chandeliers over the tables, banners on the back wall between the windows
-    third = (x2 - x1) // 4
-    for x in (x1 + third, (x1 + x2) // 2, x2 - third):
-        for y in range(yt - 1, yt + 1):
-            if d.air(x, y, zc):
-                d.set(x, y, zc, "chain[axis=y,waterlogged=false]")
-        d.set(x, yt - 2, zc, lantern(True) if p != "Neoterra" else "sea_lantern")
-    col = {"Hearthwood": "red", "Cascadia": "green", "Neoterra": "cyan"}[p]
-    for x in (x1 + 1 + 3, (x1 + x2) // 2 + 1, x2 - 1 - 3):
-        if d.air(x, y0 + 3, z2 - 1):
-            d.banner(x, y0 + 3, z2 - 1, "north", col)
-    return d
-
+    if hearths:
+        fireplace(d, x1, zc, y0, "east", yt + 4, frame, frame, fire)
+        fireplace(d, x2, zc, y0, "west", yt + 4, frame, frame, fire)
+    return zc
 
 def ph_vault(d, x1, z1, x2, z2, h=4):
     """Storehouse: barrel shelving three high along the walls and back-to-back down the middle."""
@@ -3281,7 +3272,7 @@ def player_estate(rel, L):
     else:
         T1, G, HALL, VAULT, T2 = (32, 34), (40, 34, 62, 50), (32, 2, 62, 12), (2, 34, 26, 46), (32, 52)
     if L >= 3:
-        ph_tower(d, T1[0], T1[1], 4, ("library", "alchemy", "study", "observatory"))
+        ph_tower(d, T1[0], T1[1], tower_rooms(W, "lore"))
         recolor(d, pal_tower, (T1[0] - 1, T1[1] - 1, T1[0] + 7, T1[1] + 7, 2))
         gx1, gz1, gx2, gz2 = G
         hedge(d, gx1, gz1, gx2, gz2, "oak" if pack != "Cascadia" else "spruce",
@@ -3303,6 +3294,7 @@ def player_estate(rel, L):
                 d.set(x, 3, z, ("rose_bush[half=upper]", "peony[half=upper]", "lilac[half=upper]")[x % 3])
     if L >= 4:
         ph_hall(d, *HALL, h=7)
+        hall_furniture(d, pack, W)
         recolor(d, pal_hall, (HALL[0] - 2, HALL[1] - 1, HALL[2] + 2, HALL[3] + 1, 2))
         hx = (HALL[0] + HALL[2]) // 2
         for x in (HALL[0], HALL[2]):
@@ -3312,12 +3304,23 @@ def player_estate(rel, L):
         for x in range(VAULT[0], VAULT[2] + 1, 6):
             lamp_post(d, x, VAULT[1] - 2, 1, lamp)
     if L >= 5:
-        ph_tower(d, T2[0], T2[1], 5, ("armory", "library", "study", "alchemy", "observatory"))
+        ph_tower(d, T2[0], T2[1], tower_rooms(W, "guard"))
         recolor(d, pal_tower, (T2[0] - 1, T2[1] - 1, T2[0] + 7, T2[1] + 7, 2))
-        ph_tower(d, 2, 50, 4, ("study", "library", "alchemy", "observatory"))
+        ph_tower(d, 2, 50, tower_rooms(W, "rest"))
         T3 = {"Hearthwood": (42, 50), "Cascadia": (50, 50), "Neoterra": (50, 54)}[pack]
-        ph_tower(d, T3[0], T3[1], 3, ("armory", "study", "observatory"))
-        ph_hall(d, 12, 50, 30, 61, h=5)
+        ph_tower(d, T3[0], T3[1], tower_rooms(W, "watch"))
+        ph_hall(d, 12, 50, 30, 61, h=5, hearths=False)
+        # estate chapel: pews either side of the aisle facing the altar, candles, banners
+        for z in (53, 55, 57):
+            for x in (14, 15, 16, 17, 18, 19, 24, 25, 26, 27, 28, 29):
+                d.set(x, 2, z, stair(W, "north"))
+        fit(d, [(20, 2, 60, "chiseled_stone_bricks"), (21, 2, 60, "chiseled_stone_bricks"),
+                (22, 2, 60, "chiseled_stone_bricks"), (20, 3, 60, "candle[candles=3,lit=false,waterlogged=false]"),
+                (22, 3, 60, "candle[candles=3,lit=false,waterlogged=false]"), (21, 3, 60, POT),
+                (21, 2, 58, "lectern[facing=north,has_book=false,powered=false]"),
+                (14, 4, 60, "white_wall_banner[facing=north]"), (28, 4, 60, "white_wall_banner[facing=north]"),
+                (17, 6, 55, CHAIN), (17, 5, 55, LANT), (26, 6, 55, CHAIN), (26, 5, 55, LANT),
+                (13, 2, 51, "potted_fern"), (29, 2, 51, "potted_fern")])
         recolor(d, pal_vault, (10, 49, 32, 62, 2))
         # estate wall with a gate on the street and piers with lamps
         wall = {"Hearthwood": "stone_brick_wall", "Cascadia": "cobblestone_wall", "Neoterra": "polished_blackstone_wall"}[pack]
@@ -3338,6 +3341,49 @@ def player_estate(rel, L):
                     d.set(x, 2, z, f"{wall}[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
                     d.set(x, 3, z, lantern(False))
     return d
+
+
+def hall_furniture(d, pack, W):
+    """Hand-placed furniture of each pack's great hall (coordinates of that pack's HALL rectangle)."""
+    TS = slab(W, "top")
+    if pack == "Hearthwood":        # feast hall x34..61 z33..43: two long tables, high table on the east, banners
+        for z in (36, 40):
+            for x in range(37, 58):
+                d.set(x, 2, z, TS)
+                d.set(x, 2, z - 1, stair(W, "north"))
+                d.set(x, 2, z + 1, stair(W, "south"))
+        for z in range(36, 41):
+            d.set(59, 2, z, TS)
+            d.set(60, 2, z, stair(W, "east"))
+        fit(d, [(40, 3, 36, "candle[candles=3,lit=false,waterlogged=false]"), (47, 3, 40, POT),
+                (54, 3, 36, "candle[candles=3,lit=false,waterlogged=false]"), (59, 3, 38, POT),
+                (40, 7, 38, CHAIN), (40, 8, 38, CHAIN), (40, 6, 38, LANT), (47, 7, 38, CHAIN), (47, 8, 38, CHAIN),
+                (47, 6, 38, LANT), (54, 7, 38, CHAIN), (54, 8, 38, CHAIN), (54, 6, 38, LANT),
+                (38, 5, 43, "red_wall_banner[facing=north]"), (47, 5, 43, "red_wall_banner[facing=north]"),
+                (56, 5, 43, "red_wall_banner[facing=north]"), (35, 2, 42, BRL("north")), (36, 2, 42, BRL("north"))])
+    elif pack == "Cascadia":        # lodge hall x34..61 z3..13: crosswise bench tables, bear rug, keg corner
+        for x in (40, 54):
+            for z in range(5, 12):
+                d.set(x, 2, z, TS)
+                d.set(x - 1, 2, z, stair(W, "west"))
+                d.set(x + 1, 2, z, stair(W, "east"))
+        rugc(d, 45, 7, 50, 9, 2, "brown")
+        fit(d, [(60, 2, 12, BRL("north")), (61, 2, 12, BRL("north")), (61, 3, 12, BRL()), (60, 2, 11, slab(W, "top")),
+                (47, 7, 8, CHAIN), (47, 8, 8, CHAIN), (47, 6, 8, LANT), (40, 7, 8, CHAIN), (40, 6, 8, LANT),
+                (54, 7, 8, CHAIN), (54, 6, 8, LANT), (37, 5, 13, "green_wall_banner[facing=north]"),
+                (47, 5, 13, "green_wall_banner[facing=north]"), (57, 5, 13, "green_wall_banner[facing=north]"),
+                (40, 3, 8, "candle[candles=2,lit=false,waterlogged=false]"), (54, 3, 8, POT)])
+    else:                           # banquet gallery x33..61 z3..11: round tables, a bar on the back wall
+        for tx, tz in ((38, 5), (38, 9), (44, 9), (52, 9), (56, 5), (56, 9)):
+            d.set(tx, 2, tz, slab("smooth_quartz", "top"))
+            d.set(tx, 3, tz, "potted_azure_bluet" if tx % 4 else "candle[candles=3,lit=false,waterlogged=false]")
+            for dx, dz, back in ((0, -1, "north"), (0, 1, "south"), (-1, 0, "west"), (1, 0, "east")):
+                d.set(tx + dx, 2, tz + dz, stair(W, back))
+        for x in range(45, 51):
+            d.set(x, 2, 11, slab("smooth_quartz", "top"))
+        fit(d, [(44, 2, 11, BRL("north")), (51, 2, 11, BRL("north")), (47, 3, 11, POT),
+                (40, 9, 7, "sea_lantern"), (47, 9, 7, "sea_lantern"), (54, 9, 7, "sea_lantern"),
+                (36, 5, 11, "cyan_wall_banner[facing=north]"), (58, 5, 11, "cyan_wall_banner[facing=north]")])
 
 
 REQ_PACK = [None]

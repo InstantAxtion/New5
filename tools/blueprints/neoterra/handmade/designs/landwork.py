@@ -800,7 +800,10 @@ def miner_hearthwood(rel, L):
     d.set(12, 2, 6, "spruce_slab[type=top,waterlogged=false]")           # assay / pay table
     d.set(12, 3, 6, "candle[candles=3,lit=false,waterlogged=false]")
     d.chair(13, 2, 6, "east", "spruce", sit=False)
-    floor_rug(d, ch, 2, inset=3)
+    d.rug(11, 7, 13, 8, 2, ("red_carpet", "orange_carpet"))
+    hang(d, 4, [(11, 5), (13, 7)])
+    wbox(d, 11, 3, 9, "s", "potted_red_tulip", "spruce")
+    torch(d, 12, 4, 2, "north")
     d.sign(13, 4, 2, "north", ["WHEAL", "HEARTH", "Count House"], "spruce")
     lamp_post(d, 16, 2)
     track(d, [(21, z) for z in range(11, 6, -1)] + [(x, 7) for x in range(22, 28)], 2)
@@ -827,6 +830,10 @@ def miner_hearthwood(rel, L):
         counter(d, eh, "s", 7, 1, [P.b("lever[face=floor,facing=north,powered=false]"), P.chair("dark_oak"),
                             P.shelf("dark_oak", "lantern[hanging=false,waterlogged=false]")])
         rack_bay(d, eh, "w", 2, 0)
+        hang(d, 5, [(13, 13), (16, 15)])
+        hang(d, 10, [(14, 13)])
+        shutters(d, 13, 3, 11, "n", "dark_oak")
+        shutters(d, 16, 3, 11, "n", "dark_oak")
     # ---- L3: boiler house and ore dressing floor ----
     if L >= 3:
         bh = bld(d, 10, 19, 18, 24, floors=1, axis="x", doors=[(14, 19, "n")], chimney=(18, 22),
@@ -849,6 +856,8 @@ def miner_hearthwood(rel, L):
             d.set(x, 3, 14, ("raw_iron_block", "raw_copper_block", "gravel", "coal_block", "raw_gold_block")[x % 5])
         track(d, [(x, 15) for x in range(25, 36)], 2)
         rack_bay(d, bh, "n", 2, 1)
+        hang(d, 4, [(14, 21)])
+        shutters(d, 16, 3, 24, "s", "spruce")
         # ore bins: timber hoppers on a stone platform beside the shaft
         for i, x in enumerate((26, 29, 32)):
             d.fill(x, 2, 21, x + 1, 2, 22, "cobblestone")
@@ -878,7 +887,21 @@ def miner_hearthwood(rel, L):
         for x in (28, 31, 34):
             d.bed(x, 6, 3, "north")
         counter(d, dr, "s", 6, 1, [P.b("chest[facing={f},type=single,waterlogged=false]")] * 3)
-        floor_rug(d, dr, 6, inset=2)
+        d.rug(29, 5, 33, 6, 6, ("red_carpet", "white_carpet"))
+        hang(d, 4, [(29, 7), (33, 7)])
+        hang(d, 8, [(31, 6)])
+        flowerbed(d, 26, 11, 30, 11, ("poppy", "azure_bluet", "oxeye_daisy"))     # pithead garden along the dry
+        flowerbed(d, 32, 11, 36, 11, ("cornflower", "poppy", "allium"))
+        lamp_post(d, 38, 10)
+        bench(d, 27, 13, "north", 2)
+        bench(d, 33, 13, "north", 2)
+        woodpile(d, 38, 2, 4, "z")
+        cart(d, 40, 12, "z", "coal_block")
+        lamp_post(d, 25, 10)
+        lamp_post(d, 39, 24)
+        wbox(d, 29, 3, 2, "n", "potted_poppy", "dark_oak")
+        wbox(d, 35, 3, 2, "n", "potted_poppy", "dark_oak")
+        shutters(d, 32, 7, 2, "n")
         pm = bld(d, 40, 27, 44, 31, floors=1, roof="hip", doors=[(42, 27, "n")], win=99,
                  pal=dict(wall="stone_bricks", plinth="stone_bricks", roof="deepslate_tile", framing=False,
                           frame="stripped_spruce_log"))
@@ -896,6 +919,8 @@ def miner_hearthwood(rel, L):
         counter(d, sm, "w", 2, 3, [P.b("anvil[facing=north]"), P.b("grindstone[face=floor,facing={f}]"),
                             P.b("water_cauldron[level=3]"), P.b("smithing_table")])
         counter(d, sm, "e", 2, 0, [P.b("barrel[facing=up,open=false]", "chain[axis=y,waterlogged=false]")] * 2)
+        hang(d, 4, [(5, 25)])
+        shutters(d, 2, 3, 26, "w", "spruce")
         for i, x0 in enumerate((10, 17, 24)):
             cot = bld(d, x0, 28, x0 + 5, 34, floors=2, axis="z", doors=[(x0 + 2, 28, "n")], chimney=(x0 + 5, 31),
                       pal=dict(wall=("white_terracotta", "yellow_terracotta", "pink_terracotta")[i],
@@ -911,6 +936,9 @@ def miner_hearthwood(rel, L):
             up.put(1, 0, "candle[candles=2,lit=false,waterlogged=false]", 1)
             up.put(3, 0, CHEST)
             up.put(0, 0, BARREL)
+            hang(d, 4, [(x0 + 3, 30)])
+            hang(d, 8, [(x0 + 3, 32)])
+            wbox(d, x0 + 3, 3, 34, "s", ("potted_poppy", "potted_cornflower", "potted_oxeye_daisy")[i], "spruce")
             flowerbed(d, x0, 26, x0 + 5, 26)
         for x in range(36, 45):                                       # spoil heap
             for z in range(12, 23):
@@ -946,6 +974,12 @@ def miner_cascadia(rel, L):
             d.set(14, 2, z, "spruce_fence")
     counter(d, hh, "e", 2, 0, [P.rack()] * min(2, need_racks(d)))
     porch(d, 12, 20, 13, 3, "n", gaps=(16,))
+    d.chair(13, 2, 12, "north", "spruce", sit=False)
+    d.chair(19, 2, 12, "north", "spruce", sit=False)
+    hang(d, 5, [(14, 11), (18, 11)])
+    hang(d, 4, [(16, 16), (16, 19)])
+    shutters(d, 20, 3, 19, "e")
+    shutters(d, 18, 3, 21, "s")
     d.sign(18, 4, 12, "north", ["TIMBERLINE", "MINE", "No. 1"], "spruce")
     track(d, [(cx + 2, z) for z in range(cz - 2, cz - 9, -1)], 2)
     lamp_post(d, 11, 12)
@@ -983,6 +1017,8 @@ def miner_cascadia(rel, L):
         counter(d, as_, "n", 2, 1, [P.b("brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]"), P.b("blast_furnace[facing={f},lit=true]"),
                              P.shelf("spruce", "lantern[hanging=false,waterlogged=false]"), P.books()])
         rack_bay(d, as_, "w", 2, 0)
+        hang(d, 4, [(17, 5)])
+        shutters(d, 14, 3, 5, "w", "spruce")
         d.sign(17, 4, 9, "south", ["ASSAY", "OFFICE"], "spruce")
     # ---- L3: bunkhouse ----
     if L >= 3:
@@ -995,8 +1031,14 @@ def miner_cascadia(rel, L):
         for x in (27, 29, 31, 33):
             d.bed(x, 6, 3, "north")
             d.bed(x, 6, 8, "south")
-        floor_rug(d, bk, 6, inset=3)
+        d.rug(28, 5, 31, 6, 6, ("brown_carpet", "red_carpet"))
+        hang(d, 4, [(27, 4), (31, 4)])
+        hang(d, 8, [(30, 5)])
         porch(d, 24, 35, 9, 2, "s", gaps=(29,))
+        d.chair(25, 2, 10, "south", "spruce", sit=False)
+        d.chair(34, 2, 10, "south", "spruce", sit=False)
+        shutters(d, 27, 3, 2, "n", "spruce")
+        shutters(d, 33, 3, 2, "n", "spruce")
         rack_bay(d, hh, "e", 2, 0)
     # ---- L4: stamp mill stepping down the slope ----
     if L >= 4:
@@ -1025,12 +1067,15 @@ def miner_cascadia(rel, L):
         d.hearth(3, 2, 28, "east", 5, "cobblestone", "campfire")
         counter(d, bs, "e", 2, 6, [P.b("anvil[facing=north]"), P.b("grindstone[face=floor,facing={f}]"), P.b("water_cauldron[level=3]")])
         counter(d, bs, "n", 2, 0, [P.b("smithing_table"), P.b("barrel[facing=up,open=false]")])
+        hang(d, 4, [(5, 28)])
+        shutters(d, 2, 3, 30, "w", "spruce")
         lh = bld(d, 39, 2, 45, 9, floors=1, axis="z", doors=[(42, 9, "s")],
                  pal=dict(wall="mangrove_planks", siding="mangrove_planks", batten="stripped_spruce_log",
                           end="mangrove_planks", roof="cobbled_deepslate", shutter="birch"))
-        for z in range(3, 9):
+        for z in range(3, 9):                                         # lamp charging shelf
             d.set(44, 2, z, "spruce_slab[type=top,waterlogged=false]")
             d.set(44, 3, z, "lantern[hanging=false,waterlogged=false]")
+        hang(d, 4, [(41, 5)])
         for x in range(39, 47):
             for z in range(14, 30):
                 h = 4 - (abs(x - 43) + abs(z - 22)) // 2
@@ -1050,13 +1095,25 @@ def miner_cascadia(rel, L):
         for x in (14, 16, 18, 20):
             d.bed(x, 6, 27, "north")
         counter(d, ck, "s", 6, 5, [P.b("chest[facing={f},type=single,waterlogged=false]")] * 3)
-        floor_rug(d, ck, 6, inset=2)
+        d.rug(15, 30, 18, 31, 6, ("brown_carpet", "green_carpet"))
+        hang(d, 4, [(15, 30), (19, 30)])
+        hang(d, 8, [(17, 30)])
         porch(d, 12, 22, 26, 2, "n", gaps=(17,))
+        d.chair(13, 2, 25, "north", "spruce", sit=False)
+        d.chair(21, 2, 25, "north", "spruce", sit=False)
+        hang(d, 5, [(14, 24), (20, 24)])
+        wbox(d, 15, 3, 33, "s", "potted_fern", "spruce")
 
-    # ---- room fit-out ----
     if L >= 4:
-        lay_store(Rm(d, mm, 8, "s", "spruce"), 0, kinds=(BARREL, "coal_block", "raw_iron_block"))
-        lay_office(Rm(d, mm, 8, "w", "spruce"))
+        # stamp mill upper floor: ore sample store and the mill boss's desk
+        pl(d, 8, [(26, 26, BARREL), (27, 26, "coal_block"), (28, 26, "raw_iron_block"), (29, 26, BARREL),
+                  (25, 20, "lectern[facing=east,has_book=true,powered=false]"), (25, 21, BOOKS.replace("{in}", "east")),
+                  (27, 21, "spruce_slab[type=top,waterlogged=false]")])
+        pl(d, 9, [(27, 21, CANDLE), (26, 26, BARREL)])
+        d.chair(27, 8, 22, "south", "spruce", sit=False)
+        hang(d, 6, [(30, 21), (30, 24)])
+        hang(d, 12, [(30, 22)])
+        shutters(d, 27, 3, 16, "n", "dark_oak")
     paste_cluster(d, cx, cz)
     return d
 
@@ -1098,17 +1155,26 @@ def miner_neoterra(rel, L):
     for z in (6, 7):                                                  # lamp room lockers
         d.set(12, 2, z + 2, "iron_block")
         d.set(12, 3, z + 2, "iron_trapdoor[facing=east,half=bottom,open=true,powered=false,waterlogged=false]")
-    floor_rug(d, st_, 2, ("yellow_carpet", "gray_carpet"), inset=3)
+    d.rug(14, 9, 16, 11, 2, ("yellow_carpet", "gray_carpet"))
+    ceil_light(d, 5, [(14, 8), (16, 11)])
+    hood(d, 15, 5, 5, "n")
     lamp_post(d, 10, 3)
     lamp_post(d, 20, 3)
-    for x in range(11, 20, 2):
-        d.set(x, 2, 3, "yellow_concrete" if x % 4 == 1 else "polished_blackstone_slab[type=bottom,waterlogged=false]")
+    for x, b in ((11, "polished_blackstone_slab[type=bottom,waterlogged=false]"), (13, "yellow_concrete"),
+                 (17, "yellow_concrete"), (19, "polished_blackstone_slab[type=bottom,waterlogged=false]")):
+        d.set(x, 2, 3, b)                                             # bollards along the station front
     if fl == 2:
         counter(d, st_, "n", 6, 1, [P.b("smooth_quartz_slab[type=top,waterlogged=false]", "lantern[hanging=false,waterlogged=false]"),
                              P.chair("birch"), P.b("observer[facing=up,powered=false]"), P.chair("birch"),
                              P.b("lectern[facing={f},has_book=true,powered=false]")])
         rack_bay(d, st_, "w", 6, 1)
-        floor_rug(d, st_, 6, ("gray_carpet",), inset=2)
+        d.rug(13, 9, 16, 11, 6, ("gray_carpet", "yellow_carpet"))
+        for x in (12, 13, 17, 18):                                    # planters at the station entrance
+            d.set(x, 2, 4, "moss_block")
+            d.set(x, 3, 4, "azalea" if x % 2 else "fern")
+        bench(d, 13, 2, "north", 2)
+        lamp_post(d, 21, 12)
+        ceil_light(d, 9, [(14, 9)])
         for x in range(cx + 5, 11):                                    # conveyor bridge from the tower
             for z in (cz, cz + 2):
                 d.set(x, 8, z, "light_gray_concrete")
@@ -1131,6 +1197,12 @@ def miner_neoterra(rel, L):
         counter(d, ph, "n", 7, 1, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]")] * 6)
         counter(d, ph, "s", 7, 1, [P.chair("birch"), P.b("smooth_quartz_slab[type=top,waterlogged=false]", "lantern[hanging=false,waterlogged=false]")] * 3)
         rack_bay(d, ph, "w", 7, 1)
+        pl(d, 7, [(29, 9, "smooth_quartz_slab[type=top,waterlogged=false]"), (30, 9, "smooth_quartz_slab[type=top,waterlogged=false]")])
+        pl(d, 8, [(29, 9, CANDLE), (30, 9, "potted_bamboo")])
+        d.chair(29, 7, 10, "south", "birch", sit=False)
+        d.rug(27, 11, 31, 12, 7, ("yellow_carpet", "gray_carpet"))
+        ceil_light(d, 6, [(26, 9), (31, 9)])
+        ceil_light(d, 11, [(28, 9), (32, 9)])
     # ---- L4: ore silos and control tower ----
     if L >= 4:
         for i, x0 in enumerate((24, 29, 34)):
@@ -1150,10 +1222,9 @@ def miner_neoterra(rel, L):
             d.set(40, y, 5, "smooth_quartz_slab[type=top,waterlogged=false]")
             d.set(41, y, 5, "observer[facing=up,powered=false]" if k % 2 else "lectern[facing=south,has_book=true,powered=false]")
             d.chair(40, y, 6, "south", "birch", sit=False)
-        for z in range(15, 22):
-            for x in range(22, 24):
-                if (x + z) % 2:
-                    d.set(x, 1, z, "yellow_concrete")
+            ceil_light(d, y + 3, [(41, 7)])
+        for z in range(15, 22):                                       # walkway edge marking by the silos
+            d.set(22, 1, z, "yellow_concrete")
     # ---- L5: admin block, staff canteen, parking canopy with solar ----
     if L >= 5:
         ad = bld(d, 2, 22, 18, 33, floors=3, roof="flat", doors=[(10, 22, "n")], ribbon=True,
@@ -1170,7 +1241,6 @@ def miner_neoterra(rel, L):
                 d.chair(x, y, 26, "south", "birch", sit=False)
                 d.set(x, y + 1, 25, "lantern[hanging=false,waterlogged=false]")
             counter(d, ad, "w", y, 1, [P.books()] * 4)
-            floor_rug(d, ad, y, ("gray_carpet", "yellow_carpet"), inset=3)
         for x in range(21, 44):
             for z in range(25, 33):
                 if x in (21, 43) and z in (25, 32):
@@ -1183,13 +1253,22 @@ def miner_neoterra(rel, L):
         for x in (20, 26, 32, 38):
             tree(d, x, 35, 3, "azalea_leaves", "birch_log", 1)
 
-    # ---- room fit-out ----
-    if L >= 3:
-        lay_lab(Rm(d, ph, 7, "e", "birch"))
-        lay_office(Rm(d, ph, 7, "s", "birch"))
     if L >= 5:
-        lay_lounge(Rm(d, ad, 6, "n", "birch"))
-        lay_office(Rm(d, ad, 10, "n", "birch"))
+        # admin block: staff lounge on the first floor, director's office on the second
+        for x in (4, 5, 6):
+            d.chair(x, 6, 31, "south", "birch", sit=False)
+        pl(d, 6, [(5, 30, "smooth_stone_slab[type=top,waterlogged=false]"), (3, 32, "potted_bamboo")])
+        pl(d, 7, [(5, 30, "potted_azalea_bush")])
+        d.rug(8, 28, 11, 30, 6, ("gray_carpet", "yellow_carpet"))
+        pl(d, 10, [(10, 30, "smooth_stone_slab[type=top,waterlogged=false]"), (11, 30, "smooth_stone_slab[type=top,waterlogged=false]"),
+                   (12, 32, BOOKS.replace("{in}", "north")), (3, 32, BOOKS.replace("{in}", "north")),
+                   (4, 32, BOOKS.replace("{in}", "north"))])
+        pl(d, 11, [(10, 30, CANDLE), (11, 30, "potted_fern")])
+        d.chair(10, 10, 31, "south", "birch", sit=False)
+        d.rug(5, 28, 8, 30, 10, ("yellow_carpet", "gray_carpet"))
+        ceil_light(d, 5, [(6, 24), (12, 24), (6, 30), (12, 30)])
+        ceil_light(d, 9, [(6, 28), (12, 28)])
+        ceil_light(d, 13, [(8, 28), (12, 30)])
     paste_cluster(d, cx, cz)
     return d
 

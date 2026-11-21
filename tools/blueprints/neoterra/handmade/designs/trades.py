@@ -2393,19 +2393,26 @@ def wh_neo(rel, L):
     a.opening(10, 4, 12, 4, 3, "yellow_concrete")
     d.hut(4, y0, 5)
     d.sign(10, a.yr, 3, "north", ["NEOTERRA", "LOGISTICS"], "birch", glow=True, color="yellow")
-    r0 = a.room(0, back="north")
-    racks = wh_racks(d, r0, 4, 10, 13, z2 - 1, WH[L] if L == 1 else max(WH[L], 144))
-    ups = []
+    ceil0 = 6 if sto == 1 else 5
+    racks = wh_racks(d, y0, 4, 10, 13, z2 - 1, WH[L] if L == 1 else max(WH[L], 144))
     for s_ in range(1, sto):
-        rs = a.room(s_, back="north")
-        racks += wh_racks(d, rs, 4, 10, 13, z2 - 1, max(108, WH[L] - racks))
-        ups.append(rs)
-    # goods-in desk on the ground floor; the clerk's office on the first floor front
-    furnish(r0, "shop", ["crafting_table"])
-    if ups:
-        furnish(ups[0], "office", wh_list(L, first=False), seats=2 if L >= 3 else 0)
-        for rs in ups[1:]:
-            furnish(rs, "loft")
+        racks += wh_racks(d, a.stand(s_), 4, 10, 13, z2 - 1, max(108, WH[L] - racks))
+    # goods-in: counter facing the doors, crafting bench, pallets by the loading door
+    FL = "pearlescent_froglight[axis=y]"
+    fit(d, y0, [("i", 4, 7, "crafting_table", "east"), ("s", 8, 7, sl("smooth_quartz", "top")),
+                ("s", 9, 7, sl("smooth_quartz", "top")), ("o", 9, 7, "potted_bamboo"),
+                ("s", 14, 5, "chest[facing=south,type=single,waterlogged=false]"), ("s", 16, 5, "barrel[facing=up,open=false]"),
+                ("G", 8, 6, FL, ceil0), ("G", 12, 7, FL, ceil0), ("G", 7, 12, FL, ceil0), ("G", 10, 14 if z2 > 12 else 11, FL, ceil0)])
+    if sto >= 2:                                                     # clerk's office on the first-floor front
+        fit(d, 6, [("i", 4, 6, "crafting_table", "east"), ("i", 4, 7, "cartography_table"),
+                   ("i", 5, 5, "lectern", "south")] + [("i", x, 5, "barrel", "south") for x in (8, 9, 10, 11)] +
+            ([("i", 12, 5, "ender_chest", "south")] if L >= 5 else []) + [
+            ("s", 6, 7, sl("birch", "top")), ("s", 7, 7, sl("birch", "top")), ("c", 6, 8, "south"), ("c", 7, 8, "south"),
+            ("s", 16, 5, pot(3)), ("G", 8, 7, FL if sto > 2 else "sea_lantern", 9)], "birch")
+    if sto >= 3:                                                     # top floor: overflow stock
+        fit(d, 10, [("s", x, 5, "barrel[facing=up,open=false]") for x in (8, 9, 10)] + [
+            ("s", 4, 6, "chest[facing=east,type=single,waterlogged=false]"), ("s", 13, 5, "white_wool"),
+            ("G", 8, 7, "sea_lantern", 13)])
     neo_roof(d, a, [(5, 13, 6, SOLAR), (5, 13, 9, SOLAR)] + ([(5, 13, 12, SOLAR), (5, 13, 15, SOLAR)] if z2 > 12 else []))
     # truck bay with markings and pallets
     for x in range(10, 13):
@@ -2427,16 +2434,20 @@ def wh_neo(rel, L):
         bs = 2 if L == 4 else 3
         b = build(d, 21, 4, 33, 14, bs, roof="flat", core=(31, 6), street_glass=True)
         b.door(24, 4, "north", double=True)
-        rb = b.room(0, back="north")
-        racks += wh_racks(d, rb, 22, 9, 28, 13, max(36, WH[L] - racks))
-        furnish(rb, "shop")                                          # dispatch counter
-        for s_ in range(1, bs):
-            rr = b.room(s_, back="north")
-            if s_ == 1:
-                furnish(rr, "canteen", sit=False)                    # drivers' canteen
-            else:
-                racks += wh_racks(d, rr, 22, 9, 28, 13, max(36, WH[L] - racks))
-                furnish(rr, "office", seats=2, sit=False)
+        racks += wh_racks(d, y0, 22, 9, 28, 13, max(36, WH[L] - racks))
+        fit(d, y0, [("s", x, 7, sl("smooth_quartz", "top")) for x in range(23, 29)] + [
+            ("s", 29, 5, "chest[facing=south,type=single,waterlogged=false]"), ("s", 22, 5, pot(3)),
+            ("G", 26, 6, "pearlescent_froglight[axis=y]", 5), ("G", 25, 11, "pearlescent_froglight[axis=y]", 5)])
+        fit(d, 6, [("s", 23, 13, "smoker[facing=north,lit=false]"), ("s", 24, 13, sl("smooth_quartz", "top")),
+                   ("s", 25, 13, "water_cauldron[level=3]"), ("s", 26, 13, "furnace[facing=north,lit=false]")] +
+            [("s", x, 9, sl("birch", "top")) for x in range(24, 28)] +
+            [("c", x, 8, "north", False) for x in range(24, 28)] + [("c", x, 10, "south", False) for x in range(24, 28)] +
+            [("s", 22, 5, pot(0)), ("G", 26, 11, "pearlescent_froglight[axis=y]" if bs > 2 else "sea_lantern", 9)], "birch")
+        if bs > 2:
+            racks += wh_racks(d, 10, 22, 9, 28, 13, max(36, WH[L] - racks))
+            fit(d, 10, [("s", 25, 6, sl("birch", "top")), ("c", 25, 7, "south", False),
+                        ("s", 27, 6, sl("birch", "top")), ("c", 27, 7, "south", False), ("G", 26, 6, "sea_lantern", 13)],
+                "birch")
         neo_roof(d, b, [(23, 29, 6, MOSS), (23, 29, 8, 'azalea'), (23, 29, 10, MOSS), (23, 29, 12, 'azalea')])
         # loading canopy
         for x in range(21, 34):
@@ -2449,8 +2460,10 @@ def wh_neo(rel, L):
     if L >= 5:                                                       # weighbridge kiosk at the truck gate
         k = build(d, 3, 21, 9, 25, 2, roof="flat")
         k.door(6, 21, "north")
-        furnish(k.room(0, back="south"), "kiosk", sit=False)
-        furnish(k.room(1, back="south"), "office", seats=1, sit=False)
+        fit(d, y0, [("s", 5, 24, sl("birch", "top")), ("c", 5, 23, "north", False),
+                    ("o", 5, 24, "white_candle[candles=1,lit=false,waterlogged=false]"),
+                    ("s", 7, 24, "chest[facing=north,type=single,waterlogged=false]"), ("G", 6, 23, "sea_lantern", 5)], "birch")
+        fit(d, 6, [("s", 5, 24, pot(3)), ("s", 7, 24, "chest[facing=north,type=single,waterlogged=false]")])
         for x in range(11, 19):
             for z in range(21, 25):
                 d.set(x, 1, z, "iron_block" if z in (22, 23) else "yellow_concrete")
@@ -2508,10 +2521,12 @@ def wh_hw(rel, L):
     d.sign(7, 4, 0, "north", ["Tithe Barn", "Stores"], "spruce") if False else None
     d.sign(13, 4, 3, "north", ["Tithe Barn", "Stores"], "spruce")
     d.hut(4, y0, 5)
-    r0 = a.room(0, back="north")
-    racks = barn_bays(d, r0, 4, 16, (9, 11), 9, U, WH[L])
-    furnish(r0, "loft", ["crafting_table"], lights=False)          # sacks and hay at the threshing floor
-    for z in range(9, z2, 3):
+    racks = barn_bays(d, y0, 4, 16, (9, 11), 9, U, WH[L])
+    # threshing floor at the cart door: tally bench, sacks and hay waiting to go up the bays
+    fit(d, y0, [("i", 16, 6, "crafting_table", "west"), ("s", 4, 7, "white_wool"), ("s", 5, 7, "brown_wool"),
+                ("o", 4, 7, "white_wool"), ("s", 14, 5, "hay_block[axis=y]"), ("s", 15, 5, "hay_block[axis=y]"),
+                ("o", 15, 5, "hay_block[axis=y]"), ("s", 16, 7, "chest[facing=west,type=single,waterlogged=false]")])
+    for z in (9, 12, 15, 18, 21, 24)[:U]:                             # lanterns over the nave at each bay
         d.set(10, 6, z, LANT)
     for x in (1, 19):
         lamp_post(d, x, 1, y0, P)
@@ -2525,10 +2540,19 @@ def wh_hw(rel, L):
         d.sty_over = {}
         b.door(25, 4, "north")
         if L >= 3:                                                   # steward's office and his chamber over it
-            furnish_all([(b.room(0, back="south"), "office"), (b.room(1, back="south"), "office"),
-                         (b.room(1, back="north"), "dorm")], items=wh_list(L, first=False), seats=2, beds=1)
-        else:
-            furnish(b.room(0, back="west"), "lounge")               # cottage parlour by the hearth
+            fit(d, y0, [("i", 23, 10, "crafting_table", "north"), ("i", 24, 10, "cartography_table"),
+                        ("i", 25, 10, "lectern", "north")] + [("i", x, 10, "barrel", "north") for x in (26, 27, 28)] + [
+                ("i", 23, 5, "barrel", "south"), ("s", 25, 7, sl("spruce", "top")), ("s", 26, 7, sl("spruce", "top")),
+                ("c", 25, 8, "south"), ("c", 26, 8, "south"), ("o", 25, 7, "candle[candles=2,lit=false,waterlogged=false]"),
+                ("L", 24, 7)], "spruce")
+            fit(d, 6, [("bed", 24, 10, "south"), ("s", 25, 10, sl("spruce", "top")), ("k", 23, 10, 2)] +
+                ([("i", 27, 10, "ender_chest", "north")] if L >= 5 else []) +
+                [("s", 23, 5, "chest[facing=south,type=single,waterlogged=false]"), ("rug", 24, 7, 26, 8, "blue_carpet"),
+                 ("L", 27, 7)], "spruce")
+        else:                                                        # cottage parlour by the hearth
+            fit(d, y0, [("c", 24, z, "east", False) for z in (7, 8, 9)] + [
+                ("bed", 28, 10, "south"), ("s", 27, 5, sl("spruce", "top")), ("c", 27, 6, "south", False),
+                ("rug", 23, 7, 23, 9, "blue_carpet"), ("L", 26, 8)], "spruce")
         for x in range(21, 32):
             if x != 25:
                 d.set(x, y0, 2, "spruce_fence")
@@ -2558,18 +2582,20 @@ def wh_hw(rel, L):
         buttresses(d, g, "sandstone", "sandstone")
         g.opening(25, 20, 26, 20, 3, lg("stripped_spruce_log", "x"))
         for s_ in (0, 1):
-            rg = g.room(s_, back="north")
-            racks += wh_racks(d, rg, 22, 23, 27, 29, max(36, WH[L] - racks))
-            furnish(rg, "loft")
+            yy = g.stand(s_)
+            racks += wh_racks(d, yy, 22, 23, 27, 29, max(36, WH[L] - racks))
+            fit(d, yy, [("s", 22, 21, "white_wool"), ("s", 23, 21, "brown_wool"), ("o", 22, 21, "white_wool"),
+                        ("L", 24, 22 if s_ else 21)])
     # ---- second barn closing the yard (L5)
     if L >= 5:
         e = build(d, 3, 29, 17, 38, 2, roof="gable", axis="x", core=(15, 31))
         buttresses(d, e, "sandstone", "sandstone")
         e.opening(7, 29, 9, 29, 3, lg("stripped_spruce_log", "x"))
         for s_ in (0, 1):
-            re = e.room(s_, back="north")
-            racks += wh_racks(d, re, 4, 32, 13, 37, max(36, WH[L] - racks), "x")
-            furnish(re, "loft")
+            yy = e.stand(s_)
+            racks += wh_racks(d, yy, 4, 32, 13, 37, max(36, WH[L] - racks), "x")
+            fit(d, yy, [("s", 4, 30, "hay_block[axis=y]"), ("s", 5, 30, "white_wool"), ("s", 12, 30, "brown_wool"),
+                        ("L", 10, 31 if s_ else 30)])
         wagon(d, 19, 33, y0, "spruce", "hay_block[axis=z]", "z")
         # yard wall with a gateway between the barns
         for x in range(18, 33):

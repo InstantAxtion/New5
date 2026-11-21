@@ -162,7 +162,7 @@ def awning_z(d, z1, z2, x, y, colors=("red_wool", "white_wool"), outward="east")
 # Neoterra "LUMEN BAKERY": white box with a full glass shopfront, cyan canopy, glass display counter, stacked
 #   deck ovens in polished andesite; L3 adds an upper café floor (glass) and roof terrace by L5.
 def baker_hw(rel, L):
-    d = Design("Hearthwood", rel, (50, 42, 44))
+    d = Design("Hearthwood", rel, (55, 42, 45))
     x1, z1, x2, z2, y0, y1 = 3, 5, 15, 11, 2, 5
     oak = "dark_oak"
     hw_body(d, x1, z1, x2, z2, y0, y1)
@@ -315,7 +315,7 @@ def porch(d, x1, x2, z1, z2, y0, ytop, posts, wood="spruce", rail=True, gap=(), 
 
 
 def baker_cas(rel, L):
-    d = Design("Cascadia", rel, (51, 42, 46), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (54, 42, 48), paving="coarse_dirt")
     x1, z1, x2, z2, y0, y1 = 6, 7, 16, 19, 2, 6
     cas_body(d, x1, z1, x2, z2, y0, y1)
     ridge = roof(d, x1, z1, x2, z2, 7, "z", "dark_oak", "dark_oak_slab", "spruce_planks", ends=(2, 1),
@@ -478,7 +478,7 @@ def planter(d, x, z, y, plant="flowering_azalea", box="smooth_quartz"):
 
 
 def baker_neo(rel, L):
-    d = Design("Neoterra", rel, (49, 42, 34), paving="smooth_stone")
+    d = Design("Neoterra", rel, (54, 42, 44), paving="smooth_stone")
     x1, z1, z2, y0, y1 = 3, 4, 11, 2, 5
     x2 = 13 if L == 1 else 21
     neo_body(d, x1, z1, x2, z2, y0, y1)
@@ -1021,7 +1021,7 @@ def cook(pack, rel, L):
 #   (andesite/iron) cooking line, walk-in cold room of packed ice with the racks, loading bay with a roller
 #   door, extract ducts and condensers on the roof growing with each level.
 def cookery_hw(rel, L):
-    d = Design("Hearthwood", rel, (50, 42, 46))
+    d = Design("Hearthwood", rel, (54, 42, 44))
     x1, z1, x2, z2, y0, y1 = 5, 5, 15, 15, 2, 6
     d.box(x1, y0, z1, x2, y1, z2, "stone_bricks", floor="stone_bricks")
     for x, z in perim(x1, z1, x2, z2):
@@ -1160,7 +1160,7 @@ def cookery_hw(rel, L):
 
 
 def cookery_cas(rel, L):
-    d = Design("Cascadia", rel, (46, 42, 44), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (54, 42, 46), paving="coarse_dirt")
     x1, z1, x2, z2, y0, y1 = 4, 5, 12, 17, 2, 5
     cas_body(d, x1, z1, x2, z2, y0, y1, ceiling=None)
     ridge = roof(d, x1, z1, x2, z2, 6, "z", "spruce", "spruce_slab", "spruce_planks", ends=(1, 1),
@@ -1261,7 +1261,7 @@ def cookery_cas(rel, L):
 
 
 def cookery_neo(rel, L):
-    d = Design("Neoterra", rel, (48, 42, 40), paving="smooth_stone")
+    d = Design("Neoterra", rel, (56, 42, 41), paving="smooth_stone")
     x1, z1, z2, y0, y1 = 3, 4, 14, 2, 5
     x2 = 15 if L == 1 else 22
     neo_body(d, x1, z1, x2, z2, y0, y1, wall="light_gray_concrete", pillar="gray_concrete", floor="smooth_stone",
@@ -3261,3 +3261,412 @@ def _g_cook_neo(d, L):
         lamp_post(d, 11, 37)
         lamp_post(d, 35, 37)
         bench(d, 21, 37, "north", 3)
+
+
+def garden(d, gz, trees=(6, 16, 30, 40), extra_trees=(), lamps=(11, 35), benches=(20, 36)):
+    """The L5 garden strip along the back of the site: hand-placed trees, lamp posts and benches."""
+    kind = {"Hearthwood": "oak", "Cascadia": "spruce", "Neoterra": "birch"}[d.pack]
+    for x, z in [(x, gz) for x in trees] + list(extra_trees):
+        if kind == "spruce":
+            spruce_tree(d, x, z)
+        else:
+            tree(d, x, z, kind)
+    for x in lamps:
+        lamp_post(d, x, gz - 1)
+    for x in benches:
+        bench(d, x, gz - 1, "north", 3)
+
+
+# ============================================================================================ COOKERY add-ons
+@growth("cookery", "Hearthwood")
+def _g_cookery_hw(d, L):
+    if L >= 2:
+        SHED(d, 25, 2, ["hYkKkhYkK",
+                        "....l....",
+                        "..hh.YkY.",
+                        "....l....",
+                        "kKkYhkKkh"], ["Larder"])
+    if L >= 3:
+        plans = [["       uUuU",
+                  ".......l...",
+                  "uUu..wte..p",
+                  "...........",
+                  "UoU..wte..k",
+                  "....l......",
+                  "kKk.hh.YkKk"],
+                 ["       HNH.",
+                  ".......f.f.",
+                  "Hf..T....fH",
+                  "N...s.....N",
+                  "Hf.rrr...fH",
+                  "...l.......",
+                  "kD........."]]
+        if L >= 5:
+            plans.append(["bbE..C.TT.D",
+                          ".....l..s..",
+                          "...........",
+                          "..wTe...Hf.",
+                          "..wTe......",
+                          "pk.........",
+                          "kD.        "])
+        HOUSE(d, 25, 12, plans, ["Scullery"])
+    if L >= 4:
+        HALL(d, 2, 24, ["oUoUmUu..UuUoUoUm",
+                        "........l........",
+                        "..UUUUU...UUUUU..",
+                        "..UAUVU...UAUVU..",
+                        ".................",
+                        "kK.....l.....kKk.",
+                        ".................",
+                        "..nnnn....nnnn...",
+                        "..TTTT....TTTT..."], ["Great", "Kitchen"])
+        SHED(d, 40, 2, ["kkkkk.kkk",
+                        "....l....",
+                        "..YkY.KkK",
+                        ".........",
+                        "hhh.k.hhh"], ["Stores"])
+    if L >= 5:
+        HALL(d, 24, 24, ["b.p.b.p...p.b.p.b",
+                         ".................",
+                         ".nnnnnnnnnnnnnnn.",
+                         ".TTTTTTTTTTTTTTT.",
+                         ".sssssssssssssss.",
+                         "........l........",
+                         "..wte.......wte..",
+                         "..wte...Z...wte..",
+                         "p...............p"], ["Servants'", "Hall"])
+        SHED(d, 41, 12, ["uuUUoUUuu",
+                         "....l....",
+                         "..UUU.UUU",
+                         ".........",
+                         "kKk.p.kKk"], ["Bake", "House"])
+        garden(d, 39, extra_trees=((47, 29), (22, 41), (48, 41)))
+
+
+@growth("cookery", "Cascadia")
+def _g_cookery_cas(d, L):
+    if L >= 2:
+        SHED(d, 24, 3, ["YhkKhkYkh",
+                        "....l....",
+                        "..k.h.kYk",
+                        ".........",
+                        "hkKkYhkKh"], ["Larder"])
+    if L >= 3:
+        plans = [["       oUmU",
+                  ".......l...",
+                  "UuU..nnn..h",
+                  ".....TTT...",
+                  "kk...sss..k",
+                  "....l......",
+                  "YhkWW.kYhkK"],
+                 ["       H.H.",
+                  ".......f.f.",
+                  "Hf.....N.fH",
+                  "....rrr....",
+                  "Hf.....N.fH",
+                  "...l.......",
+                  "kDk........"]]
+        if L >= 5:
+            plans.append(["HfN.bb.NfH.",
+                          ".....l.....",
+                          "...........",
+                          ".T..T..T...",
+                          ".s..s..s...",
+                          "kh.........",
+                          "Yk.        "])
+        HOUSE(d, 24, 13, plans, ["Camp", "Kitchen"])
+    if L >= 4:
+        HALL(d, 2, 26, ["omUuUoUm..UoUmkYk",
+                        "........l........",
+                        "..nnnnnnn........",
+                        "..TTTTTTT...hh.k.",
+                        "..sssssss........",
+                        "........l........",
+                        "..nnnnnnn...wte..",
+                        "..TTTTTTT...wte..",
+                        "..sssssss.......p"], ["Cook", "Shack"])
+        SHED(d, 39, 3, ["hYh.kKk.h",
+                        "....l....",
+                        "..kkk.YkY",
+                        ".........",
+                        "KkK.h.kkk"], ["Supply"])
+    if L >= 5:
+        HALL(d, 24, 26, ["k.h.k.h...h.k.h.k",
+                         ".................",
+                         "..wte..wte..wte..",
+                         "........l........",
+                         "..wte..wte..wte..",
+                         ".................",
+                         "..rrrrrrrrrrrrr..",
+                         "........Z........",
+                         "bb.b.b.....b.b.bb"], ["Dining", "Lodge"])
+        SHED(d, 40, 14, ["uu.UUU.uu",
+                         "....l....",
+                         "..UoU.UmU",
+                         ".........",
+                         "hkh.p.hkh"], ["Smoke", "Room"])
+        garden(d, 41, extra_trees=((47, 31), (22, 43), (48, 43)), benches=(20, 36))
+
+
+@growth("cookery", "Neoterra")
+def _g_cookery_neo(d, L):
+    if L >= 2:
+        SHED(d, 28, 2, ["KKk.kKK.k",
+                        "....l....",
+                        "..kkk.kkk",
+                        ".........",
+                        "kKk.kKk.K"], ["DRY", "STORE"])
+    if L >= 3:
+        plans = [["       UoUm",
+                  ".......l...",
+                  "UUU..UUU...",
+                  "...........",
+                  "UuU..UAU..k",
+                  "....l......",
+                  "kkk.p..kKk."],
+                 ["       bbCE",
+                  ".......l...",
+                  "TT.TT.TT...",
+                  "s..s..s....",
+                  "...........",
+                  "p..l.......",
+                  "kD........."]]
+        if L >= 5:
+            plans.append(["HfN.bbb.NfH",
+                          "....l......",
+                          "..wTe......",
+                          "..wTe..Hf..",
+                          "...........",
+                          "p..........",
+                          "kD.        "])
+        HOUSE(d, 28, 11, plans, ["PREP"], roofitems=SOLAR + GREEN([1, 3, 5, 7, 9, 11], 7))
+    if L >= 4:
+        HALL(d, 2, 18, ["UoUoUmUu..UuUoUoU",
+                        "........l........",
+                        "..UUUU.....UUUU..",
+                        "..UAUU.....UUVU..",
+                        ".................",
+                        "kKkKk..l.....kKkK",
+                        ".................",
+                        "..UUUUUUUUUUUUU..",
+                        "..s...s...s...s.."], ["PRODUCTION"],
+             roofitems=[(x, 3, "daylight_detector[inverted=false,power=0]") for x in range(3, 16)])
+        SHED(d, 42, 2, ["kKk.KkK.k",
+                        "....l....",
+                        "..KkK.kKk",
+                        ".........",
+                        "k.kKk.k.p"], ["DRY", "GOODS"])
+    if L >= 5:
+        HALL(d, 24, 22, ["p.b.b.b...b.b.b.p",
+                         ".................",
+                         ".nn.nn.nn.nn.nn..",
+                         ".TT.TT.TT.TT.TT..",
+                         ".ss.ss.ss.ss.ss..",
+                         "........l........",
+                         "..UUUUU...UUUUU..",
+                         "..UAUVU...UAUVU..",
+                         "p...............p"], ["STAFF", "CANTEEN"], roofitems=SOLAR + GREEN([9, 11, 13, 15], 8))
+        SHED(d, 43, 11, ["UUoUUmUUu",
+                         "....l....",
+                         "..UUUUU..",
+                         ".........",
+                         "kKk.p.kKk"], ["PASTRY"])
+        garden(d, 36, extra_trees=((48, 23), (22, 38), (48, 38)))
+
+
+# ============================================================================================ BAKER add-ons
+@growth("baker", "Hearthwood")
+def _g_baker_hw(d, L):
+    if L >= 2:
+        SHED(d, 27, 2, ["WWWkYkWWW",
+                        "....l....",
+                        "..WhW.WhW",
+                        ".........",
+                        "hhWkWkhhW"], ["Flour", "Store"])
+    if L >= 3:
+        plans = [["       bpbZ",
+                  ".......l...",
+                  "oUuUA..wR..",
+                  "..wte..wT..",
+                  "...s...wR.p",
+                  "....l......",
+                  "kYk.DVc.bbp"],
+                 ["       NHD.",
+                  ".......lf..",
+                  "Hf..T....p.",
+                  "N...s......",
+                  "..rrrrr....",
+                  "...l.......",
+                  "kV........."]]
+        if L >= 5:
+            plans.append(["Hf.b..b.fHN",
+                          ".....l.....",
+                          "..T......p.",
+                          "..s........",
+                          "...rrrr....",
+                          ".k.........",
+                          "kD.        "])
+        HOUSE(d, 27, 12, plans, ["Baker's", "House"])
+    if L >= 4:
+        HALL(d, 2, 25, ["1o1o1o1..1o1o1o1W",
+                        "........l........",
+                        "..UUUUU...UUUUU..",
+                        "..UAUVU...UVUAU..",
+                        ".................",
+                        "WW.....l.......WW",
+                        "hW.............Wh",
+                        "..kYkYk...kYkYk..",
+                        "u...............x"], ["Bake", "Hall"], extra=["bricks"])
+        SHED(d, 42, 2, ["hhh.WWW.h",
+                        "....l....",
+                        "..hWh.WhW",
+                        ".........",
+                        "WkW.h.WkW"], ["Mill", "Loft"])
+    if L >= 5:
+        HALL(d, 24, 25, ["VAVAV.b...b.VAVAV",
+                         ".................",
+                         ".wte..wte..wte...",
+                         "........l........",
+                         ".wte..wte..wte...",
+                         ".................",
+                         ".wte..wte..wte...",
+                         "........l........",
+                         "p..UUUUUUUUUUU..p"], ["Pastry", "Cafe"])
+        SHED(d, 42, 12, ["AVAVAVAVA",
+                         "....l....",
+                         "..UUU.UUU",
+                         ".........",
+                         "kYk.p.kYk"], ["Cake", "Shop"])
+        garden(d, 39, trees=(5, 14, 30, 40), extra_trees=((48, 28), (22, 42), (48, 42)), lamps=(10, 26),
+               benches=(19, 35))
+
+
+@growth("baker", "Cascadia")
+def _g_baker_cas(d, L):
+    if L >= 2:
+        SHED(d, 26, 2, ["WhWkWhWkW",
+                        "....l....",
+                        "..hWh.kYk",
+                        ".........",
+                        "WWkhh.WWk"], ["Flour", "Shed"])
+    if L >= 3:
+        plans = [["       oUmu",
+                  ".......l...",
+                  "UAU..nnn..p",
+                  "...h.TTT...",
+                  "kk...sss..k",
+                  "....l......",
+                  "YhD.bb.VcWk"],
+                 ["       NHN.",
+                  ".......lf..",
+                  "Hf.......fH",
+                  "N..rrr....N",
+                  "...........",
+                  "...l.......",
+                  "kDh........"]]
+        if L >= 5:
+            plans.append(["bHf....fHbb",
+                          ".....l.....",
+                          "..T..T.....",
+                          "..s..s.....",
+                          "...rrrr....",
+                          ".k.........",
+                          "Dh.        "])
+        HOUSE(d, 26, 12, plans, ["Baker's", "Cabin"])
+    if L >= 4:
+        HALL(d, 2, 28, ["1o1o1o1..1o1o1o1h",
+                        "........l........",
+                        "..TTTTTTT.TTTTT..",
+                        "..TAVATVT.TATVT..",
+                        ".................",
+                        "hW.....l.......Wh",
+                        "W...............W",
+                        "..kYkhk...khkYk..",
+                        "u...............x"], ["Bake", "House"], extra=["cobblestone"])
+        SHED(d, 41, 2, ["WWh.hWW.k",
+                        "....l....",
+                        "..kWk.hWh",
+                        ".........",
+                        "hhh.W.kYk"], ["Grain"])
+    if L >= 5:
+        HALL(d, 24, 28, ["k.h.k.b...b.k.h.k",
+                         ".................",
+                         ".nnn..nnn..nnn...",
+                         ".TTT..TTT..TTT...",
+                         ".sss..sss..sss...",
+                         "........l........",
+                         "..wte.......wte..",
+                         ".................",
+                         "p.AVA.UUUUU.AVA.p"], ["Cafe"])
+        SHED(d, 41, 12, ["AVA.AVA.A",
+                         "....l....",
+                         "..TTT.TTT",
+                         ".........",
+                         "kYk.p.kYk"], ["Pie", "Shop"])
+        garden(d, 42, extra_trees=((47, 31), (22, 45), (48, 45)))
+
+
+@growth("baker", "Neoterra")
+def _g_baker_neo(d, L):
+    if L >= 2:
+        SHED(d, 26, 2, ["WWkWWkWWk",
+                        "....l....",
+                        "..WkW.WkW",
+                        ".........",
+                        "kWWkWWkWW"], ["FLOUR"])
+    if L >= 3:
+        plans = [["       UoUm",
+                  ".......l...",
+                  "UAUVU..UUU.",
+                  "...........",
+                  "..UAU..wte.",
+                  "....l......",
+                  "kkk.p..kKk."],
+                 ["       bECb",
+                  ".......l...",
+                  "TT.TT......",
+                  "s..s.......",
+                  "....rrrr...",
+                  "p..l.......",
+                  "kD........."]]
+        if L >= 5:
+            plans.append(["HfN.bb..NfH",
+                          "....l......",
+                          "..T.....T..",
+                          "..s.....s..",
+                          "...rrrrr...",
+                          "p.........p",
+                          "kD.        "])
+        HOUSE(d, 26, 12, plans, ["PATISSERIE"], roofitems=SOLAR + GREEN([1, 3, 5, 7, 9, 11], 7))
+    if L >= 4:
+        HALL(d, 2, 15, ["1o1o1o1..1o1o1o1W",
+                        "........l........",
+                        "UUUU.......UUUU..",
+                        "UAUV.......VUAU..",
+                        ".....kKkKk.......",
+                        "........l........",
+                        "..UUUUUUUUUUUUU..",
+                        "..s.s.s.s.s.s.s..",
+                        "kKk...........kKk"], ["BAKE", "LAB"], extra=["polished_andesite"],
+             roofitems=[(x, 3, "daylight_detector[inverted=false,power=0]") for x in range(3, 16)])
+        SHED(d, 40, 2, ["kWWk.kWWk",
+                        "....l....",
+                        "..WWk.kWW",
+                        ".........",
+                        "WkW.p.WkW"], ["GRAIN"])
+    if L >= 5:
+        HALL(d, 24, 24, ["p.b.b.b...b.b.b.p",
+                         ".................",
+                         "..wTe..wTe..wTe..",
+                         "........l........",
+                         "..wTe..wTe..wTe..",
+                         ".................",
+                         "..rrrrrrrrrrrrr..",
+                         ".................",
+                         "p..UAUVUAUVUAU..p"], ["LUMEN", "CAFE"], roofitems=SOLAR + GREEN([9, 11, 13, 15], 8))
+        SHED(d, 41, 12, ["AVAVA.AVA",
+                         "....l....",
+                         "..UUU.UUU",
+                         ".........",
+                         "p.kKk.k.p"], ["CAKE", "BAR"])
+        garden(d, 38, extra_trees=((48, 27), (22, 40), (48, 40)))

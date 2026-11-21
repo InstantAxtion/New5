@@ -3126,6 +3126,18 @@ _HW_S_PART = """
 HW_S_PLANS = {
     "ground": _HW_S_PART + """
         R 9 2 9 10 red
+        T 13 4 candle
+        C 12 4 w
+        C 14 4 e
+        C 13 3 n
+        C 13 5 s
+        R 12 3 14 5 orange
+        X 17 3 dark_oak_planks
+        X 17 3 dark_oak_planks 1
+        X 17 3 lamp 2
+        T 5 7 potted_allium
+        C 4 7 w
+        C 6 7 e
         C 0 3 w
         C 0 4 w
         T 0 5 lamp
@@ -3367,7 +3379,44 @@ HW_S_PLANS = {
         L 49 8
     """,
 }
-HW_S_FLOORS = ["ground", "first", "second", "third", "fourth"]
+HW_S_PLANS["attic"] = _HW_S_PART + """
+        X 0 1 chest:e
+        X 0 2 chest:e
+        X 0 3 barrel:e
+        T 4 6 candle
+        C 4 5 n
+        C 4 7 s
+        X 1 10 loom:n
+        C 1 9 s
+        X 12 10 hay
+        X 13 10 hay
+        X 17 1 barrel:w
+        L 5 5
+        L 13 5
+        X 20 1 jukebox
+        C 22 3 n
+        C 23 3 n
+        C 24 3 n
+        T 23 5 lamp
+        C 31 7 s
+        C 32 7 s
+        T 31 9 candle
+        S 36 10 pot
+        P 19 10 potted_fern
+        L 23 5
+        L 32 7
+        X 39 10 chest:n
+        X 40 10 chest:n
+        X 41 10 barrel:n
+        X 39 1 bwool
+        X 39 2 wool
+        T 45 6
+        C 45 7 s
+        P 53 10 potted_fern
+        L 43 5
+        L 49 8
+"""
+HW_S_FLOORS = ["ground", "first", "second", "third", "fourth", "attic"]
 
 # Hearthwood sky tower – the two link ranges (11 x 6, no stair; reached through the wings; door lx 5 lz 0)
 HW_LW_PLANS = {
@@ -4619,7 +4668,7 @@ def grow_sky_hw(d, L):
         flowerbed(d, 49, 1, 52, 3, 2, P)
         flowerbed(d, 56, 1, 59, 3, 2, P)
     if L >= 4:                                        # south range closing a garden court
-        lv += raise_building(d, P, (2, 38, 60, 50), 2, {4: 3, 5: 5}[L], HW_S_PLANS, HW_S_FLOORS, "spruce", "spruce",
+        lv += raise_building(d, P, (2, 38, 60, 50), 2, {4: 3, 5: 6}[L], HW_S_PLANS, HW_S_FLOORS, "spruce", "spruce",
                              roof="gable", axis="x", doors=[(31, 38, "north"), (12, 38, "north"), (50, 38, "north")],
                              st=HW_SOUTH)
         for x, z in cells(16, 26, 46, 36):
@@ -4716,6 +4765,9 @@ def grow_sky_ca(d, L):
         for x, z in cells(2, 3, 16, 5):
             d.set(x, 1, z, "spruce_planks")
         d.sign(9, 5, 2, "north", ["GREAT", "HALL"], "spruce")
+        for x in (5, 6, 7, 13, 14, 15):                 # firewood stacked against the porch rail
+            d.set(x, 2, 2, log("spruce_log", "z"))
+            d.set(x, 3, 2, log("spruce_log", "z"))
         for x in (4, 14):
             tree(d, x, 28, 2, "spruce_log", "spruce_leaves", 6)
     if L >= 3:                                        # east wing: game room, library, guest lounge
