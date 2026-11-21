@@ -1507,6 +1507,11 @@ def fisherman_neoterra(rel, L):
             lamp_post(d, x, 21)
             bench(d, x + 1, 21, "south", 2)
         flowerbed(d, 1, 19, 7, 20, ("cornflower", "white_tulip", "azure_bluet"))
+        for x in (11, 13, 15, 17, 19):                                # mooring bollards on the quay edge
+            d.set(x, 2, 23, "light_gray_concrete")
+            d.set(x, 3, 23, "polished_andesite_slab[type=bottom,waterlogged=false]")
+        lamp_post(d, 9, 15)
+        lamp_post(d, 9, 19)
         for x in (12, 16):
             d.chair(x - 1, 2, 17, "west", B, sit=False)
             d.table(x, 2, 17, B, "slab", "smooth_quartz_slab")

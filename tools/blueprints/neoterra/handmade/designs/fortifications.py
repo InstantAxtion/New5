@@ -1461,6 +1461,13 @@ def hw_bar_outer(d, L):
             d.set(x, 4, z, "oak_fence")
         d.fill(23, 5, -5, 25, 5, -3, "mud_brick_slab[type=bottom,waterlogged=false]")
         d.set(24, 4, -4, CHAIN)
+        lamp_post(d, 13, -1)
+        lamp_post(d, 19, -1)
+        put(d, 19, 2, -4, ST("oak", "east"))
+        put(d, 19, 2, -3, ST("oak", "east"))
+        put(d, 29, 2, -3, BAR)
+        put(d, 29, 2, -4, BAR)
+        put(d, 29, 3, -4, KEG("north"))
         flowers(d, [(x, z) for x in range(20, 22 + 1) for z in range(-6, -6 + 1)])
         flowers(d, [(x, z) for x in range(27, 30 + 1) for z in range(-6, -6 + 1)])
         # outer curtain wall with crenels and a barbican
@@ -1843,6 +1850,26 @@ def nt_bar_east(d, L):
                        ("bed", 37, 28, "south", "cyan"), ("bed", 39, 28, "south", "cyan"), (32, 28, LOCK), (34, 28, LOCK),
                        (36, 28, LOCK), (38, 28, LOCK), (31, 20, LOCK), (32, 20, LOCK), (43, 20, "potted_bamboo"),
                        ("lamp", 35, 24), ("lamp", 40, 24)])
+        # roof terrace on the training centre: running track, planters, bench
+        track = [(x, 21) for x in range(31, 45)] + [(x, 27) for x in range(31, 45)] + \
+                [(31, z) for z in range(22, 27)] + [(44, z) for z in range(22, 27)]
+        for x, z in track:
+            put(d, x, 18, z, "red_carpet")
+        for x, z in ((32, 22), (43, 22), (32, 26), (43, 26)):
+            d.set(x, 17, z, "moss_block")
+            put(d, x, 18, z, "azalea")
+        for x in (37, 38):
+            put(d, x, 18, 24, ST("birch", "north"))
+        roof_units(d, [(35, 25), (40, 23)], 18)
+        # solar array on the garage roof
+        for x in range(31, 45):
+            for z in (5, 6, 7):
+                put(d, x, 8, z, "daylight_detector[inverted=false,power=0]")
+        for x in (44, 46):                                    # flag masts at the training centre door
+            for y in range(2, 10):
+                put(d, x, y, 17, "iron_bars")
+            put(d, x, 9, 16, "cyan_wool")
+            put(d, x, 8, 16, "white_wool")
         for x in (30, 33, 42, 45):                           # planters along the front
             d.set(x, 1, 18, "grass_block[snowy=false]")
             put(d, x, 2, 18, "azalea")

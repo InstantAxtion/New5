@@ -1,0 +1,1184 @@
+"""Hand-drawn room plans for designs/bunker.py (data only; legend in bunker.py, section "hand plans")."""
+
+
+# ---------------------------------------------------------------------------------------------------- room plans
+def _p(text, **gates):
+    return dict(rows=[r for r in text.strip("\n").split("\n")], gates=gates)
+
+
+ARCH_G = {"3": (3, "]", "d"), "4": (4, "]", "d"), "5": (5, "]", "d")}
+DORM_G = dict(zip("2345", [(2, "S", "L"), (3, "S", "L"), (4, "N", "p"), (5, "N", "p")]))
+
+# keys: (deck, x1, z1) of the room in BASE coordinates
+ROOMPLANS = {"Neoterra": {}, "Hearthwood": {}, "Cascadia": {}}
+N_, H_, C_ = ROOMPLANS["Neoterra"], ROOMPLANS["Hearthwood"], ROOMPLANS["Cascadia"]
+
+# ============================================================== NEOTERRA – civil-defence shelter (deck A)
+N_["A", 13, 1] = _p("""
+$$$$$$$$$$$
+....*......
+$$$$$$$$$$.
+$$$$$$$$$$.
+.........*.
+$$$$$$$$$$.
+$$$$$$$$$$.
+..*........
+$$$$$$$$$.$
+""")                                                    # vault A: steel racking, cross aisle by the door
+N_["A", 31, 1] = _p("""
+[[[[[[[[[[[[33
+3...........*3
+3.=======....3
+3.=e-Z-e=.....
+3.=-----=.d5..
+3.=======.....
+3..T.T..*....4
+...v.v.......4
+..33333333455.
+""", **ARCH_G)                                          # archive: shelving round the walls, enchanting desk
+N_["A", 46, 1] = _p("""
+Ly.y.yL
+.....<o
+......o
+.....<o
+...*..o
+.....<o
+..^.^.o
+..T.T..
+bbbPbbb
+""")                                                    # radio room: operators facing the transmitter wall
+N_["A", 30, 16] = _p("""
+L.p4p.p5p.L
+..........w
+*.........j
+..=======.w
+....*.....j
+...........
+pSp2pSp3pSp
+""", **DORM_G)                                          # dormitory: bunks on the south wall, wash wall east
+N_["A", 42, 16] = _p("""
+ckkdkKkdkkc
+...........
+.vvv...vvv.
+.ttt...ttt.
+.^^^...^^^.
+P....*....P
+P.........P
+""")                                                    # mess: servery on the north wall, two trestles
+N_["A", 14, 28] = _p("""
+J...*...b.J
+B->......P.
+B->..<t>...
+BT>..<t>...
+B->..<t>...
+.->......*.
+P.......PMM
+""")                                                    # rec room: sofa facing the wall screen, games table
+N_["A", 33, 28] = _p("""
+L......L
+I......U
+A.=--=.O
+G.=UU=.V
+A.=--=.D
+G..*...I
+aFFFF23a
+""", **{"2": (2, "Q", "k"), "3": (3, "Q", "k")})       # workroom: forge line south, benches both walls
+N_["A", 42, 28] = _p("""
+bbP.....Pbb
+...........
+o.=======.o
+o.=MMMMM=.o
+o.=======.o
+.^.^...^.^.
+ooooooooooo
+""")                                                    # ops room: plotting table, console bank
+N_["A", 2, 36] = _p("""
+uau.lPl.uau
+...........
+C.|||.|||.C
+...........
+aa*.....*aa
+""")                                                    # laundry: washers, mangles, drying racks
+N_["A", 14, 36] = _p("""
+ririri.kkkP
+...........
+g..iii.....
+...^^^.*...
+gbbb.u.bbbP
+""")                                                    # lab: fume-bench run, island bench
+N_["A", 30, 36] = _p("""
+LX.X.X.X.LL
+...........
+..h..h..h..
+..=-----=..
+vvv..*.vvvL
+""")                                                    # gym: targets, punch bags over mats
+N_["A", 42, 36] = _p("""
+bbbLbPbLbbb
+.T....*..T.
+.v.......v.
+...........
+Pk.......kP
+""")                                                    # office: two desks, filing wall
+N_["A", 2, 46] = _p("""
+P.........P
+.....-.....
+.^^^^-^^^^.
+.....-.....
+.^^^^-^^^^.
+....===....
+f..kkKkk..f
+""")                                                    # chapel: pews either side of the aisle
+N_["A", 14, 46] = _p("""
+L.pNpNpNp.L
+W..........
+p..........
+W..>t<.....
+p..........
+W..........
+L.pSpSpSp.L
+""")                                                    # bunk room
+N_["A", 30, 46] = _p("""
+CaCaCaCaCaC
+...........
+..CCC.aaa.C
+..........C
+..aaa.CCC.C
+...*.......
+CaCaPKPaCaC
+""")                                                    # supply store: shelving islands
+N_["A", 42, 46] = _p("""
+P.........P
+...........
+>t<.>t<.>t<
+...........
+>t<.>t<.>t<
+..*.....*..
+kkuKk.kKukk
+""")                                                    # canteen: café tables, galley south
+# ---- deck B
+N_["B", 2, 16] = _p("""
+mnm.L.L.msm
+...........
+c.TT...TT.c
+c.vv...vv.c
+...........
+...*...*...
+LLaa...aaLL
+""")                                                    # fabrication shop
+N_["B", 14, 16] = _p("""
+Lo.o.o.o.oL
+...........
+..mmm.mmm..
+..mmm.mmm..
+...........
+*.........*
+gg..*...gg.
+""")                                                    # generator hall: twin gensets
+N_["B", 42, 16] = _p("""
+HHa%..%a%cc
+...........
+C.ppp.ppp.C
+...........
+C.aaa.aaa.C
+...*...*...
+45cc...ccHH
+""", **{"4": (4, "Y", "H"), "5": (5, "Y", "H")})       # ration store
+N_["B", 2, 2] = _p("""
+gggo.m.oggg
+...........
+.gg.....gg.
+.gg..*..gg.
+...........
+m.g.g.g.g.m
+m.........m
+m.g.g.g.g.m
+...........
+.gg.....gg.
+.gg..*..gg.
+...........
+LLoo...ooLL
+""")                                                    # water treatment
+N_["B", 14, 2] = _p("""
+$$$$$$$$$$$
+....*......
+$$$$$$$$$$.
+$$$$$$$$$$.
+...........
+$$$$$$$$$$.
+$$$$$$$$$$.
+....*......
+$$$$$$$$$$.
+$$$$$$$$$$.
+...........
+4..........
+$$$$$$$$$$$
+""", **{"4": (4, "&", "c")})                            # bulk vault
+N_["B", 30, 2] = _p("""
+bqbqbPbqbqb
+...........
+..qqqqqqq.b
+..bbbbbbb.b
+...........
+..qqqqqqq.b
+..bbbbbbb..
+...........
+..T.T.T.T.b
+..v.v.v.v..
+....*...*..
+...........
+bPbqbqbqbPb
+""")                                                    # records hall: stacks and reading desks
+N_["B", 42, 2] = _p("""
+ooooooooooo
+...........
+.mm.mmm.mm.
+.mm.mmm.mm.
+...........
+L.........L
+L.ggg.ggg.L
+L.ggg.ggg.L
+...........
+.mm.....mm.
+.mm..*..mm.
+...........
+LLLo...oLLL
+""")                                                    # power plant
+N_["B", 2, 28] = _p("""
+xxxxxxxxxx...xxxxxxxxxx
+.......................
+C.ccc.ccc...ccc.ccc...C
+.......................
+X.....>t<.....>t<.....X
+...*.........*.......*.
+LLLLLaaaaaLLLaaaaaLLLLL
+""")                                                    # armoury
+N_["B", 34, 28] = _p("""
+gggggggg...gggggggg
+...................
+.ggg.ggg...ggg.ggg.
+.ggg.ggg...ggg.ggg.
+...................
+m...*....o....*...m
+mmoooLLLmmmLLLooomm
+""")                                                    # cistern & filtration
+N_["B", 2, 36] = _p("""
+ooooo.ooooo.ooooo.ooooo
+.......................
+.mmm..mmm..mmm..mmm....
+.mmm..mmm..mmm..mmm....
+.......................
+.mmm..mmm..mmm..mmm....
+.mmm..mmm..mmm..mmm....
+....*.....*.....*......
+LLLLaaaaLLLLccccLLLL...
+""")                                                    # turbine hall
+N_["B", 30, 36] = _p("""
+zzzzzzzzzzz
+...........
+.zzz...zzz.
+.zzz...zzz.
+...........
+.zzz...zzz.
+.zzz...zzz.
+..*........
+ppa.aa.aapp
+""")                                                    # hydroponics bay
+N_["B", 42, 36] = _p("""
+LpNpNpNpNpL
+...........
+..........E
+..>t<.....p
+..........E
+...*......p
+..........E
+...........
+LpSpSpSpSpL
+""")                                                    # bunk room (night shift)
+N_["B", 2, 46] = _p("""
+ns.mmm.nsk.mmm.kkdk.LLL
+.......................
+..TTT....TTT....TTT....
+..vvv....vvv....vvv....
+.......................
+...*.......*.......*...
+CCaaCCaaCC.CCaaCCaaCC..
+""")                                                    # workshops
+N_["B", 33, 46] = _p("""
+P.....kkkKkkkKkkkuuP
+....................
+.vvvv..vvvv..vvvv...
+.tttt..tttt..tttt...
+.^^^^..^^^^..^^^^...
+....*......*......*.
+CC..aa..CC..aa..CCPP
+""")                                                    # mess hall
+# ---- deck C
+N_["C", 2, 34] = _p("""
+ooooooooooooooooooooooo
+.......................
+..ggg..mmmmmmmmm..ggg..
+..ggg..mmmmmmmmm..ggg..
+.......................
+..*......*.....*....*..
+LLLLLaaaa...aaaaLLLLLLL
+""")                                                    # reactor hall
+N_["C", 26, 34] = _p("""
+o.o.o.o.o.o.o.o.o.o.o.o.o.o
+...........................
+.mm.mm.mm.mm.mm.mm.mm.mm.m.
+.mm.mm.mm.mm.mm.mm.mm.mm.m.
+...........................
+...*......*.........*......
+LLggLLggLLgg...ggLLggLLggLL
+""")                                                    # switchgear hall
+N_["C", 2, 46] = _p("""
+ooooooooooo...oooooooooooo
+..........................
+..mm.mm.mm.mm..mm.mm.mm.mm
+..mm.mm.mm.mm..mm.mm.mm.mm
+..........................
+...*.....*......*.....*...
+LLLLaaLLLLaaLLLLaaLLLLaaLL
+""")                                                    # server vault
+N_["C", 34, 46] = _p("""
+xxxxxxxx...xxxxxxxx
+...................
+C.ccc.cc...cc.ccc.C
+...................
+X.....>t<..>t<....X
+...*.........*.....
+LLLLLaaaLLLaaaLLLLL
+""")                                                    # deep armoury
+
+# ============================================================== HEARTHWOOD – the undercroft (deck A)
+H_["A", 13, 1] = _p("""
+$$$$$$$$$$$
+$.$$.$$.$.$
+$.$$.$$.$.$
+$.$$*$$.$*$
+$.$$.$$.$.$
+$.$$.$$.$.$
+$.$$.$$.$.$
+......*....
+$$$$$$$$$.$
+""")                                                    # cask cellar: racks running north-south
+H_["A", 31, 1] = _p("""
+33[[[[[[[[[[[[
+3............3
+3...e.....e..3
+3..=TTTTTT=...
+3..=vvvvvv=.5.
+3....Z........
+3...*....*...4
+.............4
+..33333333455.
+""", **ARCH_G)                                          # muniment room: long reading table
+H_["A", 46, 1] = _p("""
+bbbPbbb
+.....<T
+......q
+.....<T
+...*..q
+.....<T
+......q
+..=-=..
+MkPdPkM
+""")                                                    # letters & maps room
+H_["A", 30, 16] = _p("""
+L..wjPjw..b
+...........
+..........4
+..==-==...p
+..........5
+...........
+pS2pS3pSp.p
+""", **{"2": (2, "S", "p"), "3": (3, "S", "p"), "4": (4, "E", "p"), "5": (5, "E", "p")})  # dormitory
+H_["A", 42, 16] = _p("""
+dkkKkukKkkc
+...........
+.vvvvvvvvv.
+.ttttttttt.
+.^^^^^^^^^.
+P...*.*...P
+C.........C
+""")                                                    # refectory: one long table
+H_["A", 14, 28] = _p("""
+JbbbP.Pbbb.
+...........
+.>t<..>t<..
+...........
+.>t<..>t<..
+.....*.....
+MvvvvP.vvvM
+""")                                                    # snug: settles, card tables, bookcases
+H_["A", 33, 28] = _p("""
+I......U
+A......F
+G..==..F
+A..=U=.F
+G..==..F
+I......2
+aOVDU..3
+""", **{"2": (2, "Q", "k"), "3": (3, "Q", "k")})       # smithy: hearth range on the east wall
+H_["A", 42, 28] = _p("""
+bbbP...Pbbb
+...........
+..vvvvvvv..
+..ttttttt..
+..^^^^^^^..
+P..*...*..P
+bbMbbKbbMbb
+""")                                                    # council room
+H_["A", 2, 36] = _p("""
+uuu.l.l.uuu
+...........
+a.|.|.|.|.a
+...........
+Ca*.....*aC
+""")                                                    # wash house
+H_["A", 14, 36] = _p("""
+rribbbbirrP
+...........
+i..TTT.....
+...vvv..*..
+uiu.....ruP
+""")                                                    # still room
+H_["A", 30, 36] = _p("""
+XX.....xxxx
+...........
+...h...h...
+..-------..
+LLvvv..vvvL
+""")                                                    # fencing salle
+H_["A", 42, 36] = _p("""
+bbbbbPbbbbb
+..T.....T..
+..v.....v..
+...*...*...
+kd.......dk
+""")                                                    # steward's office
+H_["A", 2, 46] = _p("""
+P.........P
+.....-.....
+^^^^.-.^^^^
+.....-.....
+^^^^.-.^^^^
+f...===...f
+kd.kkKkk.dk
+""")                                                    # crypt chapel
+H_["A", 14, 46] = _p("""
+NpNpNpNpu.L
+...........
+...........
+....T>.....
+...........
+...........
+SpSpSpSpa.L
+""")                                                    # servants' dormitory
+H_["A", 30, 46] = _p("""
+CCCaaaCCCaa
+...........
+..CC.aa.CC.
+..........C
+..aa.CC.aa.
+...*....*..
+CaCaCHHCaCa
+""")                                                    # undercroft store
+H_["A", 42, 46] = _p("""
+P.........P
+...........
+.>t<...>t<.
+...........
+.>t<...>t<.
+..*.....*..
+kuKkkdkkKuk
+""")                                                    # servery & dining
+# ---- deck B
+H_["B", 2, 16] = _p("""
+ns.CC...CCs
+...........
+c.T.....T.c
+c.v.....v.c
+...........
+..*.....*..
+aaCC...CCaa
+""")                                                    # cooperage
+H_["B", 14, 16] = _p("""
+mmm.mmm.mmm
+...........
+.mm.....mm.
+.mm..*..mm.
+...........
+o.........o
+ccC.....Ccc
+""")                                                    # boiler room
+H_["B", 42, 16] = _p("""
+H%a.....a%%
+...........
+pp.pp.pp.pp
+...........
+aa.CC.CC.aa
+4.........5
+HHcc...ccHH
+""", **{"4": (4, "Y", "c"), "5": (5, "Y", "c")})       # root cellar
+H_["B", 2, 2] = _p("""
+ggggg.ggggg
+...........
+gg.gg.gg.gg
+gg.gg.gg.gg
+...........
+m.........m
+m..ggggg..m
+m..ggggg..m
+...........
+gg.gg.gg.gg
+..*.....*..
+...........
+ccoo...oocc
+""")                                                    # cistern
+H_["B", 14, 2] = _p("""
+$.$$.$$.$$.
+$.$$.$$.$$.
+$.$$*$$.$$.
+$.$$.$$.$$.
+$.$$.$$.$$.
+$.$$.$$*$$.
+....*......
+$.$$.$$.$$.
+$.$$.$$.$$.
+$.$$*$$.$$.
+$.$$.$$.$$.
+$.$$.$$.$$.
+$4$$.$$.$$.
+""", **{"4": (4, "&", "c")})                            # great cask vault
+H_["B", 30, 2] = _p("""
+bbbbbbbbbbb
+...........
+..q.q.q.q.b
+..q.q.q.q.b
+..q.q.q.q.b
+...........
+...T>..T>..
+...........
+..q.q.q.q.b
+..q.q.q.q.b
+..*.....*..
+...........
+bbbbbPbbbbb
+""")                                                    # records
+H_["B", 42, 2] = _p("""
+ooooo.ooooo
+...........
+.mmm...mmm.
+.mmm...mmm.
+...........
+.mmm...mmm.
+.mmm.*.mmm.
+...........
+.mmm...mmm.
+.mmm...mmm.
+...........
+...*...*...
+ccL.....Lcc
+""")                                                    # engine hall
+H_["B", 2, 28] = _p("""
+xxxxxxxxx.....xxxxxxxxx
+.......................
+..>t<.....X.....>t<....
+.......................
+..>t<...........>t<....
+....*......*......*....
+CCLLLLCCaaaaaaaCCLLLLCC
+""")                                                    # guardroom & armoury
+H_["B", 34, 28] = _p("""
+ggggggg.....ggggggg
+...................
+.gggg.........gggg.
+.gggg...m.m...gggg.
+...................
+...*.....*.....*...
+ccoooCC.....CCooocc
+""")                                                    # cistern & still
+H_["B", 2, 36] = _p("""
+mm.mm.mm.mm.mm.mm.mm.mm
+.......................
+..mmmm..mmmm..mmmm.....
+..mmmm..mmmm..mmmm.....
+.......................
+..mmmm..mmmm..mmmm.....
+..mmmm..mmmm..mmmm.....
+...*......*......*.....
+ccLLccLLccLLccLLccLL...
+""")                                                    # engine room
+H_["B", 30, 36] = _p("""
+zzz.zzz.zzz
+...........
+.z.z.z.z.z.
+...........
+...........
+.z.z.z.z.z.
+...........
+...*...*...
+ppa.....app
+""")                                                    # cellar garden
+H_["B", 42, 36] = _p("""
+NpNpNpNpNpL
+...........
+...........
+...>t<.....
+...........
+..==-==....
+...........
+...........
+SpSpSpSpSpL
+""")                                                    # night-watch dormitory
+H_["B", 2, 46] = _p("""
+ns.TTT.ns.TTT.ccaa.l...
+...vvv....vvv..........
+.......................
+..CC....CC....CC.......
+.......................
+....*.......*.......*..
+aaCCaaCCaaCCaaCCaaCC...
+""")                                                    # carpenters' shop
+H_["B", 33, 46] = _p("""
+P...kkkKkkkkKkkkuuuP
+....................
+..vvvvvvvvvvvvvv....
+..tttttttttttttt....
+..^^^^^^^^^^^^^^....
+.....*.....*.....*..
+CCaa....CCCC....aaCC
+""")                                                    # servants' hall
+# ---- deck C
+H_["C", 2, 34] = _p("""
+mmmmmmmmmmmmmmmmmmmmmmm
+.......................
+..mmmm..ggggggg..mmmm..
+..mmmm..ggggggg..mmmm..
+.......................
+...*.......*.......*...
+ccLLccLLcc...ccLLccLLcc
+""")                                                    # deep boiler house
+H_["C", 26, 34] = _p("""
+ooo.mmm.ooo.mmm.ooo.mmm.ooo
+...........................
+.mmm..mmm..mmm..mmm..mmm...
+.mmm..mmm..mmm..mmm..mmm...
+...........................
+....*......*.......*.......
+ccccLLLLcccc...ccccLLLLcccc
+""")                                                    # engine gallery
+H_["C", 2, 46] = _p("""
+bbbbbbbbbbb...bbbbbbbbbbbb
+..........................
+.qq.qq.qq.qq..qq.qq.qq.qq.
+.qq.qq.qq.qq..qq.qq.qq.qq.
+..........................
+...*......*......*.....*..
+bbbbbbbbbbbbbbbbbbbbbbbbbb
+""")                                                    # record vault
+H_["C", 34, 46] = _p("""
+xxxxxxxx...xxxxxxxx
+...................
+..>t<.......>t<....
+...................
+X.......X.......X..
+...*.....*.....*...
+CCLLLaaCCCCaaLLLCCC
+""")                                                    # deep armoury
+
+# ============================================================== CASCADIA – ridge refuge (deck A)
+C_["A", 13, 1] = _p("""
+$$$$$$$$$$$
+..*.....*..
+$$$$$.$$$$$
+$$$$$.$$$$$
+.....*.....
+$$$$$.$$$$$
+$$$$$.$$$$$
+..*.....*..
+$$$$$$$$$.$
+""")                                                    # keg store: two islands
+C_["A", 31, 1] = _p("""
+33333333333333
+[............3
+[..e.Z.e.....3
+[.=======.....
+[.=MMMMM=..5..
+[.=======.....
+[....*...T>..4
+.............4
+..[[[[[[33455.
+""", **ARCH_G)                                          # assay & survey office
+C_["A", 46, 1] = _p("""
+LybPbyL
+.......
+.T>..T>
+.......
+..*....
+.T>..T>
+.......
+.......
+CCaPaCC
+""")                                                    # telegraph office
+C_["A", 30, 16] = _p("""
+L..w.j.w.jL
+..........4
+..........p
+...=--=...5
+..........p
+...........
+SpS2pS3p..p
+""", **{"2": (2, "S", "p"), "3": (3, "S", "p"), "4": (4, "E", "p"), "5": (5, "E", "p")})  # bunkhouse
+C_["A", 42, 16] = _p("""
+kKkuk.kukKk
+...........
+.>t<...>t<.
+.>t<...>t<.
+.>t<...>t<.
+P...*.*...P
+Cc.......cC
+""")                                                    # mess shack
+C_["A", 14, 28] = _p("""
+J.M.....M.J
+...........
+K.>...^....
+m.>..<t>...
+K.>...v....
+...........
+P.vvvvvvv.P
+""")                                                    # rec hall round the stove
+C_["A", 33, 28] = _p("""
+a......I
+F......A
+F..==..G
+F..=U=.O
+F..==..V
+2......D
+3.AGIU.U
+""", **{"2": (2, "Q", "k"), "3": (3, "Q", "k")})       # blacksmith & fitter
+C_["A", 42, 28] = _p("""
+bbo.....obb
+...........
+.T>.....<T.
+...........
+.T>..M..<T.
+...*...*...
+LLaaCCCaaLL
+""")                                                    # shift office
+C_["A", 2, 36] = _p("""
+u.xxxPxxx.u
+...........
+H.aa...aa.H
+...........
+LL*.....*LL
+""")                                                    # drying room
+C_["A", 14, 36] = _p("""
+iiikkdkkiii
+...........
+g..ttt.....
+...vvv*....
+gC.....uCrP
+""")                                                    # assay lab
+C_["A", 30, 36] = _p("""
+LL.X...X.LL
+...........
+...h.--.h..
+...------..
+vvv.....vvv
+""")                                                    # boxing room
+C_["A", 42, 36] = _p("""
+bbCPbqbPCbb
+.T>.....<T.
+...........
+...*...*...
+ka.......ak
+""")                                                    # foreman's office
+C_["A", 2, 46] = _p("""
+f.........f
+...........
+^^^^...^^^^
+...........
+^^^^...^^^^
+...=====...
+PkkKk.kKkkP
+""")                                                    # miners' chapel
+C_["A", 14, 46] = _p("""
+N.N.N.N.L..
+...........
+...........
+..>t<......
+...........
+...........
+S.S.S.S.L.u
+""")                                                    # bunk room
+C_["A", 30, 46] = _p("""
+CCaaCCaaCCa
+...........
+.CCC..aaa.C
+..........C
+.aaa..CCC.C
+...*....*..
+HHCCaaCCaHH
+""")                                                    # supply room
+C_["A", 42, 46] = _p("""
+P.........P
+...........
+.vvvv.vvvv.
+.tttt.tttt.
+.^^^^.^^^^.
+...*...*...
+kkuKkCkKukk
+""")                                                    # cookhouse annex
+# ---- deck B
+C_["B", 2, 16] = _p("""
+sn.C.....Cs
+...........
+C.ttt.ttt.C
+..vvv.vvv..
+...........
+..*.....*..
+aCaC...CaCa
+""")                                                    # tool & bit shop
+C_["B", 14, 16] = _p("""
+mmmmm.mmmmm
+...........
+mm..mmm..mm
+mm..mmm..mm
+...........
+o..*...*..o
+LLcc...ccLL
+""")                                                    # compressor house
+C_["B", 42, 16] = _p("""
+%%%.....HHH
+...........
+aa.CC.CC.aa
+...........
+pp.aa.aa.pp
+4.........5
+HHCc...cCHH
+""", **{"4": (4, "Y", "H"), "5": (5, "Y", "H")})       # root cellar
+C_["B", 2, 2] = _p("""
+ggg.mmm.ggg
+...........
+ggg.....ggg
+ggg..*..ggg
+...........
+m.m.m.m.m.m
+...........
+ggg.....ggg
+ggg..*..ggg
+...........
+o.o.....o.o
+...........
+LLcC...CcLL
+""")                                                    # sump & pump room
+C_["B", 14, 2] = _p("""
+$$$$$$$$$$$
+..*........
+$$$$$.$$$$.
+$$$$$.$$$$.
+...........
+$$$$$.$$$$.
+$$$$$.$$$$.
+......*....
+$$$$$.$$$$.
+$$$$$.$$$$.
+...........
+4..........
+$$$$$$$$$$$
+""", **{"4": (4, "&", "c")})                            # powder magazine
+C_["B", 30, 2] = _p("""
+bqbqbqbqbqb
+...........
+..T>..T>..b
+..........b
+..bbbbbbb..
+..qqqqqqq..
+...........
+..qqqqqqq..
+..bbbbbbb..
+..........b
+..T>..T>..b
+...*....*..
+MbbbbPbbbbM
+""")                                                    # survey records
+C_["B", 42, 2] = _p("""
+ooooommoooo
+...........
+.mm.....mm.
+.mm.ggg.mm.
+.....g.....
+.mm.ggg.mm.
+.mm.....mm.
+...........
+L..mm.mm..L
+L..mm.mm..L
+...........
+...*...*...
+cCL.....LCc
+""")                                                    # dynamo hall
+C_["B", 2, 28] = _p("""
+CCCCCCCCCa...aCCCCCCCCC
+.......................
+..xxxx..ssnn.....xxxx..
+.......................
+..aaaa..CCCC..CCCC..aa.
+...*.......*.......*...
+LLLLaaaaCCCCaaaaLLLLCCC
+""")                                                    # powder & tool store
+C_["B", 34, 28] = _p("""
+gggggg.......gggggg
+...................
+gg..ggg.....ggg..gg
+gg..ggg.....ggg..gg
+...................
+...*....m.m....*...
+oooLLccc...cccLLooo
+""")                                                    # water tanks
+C_["B", 2, 36] = _p("""
+LLLLccccmmmmmmmccccLLLL
+.......................
+.mmmmm...mmmmm...mmm...
+.mmmmm...mmmmm...mmm...
+.......................
+.mmmmm...mmmmm...mmm...
+.......................
+...*.....*.....*.......
+oooo..oooo..oooo..oooo.
+""")                                                    # hoist-engine hall
+C_["B", 30, 36] = _p("""
+z.z.z.z.z.z
+...........
+zz.zz.zz.zz
+...........
+...........
+zz.zz.zz.zz
+...........
+..*.....*..
+aCa.....aCa
+""")                                                    # grow cave
+C_["B", 42, 36] = _p("""
+NpNpNpNpNpN
+...........
+...........
+...>t<.>t<.
+...........
+...........
+..==---==..
+...........
+SpSpSpSpSpS
+""")                                                    # shift bunkhouse
+C_["B", 2, 46] = _p("""
+mmm.ns.mmm.ns.mmm.kkkk.
+.......................
+..TTTT....TTTT....TT...
+..vvvv....vvvv....vv...
+.......................
+....*.......*.......*..
+CCaaCCLLLLCCaaCCLLLL...
+""")                                                    # machine shop
+C_["B", 33, 46] = _p("""
+P...kKkkkukkkKkkkkuP
+....................
+..>t<..>t<..>t<..>t<
+....................
+..>t<..>t<..>t<..>t<
+.....*......*......*
+CCaa..CCaa..CCaa..CC
+""")                                                    # mess hall
+# ---- deck C
+C_["C", 2, 34] = _p("""
+ggggggggggggggggggggggg
+.......................
+..mmm..mmm.....mmm..mmm
+..mmm..mmm.....mmm..mmm
+.......................
+....*.......*.......*..
+oooLLcccLL...LLcccLLooo
+""")                                                    # deep pump station
+C_["C", 26, 34] = _p("""
+mmmmmmmmmmmmmmmmmmmmmmmmmmm
+...........................
+..oo..oo..oo.....oo..oo..oo
+...........................
+..ggg..ggg..ggg..ggg..ggg..
+....*.......*......*.......
+LLccLLccLLcc...ccLLccLLccLL
+""")                                                    # generator gallery
+C_["C", 2, 46] = _p("""
+CCCCCCCCCCC...CCCCCCCCCCCC
+..........................
+.aa.CC.aa.CC..aa.CC.aa.CC.
+..........................
+.CC.aa.CC.aa..CC.aa.CC.aa.
+...*......*.....*......*..
+HHHHaaaaCCCCLLLLCCCCaaaaHH
+""")                                                    # core store
+C_["C", 34, 46] = _p("""
+LLLLLLLL...LLLLLLLL
+...................
+CC.CC.CC...CC.CC.CC
+...................
+aa.aa.aa...aa.aa.aa
+....*....*....*....
+xxxxxxxXXXXxxxxxxxx
+""")                                                    # explosives locker
+
+# ---------------------------------------------------------------------------------------------------- child plans
+_FUR = {c: (lv, "F", "k") for c, lv in zip("12345", range(1, 6))}
+_SPOT = {c: (lv, "!", ".") for c, lv in zip("6789(", range(1, 6))}
+_KSEAT = {")": (3, "^", "."), "~": (3, "v", ".")}
+_SHELF = {c: (lv, "{", ".") for c, lv in zip("2345", range(2, 6))}
+_RACK = {c: (lv, "R", "H") for c, lv in zip("2345", range(2, 6))}
+CHILD_PLANS = {
+    "Neoterra": {
+        "kitchen": _p("""
+Pp.p.p.p...
+k...)......
+p..<t>....K
+k..<t>....p
+p...~...*..
+.6789(.....
+U12345YRukk
+""", **_FUR, **_SPOT, **_KSEAT),
+        "clinic": _p("""
+3pNp2pNp2p.
+...........
+0.........u
+F..=====..p
+7.........u
+...........
+6p4p5...5p6
+""", **{"2": (2, "N", "p"), "3": (3, "N", "p"), "4": (3, "S", "p"), "5": (4, "S", "p"), "6": (5, "S", "p"),
+        "7": (3, "j", "p")}),
+        "school": _p("""
+P.........P
+{^^^...^^^.
+2TTT...TTT.
+3^^^...^^^.
+4TTT...TTT.
+5....!.K..b
+.P..BBB..bb
+""", **_SHELF),
+        "farm": _p("""
+.,,~,;,~,,;
+;,,~,;,~,,;
+;,,~,;,~,,;
+;,,~,;,~,,;
+;,,~,;,~,,;
+;;;;;;;;;;;
+R2345.0%vcH
+""", **_RACK),
+    },
+    "Hearthwood": {
+        "kitchen": _p("""
+pp.p.Pp.p..
+16........p
+27...)....p
+38..<t>...K
+49..<t>...p
+5(...~....u
+Y.URkkdkkkk
+""", **_FUR, **_SPOT, **_KSEAT),
+        "clinic": _p("""
+p.2pNpNp2p.
+...........
+3.........:
+..=======..
+4.........?
+...........
+0F5p...p56p
+""", **{"2": (2, "N", "p"), "3": (3, "W", "p"), ":": (3, "E", "p"), "4": (4, "W", "p"), "?": (4, "E", "p"),
+        "5": (5, "S", "p"), "6": (3, "j", "p")}),
+        "school": _p("""
+P.........P
+{.<T..<T...
+2.<T..<T..B
+3.<T..<T.!B
+4.<T..<T..B
+5.<T..<T.K.
+.P.......P.
+""", **_SHELF),
+        "farm": _p("""
+.,,,,;,,,,,
+~~~~~;~~~~~
+,,,,,;,,,,,
+,,,,,;,,,,,
+~~~~~;~~~~~
+;;;;;;;;;;;
+0%vc..2345R
+""", **_RACK),
+    },
+    "Cascadia": {
+        "kitchen": _p("""
+pkpkpP.....
+p........61
+k...)....72
+p..<t>...83
+k..<t>...94
+....~....(5
+uKkkkdkRU.Y
+""", **_FUR, **_SPOT, **_KSEAT),
+        "clinic": _p("""
+5.pNp3pNp..
+...........
+2.........:
+..=======..
+4.........?
+...........
+6.0F...8u.7
+""", **{"2": (2, "W", "p"), ":": (2, "E", "p"), "3": (3, "N", "p"), "4": (3, "W", "p"), "?": (4, "E", "p"),
+        "5": (4, "W", "p"), "6": (5, "W", "p"), "7": (5, "E", "p"), "8": (3, "j", "p")}),
+        "school": _p("""
+P.........P
+...T>..T>.{
+B..T>..T>.2
+B!.T>..T>.3
+B..T>..T>.4
+.K.T>..T>.5
+..P.....P..
+""", **_SHELF),
+        "farm": _p("""
+.,~,,;,,~,,
+,,~,,;,,~,,
+,,~,,;,,~,,
+,,~,,;,,~,,
+,,~,,;,,~,,
+;;;;;;;;;;;
+R2345.0%vHH
+""", **_RACK),
+    },
+}
+
+# corridor lights, by hand (base coordinates): (deck, x, z, from level)
+CORR_LIGHTS = {
+    "Neoterra": [("A", 24, 12, 1), ("A", 30, 12, 1), ("A", 27, 18, 1), ("A", 27, 22, 1), ("A", 27, 30, 1),
+                 ("A", 6, 25, 1), ("A", 12, 25, 1), ("A", 18, 25, 1), ("A", 32, 25, 1), ("A", 38, 25, 1),
+                 ("A", 44, 25, 2), ("A", 50, 25, 2), ("A", 27, 37, 3), ("A", 27, 48, 3), ("A", 6, 43, 3),
+                 ("A", 14, 43, 3), ("A", 20, 43, 3), ("A", 34, 43, 3), ("A", 40, 43, 3), ("A", 46, 43, 3),
+                 ("B", 6, 25, 2), ("B", 12, 25, 2), ("B", 18, 25, 2), ("B", 34, 25, 2), ("B", 40, 25, 2),
+                 ("B", 46, 25, 2), ("B", 27, 5, 2), ("B", 27, 12, 2), ("B", 27, 19, 2), ("B", 27, 33, 4),
+                 ("B", 27, 40, 4), ("B", 27, 48, 4), ("C", 6, 43, 5), ("C", 14, 43, 5), ("C", 22, 43, 5),
+                 ("C", 34, 43, 5), ("C", 42, 43, 5), ("C", 50, 43, 5)],
+    "Hearthwood": [("A", 23, 13, 1), ("A", 31, 13, 1), ("A", 27, 17, 1), ("A", 27, 21, 1), ("A", 27, 31, 1),
+                   ("A", 4, 25, 1), ("A", 10, 25, 1), ("A", 16, 25, 1), ("A", 22, 25, 1), ("A", 34, 25, 1),
+                   ("A", 40, 25, 1), ("A", 46, 25, 2), ("A", 51, 25, 2), ("A", 27, 39, 3), ("A", 27, 47, 3),
+                   ("A", 5, 43, 3), ("A", 12, 43, 3), ("A", 19, 43, 3), ("A", 36, 43, 3), ("A", 43, 43, 3),
+                   ("A", 50, 43, 3), ("B", 4, 25, 2), ("B", 10, 25, 2), ("B", 16, 25, 2), ("B", 22, 25, 2),
+                   ("B", 36, 25, 2), ("B", 43, 25, 2), ("B", 50, 25, 2), ("B", 27, 4, 2), ("B", 27, 10, 2),
+                   ("B", 27, 17, 2), ("B", 27, 35, 4), ("B", 27, 43, 4), ("B", 27, 51, 4), ("C", 5, 43, 5),
+                   ("C", 12, 43, 5), ("C", 19, 43, 5), ("C", 36, 43, 5), ("C", 43, 43, 5), ("C", 50, 43, 5)],
+    "Cascadia": [("A", 25, 13, 1), ("A", 29, 12, 1), ("A", 27, 16, 1), ("A", 27, 20, 1), ("A", 27, 32, 1),
+                 ("A", 3, 25, 1), ("A", 9, 25, 1), ("A", 15, 25, 1), ("A", 21, 25, 1), ("A", 33, 25, 1),
+                 ("A", 39, 25, 1), ("A", 45, 25, 2), ("A", 51, 25, 2), ("A", 27, 36, 3), ("A", 27, 45, 3),
+                 ("A", 27, 51, 3), ("A", 3, 43, 3), ("A", 9, 43, 3), ("A", 15, 43, 3), ("A", 21, 43, 3),
+                 ("A", 33, 43, 3), ("A", 39, 43, 3), ("A", 45, 43, 3), ("A", 51, 43, 3),
+                 ("B", 3, 25, 2), ("B", 9, 25, 2), ("B", 15, 25, 2), ("B", 21, 25, 2), ("B", 33, 25, 2),
+                 ("B", 39, 25, 2), ("B", 45, 25, 2), ("B", 51, 25, 2), ("B", 27, 3, 2), ("B", 27, 9, 2),
+                 ("B", 27, 15, 2), ("B", 27, 21, 2), ("B", 27, 31, 4), ("B", 27, 37, 4), ("B", 27, 43, 4),
+                 ("B", 27, 50, 4), ("C", 3, 43, 5), ("C", 9, 43, 5), ("C", 15, 43, 5), ("C", 21, 43, 5),
+                 ("C", 33, 43, 5), ("C", 39, 43, 5), ("C", 45, 43, 5), ("C", 51, 43, 5)],
+}

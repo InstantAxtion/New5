@@ -27,6 +27,7 @@ from __future__ import annotations
 from types import SimpleNamespace as NS
 
 from hm import Design, design, AIR, D4, OPP, CW, SOLID, KEEP
+from designs._bunker_plans import ROOMPLANS, CHILD_PLANS, CORR_LIGHTS
 
 GY = 24
 SW = GY + 1                                  # surface walk level
@@ -456,13 +457,10 @@ def child_design(kind, pack, rel, L):
                 c = "white_concrete"
             d.set(x, cy, z, c)
     lk = {(x - x1, z - z1) for x, z in keep}
-    R = room(0, 0, W - 1, D - 1, 1, cy - 1, lk)
-    R.front = next((s for s in ("north", "south", "west", "east") if s in door_sides(R)), "south")
-    R.keep = lk | {(hx - x1, hz - z1)}
     d.hut(hx - x1, 1, hz - z1, "north")
-    CHILD_FN[kind](d, R, M, L, pack)
-    if kind != "farm":
-        lights(d, R, M, cy, 4, skip=())
+    mir = PLANS[pack]["mirror"]
+    stamp(d, CHILD_PLANS[pack][kind], lambda i, j: ((W - 1 - i) if mir else i, j), (0, 0, W - 1, D - 1), 1,
+          cy - 1, cy, L, sit=kind != "clinic", keep=lk | {(hx - x1, hz - z1)}, mirror=mir)
     return d
 
 
@@ -1154,6 +1152,15 @@ def piece(d, ch, x, y, z, fac, M, pack, L, top, ceil_y, sit, k):
         d.bookshelf(x, y, z, 2)
     elif ch == "!":
         d.spot(x, y, z, "work")
+    elif ch == ",":                                   # crop on farmland
+        S(x, y - 1, z, "farmland[moisture=7]")
+        S(x, y, z, ["wheat[age=7]", "carrots[age=7]", "potatoes[age=7]", "beetroots[age=3]"][(x + 2 * z) % 4])
+    elif ch == "~":                                   # irrigation channel with a grow light over it
+        S(x, y - 1, z, "water[level=0]")
+        S(x, top, z, "glowstone" if L < 4 else {"Neoterra": "sea_lantern", "Hearthwood": "glowstone",
+                                                "Cascadia": "ochre_froglight[axis=y]"}[pack])
+    elif ch == ";":                                   # path
+        S(x, y - 1, z, {"Neoterra": "polished_andesite", "Hearthwood": "gravel", "Cascadia": "coarse_dirt"}[pack])
     else:
         raise RuntimeError(f"unknown plan character {ch!r}")
 
@@ -2096,53 +2103,18 @@ def bunker_common(d, pack, L):
         deck, (x1, z1, x2, z2), fy, top, keep, (hx, hz) = child_geom(pack, kind, L)
         d.reserve(x1, fy, z1, x2, child_box_top(deck), z2)
         d.child_hut(hx, fy + 1, hz, CHILD_PATH[kind])
-    req = d.req
-    barrels = 0
-    first_vault = True
-    for sp in spaces:
-        kind, deck, x1, z1, x2, z2, _ = sp
-        if kind in CHILD_KINDS:
+    # corridor lights (hand-listed)
+    for (dk, bx, bz, ml) in CORR_LIGHTS[pack]:
+        if ml <= L:
+            x, z = ((54 - bx) if P["mirror"] else bx), bz + P["dz"]
+            fy, top = LV[dk]
+            piece(d, "*", x, fy + 1, z, "north", M, pack, L, top, top + 1, False, 0)
+    # rooms: each from its own hand-drawn plan
+    for sp_w, sp_b in zip(P["spaces"], P["spaces_base"]):
+        if sp_w[0] in CHILD_KINDS or sp_w[0] in CORR_KINDS or sp_w[6] > L:
             continue
-        fy, top = LV[deck]
-        R = room(x1, z1, x2, z2, fy + 1, top, keep_for(pack, L, deck, x1, z1, x2, z2))
-        if kind in CORR_KINDS:
-            lights(d, R, M, top + 1, 4)
-            if pack == "Hearthwood" or pack == "Cascadia":
-                along_x = R.W >= R.D
-                mid = (z1 + z2) // 2 if along_x else (x1 + x2) // 2
-                for a in (range(x1, x2 + 1) if along_x else range(z1, z2 + 1)):
-                    x, z = (a, mid) if along_x else (mid, a)
-                    if d.air(x, R.y, z):
-                        d.set(x, R.y, z, "red_carpet" if pack == "Hearthwood" else
-                              "rail[shape=%s,waterlogged=false]" % ("east_west" if along_x else "north_south"))
-            continue
-        if kind == "vault":
-            barrels += f_vault_all(d, R, M, L, pack, ender=first_vault and
-                                   req["items"].get("minecraft:ender_chest", 0) > 0)
-            first_vault = False
-            continue
-        p = LP(d, R, M, L, pack)
-        if kind == "dorm":
-            got = lay_dorm(p, req["beds"])
-            if got < req["beds"]:
-                raise RuntimeError(f"dorm beds {got}/{req['beds']}")
-        elif kind == "common":
-            got = lay_common(p, req["seats"])
-            if got < req["seats"]:
-                raise RuntimeError(f"common seats {got}/{req['seats']}")
-        elif kind == "workroom":
-            lay_workroom(p)
-        elif kind == "archive":
-            lay_archive(p, req["bookshelves"], req["items"].get("minecraft:chiseled_bookshelf", 0))
-            lights(d, R, M, top + 1, 4, skip={((x1 + x2) // 2, (z1 + z2) // 2)})
-            continue
-        elif kind == "pantry":
-            lay_pantry(p)
-        else:
-            LAYOUTS[kind](p)
-        lights(d, R, M, top + 1)
-    if barrels < req["items"]["minecraft:barrel"]:
-        raise RuntimeError(f"vaults hold {barrels}")
+        plan = ROOMPLANS[pack][(sp_b[1], sp_b[2], sp_b[3])]
+        stamp_room(d, pack, sp_b, sp_w, plan, L, sit=sp_w[0] == "common")
     hx, hy, hz = P["hut"]
     d.hut(hx, hy, hz, "north")
     return spaces
