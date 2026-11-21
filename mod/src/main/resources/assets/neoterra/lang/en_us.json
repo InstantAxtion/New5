@@ -30,8 +30,17 @@
   "com.neoterra.research.technology.efficientbenches.name": "Efficient Benches",
   "com.neoterra.research.technology.efficientbenches.subtitle": "A place for every tool.",
   "com.neoterra.research.technology.workshoprhythm.name": "Workshop Rhythm",
-  "com.neoterra.research.technology.workshoprhythm.subtitle": "Measure twice, cut once \u2013 quickly.",
+  "com.neoterra.research.technology.workshoprhythm.subtitle": "Measure twice, cut once – quickly.",
   "com.neoterra.research.technology.masterartisans.name": "Master Artisans",
   "com.neoterra.research.technology.masterartisans.subtitle": "Practice makes the queue shorter.",
-  "com.neoterra.research.effects.craftingspeed.description": "Crafters Finish Orders +%3$s%% Faster"
+  "com.neoterra.research.effects.craftingspeed.description": "Crafters Finish Orders +%3$s%% Faster",
+  "block.neoterra.blockhutgreatlibrary": "Great Library (Grand Project)",
+  "item.neoterra.blockhutgreatlibrary": "Great Library (Grand Project)",
+  "com.neoterra.building.greatlibrary": "Great Library",
+  "block.neoterra.blockhuthanginggardens": "Hanging Gardens (Grand Project)",
+  "item.neoterra.blockhuthanginggardens": "Hanging Gardens (Grand Project)",
+  "com.neoterra.building.hanginggardens": "Hanging Gardens",
+  "block.neoterra.blockhutgreatforge": "Great Forge (Grand Project)",
+  "item.neoterra.blockhutgreatforge": "Great Forge (Grand Project)",
+  "com.neoterra.building.greatforge": "Great Forge"
 }

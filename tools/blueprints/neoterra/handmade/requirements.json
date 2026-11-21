@@ -11281,6 +11281,741 @@
   "yard": {},
   "yard_seats": 0
  },
+ "monuments/greatforge1.blueprint": {
+  "base": "greatforge",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/greatforgewing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgreatforge",
+  "items": {
+   "minecraft:anvil": 1,
+   "minecraft:blast_furnace": 1
+  },
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatforge2.blueprint": {
+  "base": "greatforge",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/greatforgewing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgreatforge",
+  "items": {
+   "minecraft:anvil": 1,
+   "minecraft:blast_furnace": 2
+  },
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatforge3.blueprint": {
+  "base": "greatforge",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/greatforgewing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgreatforge",
+  "items": {
+   "minecraft:anvil": 1,
+   "minecraft:blast_furnace": 3
+  },
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatforge4.blueprint": {
+  "base": "greatforge",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/greatforgewing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgreatforge",
+  "items": {
+   "minecraft:anvil": 1,
+   "minecraft:blast_furnace": 4
+  },
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatforge5.blueprint": {
+  "base": "greatforge",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/greatforgewing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgreatforge",
+  "items": {
+   "minecraft:anvil": 1,
+   "minecraft:blast_furnace": 5
+  },
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatforgewing1.blueprint": {
+  "base": "greatforgewing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:smithing_table": 1
+  },
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatforgewing2.blueprint": {
+  "base": "greatforgewing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:smithing_table": 1
+  },
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatforgewing3.blueprint": {
+  "base": "greatforgewing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:smithing_table": 1
+  },
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatforgewing4.blueprint": {
+  "base": "greatforgewing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:smithing_table": 1
+  },
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatforgewing5.blueprint": {
+  "base": "greatforgewing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:smithing_table": 1
+  },
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatlibrary1.blueprint": {
+  "base": "greatlibrary",
+  "beds": 0,
+  "bookshelves": 8,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/greatlibrarywing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgreatlibrary",
+  "items": {},
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatlibrary2.blueprint": {
+  "base": "greatlibrary",
+  "beds": 0,
+  "bookshelves": 16,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/greatlibrarywing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgreatlibrary",
+  "items": {},
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatlibrary3.blueprint": {
+  "base": "greatlibrary",
+  "beds": 0,
+  "bookshelves": 24,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/greatlibrarywing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgreatlibrary",
+  "items": {},
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatlibrary4.blueprint": {
+  "base": "greatlibrary",
+  "beds": 0,
+  "bookshelves": 32,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/greatlibrarywing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgreatlibrary",
+  "items": {},
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatlibrary5.blueprint": {
+  "base": "greatlibrary",
+  "beds": 0,
+  "bookshelves": 40,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/greatlibrarywing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhutgreatlibrary",
+  "items": {},
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatlibrarywing1.blueprint": {
+  "base": "greatlibrarywing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:lectern": 1
+  },
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatlibrarywing2.blueprint": {
+  "base": "greatlibrarywing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:lectern": 1
+  },
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatlibrarywing3.blueprint": {
+  "base": "greatlibrarywing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:lectern": 1
+  },
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatlibrarywing4.blueprint": {
+  "base": "greatlibrarywing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:lectern": 1
+  },
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/greatlibrarywing5.blueprint": {
+  "base": "greatlibrarywing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:lectern": 1
+  },
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/hanginggardens1.blueprint": {
+  "base": "hanginggardens",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/hanginggardenswing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhuthanginggardens",
+  "items": {},
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/hanginggardens2.blueprint": {
+  "base": "hanginggardens",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/hanginggardenswing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhuthanginggardens",
+  "items": {},
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/hanginggardens3.blueprint": {
+  "base": "hanginggardens",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/hanginggardenswing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhuthanginggardens",
+  "items": {},
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/hanginggardens4.blueprint": {
+  "base": "hanginggardens",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/hanginggardenswing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhuthanginggardens",
+  "items": {},
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/hanginggardens5.blueprint": {
+  "base": "hanginggardens",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": false,
+  "children": [
+   {
+    "count": 2,
+    "hut": "neoterra:blockhutwonderwing",
+    "path": "monuments/hanginggardenswing0.blueprint"
+   }
+  ],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": 1,
+  "hut": "neoterra:blockhuthanginggardens",
+  "items": {},
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/hanginggardenswing1.blueprint": {
+  "base": "hanginggardenswing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:composter": 1
+  },
+  "level": 1,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/hanginggardenswing2.blueprint": {
+  "base": "hanginggardenswing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:composter": 1
+  },
+  "level": 2,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/hanginggardenswing3.blueprint": {
+  "base": "hanginggardenswing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:composter": 1
+  },
+  "level": 3,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/hanginggardenswing4.blueprint": {
+  "base": "hanginggardenswing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:composter": 1
+  },
+  "level": 4,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "monuments/hanginggardenswing5.blueprint": {
+  "base": "hanginggardenswing",
+  "beds": 0,
+  "bookshelves": 0,
+  "child": true,
+  "children": [],
+  "cluster": null,
+  "floor_items": 0,
+  "gy": null,
+  "hut": "neoterra:blockhutwonderwing",
+  "items": {
+   "minecraft:composter": 1
+  },
+  "level": 5,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
  "monuments/royalgranary1.blueprint": {
   "base": "royalgranary",
   "beds": 0,
