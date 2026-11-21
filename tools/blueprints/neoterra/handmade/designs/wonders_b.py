@@ -2092,10 +2092,11 @@ def lay_office(r, ground):
     else:
         r.put(r.A(0), 1, "books", r.fa)
         r.put(r.A(0), 2, "plant", r.fa)
-    if D >= 7:
-        for k in range(3, W - 2, 3):
-            r.put(r.A(k), D // 2, "counter", "front")
-            r.chair(r.A(k), D // 2 - 1, "front")
+    if D >= 7:                                         # desk pods: desk with the chair on its door side
+        for v in range(3, D - 3, 3):
+            for k in range(3, W - 2, 3):
+                r.put(r.A(k), v + 1, "counter", "front")
+                r.chair(r.A(k), v, "front")
     r.rug(r.A(1), 1, r.A(2), D - 4)
     r.lamp(W // 2, D // 2)
     if W >= 9:
@@ -2116,6 +2117,10 @@ def lay_shop(r, ground):
     r.put(r.A(0), 0, "barrel", "back")
     r.put(r.O(0), 0, "sacks", "back")
     r.put(r.A(0), 1, "pot", r.fa)
+    for v in range(4, D - 2, 3):                       # display stands behind the counter
+        for k in range(1, W - 2, 3):
+            r.put(r.A(k), v, "counter", "front")
+            r.put(r.A(k + 1), v, "barrel", "front")
     r.lamp(r.W // 2, 1)
     r.lamp(r.W // 2, D - 2)
 
@@ -2134,6 +2139,9 @@ def lay_store(r, ground, granary=False):
         r.put(r.A(k), D - 1, ("hay", "sacks", "barrels")[k % 3] if granary else ("barrels", "sacks", "pot")[k % 3],
               "front")
     r.put(r.A(0), 0, "pot", "back")
+    for k in range(3, r.W - 3, 3):                     # free-standing rack rows with two-wide aisles
+        for v in range(2, D - 2):
+            r.put(r.A(k), v, "barrels" if v % 2 else ("sacks" if granary else "barrel"), "front")
     r.lamp(r.W // 2, D // 2)
 
 

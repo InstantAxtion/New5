@@ -853,43 +853,6 @@ def c_recipe(name, d, x, y, z, pack, M, i, top):
         d.set(x, y + 1, z, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]")
 
 
-KINDS = {
-    "mess": (["counter", "shelf", "crate", "counter", "plant"], "table4"),
-    "canteen": (["counter", "counter", "shelf", "sacks"], "table4"),
-    "radio": (["console", "radio", "console", "books", "shelf"], "desk"),
-    "ops": (["console", "map", "console", "books"], "table4"),
-    "office": (["books", "shelf", "locker", "books"], "desk"),
-    "laundry": (["cauldron", "sacks", "loom", "sacks", "shelf"], "crates"),
-    "lab": (["brew", "counter", "cauldron", "shelf"], "labtable"),
-    "gym": (["bench", "target", "bench", "locker"], "punchbag"),
-    "bunks": (["bed", "locker"], None),
-    "store": (["crate", "sacks", "crate", "shelf"], "crates"),
-    "fabrication": (["anvil", "crate", "grind", "shelf", "locker"], "machine"),
-    "generator": (["machine", "console", "machine", "locker"], "machine"),
-    "water": (["tank", "machine", "tank", "console"], "tank"),
-    "records": (["chis", "books", "chis", "books"], "desk"),
-    "power": (["machine", "console"], "machine"),
-    "armory": (["weapons", "weapons", "crate", "target", "locker"], "table4"),
-    "cistern": (["tank", "tank", "console"], "tank"),
-    "server": (["console", "console", "locker"], "machine"),
-    "reactor": (["machine", "console", "tank"], "machine"),
-    "turbine": (["machine", "machine", "console"], "machine"),
-    "hydro": (["shelf", "sacks", "shelf", "crate"], "planter"),
-    "guard": (["locker", "console", "bench", "shelf"], "desk"),
-    "watch": (["console", "bench", "shelf"], "table4"),
-    "lobby": (["bench", "shelf", "plant", "bench"], "table4"),
-    "briefing": (["books", "console", "shelf"], "table4"),
-    "garage": (["anvil", "crate", "locker", "crate", "grind"], "crates"),
-    "parlour": (["books", "shelf", "bench", "plant"], "table4"),
-    "bedroom": (["bed", "shelf", "locker", "bed"], None),
-    "bunkhouse": (["bed", "locker", "bed", "shelf"], "table4"),
-    "smithy": (["anvil", "grind", "crate", "weapons"], "crates"),
-    "hoist": (["machine", "console", "crate"], "machine"),
-    "mill": (["machine", "sacks", "crate", "sacks"], "crates"),
-    "cookhouse": (["counter", "cauldron", "counter", "shelf", "crate"], "table4"),
-}
-
-
 def f_vault_all(d, R, M, L, pack, ender):
     along = "x" if R.W >= R.D else "z"
     k = next(iter(R.keep)) if R.keep else (R.x1, R.z1)
