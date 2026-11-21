@@ -2516,6 +2516,14 @@ def bs_armourer(d, sl):
                ("rack2", -1, -3, "west"), ("keg", -1, -4, "west", CHAIN), ("t", -1, -5, "barrel"),
                ("hook", -1, -3, "west"), ("t", -4, 3, "anvil", "north"), ("chair", -5, 3, "east"),
                ("lamp", -3, 2), ("lamp", -3, -3)], "blacksmith")
+    # more of the shop: armour stands (iron on stone plinths) along the west wall, a fitting stool, stock barrels
+    fit(d, g, [("b", 2, 3, "smooth_stone", "iron_block"), ("b", 2, 5, "smooth_stone", CHAIN), ("b", 2, -3, "smooth_stone", "iron_block"),
+               ("rack", -7, -1, "north"), ("b", -8, -1, "smooth_stone", "iron_block"), ("t", -1, -3, "barrel"),
+               ("chair", 4, 2, "west"), ("t", 3, -1, "plant"), ("lamp", 3, 3)], "blacksmith")
+    fit(d, u, [("rack", 2, -1, "north"), ("t", 3, -1, "barrel"), ("t", 4, -1, "chest", "north"), ("t", -1, 2, "barrel"),
+               ("slab", -7, -1, CANDLE), ("t", -8, -1, "anvil", "north"), ("b", -7, 3, "water_cauldron[level=3]"),
+               ("t", -1, 3, "grind", "west"), ("slab", -2, 3, CHAIN), ("hook", -2, -1, "north"), ("lamp", 4, 2), ("lamp", -7, 1)],
+        "blacksmith")
     awning(d, x1, x2, z1, 5)
     lamp_post(d, x1, z1 - 2)
 
@@ -2908,6 +2916,22 @@ def mc_engineshed(d, sl):
     fit(d, u, [("slab", -3, 3, CANDLE), ("slab", -4, 3, "flower_pot"), ("chair", -3, 4, "south"), ("chair", -4, 2, "north"),
                ("bs", -1, -1), ("t", -2, -1, "lectern", "north"), ("t", -3, -1, "carto"), ("bs", -4, -1),
                ("t", -1, 0, "plant"), ("rack", -1, 2, "west"), ("rug", -5, 2, 4, 3), ("lamp", -3, 2)], "mechanic")
+    tx, lz = fx2 - 2, fz1 + 2
+    if d.air(tx, y + 1, lz) and fz2 - fz1 >= 6:
+        for i in range(5):                           # a small tank engine: boiler, smokestack, cab
+            z = lz + i
+            d.set(tx, y, z, "black_concrete" if i in (0, 4) else "polished_deepslate")
+            d.set(tx, y + 1, z, "iron_block" if i < 3 else "black_stained_glass")
+        d.set(tx, y + 2, lz, "cobbled_deepslate_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
+        d.set(tx, y + 2, lz + 3, slab("smooth_stone_slab"))
+        d.set(tx, y + 2, lz + 4, slab("smooth_stone_slab"))
+    fit(d, g, [("rack", -1, 3, "west"), ("t", -1, 4, "barrel"), ("b", -6, -1, "coal_block", "coal_block"), ("t", -7, -1, "barrel"),
+               ("rack", -8, -1, "north"), ("hook", -8, -1, "north"), ("b", 2, -1, "coal_block"), ("t", 3, -1, "barrel"),
+               ("t", 2, 3, "craft"), ("t", 2, 4, "anvil", "west"), ("slab", 2, 5, CANDLE), ("lamp", 3, -2), ("lamp", -6, -3)],
+        "mechanic")
+    fit(d, u, [("t", -6, -1, "chest", "north"), ("t", -7, -1, "chest", "north"), ("rack", -8, -1, "north"),
+               ("desk", -7, 3, "south"), ("t", -1, 3, "barrel"), ("t", 4, -1, "plant"), ("t", 5, -1, "carto"),
+               ("b", -1, 4, "bookshelf"), ("lamp", -7, 2), ("lamp", 5, 2)], "mechanic")
     for x in range(x1 + 3, x2 - 2, 4):               # smoke vents along the ridge
         col(d, x, (z1 + z2) // 2, info["ridge"] + 1, info["ridge"] + 2, "iron_bars")
     lamp_post(d, info["mx"] - 2, z1 - 2)
@@ -3327,6 +3351,14 @@ def sf_drying(d, sl):
     fit(d, u, [("b", x, 4, fen, tray) for x in (-2, -3, -4, -5, -6)] +
         [("b", -1, -1, "brown_wool"), ("rack", -2, -1, "north"), ("slab", -3, -1, DPOT), ("t", -1, 1, "sieve"),
          ("lamp", -4, 2)], "sifter")
+    fit(d, g, [("b", x, -3, fen, tray) for x in (-3, -4, -5, -6, -7)] +
+        [("b", 2, -1, "white_wool", "brown_wool"), ("b", 3, -1, "white_wool"), ("t", 4, -1, "barrel"), ("keg", -5, -1, "north", "gravel"),
+         ("t", -6, -1, "barrel"), ("keg", -1, 2, "west", "sand"), ("t", -1, 3, "sieve"), ("b", -8, 3, fen, tray),
+         ("b", -9, 3, fen, tray), ("t", 2, 3, "sieve"), ("chair", 3, 3, "east"), ("lamp", 3, 2), ("lamp", -8, 2)], "sifter")
+    fit(d, u, [("b", x, -3, fen, tray) for x in (-3, -4, -5, -6, -7)] +
+        [("t", -4, -1, "barrel"), ("t", -5, -1, "barrel"), ("keg", -6, -1, "north", "sand"), ("t", -1, 2, "sieve"),
+         ("chair", -2, 2, "east"), ("b", -8, 4, fen, tray), ("b", -9, 4, fen, tray), ("t", 5, -1, "chest", "north"),
+         ("lamp", -7, 1), ("lamp", 5, 2)], "sifter")
     lamp_post(d, info["mx"] + 2, z1 - 2)
 
 

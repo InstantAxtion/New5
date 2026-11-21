@@ -1399,15 +1399,25 @@ def ar_hearthwood(rel, L):
     for x in range(x1 + 3, X2 - 1, 4):
         d.lamp(x, 5, 6)
     # shop corner by the door: arrow barrel and crock, a stool at the bench, and stores along the back wall
-    shop = [(4, 5, KEG.replace("FACE", "up"), POT.replace("FACE", "east")), (6, 4, "potted_red_tulip"),
+    shop = [(4, 6, KEG.replace("FACE", "up"), POT.replace("FACE", "east")), (6, 4, "potted_red_tulip"),
             (11, 8, SL("dark_oak", "top"), LANT_S)]
     if X2 >= 17:
-        shop += [(13, 8, KEG.replace("FACE", "north"), KEG.replace("FACE", "up")), (15, 8, SL("dark_oak", "top"), "potted_red_tulip"),
-                 (14, 4, POT.replace("FACE", "south"))]
+        shop += [(13, 8, KEG.replace("FACE", "north"), KEG.replace("FACE", "up")), (14, 4, POT.replace("FACE", "south"))]
+        d.banner(12, 4, 4, "south", "green")
+        d.banner(15, 4, 8, "north", "yellow")
     if X2 >= 21:
-        shop += [(17, 8, SL("dark_oak", "top"), LANT_S), (18, 8, "chest[facing=north,type=single,waterlogged=false]"),
+        shop += [(15, 8, SL("dark_oak", "top"), "potted_red_tulip"), (17, 8, SL("dark_oak", "top"), LANT_S), (18, 8, "chest[facing=north,type=single,waterlogged=false]"),
                  (17, 4, KEG.replace("FACE", "south"), "potted_oxeye_daisy")]
     put_all(d, 2, shop)
+    # under the front eaves: a bench by the door, arrow casks, a practice butt on the gable end
+    front = [(4, 2, ST("dark_oak", "north")), (5, 2, ST("dark_oak", "north")), (9, 2, KEG.replace("FACE", "north"), KEG.replace("FACE", "up")),
+             (10, 2, "potted_red_tulip"), (2, 5, "hay_block[axis=y]", "target[power=0]"), (2, 7, "water_cauldron[level=3]"),
+             (X2 + 1, 5, KEG.replace("FACE", "east")), (X2 + 1, 7, "dark_oak_fence", LANT_S)]
+    if X2 >= 17:
+        front += [(13, 2, ST("dark_oak", "north")), (14, 2, ST("dark_oak", "north")), (16, 2, "potted_oxeye_daisy")]
+    if X2 >= 21:
+        front += [(19, 2, KEG.replace("FACE", "north"), "potted_red_tulip"), (20, 2, "dark_oak_fence", LANT_S)]
+    put_all(d, 2, front)
     # stair up along the back wall
     flight(d, x1 + 1, 2, z2 - 1, "east", 4, "dark_oak", "dark_oak_planks")
     for x in range(x1 + 2, x1 + 5):
