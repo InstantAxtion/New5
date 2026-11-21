@@ -91,32 +91,33 @@ BASE = dict(
         ("vault", "B", 14, 2, 24, 14, 2),
         ("records", "B", 30, 2, 40, 14, 3),
         ("power", "B", 42, 2, 52, 14, 4),
-        ("armory", "B", 2, 28, 12, 34, 4),
-        ("store", "B", 14, 28, 24, 34, 4),
-        ("cistern", "B", 34, 28, 40, 34, 5),
-        ("server", "B", 42, 28, 52, 34, 5),
-        ("reactor", "B", 2, 36, 12, 44, 4),
-        ("turbine", "B", 14, 36, 24, 44, 4),
+        ("armory", "B", 2, 28, 24, 34, 4),
+        ("cistern", "B", 34, 28, 52, 34, 5),
+        ("turbine", "B", 2, 36, 24, 44, 4),
         ("hydro", "B", 30, 36, 40, 44, 4),
         ("bunks", "B", 42, 36, 52, 44, 4),
-        ("fabrication", "B", 2, 46, 12, 52, 5),
-        ("records", "B", 14, 46, 24, 52, 5),
-        ("mess", "B", 33, 46, 40, 52, 5),
+        ("workshop", "B", 2, 46, 24, 52, 5),
+        ("mess", "B", 33, 46, 52, 52, 5),
         # ---- deck C (plant deck)
         ("corr", "C", 2, 42, 52, 44, 5),
-        ("reactor", "C", 2, 34, 12, 40, 5),
-        ("turbine", "C", 14, 34, 24, 40, 5),
-        ("power", "C", 26, 34, 36, 40, 5),
-        ("water", "C", 38, 34, 52, 40, 5),
-        ("cistern", "C", 2, 46, 12, 52, 5),
-        ("server", "C", 14, 46, 27, 52, 5),
-        ("armory", "C", 34, 46, 44, 52, 5),
-        ("store", "C", 46, 46, 52, 52, 5),
-        ("power", "B", 42, 46, 52, 52, 5),
+        ("reactor", "C", 2, 34, 24, 40, 5),
+        ("power", "C", 26, 34, 52, 40, 5),
+        ("server", "C", 2, 46, 27, 52, 5),
+        ("armory", "C", 34, 46, 52, 52, 5),
     ],
-    doors=[(45, 5, "A", 4, "door"), (13, 49, "B", 5, "door"), (41, 49, "B", 5, "door"), (7, 15, "B", 4, "door"), (47, 15, "B", 4, "door"),
-           (13, 40, "B", 4, "door"), (41, 40, "B", 4, "door"), (36, 45, "B", 5, "door"), (29, 46, "B", 5, "open"), (31, 45, "C", 5, "open"),
-           (29, 28, "A", 2, "open"), (31, 27, "B", 2, "open")],
+    doors=[  # every door / opening, by hand: (x, z, deck, from level, kind)
+        (22, 10, "A", 1, "vault"), (31, 10, "A", 1, "door"), (7, 23, "A", 1, "door"), (23, 15, "A", 1, "door"),
+        (31, 15, "A", 1, "door"), (7, 27, "A", 1, "door"), (25, 30, "A", 1, "door"), (36, 27, "A", 1, "door"),
+        (29, 28, "A", 2, "open"), (47, 23, "A", 3, "door"), (47, 27, "A", 3, "door"), (7, 41, "A", 3, "door"),
+        (25, 38, "A", 3, "door"), (29, 38, "A", 3, "door"), (7, 45, "A", 3, "door"), (47, 41, "A", 4, "door"),
+        (29, 49, "A", 4, "door"), (47, 45, "A", 4, "door"), (45, 5, "A", 4, "door"), (25, 49, "A", 5, "door"),
+        (35, 23, "B", 2, "door"), (47, 23, "B", 2, "door"), (25, 8, "B", 2, "vault"), (31, 27, "B", 2, "open"),
+        (7, 23, "B", 3, "door"), (19, 23, "B", 3, "door"), (29, 8, "B", 3, "door"), (13, 27, "B", 4, "door"),
+        (25, 40, "B", 4, "door"), (29, 40, "B", 4, "door"), (41, 40, "B", 4, "door"), (7, 15, "B", 4, "door"),
+        (47, 15, "B", 4, "door"), (43, 27, "B", 5, "door"), (25, 49, "B", 5, "door"), (36, 45, "B", 5, "door"),
+        (29, 46, "B", 5, "open"),
+        (13, 41, "C", 5, "door"), (39, 41, "C", 5, "door"), (14, 45, "C", 5, "door"), (43, 45, "C", 5, "door"),
+        (31, 45, "C", 5, "open")],
     child_huts={"kitchen": (24, 16), "clinic": (12, 16), "school": (2, 34), "farm": (30, 16)},
 )
 
@@ -408,36 +409,8 @@ def active(pack, L):
 
 
 def level_doors(pack, L):
-    """Doors at level L: one per room onto the first adjacent corridor (plan order) + the plan's extra doors."""
-    sp = active(pack, L)
-    cors = [s for s in sp if s[0] in CORR_KINDS]
-    out = []
-    for (k, dk, x1, z1, x2, z2, ml) in sp:
-        if k in CORR_KINDS:
-            continue
-        for (ck, cd, cx1, cz1, cx2, cz2, _) in cors:
-            if cd != dk:
-                continue
-            door = None
-            ox1, ox2 = max(x1, cx1), min(x2, cx2)
-            oz1, oz2 = max(z1, cz1), min(z2, cz2)
-            if ox1 <= ox2:
-                if z2 + 2 == cz1:
-                    door = ((ox1 + ox2) // 2, z2 + 1)
-                elif cz2 + 2 == z1:
-                    door = ((ox1 + ox2) // 2, z1 - 1)
-            if door is None and oz1 <= oz2:
-                if x2 + 2 == cx1:
-                    door = (x2 + 1, (oz1 + oz2) // 2)
-                elif cx2 + 2 == x1:
-                    door = (x1 - 1, (oz1 + oz2) // 2)
-            if door:
-                out.append((door[0], door[1], dk, "vault" if k == "vault" else "door"))
-                break
-    for (x, z, dk, ml, kind) in PLANS[pack]["doors"]:
-        if ml <= L:
-            out.append((x, z, dk, kind))
-    return out
+    """The plan's hand-listed doors that exist at level L."""
+    return [(x, z, dk, kind) for (x, z, dk, ml, kind) in PLANS[pack]["doors"] if ml <= L]
 
 
 def keep_for(pack, L, deck, x1, z1, x2, z2):

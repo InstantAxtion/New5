@@ -499,7 +499,10 @@ def house_hw(rel, L):
     gz2 = z1 - 1
     if L >= 3:
         gz2 = z1 - 2 - (1 if jet else 0)
-        garden(d, 2, 1, 21, gz2, y0, "spruce", gates=((9, 1, "north"), (9, gz2, "north")))
+        garden(d, 2, 1, 21, gz2, y0, "spruce", gates=((9, 1, "north"), (9, gz2, "north")),
+               plants=((3, 2, "rose_bush[half=lower]"), (4, 2, "poppy"), (6, 2, "oxeye_daisy"), (7, 2, "allium"),
+                       (11, 2, "cornflower"), (15, 2, "azure_bluet"), (16, 2, "red_tulip"),
+                       (19, 2, "lilac[half=lower]"), (20, 2, "dandelion")))
         path(d, [(9, z) for z in range(0, z1)], y0 - 1, "gravel")
         clear_above_path(d, [(9, z) for z in range(0, z1)], y0 - 1)
         for z in range(1, z1):
@@ -951,8 +954,12 @@ def cottage_hw(rel, L):
     wardrobe(d, 5, 6, 13, "east", "spruce")
     wardrobe(d, 13, 6, 13, "west", "spruce")
     # ---- garden: picket fence, flower borders, path, a bench and an apple tree corner
-    garden(d, 1, 0, 8, z1 - 3, y0, "spruce", ((8, 2, "east"),))
-    garden(d, 10, 0, 19, z1 - 3, y0, "spruce", ((10, 2, "west"),))
+    garden(d, 1, 0, 8, z1 - 3, y0, "spruce", ((8, 2, "east"),),
+           plants=((2, 1, "rose_bush[half=lower]"), (3, 1, "poppy"), (6, 1, "oxeye_daisy"), (2, 3, "cornflower"),
+                   (4, 3, "allium"), (6, 3, "lilac[half=lower]")))
+    garden(d, 10, 0, 19, z1 - 3, y0, "spruce", ((10, 2, "west"),),
+           plants=((12, 1, "red_tulip"), (14, 1, "peony[half=lower]"), (18, 1, "dandelion"), (12, 3, "azure_bluet"),
+                   (17, 3, "cornflower")))
     for z in range(0, z1):
         d.set(9, 1, z, "gravel")
     clear_above_path(d, [(9, z) for z in range(0, z1)], 1)
@@ -1479,7 +1486,9 @@ def apartment_hw(rel, L, F=None, garden_on=None):
         d.set(x, 2, 1, "stone_brick_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
         d.set(x, 3, 1, lantern(False))
     if garden_on:
-        garden(d, x1, z2 + 2, x2, 18, 2, "dark_oak", ((13, z2 + 2, "north"),))
+        garden(d, x1, z2 + 2, x2, 18, 2, "dark_oak", ((13, z2 + 2, "north"),),
+               plants=((5, 15, "red_tulip"), (7, 17, "peony[half=lower]"), (16, 15, "allium"),
+                       (19, 17, "rose_bush[half=lower]"), (21, 15, "oxeye_daisy")))
         for z in range(z2 + 1, 18):
             d.set(13, 1, z, "gravel")
         clear_above_path(d, [(13, z) for z in range(z2 + 1, 18)], 1)
@@ -1648,7 +1657,10 @@ def quadplex_hw(rel, L, U=None):
         d.lamp(a + 2, 8, 10)
         rugc(d, a + 1, 9, a + 2, 11, 6, "light_gray")
         # front garden
-        garden(d, a - 1, 1, a + 5, z1 - 2, 2, "spruce", ((a + 1, 1, "north"),))
+        fl = (("poppy", "oxeye_daisy", "rose_bush[half=lower]"), ("cornflower", "allium", "peony[half=lower]"),
+              ("dandelion", "azure_bluet", "lilac[half=lower]"), ("red_tulip", "white_tulip", "rose_bush[half=lower]"))[k]
+        garden(d, a - 1, 1, a + 5, z1 - 2, 2, "spruce", ((a + 1, 1, "north"),),
+               plants=((a, 2, fl[0]), (a + 3, 2, fl[1]), (a + 4, 3, fl[2])))
         for z in range(0, z1):
             d.set(a + 1, 1, z, "gravel")
         clear_above_path(d, [(a + 1, z) for z in range(0, z1)], 1)
@@ -2774,12 +2786,6 @@ def hedge(d, x1, z1, x2, z2, kind="oak", gaps=()):
             d.set(x, d.gy + 1, z, f"{kind}_leaves[distance=1,persistent=true,waterlogged=false]")
 
 
-def orchard(d, x1, z1, x2, z2, kind="oak", step=4):
-    for x in range(x1, x2 + 1, step):
-        for z in range(z1, z2 + 1, step):
-            tree(d, x, z, d.gy + 1, kind, 4 if kind != "spruce" else 6, 2)
-
-
 def pond(d, x1, z1, x2, z2, edge="grass_block[snowy=false]"):
     for x, z in cells(x1, z1, x2, z2):
         corner = x in (x1, x2) and z in (z1, z2)
@@ -3526,13 +3532,15 @@ def house_estate_hw(rel, L):
         outbuilding(d, 2, 28, 12, 35, "greenhouse", h=3)
         lane(d, 7, 25, 8, 27, "gravel")
         lamp_post(d, 24, 26, 1)
-        orchard(d, 15, 30, 21, 38, "oak", 6)
+        for tx, tz in ((15, 30), (20, 33), (16, 37)):              # three old apple trees
+            tree(d, tx, tz, 2, "oak", 4, 2)
     if L >= 5:
         outbuilding(d, 2, 40, 14, 48, "workshop", h=4)
         recolor(d, [("deepslate_tile", "granite"), ("calcite", "yellow_terracotta")], (1, 39, 15, 49))
         outbuilding(d, 16, 42, 23, 48, "bakehouse", h=4)
         pond(d, 48, 29, 54, 35)
-        orchard(d, 49, 40, 53, 48, "birch", 4)
+        for tx, tz in ((50, 41), (53, 45), (49, 47)):              # birches by the pond
+            tree(d, tx, tz, 2, "birch", 5, 2)
         lane(d, 2, 37, 23, 39, "gravel")
         for x in (6, 19):
             bench(d, x, 38, 2, "east", "south", "dark_oak")
@@ -3605,7 +3613,8 @@ def house_estate_ca(rel, L):
         for ax, az, f in ((cx - 2, cz, "east"), (cx + 2, cz, "west"), (cx, cz - 2, "south"), (cx, cz + 2, "north")):
             d.set(ax, 14, az, stair("dark_oak", f))
         pond(d, 2, 44, 10, 50)
-        orchard(d, 14, 44, 30, 54, "spruce", 5)
+        for tx, tz in ((14, 45), (19, 48), (24, 44), (28, 49), (16, 53), (23, 54), (29, 55)):   # spruce stand
+            tree(d, tx, tz, 2, "spruce", 6, 2)
         lane(d, 38, 28, 39, 41, "coarse_dirt")
         bench(d, 4, 41, 2, "east", "north", "spruce")
         wagon(d, 41, 28, 2, "spruce")
@@ -3719,11 +3728,16 @@ def cottage_hamlet_hw(rel, L):
         lane(d, 22, 15, 57, 16, "gravel")
         lamp_post(d, 30, 14, 1)
         garden(d, 11, 24, 18, 30, 2, "spruce", ((14, 24, "north"),))
+        for z, crop in ((26, "carrots[age=7]"), (28, "potatoes[age=7]")):           # two vegetable rows
+            for x in (12, 13, 15, 16, 17):
+                d.set(x, 1, z, "farmland[moisture=7]")
+                d.set(x, 2, z, crop)
         bench(d, 33, 13, 2, "east", "north", "dark_oak")
         tree(d, 52, 13, 2, "oak", 4, 2)
     if L >= 4:
         dovecote(d, 34, 19, "Hearthwood")
-        orchard(d, 47, 20, 55, 28, "oak", 4)
+        for tx, tz in ((48, 21), (52, 21), (55, 25), (48, 26), (52, 28)):  # apple orchard
+            tree(d, tx, tz, 2, "oak", 4, 2)
         hedge(d, 45, 18, 57, 30, "oak", gaps=((45, 24),))
         addon(d, 22, 19, 30, 26, "potting")
         recolor(d, [("deepslate_tile", "granite")], (21, 18, 31, 27))
@@ -3738,7 +3752,8 @@ def cottage_hamlet_hw(rel, L):
         lane(d, 20, 17, 21, 52, "gravel")
         for z in (22, 34, 46):
             lamp_post(d, 19, z, 1)
-        orchard(d, 25, 45, 53, 51, "oak", 7)
+        for tx, tz in ((25, 46), (33, 49), (41, 46), (49, 49)):
+            tree(d, tx, tz, 2, "oak", 4, 2)
     return d
 
 
@@ -3778,7 +3793,8 @@ def cottage_retreat_ca(rel, L):
         tree(d, 22, 27, 2, "spruce", 6, 2)
         tree(d, 57, 31, 2, "spruce", 6, 2)
     if L >= 4:
-        orchard(d, 3, 30, 19, 38, "spruce", 5)
+        for tx, tz in ((3, 31), (8, 34), (13, 30), (18, 35), (5, 37)):
+            tree(d, tx, tz, 2, "spruce", 6, 2)
         pond(d, 26, 24, 40, 34)
         for z in range(25, 30):                            # plank dock into the pond
             d.set(33, 1, z, "spruce_planks")
