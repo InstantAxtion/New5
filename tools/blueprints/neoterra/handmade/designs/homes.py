@@ -401,7 +401,7 @@ def planter(d, x1, z1, x2, z2, y, plants=("azalea", "flowering_azalea", "fern"))
 
 
 # ============================================================================================ HOUSE
-def house_hw(rel, L):
+def house_hw(rel, L, v=0):
     d = Design("Hearthwood", rel, (24, 26, 25), paving="grass_block[snowy=false]")
     W = "dark_oak"
     x1, x2, z1, z2 = 4, 14, 7, 16
@@ -445,12 +445,17 @@ def house_hw(rel, L):
                 d.set(x, yu + 1, z, "glass_pane")
     # ---- ground floor
     fireplace(d, x1, 11, y0, "east", ridge + 2, "bricks")
-    rugc(d, 5, 10, 6, 12, y0, "red")
-    sofa(d, 7, 10, y0, 3, "south", "east", "dark_oak")
-    d.set(5, y0, 9, "potted_red_tulip")
     d.hut(5, y0, 8)
-    # dining
-    d.dining(10, y0, 10, 2, "z", "dark_oak", ("e", "w"))
+    if v == 0:      # settle facing the inglenook, dining table for four by the window
+        rugc(d, 5, 10, 6, 12, y0, "red")
+        sofa(d, 7, 10, y0, 3, "south", "east", "dark_oak")
+        d.set(5, y0, 9, "potted_red_tulip")
+        d.dining(10, y0, 10, 2, "z", "dark_oak", ("e", "w"))
+    else:           # dower house: two wing chairs at the fire, round table, dresser with plates
+        rugc(d, 5, 10, 6, 12, y0, "green")
+        fit(d, [(6, y0, 10, stair("dark_oak", "east")), (6, y0, 12, stair("dark_oak", "east")),
+                (5, y0, 9, "potted_azure_bluet"), (8, y0, 8, CHEST("south")), (8, y0 + 1, 8, POT)])
+        d.dining(9, y0, 11, 1, "x", "dark_oak", ("n", "s", "e", "w"), sit=False)
     d.lamp(10, deck - 1, 10)
     d.lamp(6, deck - 1, 11)
     # kitchen along the back wall (east half) and east wall
@@ -720,7 +725,7 @@ def house_ca(rel, L):
     return d
 
 
-def house_nt(rel, L):
+def house_nt(rel, L, v=0):
     d = Design("Neoterra", rel, (23, 26, 23), paving="smooth_stone")
     x1, x2, z1, z2 = 3, 15, 6, 15
     y0 = 2
@@ -754,12 +759,28 @@ def house_nt(rel, L):
     # ---- ground floor: living (west), dining, kitchen (back), bedroom (east)
     fireplace(d, x1, 11, y0, "east", 9 if not up else 12, "polished_blackstone_bricks", "polished_blackstone_bricks",
               "soul_campfire", stack_out=True)
-    rugc(d, 4, 9, 5, 13, y0, "light_gray")
-    sofa(d, 6, 10, y0, 3, "south", "east", "birch", arms=False)
-    d.set(6, y0, 9, "birch_trapdoor[facing=north,half=bottom,open=true,powered=false,waterlogged=false]")
-    d.set(4, y0, 7, "potted_bamboo")
     d.hut(5, y0, 7)
-    d.dining(9, y0, 10, 2, "x", "birch", ("n", "s"))
+    if v == 0:      # lounge: sofa facing the linear fire, dining table for four
+        rugc(d, 4, 9, 5, 13, y0, "light_gray")
+        sofa(d, 6, 10, y0, 3, "south", "east", "birch", arms=False)
+        d.set(6, y0, 9, "birch_trapdoor[facing=north,half=bottom,open=true,powered=false,waterlogged=false]")
+        d.set(4, y0, 7, "potted_bamboo")
+        d.dining(9, y0, 10, 2, "x", "birch", ("n", "s"))
+    elif v == 1:    # guest villa 1: reading lounge – two armchairs at the fire, round table, books
+        rugc(d, 4, 10, 6, 12, y0, "orange")
+        fit(d, [(6, y0, 10, stair("birch", "east")), (6, y0, 12, stair("birch", "east")),
+                (8, y0, 9, slab("smooth_quartz", "top")), (8, y0 + 1, 9, "potted_azure_bluet"),
+                (10, y0, 8, "bookshelf"), (10, y0 + 1, 8, "potted_fern"), (10, y0, 13, "potted_bamboo")])
+        d.dining(8, y0, 11, 1, "x", "birch", ("n", "s", "e"), sit=False)
+    elif v == 2:    # guest villa 2: long dinner table, sideboard and a plant by the window
+        rugc(d, 5, 9, 9, 11, y0, "lime")
+        d.dining(6, y0, 10, 3, "x", "birch", ("n", "s"), sit=False)
+        fit(d, [(10, y0, 12, CHEST("west")), (10, y0 + 1, 12, POT), (4, y0, 9, "potted_bamboo")])
+    else:           # guest villa 3: music room – sofa across the room, jukebox, rug
+        sofa(d, 7, 12, y0, 3, "east", "south", "birch", arms=False, sit=False)
+        rugc(d, 6, 9, 9, 10, y0, "magenta")
+        fit(d, [(10, y0, 9, "note_block[instrument=harp,note=0,powered=false]"), (4, y0, 13, "potted_bamboo"),
+                (10, y0, 12, slab("smooth_quartz", "top")), (10, y0 + 1, 12, "candle[candles=3,lit=false,waterlogged=false]")])
     for x, z in ((9, 10), (5, 11), (13, 9)):
         d.set(x, 5, z, "sea_lantern")
     # kitchen back wall west half
@@ -890,7 +911,7 @@ def dormer(d, c, z, y, out, wall, roofb, glass="glass_pane"):
     d.set(c, y + 1, z + oz, wall)
 
 
-def cottage_hw(rel, L):
+def cottage_hw(rel, L, v=0):
     d = Design("Hearthwood", rel, (21, 22, 22), paving="grass_block[snowy=false]")
     x1, x2, z1, z2 = 4, 14, 7, 14
     y0 = 2
@@ -951,9 +972,14 @@ def cottage_hw(rel, L):
     d.lamp(6, 4, 11)
     # ---- east room: parlour with inglenook
     fireplace(d, x2, 11, y0, "west", ridge + 3, "stone_bricks", "stone_bricks")
-    d.chair(12, y0, 10, "west", "dark_oak", arms=False)
-    d.chair(12, y0, 12, "west", "dark_oak", arms=False)
-    rugc(d, 13, 10, 13, 12, y0, "green")
+    if v == 0:      # two armchairs at the inglenook
+        d.chair(12, y0, 10, "west", "dark_oak", arms=False)
+        d.chair(12, y0, 12, "west", "dark_oak", arms=False)
+        rugc(d, 13, 10, 13, 12, y0, "green")
+    else:           # neighbour's cottage: a settle across the hearth and a footstool
+        sofa(d, 12, 10, y0, 3, "south", "west", "spruce", arms=False)
+        rugc(d, 13, 10, 13, 12, y0, "blue")
+        d.set(11, y0, 9, "potted_cornflower")
     d.set(13, 3, 10, AIR)
     if L >= 3:
         d.bookshelf(11, y0, 13)
@@ -1042,7 +1068,7 @@ def aframe(d, x1, x2, z1, z2, y, stairb="dark_oak", full="dark_oak_planks", over
     return y + 2 * half + 1
 
 
-def cottage_ca(rel, L):
+def cottage_ca(rel, L, v=0):
     d = Design("Cascadia", rel, (23, 24, 25), paving="grass_block[snowy=false]")
     W = "spruce"
     x1, x2, z1, z2 = 4, 18, 9, 19
@@ -1086,14 +1112,23 @@ def cottage_ca(rel, L):
                 (5, 17, "barrel")], y0, "east", W, shelf=False)
     if 2 <= L <= 4:
         d.item(5, y0, 18, "barrel", "east")
-    d.table(7, y0, 15, W)
-    d.chair(7, y0, 14, "north", W, sit=False)
-    d.chair(7, y0, 16, "south", W, sit=False)
+    if v == 0:
+        d.table(7, y0, 15, W)
+        d.chair(7, y0, 14, "north", W, sit=False)
+        d.chair(7, y0, 16, "south", W, sit=False)
+    else:           # lodge: bigger table for the guests by the glass
+        d.dining(8, y0, 12, 2, "x", W, ("n", "s"), sit=False)
     fireplace(d, mid, z2, y0, "north", ridge + 2, "cobblestone", "mossy_cobblestone")
     for y in range(y0 + 2, ridge + 2):
         d.set(mid, y, z2 + 1, "cobblestone" if y % 4 else "mossy_cobblestone")
-    rugc(d, 10, 17, 12, 18, y0, "red")
-    sofa(d, 10, 16, y0, 3, "east", "north", W)
+    if v == 0:
+        rugc(d, 10, 17, 12, 18, y0, "red")
+        sofa(d, 10, 16, y0, 3, "east", "north", W)
+    else:           # lodge: two armchairs and a bearskin-brown rug at the hearth
+        rugc(d, 10, 17, 12, 18, y0, "brown")
+        d.chair(10, y0, 16, "north", W)
+        d.chair(12, y0, 16, "north", W)
+        d.set(11, y0, 16, slab(W))
     bedset(d, 17, y0, 18, "south", (), "red", W)
     nightstand(d, 16, y0, 18, W, "lantern")
     d.set(17, y0, 16, "chest[facing=north,type=single,waterlogged=false]")
@@ -1692,7 +1727,7 @@ def apartment_ca(rel, L, B=None, F=None, v=0):
 
 
 # ============================================================================================ QUADPLEX
-def quadplex_hw(rel, L, U=None):
+def quadplex_hw(rel, L, U=None, v=0):
     d = Design("Hearthwood", rel, (29, 22, 21), paving="grass_block[snowy=false]")
     U = U or min(L, 4)
     x0, z1, z2 = 3, 6, 15
@@ -1727,9 +1762,19 @@ def quadplex_hw(rel, L, U=None):
         hw_window(d, a + 2, 7, z2, 1)
         # chimney breast on the west wall, stack through the roof
         d.hearth(a, 2, 9, "east", ridge + 2, "bricks", "campfire")
-        d.chair(a + 2, 2, 8, "east", W)
-        d.chair(a + 2, 2, 10, "east", W)
-        d.set(a + 1, 2, 9, "red_carpet")
+        alt = (k + v) % 3
+        if alt == 0:    # two armchairs at the hearth
+            d.chair(a + 2, 2, 8, "east", W)
+            d.chair(a + 2, 2, 10, "east", W)
+            d.set(a + 1, 2, 9, "red_carpet")
+        elif alt == 1:  # a settle facing the hearth
+            sofa(d, a + 2, 8, 2, 3, "south", "east", W, arms=False)
+            d.set(a + 1, 2, 9, "green_carpet")
+        else:           # rocking chair, side table with a lamp, books
+            d.chair(a + 2, 2, 8, "east", W)
+            d.chair(a + 2, 2, 10, "east", "spruce")
+            fit(d, [(a + 3, 2, 8, "bookshelf"), (a + 1, 2, 9, "blue_carpet"), (a + 3, 2, 10, slab(W, "top")),
+                    (a + 3, 3, 10, LANTF)])
         # kitchen & table
         kitchen(d, [(a, 14, "furnace"), (a + 1, 14, "sink"), (a + 2, 14, "smoker"), (a + 3, 14, "crafting_table")],
                 2, "north", W)
@@ -1823,7 +1868,7 @@ def cabin(d, x1, z1, out, mirror, Y, bedc, extra_barrel=True, double=False, porc
 
 
 
-def quadplex_nt(rel, L, U=None):
+def quadplex_nt(rel, L, U=None, v=0):
     d = Design("Neoterra", rel, (31, 20, 19), paving="smooth_stone")
     U = U or min(L, 4)
     W = "birch"
@@ -1852,9 +1897,19 @@ def quadplex_nt(rel, L, U=None):
         d.set(a + 4, 4, z1 - 1, slab("smooth_quartz", "top"))
         d.set(a + 3, 4, z1 - 1, slab("smooth_quartz", "top"))
         # ground: sofa facing the street glass, dining, kitchen along the back wall
-        sofa(d, a, z1 + 3, 2, 2, "east", "south", W, arms=False)
-        d.set(a, 2, z1 + 1, "potted_bamboo")
-        rugc(d, a, z1 + 2, a + 2, z1 + 2, 2, "cyan")
+        alt = (k + v) % 3
+        if alt == 0:    # sofa facing the street glass
+            sofa(d, a, z1 + 3, 2, 2, "east", "south", W, arms=False)
+            d.set(a, 2, z1 + 1, "potted_bamboo")
+            rugc(d, a, z1 + 2, a + 2, z1 + 2, 2, "cyan")
+        elif alt == 1:  # two lounge chairs either side of a low table
+            fit(d, [(a, 2, z1 + 2, stair(W, "west")), (a + 2, 2, z1 + 2, stair(W, "east")),
+                    (a + 1, 2, z1 + 2, slab("smooth_quartz")), (a, 2, z1 + 1, "potted_fern")])
+            rugc(d, a, z1 + 3, a + 2, z1 + 3, 2, "orange")
+        else:           # work-from-home corner: desk on the glass, chair, plant
+            fit(d, [(a, 2, z1 + 1, slab("smooth_quartz", "top")), (a + 1, 2, z1 + 1, slab("smooth_quartz", "top")),
+                    (a, 2, z1 + 2, stair(W, "south")), (a + 2, 2, z1 + 1, "potted_bamboo")])
+            rugc(d, a, z1 + 3, a + 2, z1 + 3, 2, "lime")
         d.table(a + 1, 2, z1 + 6, W, "slab", "smooth_quartz_slab")
         d.chair(a, 2, z1 + 6, "west", W)
         d.chair(a + 2, 2, z1 + 6, "east", W)
@@ -2916,12 +2971,12 @@ def quadplex_streets_hw(rel, L):
     recolor(m, [("deepslate_tile", "brick")], parts=("full", "stairs", "slab"))
     stamp(d, m, 0, 0, primary=True)
     if L >= 4:
-        m = quadplex_hw(rel, 3, 3 if L == 4 else 4)
+        m = quadplex_hw(rel, 3, 3 if L == 4 else 4, v=1)
         recolor(m, [("deepslate_tile", "granite"), ("calcite", "light_blue_terracotta"),
                     ("white_terracotta", "yellow_terracotta")])
         stamp(d, m, 30, 0)
     if L >= 5:
-        m = quadplex_hw(rel, 3, 4)
+        m = quadplex_hw(rel, 3, 4, v=2)
         recolor(m, [("deepslate_tile", "mud_brick"), ("bricks", "stone_bricks"), ("calcite", "pink_terracotta")])
         stamp(d, m, 0, 26)
     if L >= 4:
@@ -2941,12 +2996,12 @@ def quadplex_mews_nt(rel, L):
     recolor(m, [("cyan_terracotta", "lime_terracotta")])
     stamp(d, m, 0, 0, primary=True)
     if L >= 4:
-        m = quadplex_nt(rel, 3, 3 if L == 4 else 4)
+        m = quadplex_nt(rel, 3, 3 if L == 4 else 4, v=1)
         recolor(m, [("white_concrete", "white_terracotta"), ("cyan_terracotta", "orange_terracotta"),
                     ("light_gray_concrete", "brown_terracotta")])
         stamp(d, m, 32, 0)
     if L >= 5:
-        m = quadplex_nt(rel, 3, 4)
+        m = quadplex_nt(rel, 3, 4, v=2)
         recolor(m, [("white_concrete", "light_gray_concrete"), ("cyan_terracotta", "magenta_terracotta"),
                     ("light_gray_concrete", "gray_concrete")])
         stamp(d, m, 0, 22)
@@ -3464,7 +3519,7 @@ def house_estate_hw(rel, L):
         lamp_post(d, 34, 14, 1)
         wagon(d, 29, 15, 2, "dark_oak")
     if L >= 4:
-        dower = house_hw(rel, 1)
+        dower = house_hw(rel, 1, v=1)
         recolor(dower, [("deepslate_tile", "dark_prismarine"), ("calcite", "pink_terracotta")],
                 parts=("full", "stairs", "slab"))
         stamp(d, dower, 26, 27)
@@ -3656,7 +3711,7 @@ def house_estate_nt(rel, L):
         rugc(d, 29, 19, 31, 20, 2, "orange")
         recolor(d, [("white_concrete", "orange_terracotta")], (26, 17, 38, 24, 2))
     if L >= 4:
-        g = house_nt(rel, 1)
+        g = house_nt(rel, 1, v=1)
         recolor(g, [("white_concrete", "light_gray_concrete"), ("cyan_terracotta", "yellow_terracotta"),
                     ("stripped_birch_log", "stripped_mangrove_log")])
         stamp(d, g, 0, 25)
@@ -3689,7 +3744,7 @@ def house_estate_nt(rel, L):
         for gx, pal in ((0, [("white_concrete", "white_terracotta"), ("cyan_terracotta", "lime_terracotta")]),
                         (26, [("white_concrete", "light_gray_concrete"), ("cyan_terracotta", "magenta_terracotta"),
                               ("stripped_birch_log", "stripped_cherry_log")])):
-            g = house_nt(rel, 1)
+            g = house_nt(rel, 1, v=2 if gx == 0 else 3)
             recolor(g, pal)
             stamp(d, g, gx, 48)
         lane(d, 0, 46, 55, 47, "smooth_stone")
@@ -3770,7 +3825,7 @@ def cottage_hamlet_hw(rel, L):
                 (28, 2, 22, slab("dark_oak", "top")), (28, 3, 22, POT), (26, 4, 23, LANT)])
         recolor(d, [("deepslate_tile", "granite")], (21, 18, 31, 27))
     if L >= 5:
-        nb = cottage_hw(rel, 3)
+        nb = cottage_hw(rel, 3, v=1)
         recolor(nb, [("smooth_sandstone", "calcite"), ("cut_sandstone", "stone_bricks")])
         stamp(d, nb, 0, 32)
         addon(d, 22, 33, 33, 40, "cartshed", h=4)
@@ -3863,7 +3918,7 @@ def cottage_retreat_ca(rel, L):
         for x, z in ((54, 22), (57, 22), (54, 25), (57, 25)):
             d.set(x, 13, z, log("spruce_log", "y"))
     if L >= 5:
-        lodge = cottage_ca(rel, 5)
+        lodge = cottage_ca(rel, 5, v=1)
         recolor(lodge, [("dark_oak", "dark_prismarine")], parts=("full", "stairs", "slab"))
         stamp(d, lodge, 0, 35, hut_to="barrel[facing=up,open=false]")
         aframe_hut(d, 30, 40, "cyan", 2)

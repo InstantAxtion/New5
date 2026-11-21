@@ -449,12 +449,15 @@ def skytower_nt(rel, L):
         d.set(16, s + 4, 15, endrod("down"))
         d.sign(12, s + 2, 15, "south", ["", f"FLAT {S.index(s) + 1}"], "birch", glow=True, color="cyan")
     flight(d, 6, 16, 2, 6, "east", "smooth_quartz")
+    flight_rails(d, 6, 16, 2, 6, "east", "glass_pane")
     for f, s in enumerate(S):
         Y = s + 1
         if f % 2 == 0:
             flight(d, 11, 17, Y, 5, "west", "smooth_quartz")
+            flight_rails(d, 11, 17, Y, 5, "west", "glass_pane")
         else:
             flight(d, 7, 16, Y, 5, "east", "smooth_quartz")
+            flight_rails(d, 7, 16, Y, 5, "east", "glass_pane")
     # ---- balconies (street side); the first one is the entrance canopy
     for s in S:
         for x, z in cells(5, 2, 17, 3):
@@ -764,9 +767,9 @@ def skytower_hw(rel, L):
     # ---- stair hall
     for x, z in cells(14, 6, 16, 16):
         d.set(x, 1, z, "polished_blackstone" if (x + z) % 2 else "calcite")
-    flight(d, 14, 11, 2, 5, "south", "dark_oak")
-    flight(d, 16, 15, 7, 5, "north", "dark_oak")
-    flight(d, 14, 15, 12, 5, "north", "dark_oak")
+    for fl in ((14, 11, 2, "south"), (16, 15, 7, "north"), (14, 15, 12, "north")):
+        flight(d, fl[0], fl[1], fl[2], 5, fl[3], "dark_oak")
+        flight_rails(d, fl[0], fl[1], fl[2], 5, fl[3], "dark_oak_fence")
     n = 0
     for z, h in ((12, 1), (13, 2), (14, 3)):           # residents' lockers under the stairs
         for k in range(h):
@@ -1038,6 +1041,13 @@ def skytower_ca(rel, L):
             d.set(4, y, z, log("spruce_log", "y"))
     flight(d, 5, 9, 2, 5, "south", "spruce")
     flight(d, 5, 20, 7, 5, "north", "spruce")
+    flight_rails(d, 5, 9, 2, 5, "south", "spruce_fence")
+    flight_rails(d, 5, 20, 7, 5, "north", "spruce_fence")
+    for y in (7, 12):                                    # railings across the open ends of the gallery decks
+        for x in (5, 6, 7):
+            for z in (3, 27):
+                if d.air(x, y, z):
+                    d.set(x, y, z, "spruce_fence")
     for z in range(Z1 - 1, Z2 + 2):
         for x, y in ((3, 12), (4, 13), (5, 14), (6, 15), (7, 16)):
             d.set(x, y, z, stair("dark_oak", "east"))
@@ -1568,6 +1578,7 @@ def twin_hw(rel, L):
     for x in (6, 7, 8):
         d.set(x, 5, Z1, log("dark_oak_log", "x"))
     d.door(7, 7, Z1, "north", "dark_oak")
+    d.set(7, 7, Z1 - 1, "dark_oak_fence")                  # bar across the hoist door
     for z in range(Z1 - 3, Z1 + 1):
         d.set(7, 11, z, log("dark_oak_log", "z"))
     for y in range(6, 11):
@@ -4905,11 +4916,10 @@ def grow_twin_hw(d, L):
     if L >= 2:                                        # timber seasoning barn behind the workshop
         lv += raise_building(d, P, (2, 21, 12, 35), 2, 2, HW_BARN_PLANS, ["timber", "loft"], "spruce", "oak",
                              roof="gable", axis="z", chimneys=False, doors=[(7, 21, "north")], st=HW_YARD_BARN)
-        for z in range(37, 41):                        # log pile outside
+        for z in (36, 37):                             # log pile outside the barn
             for x in range(3, 11):
                 d.set(x, 2, z, log("oak_log", "x"))
-                if z < 40:
-                    d.set(x, 3, z, log("oak_log", "x"))
+                d.set(x, 3, z, log("oak_log", "x"))
     if L >= 3:                                        # clerk of works' office and drawing room
         lv += raise_building(d, P, (33, 2, 45, 12), 2, 3, HW_CLERK_PLANS, ["clerk", "drawing", "archive"], "oak", "oak",
                              roof="gable", axis="x", doors=[(39, 12, "south")], st=HW_YARD_OFFICE)
