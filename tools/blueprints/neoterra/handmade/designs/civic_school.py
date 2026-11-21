@@ -770,6 +770,366 @@ def sch_hearthwood(rel, L):
     return d
 
 
+# ================================================================================================ NEOTERRA
+# Modern primary school: glass classroom pavilion behind coloured fins (L1), glass bridge to a second pavilion
+# (L2, art studio from L3), upper floor and fenced playground (L3), sports hall (L4), three-storey science and
+# library block and a glazed canteen (L5).
+def sch_neoterra(rel, L):
+    d = new("Neoterra", rel, (53, 30, 51), paving="smooth_stone")
+    B = "birch"
+    Q = tslab("smooth_quartz_slab")
+    SL = "sea_lantern"
+    fins = {7: "yellow_concrete", 10: "lime_concrete", 16: "orange_concrete", 19: "yellow_concrete",
+            25: "lime_concrete", 28: "orange_concrete", 31: "yellow_concrete", 34: "lime_concrete"}
+    pnf = 2 if L >= 3 else 1
+    # ------------------------------------------------------------------ shells
+    A = shell(d, 6, 6, 20, 16, pnf, "flat", glassy=True, win="nsw")
+    if L >= 2:
+        Bb = shell(d, 24, 6, 36, 16, 1, "flat", glassy=True, win="nse")
+        d.box(20, Y0, 9, 24, 5, 13, "glass", floor="polished_diorite")
+        d.fill(20, 6, 9, 24, 6, 13, "smooth_quartz")
+        d.clear(21, Y0, 10, 23, 5, 12)
+        arch(d, 20, Y0, 11, "east")
+        arch(d, 24, Y0, 11, "east")
+    if L >= 4:
+        shell(d, 6, 20, 34, 32, 1, "flat", wh=8, win="n", mat="light_gray_concrete")
+    if L >= 5:
+        S5 = shell(d, 38, 6, 50, 24, 3, "flat", glassy=True, win="nsew")
+        C5 = shell(d, 6, 36, 30, 46, 1, "flat", glassy=True, win="nsw")
+
+    # ------------------------------------------------------------------ A: classroom pavilion (L1+)
+    for x, c in fins.items():
+        if x < 20 or L >= 2:
+            for y in range(Y0, 5 * (pnf if x < 20 else 1) + 2):
+                d.set(x, y, 5, c)
+    entry(d, 12, Y0, 6, "south", double=True, step="polished_andesite")
+    d.fill(11, 5, 6, 14, 5, 6, "white_concrete")                       # lintel, canopy and glowing name sign
+    d.fill(11, 6, 3, 14, 6, 5, Q)
+    d.sign(12, 5, 5, "north", ["SUNRISE", "SCHOOL"], B, glow=True, color="yellow")
+    d.sign(13, 5, 5, "north", ["primary", "& infants"], B, glow=True, color="cyan")
+    d.hut(7, Y0, 7)
+    keep(d, 8, Y0, 7)
+    # classroom: board on the south wall, teacher's desk in front, three table islands of four, book wall west
+    board(d, [(11, 15), (12, 15), (13, 15), (14, 15)], Y0 + 1, "north", "gray_concrete", ledge=B)
+    plan(d, Y0, 7, 7, [
+        # 7..19
+        "............p",   # z7  (hut x7, entry x12-13)
+        ".............",   # z8
+        ".nn..nn..nn..",   # z9
+        "BTT..TT..TT..",   # z10
+        "Bss..ss..ss..",   # z11
+        "B............",   # z12
+        ".....MM......",   # z13
+        ".....wc......",   # z14
+        "p...........p",   # z15
+    ], {"p": "potted_bamboo", "n": seat("north", B), "s": seat("south", B), "T": Q, "B": shelf, "M": Q,
+        "w": work, "c": seat("south", B)})
+    plan(d, Y0 + 1, 7, 10, ["B", "B", "B"], {"B": shelf})
+    d.set(12, Y0 + 1, 13, "flower_pot")
+    d.set(13, Y0 + 1, 13, candle(1, "lime"))
+    d.set(8, Y0 + 1, 10, "potted_cactus") if False else None
+    for x, z in ((9, 10), (13, 10), (17, 10), (12, 13)):                 # ceiling light panels
+        d.set(x, 6, z, SL)
+    for x in (8, 17):                                                   # street planters and lamps
+        d.set(x, 2, 3, "moss_block")
+        d.set(x, 3, 3, "flowering_azalea")
+    d.set(10, 2, 3, "moss_block")
+    d.set(15, 2, 3, "moss_block")
+    d.set(10, 3, 3, "azalea")
+    d.set(15, 3, 3, "azalea")
+    lamp_post(d, 4, 4)
+    lamp_post(d, 22, 4)
+    ground(d, 12, 0, 13, 4, "polished_andesite")
+    d.chair(5, Y0, 9, "west", B, sit=False) if False else None
+    if pnf > 1:                                                         # upper floor: media and language room
+        stairs(d, 14, 7, Y0, 7, "east")
+        rails(d, 7, [(15, 8), (16, 8), (17, 8), (14, 7)])
+        plan(d, 7, 7, 8, [
+            # 7..19
+            "B............",   # z8
+            "B............",   # z9
+            "B..~~~~~~....",   # z10
+            "B..~nnn~~....",   # z11
+            "...~QQQ~~....",   # z12
+            "B..~sss~~....",   # z13
+            "B............",   # z14
+            ".............",   # z15 (study counter below)
+        ], {"B": shelf, "~": "cyan_carpet", "n": seat("north", B), "s": seat("south", B), "Q": Q})
+        for x in range(9, 20):                                          # study counter along the south glass
+            if x != 14:
+                d.set(x, 7, 15, Q)
+                d.chair(x, 7, 14, "north", B) if x in (9, 11, 13, 16, 18) else None
+        for x in (10, 12, 17):
+            d.set(x, 8, 15, "flower_pot" if x == 12 else candle(1, "cyan"))
+        d.set(11, 8, 12, "potted_azure_bluet")
+        for x, z in ((10, 11), (15, 11), (12, 14)):
+            d.set(x, 11, z, SL)
+        # roof: two double rows of solar panels, planters on the corners, vent unit
+        for z in (9, 10, 12, 13):
+            for x in range(9, 18):
+                d.set(x, 12, z, "daylight_detector[inverted=false,power=0]")
+        for x, z in ((7, 7), (19, 7), (7, 15), (19, 15)):
+            d.set(x, 12, z, "moss_block")
+            d.set(x, 13, z, "flowering_azalea")
+        d.set(18, 12, 14, "smooth_stone")
+        d.set(18, 13, 14, "iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
+
+    # ------------------------------------------------------------------ B: second pavilion (L2 class, L3+ art)
+    if L >= 2:
+        entry(d, 30, Y0, 6, "south", step="polished_andesite")
+        d.sign(30, 5, 5, "north", ["ART STUDIO" if L >= 3 else "CLASS 2"], B, glow=True, color="lime")
+        d.set(30, 5, 6, "white_concrete")
+        if L < 3:
+            board(d, [(35, 10), (35, 11), (35, 12)], Y0 + 1, "west", "gray_concrete", ledge=B)
+            plan(d, Y0, 25, 7, [
+                # 25..35
+                "..........p",   # z7
+                "..wT.wT....",   # z8
+                "..wT.wT....",   # z9
+                "...........",   # z10
+                "...........",   # z11  (bridge arrives at x25)
+                "...........",   # z12
+                "..wT.wT....",   # z13
+                "..wT.wT....",   # z14
+                "p.........p",   # z15
+            ], {"p": "potted_bamboo", "w": seat("west", B), "T": Q})
+            d.set(33, 2, 11, Q)
+            d.chair(34, 2, 12, "east", B)
+        else:
+            plan(d, Y0, 25, 7, [
+                # 25..35
+                ".........L.",   # z7  loom
+                ".E.E.....M.",   # z8  easels, map table
+                ".f.f.......",   # z9  painters' stools
+                "...........",   # z10
+                "..ttt.ttt..",   # z11 work tables
+                "..sss.sss..",   # z12
+                "...........",   # z13
+                ".WK.....RRR",   # z14 sink, kiln, paint racks
+                "..........p",   # z15
+            ], {"L": itm("loom", "west"), "M": itm("cartography_table"), "E": "birch_fence",
+                "f": stool("north", B), "t": "white_concrete", "s": seat("south", B),
+                "W": "water_cauldron[level=3]", "K": "blast_furnace[facing=north,lit=false]",
+                "R": "barrel[facing=north,open=false]", "p": "potted_bamboo"})
+            for x in (26, 28):
+                d.set(x, Y0 + 1, 8, trap(B, "north", "bottom", True))
+            plan(d, Y0 + 1, 27, 11, ["pir.rpi"], {"p": "flower_pot", "i": candle(3, "yellow"),
+                                                   "r": candle(2, "magenta")})
+            d.set(34, 3, 14, "barrel[facing=north,open=false]")
+            d.banner(35, 4, 11, "west", "magenta")
+            d.banner(35, 4, 13, "west", "lime")
+        for x, z in ((28, 10), (32, 10), (30, 13)):
+            d.set(x, 6, z, SL)
+        d.set(22, 6, 11, SL)
+        # roof garden on the second pavilion
+        for x, z in ((26, 8), (27, 8), (33, 8), (34, 8), (26, 14), (27, 14), (33, 14), (34, 14)):
+            d.set(x, 7, z, "moss_block")
+            d.set(x, 8, z, "flowering_azalea" if (x + z) % 2 else "azalea")
+        for x in range(28, 33):
+            d.set(x, 7, 11, "moss_block")
+            d.set(x, 8, 11, "potted_bamboo" if x % 2 else "fern")
+        d.set(34, 7, 11, "smooth_stone")
+        d.set(34, 8, 11, "iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
+
+    # ------------------------------------------------------------------ playground (L3+)
+    if L >= 3:
+        for x in range(38, 51):
+            for z in (28, 44):
+                if not (z == 28 and x in (43, 44)):
+                    d.set(x, 2, z, "birch_fence")
+        for z in range(29, 44):
+            d.set(38, 2, z, "birch_fence")
+            d.set(50, 2, z, "birch_fence")
+        ground(d, 39, 29, 49, 43, "lime_concrete")
+        ground(d, 43, 28, 44, 28, "smooth_stone")
+        for z in range(30, 36):                                         # running track lines
+            d.set(40, 1, z, "white_concrete")
+        for k, (a, b) in enumerate(((1, 0), (1, 1), (0, 2), (2, 2), (1, 3), (0, 4), (2, 4), (1, 5))):
+            d.set(41 + a, 1, 31 + b, "yellow_concrete" if k % 2 else "white_concrete")
+        # climbing frame with slide
+        for x, z in ((45, 31), (48, 31), (45, 34), (48, 34)):
+            for y in range(2, 5):
+                d.set(x, y, z, "yellow_concrete")
+        d.fill(45, 5, 31, 48, 5, 34, "orange_concrete")
+        for z in (32, 33):
+            d.set(44, 2, z, "ladder[facing=west,waterlogged=false]") if False else None
+        for k, z in enumerate((35, 36, 37)):
+            d.set(46, 4 - k, z, stair("smooth_quartz_stairs", "north"))
+        d.set(46, 1, 38, "white_concrete")
+        # shade canopy over two benches
+        for x in (40, 42):
+            for y in range(2, 6):
+                d.set(x, y, 40, "birch_fence")
+        d.fill(39, 6, 39, 43, 6, 42, slab("smooth_quartz_slab", "bottom"))
+        for x in (40, 41, 42):
+            sit_out(d, x, Y0, 42, "south", B)
+        d.set(48, 2, 42, "moss_block")
+        d.set(48, 3, 42, "flowering_azalea")
+        lamp_post(d, 49, 29)
+
+    # ------------------------------------------------------------------ sports hall (L4+)
+    if L >= 4:
+        entry(d, 20, Y0, 20, "south", double=True, step="polished_andesite")
+        for x in range(7, 34):                                          # court with lines
+            for z in range(21, 32):
+                d.set(x, 1, z, "white_concrete" if x in (7, 33, 20) or z in (21, 31) else "orange_terracotta")
+        for x in (8, 32):                                               # basketball hoops at both ends
+            for y in (4, 5, 6):
+                d.set(x, y, 26, "white_stained_glass")
+            d.set(x + (1 if x == 8 else -1), 5, 26, "iron_bars")
+        for z in (22, 24, 28, 30):                                      # wall bars on the west wall
+            for y in range(2, 8):
+                d.set(7, y, z, "ladder[facing=east,waterlogged=false]")
+        for x in range(10, 19):                                         # team benches by the entrance
+            if x != 14:
+                d.chair(x, Y0, 21, "north", B)
+        for x in range(23, 32):
+            if x != 27:
+                d.chair(x, Y0, 21, "north", B)
+        d.set(33, Y0, 31, "barrel[facing=up,open=false]")
+        d.set(33, Y0, 30, "barrel[facing=up,open=false]")
+        d.set(32, Y0, 31, "target[power=0]")
+        for x in (10, 16, 24, 30):
+            for z in (23, 29):
+                d.set(x, 10, z, SL)
+        d.sign(20, 7, 19, "north", ["SPORTS", "HALL"], B, glow=True, color="yellow")
+        d.set(20, 7, 20, "light_gray_concrete")
+        lamp_post(d, 17, 18)
+        lamp_post(d, 24, 18)
+
+    # ------------------------------------------------------------------ L5: science block + canteen
+    if L >= 5:
+        entry(d, 44, Y0, 6, "south", double=True, step="polished_andesite")
+        d.fill(43, 6, 3, 46, 6, 5, Q)
+        d.sign(44, 6, 5, "north", ["SCIENCE", "& LIBRARY"], B, glow=True, color="orange")
+        d.set(44, 6, 6, "white_concrete")
+        stairs(d, 39, 8, Y0, 7, "south")
+        stairs(d, 49, 22, 7, 12, "north")
+        # ground: laboratory with two benches, wash station, fish tank, specimen shelves
+        plan(d, Y0, 40, 7, [
+            # 40..49
+            ".........W",   # z7
+            ".........W",   # z8
+            "..........",   # z9
+            "..nnnnnn..",   # z10
+            "..XXXXXX..",   # z11
+            "..ssssss..",   # z12
+            "..........",   # z13
+            "..........",   # z14
+            "..nnnnnn..",   # z15
+            "..XXXXXX..",   # z16
+            "..ssssss..",   # z17
+            "..........",   # z18
+            "..........",   # z19
+            "..........",   # z20
+            ".GGGGG...K",   # z21
+            ".G...G...K",   # z22
+            ".GGGGG...K",   # z23
+        ], {"W": "water_cauldron[level=3]", "n": seat("north", B), "s": seat("south", B), "X": "white_concrete",
+            "G": "glass", "K": "barrel[facing=west,open=false]"})
+        for x in (42, 43, 44):
+            for y in (2, 3):
+                d.set(x, y, 22, "water")
+        plan(d, Y0 + 1, 42, 11, ["b.p.b.", ".....", ".....", ".....", ".....", "pb..bi"],
+             {"b": "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]", "p": "flower_pot",
+              "i": candle(2, "lime")})
+        d.set(41, 3, 21, "glass")
+        for x in range(41, 46):
+            d.set(x, 4, 21, "glass") if False else None
+        d.set(49, 3, 21, "potted_cactus")
+        for x, z in ((42, 11), (47, 11), (42, 16), (47, 16), (44, 21)):
+            d.set(x, 6, z, SL)
+        # first floor: library stacks, reading tables by the north glass
+        rails(d, 7, [(40, 9), (40, 10), (40, 11), (39, 8)])
+        rails(d, 12, [(48, 19), (48, 20), (48, 21), (49, 22)])
+        for z in (14, 17, 20):
+            for x in range(42, 47):
+                d.bookshelf(x, 7, z)
+                d.bookshelf(x, 8, z)
+        plan(d, 7, 41, 8, [
+            # 41..48
+            "..nnn.nn",     # z8
+            "..QQQ.QQ",     # z9
+            "..sss.ss",     # z10
+            "........",     # z11
+        ], {"n": seat("north", B), "s": seat("south", B), "Q": Q})
+        d.set(43, 8, 9, candle(1, "orange"))
+        d.set(47, 8, 9, "potted_bamboo")
+        d.set(48, 7, 14, "lectern[facing=west,has_book=false,powered=false]")
+        d.set(41, 7, 23, "potted_bamboo")
+        for x, z in ((44, 9), (44, 15), (44, 18), (44, 22)):
+            d.set(x, 11, z, SL)
+        # second floor: science classroom with board on the west wall and bench desks facing it
+        board(d, [(39, 14), (39, 15), (39, 16)], 13, "east", "gray_concrete", ledge=B)
+        plan(d, 12, 40, 8, [
+            # 40..48
+            ".........",    # z8
+            "...TTT...",    # z9
+            "...eee...",    # z10
+            ".........",    # z11
+            "...TT.TT.",    # z12
+            "...ee.ee.",    # z13
+            ".M.......",    # z14
+            ".c.TT.TT.",    # z15
+            "...ee.ee.",    # z16
+            ".........",    # z17
+            "...TT.TT.",    # z18
+            "...ee.ee.",    # z19
+        ], {"T": Q, "e": seat("south", B), "M": Q, "c": stool("west", B)})
+        for x, z in ((44, 11), (44, 17), (44, 21)):
+            d.set(x, 16, z, SL)
+        # roof: telescope dome-less platform, solar rows, planters
+        for z in (9, 10, 13, 14):
+            for x in range(40, 48):
+                d.set(x, 17, z, "daylight_detector[inverted=false,power=0]")
+        d.set(46, 17, 20, "smooth_stone")
+        d.set(46, 18, 20, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        d.set(41, 17, 20, "iron_block") if False else None
+        for x, z in ((40, 22), (48, 22), (40, 17), (48, 17)):
+            d.set(x, 17, z, "moss_block")
+            d.set(x, 18, z, "flowering_azalea")
+        # canteen: dining tables in the west part, servery counter, kitchen in the east part
+        entry(d, 18, Y0, 36, "south", double=True, step="polished_andesite")
+        d.sign(18, 5, 35, "north", ["CANTEEN"], B, glow=True, color="lime")
+        d.set(18, 5, 36, "white_concrete")
+        for z, back in ((38, "north"), (40, "south"), (42, "north"), (44, "south")):
+            for x in range(8, 16):
+                d.chair(x, Y0, z, back, B)
+        for z in (39, 43):
+            for x in range(8, 16):
+                d.set(x, Y0, z, "white_concrete")
+            for x in (9, 12, 15):
+                d.set(x, Y0 + 1, z, "potted_bamboo" if x == 12 else "flower_pot")
+        for z in range(37, 46):
+            if z != 41:
+                d.set(21, Y0, z, Q)
+        for z in (38, 40, 43):
+            d.set(21, Y0 + 1, z, "cake[bites=0]" if z == 40 else "flower_pot")
+        plan(d, Y0, 22, 37, [
+            # 22..29
+            "......SF",     # z37
+            ".......C",     # z38
+            "...XX...",     # z39
+            "...XX..K",     # z40
+            "........",     # z41
+            "...XX..K",     # z42
+            "...XX...",     # z43
+            ".......C",     # z44
+            "......BB",     # z45
+        ], {"S": "smoker[facing=west,lit=true]", "F": "furnace[facing=west,lit=false]",
+            "C": "water_cauldron[level=3]", "X": "white_concrete", "K": "barrel[facing=west,open=false]",
+            "B": "blast_furnace[facing=north,lit=false]"})
+        for x, z in ((10, 41), (14, 41), (25, 41), (18, 39)):
+            d.set(x, 6, z, SL)
+        for z in (39, 41, 43):                                          # canteen roof solar rows
+            for x in range(9, 28):
+                d.set(x, 7, z, "daylight_detector[inverted=false,power=0]")
+        for z in (37, 40, 43, 46):                                      # birch avenue beside the canteen
+            plant_tree(d, 34, z, "birch")
+        lamp_post(d, 32, 35)
+    return d
+
+
 @design("school")
 def school_v2(pack, rel, L):
-    return common_materials({"Hearthwood": sch_hearthwood}[pack](rel, L))
+    return common_materials({"Hearthwood": sch_hearthwood, "Neoterra": sch_neoterra}[pack](rel, L))

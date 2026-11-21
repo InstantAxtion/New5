@@ -427,8 +427,8 @@ def hw_west_ward(d, L):
         P(d, u, [(19, 11, "note_block[instrument=harp,note=0,powered=false]"),
                  (20, 11, "note_block[instrument=harp,note=5,powered=false]")])
         d.chair(19, u, 12, "south", "oak", sit=False)
-        for x in (13, 14, 15, 16):
-            d.bookshelf(x, u, 17, 2)
+        for x in (12, 13, 14, 15, 16):                           # full-height case (backs the schoolroom board)
+            d.bookshelf(x, u, 17, 3)
         sit(d, [(19, 17), (20, 17)], u, "south", "oak")
         stand(d, 21, u, 17, "oak_slab", LAMP)
         hang(d, [(14, 14), (18, 14)], 10)
@@ -853,7 +853,7 @@ def nt_tower_floor(d, k, y):
         sit(d, [(x, 25) for x in range(19, 26)], y, "south", "mangrove")
         d.chair(18, y, 24, "west", "mangrove", sit=False)
         d.chair(26, y, 24, "east", "mangrove", sit=False)
-        d.fill(20, y + 1, 18, 24, y + 2, 18, "black_concrete")
+        d.fill(20, y + 1, 19, 24, y + 2, 19, "black_concrete")
         P(d, y, [(27, 19, "potted_bamboo"), (27, 29, "potted_bamboo"), (19, 29, "potted_azure_bluet")])
         P(d, y + 1, [(20, 24, "potted_white_tulip"), (24, 24, "potted_white_tulip")])
         panels(d, [(20, 24), (24, 24), (22, 21), (22, 27)], c)
@@ -1009,11 +1009,11 @@ def hosp_neoterra(rel, L):
         nt_core_upper(d, L)
     if L >= 3:
         nt_wing(d, L)
+    if L >= 5:                                                   # before the tower: its flights cut the research
+        nt_research(d, L)                                        # wing's cantilevered roof edge
+        nt_garden(d)
     if L >= 4:
         nt_tower(d, L)
-    if L >= 5:
-        nt_research(d, L)
-        nt_garden(d)
     return d
 
 
