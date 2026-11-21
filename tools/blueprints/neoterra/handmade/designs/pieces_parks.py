@@ -99,14 +99,6 @@ def plan(d, y, rows, legend, x0=0, z0=0, seat=None):
                 d.set(x, y, z, legend[ch])
 
 
-def tags_from(d, y, rows, ch, name, x0=0, z0=0):
-    """Tag every cell marked `ch` in a hand-drawn tag plan."""
-    for dz, row in enumerate(rows):
-        for dx, c in enumerate(row):
-            if c == ch:
-                d.tag(x0 + dx, y, z0 + dz, name)
-
-
 def new(pack, rel, size, ctrl):
     d = Design(pack, rel, size=size, gy=GY)
     d.ctrl = ctrl
@@ -1203,7 +1195,7 @@ def cas_mediumpark(d):
     g[10][1] = g[13][1] = "m"
     paint(g, 15, 10, 16, 13, "m")                        # spring rocks
     g[11][15] = g[12][15] = "a"
-    paint(g, 2, 14, 4, 14, "c")                          # overlook pad
+    paint(g, 3, 14, 5, 14, "c")                          # overlook pad
     plan(d, 1, rows_of(g), CAS)
     d.fill(1, 0, 10, 14, 0, 13, "gravel")
     # spring: notch on a boulder pile spilling west into the creek head
@@ -1254,7 +1246,7 @@ def cas_mediumpark(d):
     d.set(12, 2, 6, log("spruce_log", "x"))
     d.set(14, 2, 6, log("spruce_log", "x"))
     # overlook bench at the pool, reeds and lilies
-    for x in (2, 3, 4):
+    for x in (3, 4, 5):
         d.set(x, 2, 14, stairs("spruce", "south"))
         d.tag(x, 2, 14, "sit_out")
     for x, z in ((0, 11), (0, 12), (5, 10)):
@@ -1408,7 +1400,7 @@ def cas_parklarge(d):
     an overlook bench at a pond fed by a waterfall spilling from a mossy rock bluff, a creek with a railed
     footbridge running west into a marsh with reeds, a picnic table under the firs, boulders, ferns, berries."""
     g = grid(25, "g")
-    trail = [(12, z) for z in range(0, 5)] + [(11, z) for z in range(4, 9)] + [(10, z) for z in range(8, 14)] \
+    trail = [(12, z) for z in range(0, 5)] + [(11, z) for z in range(4, 10)] + [(10, z) for z in range(9, 14)] \
         + [(11, z) for z in range(13, 19)] + [(12, z) for z in range(18, 22)] + [(13, 21), (14, 21)]
     for x, z in trail:
         g[z][x] = "d"
@@ -1424,7 +1416,7 @@ def cas_parklarge(d):
     for x, z in ((4, 16), (5, 15), (13, 14), (6, 16)):
         g[z][x] = "W"
     paint(g, 2, 4, 7, 9, "P")                            # lean-to floor
-    paint(g, 7, 5, 9, 9, "c")                            # fire clearing
+    paint(g, 7, 5, 10, 9, "c")                           # fire clearing
     paint(g, 15, 19, 20, 23, "c")                        # picnic clearing
     for x, z in ((3, 22), (7, 20), (21, 16), (1, 11), (23, 12), (8, 22)):
         g[z][x] = "p"
@@ -1494,13 +1486,13 @@ def cas_parklarge(d):
     d.set(4, 4, 6, HANGING)
     d.set(3, 3, 5, AIR)
     # fire circle in front of the lean-to
-    fire_pit(d, 8, 7)
-    for x in (7, 9):
+    fire_pit(d, 9, 7)
+    for x in (8, 10):
         d.set(x, 2, 5, log("spruce_log", "x"))
-    d.set(8, 2, 5, stairs("spruce", "north"))
-    d.tag(8, 2, 5, "sit_out")
-    d.set(8, 2, 9, stairs("spruce", "south"))
-    d.tag(8, 2, 9, "sit_out")
+    d.set(9, 2, 5, stairs("spruce", "north"))
+    d.tag(9, 2, 5, "sit_out")
+    d.set(9, 2, 9, stairs("spruce", "south"))
+    d.tag(9, 2, 9, "sit_out")
     # overlook bench at the pond's west shore, facing the falls
     for z in (9, 10, 11):
         d.set(13, 2, z, stairs("spruce", "west"))
@@ -1545,7 +1537,7 @@ def cas_parklarge(d):
     d.sign(15, 4, 1, "north", ["falls  ->", "lean-to  <-", "", ""], wood="spruce")
     # forest: firs placed around the clearings, boulders, ferns, berries
     for x, z, h in ((1, 1, 6), (6, 1, 6), (2, 20, 8), (5, 22, 7), (9, 20, 6), (22, 20, 8), (23, 15, 6),
-                    (16, 16, 6), (8, 12, 5), (1, 11, 6), (20, 23, 5)):
+                    (16, 16, 6), (8, 12, 5), (1, 11, 6), (23, 23, 5)):
         fir(d, x, z, h=h)
     for x, z, big in ((14, 6, True), (5, 12, False), (21, 17, True), (8, 23, False), (17, 6, False)):
         boulder(d, x, z, big=big)

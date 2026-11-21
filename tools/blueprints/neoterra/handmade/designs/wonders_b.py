@@ -2682,6 +2682,24 @@ def gb_neoterra(rel, L):
             d.set(x, 1, 27, "smooth_stone")
         for z in (31, 34, 37, 40, 43):
             d.set(39, 1, z, "smooth_stone")
+        # glass bus shelter on the south sidewalk east of the bridge
+        for x in (44, 49):
+            for z in (27, 28):
+                for y in (2, 3, 4):
+                    d.set(x, y, z, "light_gray_concrete" if z == 28 else "white_concrete")
+        for x in range(45, 49):
+            for y in (2, 3, 4):
+                d.set(x, y, 28, "light_blue_stained_glass_pane" if y < 4 else "cyan_terracotta")
+            d.set(x, 2, 27, "smooth_quartz_slab[type=bottom,waterlogged=false]")
+        for x in range(43, 51):
+            for z in (26, 27, 28):
+                d.set(x, 5, z, "smooth_quartz_slab[type=bottom,waterlogged=false]")
+        d.set(46, 4, 27, "end_rod[facing=down]")
+        d.set(47, 4, 27, "end_rod[facing=down]")
+        d.sign(43, 2, 27, "north", ["BUS", "Line 4"], "birch", glow=True, color="cyan") if False else None
+        d.set(50, 2, 27, "barrel[facing=up,open=false]")
+        for x in (51, 53):
+            d.set(x, 2, 27, "iron_bars")
         # riverside seating steps on the west bank, facing the water and the bridge
         for k, x in enumerate((21, 20, 19)):
             for z in range(38, 44):
