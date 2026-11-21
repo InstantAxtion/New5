@@ -1036,6 +1036,10 @@ def hc_close(d, L):
         d.set(x, 4, z, "lantern[hanging=false,waterlogged=false]")
     for x in (8, 22):
         d.chair(x, 2, 0, "north", "dark_oak")
+    lamp_post(d, 35, 19, "polished_andesite", fence("dark_oak_fence"))       # lamps at the chapter-house door
+    lamp_post(d, 41, 19, "polished_andesite", fence("dark_oak_fence"))
+    d.chair(44, 2, 22, "east", "dark_oak", sit=False)                         # bench under the chapter house
+    d.chair(44, 2, 23, "east", "dark_oak", sit=False)
     # churchyard wall with coping along the street and the east side, lych-gate on the street
     for x in range(28, 48):
         if 35 <= x <= 37:
@@ -2007,6 +2011,8 @@ def cc_cathedral(rel, L):
         cc_well(d, 27, 33)
         d.chair(25, 2, 31, "west", "spruce", sit=False)               # bench by the well
         d.chair(25, 2, 32, "west", "spruce", sit=False)
+        d.set(29, 2, 31, "barrel[facing=up,open=false]")              # water butt and bucket stand
+        d.set(29, 2, 32, "cauldron")
         for x, y, z, b in ((6, 2, 43, "spruce_planks"), (7, 2, 43, "spruce_planks"), (6, 3, 43, "hay_block[axis=y]"),
                            (7, 3, 43, log("oak_log", "x")), (8, 2, 43, fence("spruce_fence")),
                            (6, 2, 42, trap("spruce_trapdoor", "north", "bottom", True)),
