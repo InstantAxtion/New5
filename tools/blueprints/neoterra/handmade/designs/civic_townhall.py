@@ -347,22 +347,22 @@ def th_hearthwood(rel, L):
         link(d, 32, Y0, 18, "east")
         edoor(d, 44, Y0, 18, "west", double=True, along="z")
     if two:
-        stairs(d, 22, 21, Y0, 7, "east", rails=[(23, 20), (24, 20), (25, 20), (26, 20)])
+        stairs(d, 22, 21, Y0, 7, "east", rails=[(22, 21), (23, 20), (24, 20), (25, 20)])
         link(d, 20, 7, 18, "east")
         link(d, 32, 7, 18, "east")
     if L >= 4:
         r = shell(d, 20, 22, 32, 35, 2, "gable", "z", mat="bricks", up="calcite", ties=(25, 29))
         link(d, 26, Y0, 22, "south")
-        stairs(d, 31, 24, Y0, 7, "south", rails=[(30, 25), (30, 26), (30, 27), (30, 28)])
+        stairs(d, 31, 24, Y0, 7, "south", rails=[(31, 24), (30, 25), (30, 26), (30, 27)])
         chim(d, 32, 30, Y0, r["ridge"] + 1)
         edoor(d, 26, Y0, 35, "north")
     if L >= 5:
         shell(d, 8, 24, 18, 34, 2, "gable", "z", mat="stone_bricks", up="stone_bricks", gable_end="stone_bricks")
         edoor(d, 13, Y0, 24, "south")
-        stairs(d, 9, 26, Y0, 7, "south", rails=[(10, 27), (10, 28), (10, 29), (10, 30)])
+        stairs(d, 9, 26, Y0, 7, "south", rails=[(9, 26), (10, 27), (10, 28), (10, 29)])
         shell(d, 34, 24, 44, 34, 2, "gable", "z", mat="bricks", up="calcite")
         edoor(d, 39, Y0, 24, "south")
-        stairs(d, 43, 27, Y0, 7, "south", rails=[(42, 28), (42, 29), (42, 30), (42, 31)])
+        stairs(d, 43, 27, Y0, 7, "south", rails=[(43, 27), (42, 28), (42, 29), (42, 30)])
         mx1, mz1, mx2, mz2 = 46, 24, 54, 36                         # market house: open arcade below
         shell(d, mx1, mz1, mx2, mz2, 2, "gable", "z", mat="stone_bricks", up="calcite")
         for x in range(mx1, mx2 + 1):
@@ -372,7 +372,7 @@ def th_hearthwood(rel, L):
                     for y in range(Y0, 6):
                         d.set(x, y, z, AIR)
                     d.set(x, 5, z, "stone_brick_slab[type=top,waterlogged=false]")
-        stairs(d, 53, 34, Y0, 7, "north", rails=[(52, 33), (52, 32), (52, 31), (52, 30)])
+        stairs(d, 53, 34, Y0, 7, "north", rails=[(53, 34), (52, 33), (52, 32), (52, 31)])
     hw_rooms(d, L)
     return d
 

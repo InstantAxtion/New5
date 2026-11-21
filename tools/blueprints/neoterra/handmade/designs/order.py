@@ -3124,7 +3124,13 @@ def en_neoterra(rel, L):
                    (13, 9, CHISEL.replace("FACE", "west")), (11, 5, "potted_bamboo")])
     # ---- growth: an arcane institute round the tower
     if L >= 3:                                                    # library annex linked to the tower
-        building(d, 17, 4, 29, 14, nf=2, roof="flat", doors=(("north", 23), ("west", 9)))
+        b = building(d, 17, 4, 29, 14, nf=2, roof="flat", doors=(("north", 23), ("west", 9)))
+        room(d, b, 0, ["BBBB   BBBB", "           ", " BBB   BBB ", "           ", "    nnn    ", "    TTT   P",
+                       "    sss    ", "           ", "      BBB B"], lights=[(2, 2), (8, 2), (5, 5)])   # library annex
+        room(d, b, 1, ["BBBB a BBBB", "           ", "  t     t  ", " sss   sss ", "    nnn    ", "B   TTT   B",
+                       "    sss    ", "      g   g", "      PPPP "], lights=[(3, 3), (8, 3)])          # reading room
+        wlamp(d, 22, 4, 3)
+        wlamp(d, 24, 4, 3)
         d.set(x2, 2, 9, AIR) if False else None
         d.sign(26, 5, 3, "north", ["", "LIBRARY"], "birch", glow=True, color="magenta")
         lamp_post(d, 16, 1)
@@ -3132,6 +3138,8 @@ def en_neoterra(rel, L):
     if L >= 4:                                                    # observatory with a glass dome
         ob = building(d, 17, 18, 29, 28, nf=1, roof="flat", doors=(("north", 23), ("west", 23)),
                       flat_deco=False)
+        room(d, ob, 0, ["x C     C x", "           ", "   nnnnn   ", "  w     e  ", "  w  a  e  ", "  w     e  ",
+                        "   sssss   ", "           ", "B  z   z  B"], lights=[(2, 2), (8, 2), (5, 7)])  # planetarium ring
         cx, cz, r = 23, 23, 4
         for x in range(cx - r, cx + r + 1):
             for z in range(cz - r, cz + r + 1):
@@ -3146,7 +3154,15 @@ def en_neoterra(rel, L):
             d.set(x, 1, 16, "moss_block")
             d.set(x, 2, 16, "flowering_azalea")
     if L >= 5:                                                    # scriptorium and dormitory for adepts
-        building(d, 2, 20, 14, 30, nf=3, roof="flat", doors=(("north", 8), ("east", 25)))
+        b = building(d, 2, 20, 14, 30, nf=3, roof="flat", doors=(("north", 8), ("east", 25)))
+        room(d, b, 0, ["BBBB   BBBB", "           ", " l l   l l ", " s s   s s ", "           ", "B   nnn   B",
+                       "B   TTT   B", "    sss    ", "      BB BB"], lights=[(2, 2), (8, 2), (5, 5)])  # scriptorium
+        room(d, b, 1, ["xC t   t Cx", "   s   s   ", "           ", "    nnn    ", "C   TTT   C", "    sss    ",
+                       "g         g"], lights=[(3, 2), (7, 4)])                                      # masters' office
+        room(d, b, 2, ["1l1l1C1l1l1", "2 2 2 2 2 2", "c         c", "          K", "      4 4 4", "      3l3l3"],
+             lights=[(3, 2), (8, 2)])                                                            # adepts' dorm
+        wlamp(d, 7, 4, 19)
+        wlamp(d, 9, 4, 19)
         for z in range(18, 31, 3):
             d.set(16, 1, z, "moss_block")
             d.set(16, 2, z, "azalea")
