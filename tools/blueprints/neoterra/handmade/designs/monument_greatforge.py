@@ -168,7 +168,7 @@ def water_strip(d, x1, z1, x2, z2, weir="mossy_stone_bricks"):
 # =============================================================================================================
 #                                     HEARTHWOOD – Coalbrookdale ironworks
 # =============================================================================================================
-HW_SIZE = (57, 40, 49)
+HW_SIZE = (57, 40, 51)
 HW_WX, HW_WZ, HW_WSIZE, HW_WHUT = (1, 45), 1, (11, 26, 13), (2, 1, 4)
 HW_STACK = {1: 21, 2: 24, 3: 26, 4: 28, 5: 31}
 
@@ -543,6 +543,7 @@ def hw_main(rel, L):
     if L >= 3:
         hw_bank(d, L)
         hw_river(d, L)
+        hw_tollhouse(d, L)
     place_wings(d, HW_WX, HW_WZ, HW_WSIZE, HW_WHUT)
     connect_walls(d)
     return d
@@ -648,52 +649,102 @@ def hw_bank(d, L):
 
 
 def hw_river(d, L):
-    """L3 river along the back of the works and the cast-iron arch bridge (Ironbridge) at x 47..51."""
-    water_strip(d, 0, 41, d.sx - 1, 44)
+    """L3 river along the back of the works and the cast-iron arch bridge (Ironbridge) at x 46..52."""
+    water_strip(d, 0, 41, d.sx - 1, 45)
     for x in range(d.sx):
         d.set(x, 1, 40, "stone_bricks")
-        d.set(x, 1, 45, "stone_bricks")
-        if not 47 <= x <= 51:
+        d.set(x, 1, 46, "stone_bricks")
+        if not 46 <= x <= 52:
             d.set(x, 2, 40, "stone_brick_wall")
-    d.set(0, 1, 41, "mossy_stone_bricks")                  # weirs at the plot edges keep the water in
-    for z in range(41, 45):
+            d.set(x, 2, 46, "stone_brick_wall")
+    for z in range(41, 46):                                # weirs at the plot edges keep the water in
         d.set(0, 1, z, "mossy_stone_bricks")
         d.set(d.sx - 1, 1, z, "mossy_stone_bricks")
     for x in range(d.sx):
-        for z in (46, 47, 48):
-            if not 47 <= x <= 51:
-                d.set(x, 1, z, "coarse_dirt" if z == 47 else "grass_block[snowy=false]")
-    # bridge: deck x 48..50, rails on x 47 and 51, ribs on 47 / 49 / 51
-    iron, irst = "polished_deepslate", "polished_deepslate_stairs"
-    prof = {38: (2, "s"), 39: (3, "s"), 40: (4, "s"), 41: (4, "b"), 42: (4, "b"), 43: (4, "b"), 44: (4, "b"),
-            45: (4, "n"), 46: (3, "n"), 47: (2, "n")}
+        for z in (47, 48, 49, 50):
+            d.set(x, 1, z, "coarse_dirt" if z == 48 else "grass_block[snowy=false]")
+    # bridge: deck x 47..51, rails on x 46 and 52, semicircular cast-iron ribs on x 46 / 48 / 50 / 52
+    iron, irst, irsl = "polished_deepslate", "polished_deepslate_stairs", "polished_deepslate_slab"
+    prof = {37: (2, "s"), 38: (3, "s"), 39: (4, "s"), 40: (5, "s"), 41: (6, "s"), 42: (6, "b"), 43: (6, "b"),
+            44: (6, "b"), 45: (6, "n"), 46: (5, "n"), 47: (4, "n"), 48: (3, "n"), 49: (2, "n")}
     for z, (y, k) in prof.items():
-        for x in range(47, 52):
-            for yy in range(2, y):
-                if z in (41, 42, 43, 44):
-                    continue
-                d.set(x, yy, z, "stone_bricks" if x in (47, 51) or z in (39, 40, 45, 46) else "stone_bricks")
-            if k == "b":
-                d.set(x, y, z, iron if x in (47, 51) else "spruce_planks")
+        for x in range(46, 53):
+            if z <= 40 or z >= 46:                         # masonry abutments under the ramps
+                for yy in range(2, y):
+                    d.set(x, yy, z, "stone_bricks")
+            if k == "b" or x in (46, 52):
+                d.set(x, y, z, iron if x in (46, 52) else "spruce_planks")
             else:
-                d.set(x, y, z, stair("stone_brick_stairs", "south" if k == "s" else "north")
-                      if 48 <= x <= 50 else "stone_bricks")
-        if 39 <= z <= 46:
-            for x in (47, 51):
+                d.set(x, y, z, stair("stone_brick_stairs" if z <= 40 or z >= 46 else irst,
+                                     "south" if k == "s" else "north"))
+        if 38 <= z <= 48:
+            for x in (46, 52):
                 d.set(x, y + 1, z, "iron_bars")
-    for x in (47, 49, 51):                                 # the arch rib with its haunches
-        d.set(x, 3, 41, stair(irst, "north", "top"))
-        d.set(x, 3, 44, stair(irst, "south", "top"))
-        d.set(x, 2, 41, iron)
-        d.set(x, 2, 44, iron)
-    for x in (47, 51):                                     # lamp standards at the ends
-        d.set(x, 5, 39, iron)
-        d.set(x, 6, 39, "lantern[hanging=false,waterlogged=false]")
-        d.set(x, 5, 46, iron)
-        d.set(x, 6, 46, "lantern[hanging=false,waterlogged=false]")
-    d.set(49, 5, 38, AIR)
-    for z in range(46, 49):
-        for x in range(48, 51):
+    for x in (46, 48, 50, 52):                             # the arch rib
+        put(d, [(x, 4, 41, stair(irst, "north", "top")), (x, 5, 42, stair(irst, "north", "top")),
+                (x, 5, 43, slab(irsl, "top")), (x, 5, 44, stair(irst, "south", "top")),
+                (x, 4, 45, stair(irst, "south", "top")), (x, 2, 41, iron), (x, 3, 41, iron),
+                (x, 2, 45, iron), (x, 3, 45, iron)])
+    for x in (46, 52):                                     # spandrel rings between rib and deck
+        d.set(x, 5, 41, "iron_bars")
+        d.set(x, 5, 45, "iron_bars")
+    for x in (47, 49, 51):                                 # cross girders under the deck
+        d.set(x, 5, 43, slab(irsl, "top"))
+    for x, z in ((46, 37), (52, 37), (46, 49), (52, 49)):  # lamp standards at the ends
+        d.set(x, 3, z, iron)
+        d.set(x, 4, z, "polished_deepslate_wall")
+        d.set(x, 5, z, "lantern[hanging=false,waterlogged=false]")
+    for z in range(35, 37):
+        for x in range(47, 52):
             d.set(x, 1, z, "gravel")
 
 
+def hw_tollhouse(d, L):
+    """L3 bridge toll house: brick ground storey, timber-framed upper storey, hipped roof, toll board."""
+    X1, X2, Z1, Z2 = 40, 45, 29, 35
+    rect(d, X1, Z1, X2, Z2, 1, "stone_bricks")
+    hw_brick_walls(d, X1, Z1, X2, Z2, 2, 5)
+    ring(d, X1, Z1, X2, Z2, 6, "dark_oak_planks")
+    for x in range(X1, X2 + 1):
+        for z in range(Z1, Z2 + 1):
+            if x in (X1, X2) or z in (Z1, Z2):
+                for y in range(7, 10):
+                    post = (x in (X1, X2) and z in (Z1, Z2)) or (x in (X1, X2) and z == 32) or (z in (Z1, Z2) and x == 42)
+                    d.set(x, y, z, logb("stripped_dark_oak_log") if post else "calcite")
+            else:
+                d.set(x, 6, z, "spruce_planks")
+    ring(d, X1, Z1, X2, Z2, 10, "dark_oak_planks")
+    d.hip(X1, Z1, X2, Z2, 11, "deepslate_tile_stairs", "deepslate_tile_slab", overhang=1)
+    d.door(X2, 2, 32, "east", "dark_oak")
+    for z in (30, 34):
+        d.window(X2, 3, z, X2, 4, z)
+    d.window(X1, 3, 30, X1, 4, 30)
+    d.window(42, 3, Z1, 43, 4, Z1)
+    d.window(42, 3, Z2, 43, 4, Z2)
+    for x, z in ((X2, 31), (X2, 33), (X1, 33), (43, Z1), (44, Z2)):
+        d.window(x, 7, z, x, 8, z)
+    d.sign(X2 + 1, 4, 31, "east", ["IRON BRIDGE", "TOLLS", "Coach 2s 6d", "Foot 1/2d"], "dark_oak")
+    put(d, [(X2 + 1, 4, 33, "lantern[hanging=false,waterlogged=false]"), (X2 + 1, 3, 33, "stone_brick_wall")])
+    for y in range(2, 15):                                 # chimney stack on the west wall
+        d.set(X1 - 1, y, 34, "bricks")
+    d.set(X1 - 1, 15, 34, "terracotta")
+    # ground floor: the toll office
+    put(d, [(44, 2, 30, slab("dark_oak_slab", "top")), (44, 3, 30, cand(3)), (43, 2, 30, stair("dark_oak_stairs", "west")),
+            (44, 2, 34, slab("dark_oak_slab", "top")), (44, 3, 34, "chest[facing=west,type=single,waterlogged=false]"),
+            (41, 2, 34, "furnace[facing=east,lit=true]"), (41, 3, 34, "bricks"),
+            (42, 2, 33, "dark_oak_fence"), (42, 3, 33, plate("dark_oak")), (43, 2, 33, stair("dark_oak_stairs", "east")),
+            (41, 2, 30, "barrel[facing=up,open=false]"), (41, 3, 30, "potted_red_tulip"),
+            (42, 2, 31, "red_carpet"), (43, 2, 31, "red_carpet"), (42, 2, 32, "red_carpet"), (43, 2, 32, "red_carpet")])
+    for y in range(2, 7):
+        d.set(41, y, 31, "ladder[facing=east,waterlogged=false]")
+    lamp(d, 43, 5, 32)
+    # upper floor: the toll keeper's bedroom
+    bed(d, 43, 7, 34, "south", "red")
+    put(d, [(44, 7, 34, slab("spruce_slab", "top")), (44, 8, 34, cand(1)),
+            (42, 7, 34, "chest[facing=north,type=single,waterlogged=false]"),
+            (41, 7, 34, "barrel[facing=up,open=false]"), (41, 8, 34, "barrel[facing=east,open=false]"),
+            (44, 7, 30, "water_cauldron[level=3]"), (42, 7, 30, "dark_oak_fence"), (42, 8, 30, plate("dark_oak")),
+            (43, 7, 30, stair("dark_oak_stairs", "east")),
+            (42, 7, 32, "white_carpet"), (43, 7, 32, "white_carpet"), (44, 7, 32, "white_carpet"),
+            (43, 7, 31, "white_carpet")])
+    lamp(d, 43, 9, 32)
