@@ -860,6 +860,13 @@ def gt_hearthwood(rel, L):
         path(d, 28, 0, 28, 3)
         flowerbed(d, 23, 1, 26, 2)
         flowerbed(d, 31, 1, 34, 2)
+        woodpile(d, 21, 5, 22, 9, 3, "dark_oak")                  # firewood between watch-house and barracks
+        woodpile(d, 36, 5, 36, 7, 3, "dark_oak")
+        for x in range(24, 35):                                   # box hedge along the court
+            if x not in (28, 29):
+                d.set(x, 2, 12, "oak_leaves[distance=1,persistent=true,waterlogged=false]")
+        dummy(d, 30, 2, 13, "north")
+        dummy(d, 33, 2, 13, "north")
     if L >= 5:
         # stable and a gate tower round a cobbled court
         b = building(d, 23, 15, 34, 21, nf=2, axis="x", doors=(("north", 26), ("north", 31)))
@@ -888,6 +895,7 @@ def gt_hearthwood(rel, L):
         d.set(36, 2, 20, "hay_block[axis=y]")
         d.set(36, 3, 20, "hay_block[axis=x]")
         bench(d, 25, 13, "south", 3)
+        woodpile(d, 23, 22, 34, 22, 2, "dark_oak")                 # hay-loft firewood behind the stable
         # jettied lookout gallery round the tower's lookout storey
         for x in range(x1 - 1, x2 + 2):
             for z in range(z1 - 1, z2 + 2):
@@ -1063,6 +1071,7 @@ def gt_cascadia(rel, L):
         cart(d, 33, 6, "z")
         lamp_post(d, 21, 3)
         path(d, 12, 13, 26, 13)
+        woodpile(d, 24, 11, 30, 11, 3)                            # cordwood behind the equipment shed
     if L >= 3:                                                    # two-storey bunkhouse
         b = building(d, 21, 16, 33, 23, nf=2, axis="x", doors=(("north", 27), ("west", 19)), chimney=(34, 20))
         room(d, b, 0, ["MFW=p  KKu ",         # bunkhouse cookroom: stove, sink, crocks, flour barrels,
@@ -1133,6 +1142,11 @@ def gt_cascadia(rel, L):
         d.set(14, 2, 27, "spruce_fence_gate[facing=east,in_wall=false,open=false,powered=false]")
         d.set(17, 2, 29, "water_cauldron[level=3]")
         d.set(16, 2, 30, "hay_block[axis=y]")
+        d.set(17, 2, 27, "hay_block[axis=y]")
+        d.set(17, 3, 27, "hay_block[axis=x]")
+        woodpile(d, 35, 16, 36, 19, 3)                            # bunkhouse stove wood
+        woodpile(d, 35, 21, 36, 23, 3)
+        woodpile(d, 13, 28, 13, 31, 3)
         tree(d, 37, 2, 3, "spruce_log", "spruce_leaves", 7, 2, cone=True)
     if L >= 5:                                                    # radio room / mess hall and a second lookout
         b = building(d, 21, 26, 37, 32, nf=2, axis="x", doors=(("north", 29), ("north", 24)), chimney=(29, 33))
@@ -1162,6 +1176,17 @@ def gt_cascadia(rel, L):
         d.set(37, t2.ridge + 4, 10, ROD())
         tree(d, 37, 2, 22, "spruce_log", "spruce_leaves", 8, 2, cone=True)
         tree(d, 2, 2, 31, "spruce_log", "spruce_leaves", 7, 2, cone=True)
+        woodpile(d, 39, 13, 40, 20, 3)                            # winter cordwood for the station
+        woodpile(d, 0, 13, 1, 19, 2, None)
+        woodpile(d, 38, 26, 39, 31, 3)
+        for x in range(16, 20):                                   # crew vegetable patch
+            for z in range(18, 24):
+                if x in (16, 19) or z in (18, 23):
+                    d.set(x, 2, z, "spruce_fence")
+                else:
+                    d.set(x, 1, z, "farmland[moisture=7]")
+                    d.set(x, 2, z, "carrots[age=7]" if z % 2 else "potatoes[age=7]")
+        d.set(16, 2, 20, "spruce_fence_gate[facing=west,in_wall=false,open=false,powered=false]")
     return d
 
 
@@ -4338,6 +4363,11 @@ def gy_cascadia(rel, L):
         for x in (28, 38):
             lamp_post(d, x, 22)
             lamp_post(d, x, 32)
+        flowerbed(d, 30, 22, 36, 22)                              # memorial flowers round the pavilion
+        flowerbed(d, 30, 32, 36, 32)
+        woodpile(d, 31, 10, 37, 10, 3)                            # sexton's firewood
+        woodpile(d, 39, 8, 40, 10, 3)
+        flowerbed(d, 38, 24, 38, 30)
         bench(d, 26, 27, "west", 3) if False else None
         for z in (25, 28):                                        # log benches on the path to the pavilion
             d.set(26, 2, z, LOG("spruce_log", "z"))
@@ -4608,6 +4638,10 @@ def ms_hearthwood(rel, L):
         d.set(3, c.ridge + 2, 29, "bell[attachment=ceiling,facing=east,powered=false]")
         for x in (24, 30, 36):
             tree(d, x, 2, 31, "oak_log", "oak_leaves", 4, 2)
+        flowerbed(d, 4, 24, 9, 24)                                # chapel garth: flower borders and a yew hedge
+        flowerbed(d, 13, 24, 18, 24)
+        flowerbed(d, 20, 26, 20, 31)
+        hedge(d, 3, 33, 19, 33, leaves="spruce_leaves")
     return d
 
 
