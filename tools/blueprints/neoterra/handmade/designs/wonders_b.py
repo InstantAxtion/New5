@@ -2540,18 +2540,27 @@ def gb_cascadia(rel, L):
         for x in range(1, 12):
             d.set(x, 2, 35, "spruce_fence")
         # ---- timber yard on the north bank: decks of logs on skids, held by stakes, a peavey rack
-        for z, h in ((1, 3), (2, 3), (4, 2), (5, 2)):
-            for x in range(37, 44):
+        for z, h in ((1, 4), (2, 4), (4, 3), (5, 3)):
+            for x in range(38, 43):
                 for y in range(2, 2 + h):
                     d.set(x, y, z, "spruce_log[axis=x]" if (x + y) % 5 else "stripped_spruce_log[axis=x]")
-        for x in (36, 44):
+        for x in (37, 43):
             for z in (1, 2, 4, 5):
-                for y in (2, 3, 4):
+                for y in (2, 3, 4, 5):
                     d.set(x, y, z, "spruce_fence")
         for x in range(37, 44):
             d.set(x, 1, 3, "coarse_dirt")
-        d.set(36, 2, 3, "barrel[facing=up,open=false]")
-        d.set(44, 2, 3, "grindstone[face=floor,facing=east]")
+        for y in range(2, 9):                              # gin pole with its boom and a log on the chain
+            d.set(43, y, 3, "spruce_log[axis=y]")
+        for x in (40, 41, 42):
+            d.set(x, 8, 3, "spruce_fence")
+        for y in (6, 7):
+            d.set(40, y, 3, "chain[axis=y,waterlogged=false]")
+        d.set(40, 5, 3, "stripped_spruce_log[axis=x]")
+        d.set(37, 2, 3, "barrel[facing=up,open=false]")
+        d.set(38, 2, 3, "grindstone[face=floor,facing=east]")
+        lamppost(d, 37, 7, post="spruce_fence")
+        lamppost(d, 43, 7, post="spruce_fence")
     if L >= 5:
         # ---- Timberline Hotel: lobby with desk and fireside chairs, dining, kitchen; two floors of rooms
         b = building(d, 48, 25, 58, 35, 3, door="north", ladder=(57, 34, "north"), hearth=(49, 30, "east"), pal=4)
@@ -2610,25 +2619,43 @@ def gb_cascadia(rel, L):
                        "......",
                        "bC.s.B"], face={"G": "south", "U": "south", "A": "north"})
         put(d, b["S"], [(1, 4, 4, "sign", ("west", ["Smithy"])), (1, 4, 3, "torch", "west")])
-        # ---- Schoolhouse: rows of desks facing the teacher and the stove, a bell cote over the door
-        b = building(d, 44, 0, 54, 6, 1, door="south", doorpos=49, hearth=(53, 3, "west"), pal=3)
-        plan(d, b, 0, ["9Q.....79",
-                       ".3.3.3...",
-                       ".T.T.T.l.",
-                       ".3.3.3...",
-                       "p...m...b"], face={"Q": "south"})
+        # ---- Schoolhouse: desks facing the teacher's lectern, the stove at the back, a bell cote on the ridge
+        b = building(d, 45, 0, 55, 5, 1, door="west", doorpos=3, hearth=(54, 2, "west"), pal=3)
+        plan(d, b, 0, ["7.T2T2T2.",
+                       "Q.T2T2T2.",
+                       "..l......",
+                       "9.m..b.p."], face={"Q": "east"})
         r = b["ridge"]
-        for x in (48, 50):
+        for x in (49, 51):
             for y in range(r - 1, r + 2):
-                d.set(x, y, 3, "stripped_spruce_log[axis=y]")
-        d.set(49, r + 1, 3, "bell[attachment=double_wall,facing=east,powered=false]")
-        for x in range(47, 52):
-            d.set(x, r + 2, 3, slab("spruce_slab", "bottom"))
-        put(d, b["S"], [(49, 4, 7, "sign", ("south", ["School"])), (48, 4, 7, "torch", "south"),
-                        (50, 4, 7, "torch", "south"), (46, 2, 7, "chair", "south"), (47, 2, 7, "chair", "south")])
-        for x in range(45, 54):                            # picket fence of the school yard
-            if x not in (49,):
-                d.set(x, 2, 9, "spruce_fence")
+                d.set(x, y, 2, "stripped_spruce_log[axis=y]")
+        d.set(50, r + 1, 2, "bell[attachment=double_wall,facing=east,powered=false]")
+        for x in range(48, 53):
+            d.set(x, r + 2, 2, slab("spruce_slab", "bottom"))
+        put(d, b["S"], [(44, 4, 4, "sign", ("west", ["School"])), (44, 4, 2, "torch", "west")])
+        for y in range(2, 10):                             # flag pole at the school door
+            d.set(44, y, 6, "spruce_fence")
+        d.set(44, 9, 7, "blue_wall_banner[facing=south]")
+        # ---- campfire circle on the north-west green: stone ring, log benches, picnic table, woodpile
+        cx, cz = 19, 4
+        d.set(cx, 2, cz, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+        for dx, dz in ((-1, -1), (0, -1), (1, -1), (-1, 0), (1, 0), (-1, 1), (0, 1), (1, 1)):
+            d.set(cx + dx, 1, cz + dz, "cobblestone")
+            d.set(cx + dx, 2, cz + dz, slab("cobblestone_slab", "bottom"))
+        for k in (-1, 0, 1):
+            d.set(cx + k, 2, cz - 3, "stripped_spruce_log[axis=x]")
+            d.set(cx + k, 2, cz + 3, "stripped_spruce_log[axis=x]")
+            d.set(cx - 3, 2, cz + k, "stripped_spruce_log[axis=z]")
+            d.set(cx + 3, 2, cz + k, "stripped_spruce_log[axis=z]")
+        d.table(22, 2, 8, "spruce", "post")
+        d.chair(21, 2, 8, "west", "spruce", sit=False)
+        d.chair(23, 2, 8, "east", "spruce", sit=False)
+        for x in (16, 17):
+            for y in (2, 3):
+                d.set(x, y, 8, "spruce_log[axis=z]")
+        lamppost(d, 16, 1, post="spruce_fence")
+        lamppost(d, 23, 1, post="spruce_fence")
+        lamppost(d, 19, 8, post="spruce_fence")
         for x, z in ((13, 2), (58, 2), (59, 37), (47, 37)):
             tree(d, x, z, h=7, log="spruce_log", leaves="spruce_leaves", r=2)
         for x, z in ((57, 1), (59, 3), (57, 3), (60, 2)):   # fern understorey of the street-corner fir
@@ -2741,7 +2768,7 @@ def gb_neoterra(rel, L):
         d.set(42, 2, 27, "smooth_quartz")                  # stop marker light
         d.set(42, 3, 27, "sea_lantern")
         d.set(50, 2, 27, "barrel[facing=up,open=false]")
-        for x in (51, 53):
+        for x in (51, 53, 55):                             # bike stands
             d.set(x, 2, 27, "iron_bars")
         # riverside seating steps on the west bank, facing the water and the bridge
         for k, x in enumerate((21, 20, 19)):

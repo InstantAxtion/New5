@@ -17,6 +17,7 @@ def main():
     root, pack = Path(sys.argv[1]), sys.argv[2]
     designs = hm.load_designs()
     n = 0
+    tests = {}
     for base, fn in sorted(designs.items()):
         if pack not in hm.packs_for(base):
             continue
@@ -26,6 +27,13 @@ def main():
             dst.parent.mkdir(parents=True, exist_ok=True)
             bp.save(dst)
             n += 1
+            if getattr(bp, "farm_test", None):
+                tests[rel] = bp.farm_test
+    if tests:
+        import json
+        out = HERE.parents[3] / "mod/src/main/resources/data/neoterra/farmtests.json"
+        out.write_text(json.dumps({"pack": pack, "farms": tests}, indent=1, sort_keys=True) + "\n")
+        print(f"{pack}: farm tests for {len(tests)} farms -> {out}")
     print(f"{pack}: {n} hand-made hut levels ({len(designs)} types)")
 
 

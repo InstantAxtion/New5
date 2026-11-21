@@ -556,6 +556,16 @@ def put_all(d, y, items):
                 d.set(x, y + 1, z, it[3])
 
 
+def inlay(d, x1, z1, x2, z2, y):
+    """Sink the carpet mats drawn on walk layer y (x1..x2/z1..z2) into the floor as flush wool panels."""
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            st = d.get(x, y, z)
+            if st.endswith("_carpet") and "moss" not in st:
+                d.set(x, y - 1, z, st.split(":")[-1].replace("_carpet", "_wool"))
+                d.set(x, y, z, AIR)
+
+
 SLABTOP = lambda w: f"{w}_slab[type=top,waterlogged=false]"
 POT = "decorated_pot[cracked=false,facing=FACE,waterlogged=false]"
 CHISEL = ("chiseled_bookshelf[facing=FACE,slot_0_occupied=true,slot_1_occupied=true,slot_2_occupied=false,"
@@ -2159,6 +2169,20 @@ def ca_hearthwood(rel, L):
             d.set(x, 7, z + 1, "chest[facing=%s,type=single,waterlogged=false]" % ("east" if f == "west" else "west"))
     for z in range(z1 + 2, Z2, 4):
         d.lamp(6, 12, z) if d.air(6, 12, z) else None
+    # under the hall's eaves: benches at the front, forge fuel and quench water on the west, kit along the east
+    eave = [(3, 1, ST("dark_oak", "north")), (8, 1, ST("dark_oak", "north")), (9, 1, KEG.replace("FACE", "north"), KEG.replace("FACE", "up")),
+            (1, 4, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (1, 6, "water_cauldron[level=3]"),
+            (1, 9, "hay_block[axis=y]", "target[power=0]"), (1, 11, "dark_oak_fence", LANT_S),
+            (11, 8, SL("dark_oak", "top"), ROD()), (11, 9, SL("dark_oak", "top"), POT.replace("FACE", "east")),
+            (11, 11, "dark_oak_fence", LANT_S), (4, Z2 + 1, "composter[level=4]"), (8, Z2 + 1, KEG.replace("FACE", "south"))]
+    eave += {1: [], 2: [(1, 13, "grindstone[face=floor,facing=west]")],
+             3: [(1, 13, "grindstone[face=floor,facing=west]"), (11, 14, KEG.replace("FACE", "east"))],
+             4: [(1, 13, "grindstone[face=floor,facing=west]"), (1, 16, KEG.replace("FACE", "west"), "potted_red_tulip"),
+                 (11, 14, KEG.replace("FACE", "east")), (11, 16, "dark_oak_fence", LANT_S)],
+             5: [(1, 13, "grindstone[face=floor,facing=west]"), (1, 16, KEG.replace("FACE", "west"), "potted_red_tulip"),
+                 (1, 18, "dark_oak_fence", LANT_S), (11, 14, KEG.replace("FACE", "east")), (11, 16, "dark_oak_fence", LANT_S),
+                 (11, 18, SL("dark_oak", "top"), ROD())]}[L]
+    put_all(d, 2, eave)
     # sand ring
     rx1, rz1, rx2, rz2 = 13, 3, 27, 18
     d.fill(rx1, 1, rz1, rx2, 1, rz2, "sand")
@@ -2281,6 +2305,10 @@ def ca_hearthwood(rel, L):
         wlamp(d, 10, 4, 26)
         flowerbed(d, 3, 25, 6, 26)
         flowerbed(d, 12, 25, 15, 26)
+        put_all(d, 2, [(1, 28, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (1, 30, "dark_oak_fence", LANT_S),
+                       (1, 33, "composter[level=4]"), (1, 35, "water_cauldron[level=3]"), (4, 37, ST("dark_oak", "south")),
+                       (5, 37, ST("dark_oak", "south")), (10, 37, KEG.replace("FACE", "south")), (14, 37, "potted_red_tulip"),
+                       (18, 28, KEG.replace("FACE", "east"), "potted_oxeye_daisy"), (18, 34, "dark_oak_fence", LANT_S)])
         bench(d, 8, 25, "south", 2) if False else None
         lamp_post(d, 1, 25)
     if L >= 5:                                                    # great hall with a gatehouse tower
@@ -2310,6 +2338,9 @@ def ca_hearthwood(rel, L):
         room(d, b, 3, ["x t C", "  s  ", "     ", "K   K", "     ", "R    "])
         for x in range(20, 39, 4):
             d.banner(x, 5, 27, "north", "red" if x % 8 else "white")
+        put_all(d, 2, [(22, 38, KEG.replace("FACE", "south"), KEG.replace("FACE", "up")), (25, 38, "composter[level=4]"),
+                       (33, 38, "water_cauldron[level=3]"), (36, 38, "dark_oak_fence", LANT_S), (19, 29, KEG.replace("FACE", "west")),
+                       (19, 36, "dark_oak_fence", LANT_S), (31, 38, ST("dark_oak", "south")), (32, 38, ST("dark_oak", "south"))])
     return d
 
 
@@ -2518,6 +2549,12 @@ def ca_cascadia(rel, L):
             for z in (28, 34):
                 d.set(x, 2, z, "spruce_fence")
         b = building(d, 23, 24, 42, 34, nf=2, axis="x", doors=(("north", 29), ("west", 29)), chimney=(43, 29))
+        put_all(d, 2, [(25, 35, KEG.replace("FACE", "south"), KEG.replace("FACE", "up")), (27, 35, "spruce_log[axis=y]", "spruce_fence"),
+                       (22, 26, "spruce_fence", LANT_S),
+                       (22, 32, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (22, 33, "hay_block[axis=y]")])
+        if L == 4:                                                # (L5 keeps this strip free as the stable's path)
+            put_all(d, 2, [(31, 35, "water_cauldron[level=3]"), (34, 35, "composter[level=4]"), (37, 35, "spruce_fence", LANT_S),
+                           (40, 35, KEG.replace("FACE", "south"))])
         room(d, b, 0, ["RRRR  ZZZZ   RRRRu",  # timbersports gym: axes, throwing targets, pells, mat,
                        "                 k",  # chopping stumps
                        "  D   D   D   D   ",
@@ -2755,6 +2792,8 @@ def ca_neoterra(rel, L):
                        "   sss   sss   sss ",
                        "      PP   PP   PP ",
                        "      g   g   g   g"], lights=[(5, 3), (13, 3), (9, 6)])
+        inlay(d, 25, 16, 43, 26, 2)                               # sparring mats set flush into the floor
+        inlay(d, 25, 16, 43, 26, 7)
         wlamp(d, 32, 4, 14)
         wlamp(d, 34, 4, 14)
         for x in (26, 30, 38, 42):                                # planters along the dojo front
@@ -2993,6 +3032,11 @@ def en_hearthwood(rel, L):
         d.set(gx1 + 1, 2, gz2 - 1, "oak_sapling[stage=0]") if False else None
     put_all(d, 2, [(4, 10, SL("dark_oak", "top"), "candle[candles=3,lit=false,waterlogged=false]"), (6, 4, SL("dark_oak", "top"), POT.replace("FACE", "south")), (11, 4, "potted_allium"),
                    (4, 8, SL("dark_oak", "top"), "candle[candles=2,lit=false,waterlogged=false]")])
+    if L >= 2:                                                    # under the study's eaves: herb barrels, bench, lamps
+        put_all(d, 2, [(2, 5, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (2, 8, "dark_oak_fence", LANT_S),
+                       (5, 2, ST("dark_oak", "north")), (6, 2, ST("dark_oak", "north")), (11, 2, "potted_allium"),
+                       (12, 2, KEG.replace("FACE", "north"), "potted_red_tulip"), (4, 12, "composter[level=4]"),
+                       (12, 12, "water_cauldron[level=3]")])
     # ---- growth: a small college of lore along the lane
     if L >= 3:                                                    # scriptorium with copyists' desks, archive above
         b = building(d, 26, 3, 34, 10, nf=2, axis="z", doors=(("north", 30), ("west", 7)), chimney=(35, 7))
@@ -3003,6 +3047,9 @@ def en_hearthwood(rel, L):
         wlamp(d, 29, 4, 2)
         wlamp(d, 31, 4, 2)
         d.sign(28, 4, 2, "north", ["Scriptorium"], "dark_oak")
+        put_all(d, 2, [(25, 4, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (25, 9, "dark_oak_fence", LANT_S),
+                       (28, 11, "composter[level=4]"), (31, 11, KEG.replace("FACE", "south")), (33, 11, "water_cauldron[level=3]"),
+                       (35, 4, KEG.replace("FACE", "east"), "potted_allium")])
         flowerbed(d, 27, 0, 28, 1)
         flowerbed(d, 32, 0, 33, 1)
         lamp_post(d, 25, 1)
@@ -3015,6 +3062,8 @@ def en_hearthwood(rel, L):
         for y in range(t.ridge + 1, t.ridge + 3):
             d.set(39, y, 6, "iron_bars")
         d.set(39, t.ridge + 3, 6, ROD())
+        put_all(d, 2, [(43, 5, "dark_oak_fence", LANT_S), (43, 8, KEG.replace("FACE", "east"), KEG.replace("FACE", "up")),
+                       (38, 10, "potted_azure_bluet"), (40, 10, KEG.replace("FACE", "south")), (35, 9, ST("dark_oak", "west"))])
     if L >= 5:                                                    # college hall round a quad
         b = building(d, 3, 22, 24, 31, nf=2, axis="x", doors=(("north", 13), ("east", 27)), chimney=(2, 27))
         room(d, b, 0, ["BBbBBbBBb  BBbBBbBBB",   # college hall library: stacks, three reading tables
@@ -3039,6 +3088,11 @@ def en_hearthwood(rel, L):
             for z in range(13, 21):
                 d.set(x, 1, z, "grass_block[snowy=false]" if (x + z) % 7 else "gravel")
         tree(d, 34, 2, 16, "oak_log", "oak_leaves", 4, 2)
+        put_all(d, 2, [(2, 24, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (2, 30, "dark_oak_fence", LANT_S),
+                       (6, 21, ST("dark_oak", "north")), (7, 21, ST("dark_oak", "north")), (19, 21, ST("dark_oak", "north")),
+                       (20, 21, ST("dark_oak", "north")), (10, 21, "potted_red_tulip"), (25, 24, KEG.replace("FACE", "east")),
+                       (25, 30, "dark_oak_fence", LANT_S), (6, 32, "composter[level=4]"), (12, 32, KEG.replace("FACE", "south")),
+                       (18, 32, "water_cauldron[level=3]"), (22, 32, KEG.replace("FACE", "south"), "potted_allium")])
         for x in (28, 40):
             bench(d, x, 19, "south", 2)
         path(d, 26, 12, 42, 12)
@@ -3119,6 +3173,9 @@ def en_cascadia(rel, L):
         wlamp(d, 23, 4, 2)
         bench(d, 21, 2, "south", 2)
         lamp_post(d, 18, 1)
+        put_all(d, 2, [(19, 4, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (19, 8, "spruce_fence", LANT_S),
+                       (22, 10, "composter[level=4]"), (25, 10, "water_cauldron[level=3]"), (27, 10, KEG.replace("FACE", "south")),
+                       (29, 4, KEG.replace("FACE", "east"), "potted_fern"), (29, 8, "spruce_log[axis=y]", "spruce_fence")])
     if L >= 3:                                                    # bindery with a drying porch
         b = building(d, 20, 13, 30, 20, nf=1, axis="z", doors=(("north", 25),))
         room(d, b, 0, ["XO     BB", "         ", "  ===  K ", "  s s  k ", "        B", "m  KK  Kc"],
@@ -3209,14 +3266,26 @@ def en_neoterra(rel, L):
                           (5, 6, 5, 12, [(5, 8), (5, 10)]), (13, 6, 13, 11, [(13, 8), (13, 10)])])
         d.set(9, y, 9, "amethyst_block")
         d.set(9, y + 1, 9, "amethyst_cluster[facing=up,waterlogged=false]")
-        if i == 1:
+        if i == 1:                                                # lectern study round the crystal
             d.item(7, y, 9, "lectern", "east")
             d.item(11, y, 9, "lectern", "west")
-        else:
+            d.rug(7, 7, 11, 11, y, ("magenta_carpet", "purple_carpet"))
+        elif i == 2:                                              # reading lounge: armchairs and a tea table
             d.chair(8, y, 7, "north", "birch", sit=False)
             d.chair(10, y, 7, "north", "birch", sit=False)
             d.set(9, y, 7, SL("smooth_quartz", "top"))
-        d.rug(7, 7, 11, 11, y, ("magenta_carpet", "purple_carpet"))
+            d.set(9, y + 1, 7, "candle[candles=3,lit=false,waterlogged=false]")
+            d.chair(7, y, 11, "west", "birch", sit=False)
+            d.chair(11, y, 11, "east", "birch", sit=False)
+            d.rug(6, 8, 12, 10, y, ("light_blue_carpet", "white_carpet"))
+        else:                                                     # star chamber: chart table and a scrying bowl
+            d.set(7, y, 7, "cartography_table")
+            d.chair(7, y, 8, "south", "birch", sit=False)
+            d.set(11, y, 11, "water_cauldron[level=3]")
+            d.set(11, y, 7, SL("smooth_quartz", "top"))
+            d.set(11, y + 1, 7, "potted_azure_bluet")
+            d.set(7, y, 11, CHISEL.replace("FACE", "east"))
+            d.rug(8, 8, 10, 10, y, ("black_carpet", "blue_carpet"), "check")
         for x, z in ((7, 7), (11, 7), (7, 11), (11, 11)):
             d.set(x, y + 3, z, "sea_lantern")
     # crystal crown on the roof
@@ -3265,6 +3334,18 @@ def en_neoterra(rel, L):
         for y in range(ob.top + 1, ob.top + 4):
             d.set(cx, y, cz, "iron_bars")
         d.set(cx, ob.top + 4, cz, ENDROD("north"))
+        # viewing deck inside the dome: a ladder from the planetarium, a doorway in the glass, chairs round the scope
+        ladder(d, 28, 23, 2, ob.top, "west")
+        d.set(27, ob.top + 1, 23, AIR)
+        d.set(27, ob.top + 2, 23, AIR)
+        d.chair(21, ob.top + 1, 23, "west", "birch", sit=False)
+        d.chair(23, ob.top + 1, 21, "north", "birch", sit=False)
+        d.chair(23, ob.top + 1, 25, "south", "birch", sit=False)
+        d.set(21, ob.top + 1, 21, "cartography_table")
+        d.set(21, ob.top + 1, 25, SL("smooth_quartz", "top"))
+        d.set(21, ob.top + 2, 25, "candle[candles=2,lit=false,waterlogged=false]")
+        d.set(25, ob.top + 1, 25, CHISEL.replace("FACE", "north"))
+        d.set(25, ob.top + 1, 21, "potted_azure_bluet")
         for x in range(18, 29, 3):
             d.set(x, 1, 16, "moss_block")
             d.set(x, 2, 16, "flowering_azalea")
@@ -3451,6 +3532,9 @@ def al_hearthwood(rel, L):
         wlamp(d, 19, 4, 3)
         d.sign(22, 4, 3, "north", ["Still", "House"], "dark_oak")
         lamp_post(d, 15, 1)
+        put_all(d, 2, [(12, 5, KEG.replace("FACE", "east"), KEG.replace("FACE", "up")), (12, 6, "dark_oak_fence", LANT_S),
+                       (5, 13, "composter[level=4]"), (7, 13, "water_cauldron[level=3]"),
+                       (9, 13, KEG.replace("FACE", "south"), "potted_blue_orchid")])     # yard behind the shop
     if L >= 3:                                                    # herbalist's cottage (two storeys)
         b = building(d, 27, 3, 35, 10, nf=2, axis="x", doors=(("north", 31), ("west", 7)), chimney=(36, 7))
         room(d, b, 0, ["MFW   $", "       ", "   nn  ", "   TT K", "   ss k", "      c"], lights=[(3, 2)])   # kitchen
@@ -3469,6 +3553,9 @@ def al_hearthwood(rel, L):
         room(d, b, 1, ["HHHHH  HHHHH", "H          H", "m          m", "K          K", "      HHHHHH",
                        "      HHHHHH"], lights=[(6, 2)])                                         # loft store
         wlamp(d, 22, 4, 23)
+        put_all(d, 2, [(16, 25, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (16, 31, "dark_oak_fence", LANT_S),
+                       (20, 32, "composter[level=4]"), (24, 32, "water_cauldron[level=3]"), (28, 32, KEG.replace("FACE", "south")),
+                       (19, 23, "potted_blue_orchid"), (27, 23, "dark_oak_fence", LANT_S), (21, 32, "hay_block[axis=x]")])
         for x in range(18, 30, 3):
             drying_beam(d, x, x + 1, 23, 5, "stripped_dark_oak_log") if False else None
     if L >= 5:                                                    # guild hall of apothecaries
@@ -3596,6 +3683,10 @@ def al_cascadia(rel, L):
         room(d, b, 1, ["K  m  K", "H     H", "      c", "       ", "      K"], lights=[(3, 1)])   # bottle store
         wlamp(d, 21, 4, 14)
         cart(d, 13, 18, "z")
+        put_all(d, 2, [(17, 16, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (17, 20, "spruce_fence", LANT_S),
+                       (20, 22, "composter[level=4]"), (23, 22, "water_cauldron[level=3]"), (25, 22, KEG.replace("FACE", "south")),
+                       (27, 16, KEG.replace("FACE", "east"), "potted_fern"), (27, 20, "spruce_log[axis=y]", "spruce_fence"),
+                       (19, 14, "potted_fern")])
     if L >= 4:                                                    # bunk cabin for the pickers
         b = building(d, 3, 24, 13, 31, nf=2, axis="x", doors=(("north", 8),), chimney=(14, 27))
         room(d, b, 0, ["MFW=   $K", "         ", "  nnnn   ", "  TTTT  k", "  ssss  K", "      h c"],
@@ -3929,6 +4020,9 @@ def gy_hearthwood(rel, L):
             if x != 31:
                 d.set(x, 2, 0, "oak_fence")
         lamp_post(d, 25, 2)
+        put_all(d, 2, [(26, 5, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (26, 8, "dark_oak_fence", LANT_S),
+                       (29, 10, "composter[level=4]"), (32, 10, "water_cauldron[level=3]"), (34, 10, KEG.replace("FACE", "south")),
+                       (36, 4, KEG.replace("FACE", "east"), "potted_red_tulip"), (36, 8, "dark_oak_log[axis=y]", "dark_oak_fence")])
     if L >= 3:                                                    # family mausoleums
         for mx in (27, 34):
             b = building(d, mx, 30, mx + 5, 35, nf=1, roof="hip", ground="stone_bricks",
@@ -3958,6 +4052,12 @@ def gy_hearthwood(rel, L):
         wlamp(d, 36, 4, 13)
         for x in (40, 42):
             tree(d, x, 2, 33, "dark_oak_log", "spruce_leaves", 4, 2)
+        put_all(d, 2, [(29, 13, ST("dark_oak", "north")), (30, 13, ST("dark_oak", "north")), (40, 13, ST("dark_oak", "north")),
+                       (41, 13, ST("dark_oak", "north")), (33, 13, "dark_oak_fence", LANT_S), (37, 13, "dark_oak_fence", LANT_S),
+                       (26, 16, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (26, 22, "dark_oak_fence", LANT_S),
+                       (26, 24, "composter[level=4]"), (44, 16, KEG.replace("FACE", "east")), (44, 22, "water_cauldron[level=3]"),
+                       (30, 25, KEG.replace("FACE", "south")), (34, 25, "potted_red_tulip"), (38, 25, "dark_oak_fence", LANT_S),
+                       (42, 25, "hay_block[axis=x]")])
     return d
 
 
@@ -4102,6 +4202,11 @@ def gy_cascadia(rel, L):
              lights=[(4, 2), (14, 2), (9, 5)])                                         # mourners' parlour
         wlamp(d, 11, 4, 24)
         wlamp(d, 13, 4, 24)
+        put_all(d, 2, [(5, 24, ST("spruce", "north")), (6, 24, ST("spruce", "north")), (17, 24, ST("spruce", "north")),
+                       (18, 24, ST("spruce", "north")), (9, 24, "spruce_fence", LANT_S), (15, 24, "spruce_fence", LANT_S),
+                       (1, 27, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (1, 33, "water_cauldron[level=3]"),
+                       (23, 27, KEG.replace("FACE", "east")), (23, 33, "spruce_log[axis=y]", "spruce_fence"),
+                       (6, 35, "composter[level=4]"), (12, 35, KEG.replace("FACE", "south")), (18, 35, "hay_block[axis=x]")])
         for x in range(39, 46, 3):
             tree(d, x, 2, 33, "spruce_log", "spruce_leaves", 7, 2, cone=True)
     return d
@@ -4436,6 +4541,10 @@ def ms_cascadia(rel, L):
         for x in range(27, 38):
             d.set(x, 1, 2, "spruce_planks")
         lamp_post(d, 25, 2)
+        put_all(d, 2, [(26, 4, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (26, 9, "spruce_fence", LANT_S),
+                       (29, 11, "composter[level=4]"), (32, 11, "water_cauldron[level=3]"), (35, 11, KEG.replace("FACE", "south")),
+                       (38, 4, "spruce_log[axis=y]", "spruce_fence"), (38, 9, KEG.replace("FACE", "east"), "potted_fern"),
+                       (29, 2, ST("spruce", "north")), (30, 2, ST("spruce", "north")), (35, 2, "potted_fern")])
     if L >= 4:                                                    # guest cabins
         for gx in (2, 14):
             b = building(d, gx, 28, gx + 9, 35, nf=2, axis="z", doors=(("north", gx + 4),), chimney=(gx + 10, 31))
@@ -4447,6 +4556,13 @@ def ms_cascadia(rel, L):
                 room(d, b, 1, ["1l1l1  C", "2 2 2   ", "c       "], lights=[(4, 2)])
         for x in range(2, 26):
             d.set(x, 1, 26, "spruce_planks")
+        put_all(d, 2, [(3, 27, ST("spruce", "north")), (4, 27, ST("spruce", "north")), (9, 27, "spruce_fence", LANT_S),
+                       (15, 27, ST("spruce", "north")), (16, 27, ST("spruce", "north")), (21, 27, "spruce_fence", LANT_S),
+                       (1, 30, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (1, 34, "water_cauldron[level=3]"),
+                       (13, 29, "spruce_log[axis=y]", "spruce_fence"), (13, 34, KEG.replace("FACE", "east")),
+                       (24, 30, KEG.replace("FACE", "east"), "potted_fern"), (24, 34, "spruce_fence", LANT_S),
+                       (5, 36, "composter[level=4]"), (9, 36, KEG.replace("FACE", "south")), (17, 36, "composter[level=4]"),
+                       (21, 36, "hay_block[axis=x]")])
     if L >= 5:                                                    # great hall for gatherings
         b = building(d, 26, 25, 44, 37, nf=2, axis="x", doors=(("north", 35), ("west", 30)), chimney=(35, 38))
         room(d, b, 0, ["MFW=p    KKu=$=ck", "                 ", "  nnnnnn  nnnnnn ", "  TTTTTT  TTTTTT ",
@@ -4459,6 +4575,10 @@ def ms_cascadia(rel, L):
              lights=[(4, 2), (12, 2), (8, 6)])                                     # gathering lounge
         wlamp(d, 34, 4, 24)
         wlamp(d, 36, 4, 24)
+        put_all(d, 2, [(28, 24, ST("spruce", "north")), (29, 24, ST("spruce", "north")), (40, 24, ST("spruce", "north")),
+                       (41, 24, ST("spruce", "north")), (25, 27, KEG.replace("FACE", "west")), (25, 34, "spruce_fence", LANT_S),
+                       (29, 38, "composter[level=4]"), (32, 38, "water_cauldron[level=3]"), (39, 38, KEG.replace("FACE", "south")),
+                       (42, 38, "spruce_fence", LANT_S)])
         for z in range(3, 22, 6):
             tree(d, 42, 2, z, "spruce_log", "spruce_leaves", 7, 2, cone=True)
     return d

@@ -716,6 +716,8 @@ def sm_neoterra(rel, L):
         place(d, "barrel", [(x1 + 1, 2, z, "up") for z in range(z1 + 2, z2 - 1)])
         for z in range(z1 + 2, z2 - 1):
             d.set(x1 + 1, 4, z, slab("smooth_stone_slab", "top"))
+        for z in range(z1 + 2, z2 - 1, 2):            # pots and candles on the shelf over the barrels
+            d.set(x1 + 1, 5, z, "decorated_pot[cracked=false,facing=east,waterlogged=false]" if z % 4 else CANDLE)
         for y in range(5, roof):
             d.set(8, y, 8, "chain[axis=y,waterlogged=false]")
         d.set(8, 4, 8, "lantern[hanging=true,waterlogged=false]")
@@ -1256,6 +1258,19 @@ def mc_neoterra(rel, L):
         for x in range(x1 + 2, x2 - 1, 4):
             d.set(x, roof, 8, "sea_lantern")
         d.plant(x2 - 1, 7, z1 + 1, "potted_bamboo")
+        # design office: a meeting table with chairs, the reference bookcase on the glass side
+        d.rug(x1 + 5, 8, x1 + 8, 10, 7, ("cyan_carpet", "light_gray_carpet"))
+        for x in (x1 + 6, x1 + 7):
+            d.table(x, 7, 9, "birch")
+            d.chair(x, 7, 8, "north", "birch", sit=False)
+            d.chair(x, 7, 10, "south", "birch", sit=False)
+        for z in (z1 + 3, z1 + 4):
+            d.set(x2 - 1, 7, z, "bookshelf")
+            d.set(x2 - 1, 8, z, "bookshelf")
+        d.set(x2 - 1, 7, z1 + 5, "chiseled_bookshelf[facing=west,slot_0_occupied=true,slot_1_occupied=false,"
+              "slot_2_occupied=true,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
+        hang(d, x1 + 6, 9, 9)
+        hang(d, x2 - 3, 9, z1 + 3)
     if L >= 4:
         solar(d, x1 + 2, z1 + 2, x2 - 2, z1 + 4, roof + 1)
     if L >= 5:
@@ -1913,6 +1928,18 @@ def sf_neoterra(rel, L):
             d.set(x, 3, z, "iron_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]")
     d.set(x2 - 1, 2, 8, "gravel")
     d.set(x2 - 1, 3, 8, "gravel")
+    # hand sieving bench in front of the screens: two sieves either side of a wash tub, stools, sand barrels
+    sieve(d, x1 + 6, 2, 6, "birch")
+    d.set(x1 + 7, 2, 6, "water_cauldron[level=3]")
+    sieve(d, x1 + 8, 2, 6, "birch")
+    d.set(x1 + 6, 2, 5, st("birch_stairs", "north"))
+    d.set(x1 + 8, 2, 5, st("birch_stairs", "north"))
+    for z in (5, 6):
+        d.set(x2 - 1, 2, z, "barrel[facing=up,open=false]")
+    d.set(x2 - 1, 3, 5, "sand")
+    d.set(x2 - 2, 2, 6, "barrel[facing=up,open=false]")
+    for x in (x1 + 7, x2 - 2):
+        hang(d, x, 5, 7)
     neo_sign(d, x1 + 6, 5, z1 - 1, ["SCREENING"]) if False else None
     d.sign(x1 + 6, 6, z1 - 2, "north", ["SCREENING", "WORKS"], "birch", glow=True, color="cyan")
     d.set(x1 + 6, 6, z1 - 1, "cyan_terracotta")
@@ -2454,6 +2481,15 @@ def bs_coalshed(d, sl):
     d.set(x2 - 2, 3, z1 + 1, "lantern[hanging=false,waterlogged=false]")
     hang(d, x1 + 3, 4, (z1 + z2) // 2)
     hang(d, x2 - 3, 4, (z1 + z2) // 2)
+    # coal weigh-scale with the coalman's stool, more lanterns down the front, shovel hooks on the end wall
+    for x, z, b in ((x2 - 3, z1 + 3, "heavy_weighted_pressure_plate[power=0]"), (x2 - 4, z1 + 3, st("spruce_stairs", "east")),
+                    (x2 - 1, z1 + 4, "barrel[facing=up,open=false]"), (x2 - 1, z1 + 5, "barrel[facing=up,open=false]"),
+                    (x1 + 3, z1 + 3, "black_wool"), (x1 + 4, z1 + 3, "gray_wool")):
+        if d.air(x, 2, z) and d.air(x, 3, z):
+            d.set(x, 2, z, b)
+    for x in (x1 + 3, (x1 + x2) // 2, x2 - 3):
+        if d.air(x, 4, z1 + 1) and d.air(x, 3, z1 + 1):
+            hang(d, x, 4, z1 + 1)
     post_sign(d, x1 + 2, z1 - 1, ["COAL", "& CHARCOAL"])
     rails(d, [(x, z1 - 2) for x in range(x1, x2 + 1)], "east_west")
     lamp_post(d, x2 + 1, z1 - 1)
@@ -2631,6 +2667,13 @@ def sm_casting(d, sl):
                ("t", -4, -1, "furnace", "north"), ("t", -5, -1, "furnace", "north"), ("b", -6, -1, "coal_block"),
                ("rack", -1, 1, "west"), ("rack", -1, 2, "west"), ("slab", 1, -1, CANDLE), ("t", 2, -1, "craft"),
                ("b", 0, -2, "sand", "sand"), ("lamp", -3, 1), ("lamp", 3, 1)], "smeltery")
+    # ingot racks and ore kegs round the walls, moulding flasks (sand boxes with lids) by the west wall
+    fit(d, g, [("rack", -1, 3, "west"), ("t", -1, 4, "barrel"), ("rack", -1, 5, "west"), ("keg", -1, 6, "west", "raw_iron_block"),
+               ("t", -2, 0, "barrel"), ("keg", -3, 0, "south", "raw_iron_block"), ("keg", -4, 0, "south", "raw_copper_block"),
+               ("slab", -5, 0, CANDLE), ("t", 0, 2, "chest", "east"), ("b", 0, 3, "sand", td("spruce_trapdoor", "east")),
+               ("b", 0, 4, "sand", td("spruce_trapdoor", "east")), ("b", 0, 5, "iron_block"), ("t", 0, 6, "barrel"),
+               ("hook", 0, 2, "east"), ("hook", -1, 3, "west"), ("b", 1, -1, "coal_block", "coal_block"),
+               ("lamp", -2, 4), ("lamp", 1, 4)], "smeltery")
     if d.pack != "Neoterra":
         mz = (z1 + z2) // 2
         for x in range(x1 + 2, x2 - 1):
@@ -2655,6 +2698,12 @@ def sm_blast(d, sl):
                     d.set(x, y, z, "stone_bricks" if y in (9, 15) else tb)
                 elif y > 2:
                     d.set(x, y, z, AIR)
+    for y in range(2, 10):                           # the shaft is charged: hearth, then layers of coke, ore, flux
+        for x in range(tx - 2, tx + 3):
+            for z in range(tz - 2, tz + 3):
+                if (x, z) == (tx, tz - 2) and y < 4:
+                    continue
+                d.set(x, y, z, "magma_block" if y == 2 else ("coal_block", "raw_iron_block", "gravel")[y % 3])
     d.set(tx, 2, tz, "magma_block")
     for y in (2, 3):
         d.set(tx, y, tz - 3, AIR)
@@ -2668,6 +2717,13 @@ def sm_blast(d, sl):
                             "has_bottle_1=false,has_bottle_2=false]"), ("slab", -3, -1, CANDLE), ("bs", -1, 1),
                             ("chair", -3, 0, "south"), ("t", -4, -1, "carto"), ("rug", -4, 0, 3, 1), ("lamp", -2, 0)],
         "smeltery")
+    fit(d, ch["rooms"][0], [("rack", -1, 1, "west"), ("t", -1, 2, "barrel"), ("b", -5, -1, "sand", "sand"), ("t", -6, -1, "barrel"),
+                            ("t", 0, -1, "chest", "east"), ("b", 0, 3, "iron_block"), ("b", 0, 4, "iron_block", "iron_block"),
+                            ("keg", -2, 0, "south", "coal_block"), ("slab", -3, 0, CANDLE), ("hook", -1, 1, "west"),
+                            ("b", -3, 3, "cauldron"), ("lamp", -3, 3), ("lamp", 1, 2)], "smeltery")
+    fit(d, ch["rooms"][1], [("bs", -5, -1), ("t", -6, -1, "book"), ("t", -1, 2, "chest", "west"), ("slab", -1, 3, "flower_pot"),
+                            ("desk", -4, 3, "south"), ("t", -1, 4, "plant"), ("slab", -2, 0, CANDLE), ("t", -3, 0, "chest", "south"),
+                            ("lamp", -4, 2)], "smeltery")
     if wide:
         for z in range(z1, tz - 3):
             col(d, x1 + 3, z, 2, 9, M["post"]) if (z - z1) % 3 == 0 else None
@@ -2799,6 +2855,16 @@ def ss_pughouse(d, sl):
     fit(d, u2, [("rack2", -1, -1, "north"), ("rack2", -2, -1, "north"), ("keg", -3, -1, "north", "terracotta"),
                 ("rack2", -4, -1, "north"), ("keg", -1, 1, "west", "bricks"), ("slab", -1, 0, DPOT), ("lamp", -3, 1)],
         "stonesmeltery")
+    # blunging floor: more clay bins and a wedging bench; wheel room: shelves of greenware; ware store: racks
+    fit(d, g, [("b", -1, 2, "clay", "clay"), ("b", -1, 3, "clay"), ("slab", -6, -1, DPOT), ("t", -7, -1, "barrel"),
+               ("slab", -4, 3, "clay"), ("slab", -5, 3), ("chair", -4, 4, "south"), ("t", 2, -1, "barrel"),
+               ("keg", 3, -1, "north", "clay"), ("t", 0, -3, "chest", "east"), ("hook", -1, 1, "west"),
+               ("lamp", -5, -3), ("lamp", 2, 3)], "stonesmeltery")
+    fit(d, u, [("slab", -4, -1, DPOT), ("slab", -5, -1, "flower_pot"), ("slab", -6, -1, DPOT), ("rack", -1, 3, "west"),
+               ("slab", -1, 4, DPOT), ("t", 5, -1, "chest", "north"), ("lamp", -5, 3)], "stonesmeltery")
+    fit(d, u2, [("rack2", -5, -1, "north"), ("keg", -6, -1, "north", "bricks"),
+                ("rack2", -3, 4, "north"), ("rack2", -4, 4, "north"), ("slab", 5, -1, DPOT),
+                ("t", 6, -1, "barrel"), ("lamp", -4, 6), ("lamp", 6, 2)], "stonesmeltery")
     cx, cz = (x2 - 3, (z1 + z2) // 2) if wide else ((x1 + x2) // 2, z2 - 2)
     for x in range(cx - 3, cx + 4):                  # round track of the horse gin
         for z in range(cz - 2, cz + 3):
@@ -2896,6 +2962,10 @@ def mc_garage(d, sl):
                               ("rack", -4, -1, "north"), ("t", -5, -1, "piston"), ("t", -6, -1, "observer", "north"),
                               ("hook", -2, -1, "north"), ("hook", -5, -1, "north"), ("t", 0, -1, "barrel")],
         "mechanic")
+    fit(d, info["rooms"][0], [("t", -7, -1, "chest", "north"), ("t", -8, -1, "craft"), ("rack", -9, -1, "north"),
+                              ("t", -10, -1, "barrel"), ("rack", -1, 2, "west"), ("t", -1, 3, "barrel"), ("t", 0, 3, "chest", "east"), ("b", 0, 4, "piston[extended=false,facing=up]"),
+                              ("t", 0, 5, "barrel"), ("hook", -1, 2, "west"), ("hook", -9, -1, "north"),
+                              ("lamp", 2, 3), ("lamp", -3, 3), ("lamp", -8, 3), ("lamp", 2, -3), ("lamp", -8, -3)], "mechanic")
     rails(d, [(x1 + 2, z) for z in range(max(0, z1 - 4), z1 + 3)], "north_south")
 
 
@@ -3004,6 +3074,22 @@ def sn_cutshed(d, sl):
         col(d, x, zc, 2, 7, MAT[d.pack]["post"])
     for x in range(x1 - 1, x2 + 2):
         d.set(x, 8, zc, "iron_block" if d.pack == "Neoterra" else f"{MAT[d.pack]['beam']}[axis=x]")
+    # sawyers' stools in front of the saws, a wet-saw tub, lanterns under the roof beams, offcuts barrel
+    w = WOOD[d.pack]
+    for x in range(x1 + 2, x2 - 1, 4):
+        if d.air(x, 2, zc - 1):
+            d.set(x, 2, zc - 1, st(f"{w}_stairs", "north"))
+    for x, b in ((x1 + 3, "water_cauldron[level=3]"), (x2 - 2, "barrel[facing=up,open=false]")):
+        if d.air(x, 2, zc - 1):
+            d.set(x, 2, zc - 1, b)
+    for x in range(x1 + 2, x2 - 1, 4):
+        for z in (z1 + 2, zc + 1, z2 - 2):
+            if d.air(x, 5, z) and d.air(x, 4, z):
+                hang(d, x, 5, z)
+    for x, z, b in ((x2 - 1, z1 + 3, "grindstone[face=floor,facing=west]"), (x2 - 1, z1 + 4, "barrel[facing=up,open=false]"),
+                    (x1 + 1, zc + 1, "crafting_table"), (x1 + 1, zc + 2, "chest[facing=east,type=single,waterlogged=false]")):
+        if d.air(x, 2, z) and d.air(x, 3, z):
+            d.set(x, 2, z, b)
     post_sign(d, x1 + 1, z1 - 1, ["CUTTING", "SHED"])
 
 
@@ -3060,6 +3146,21 @@ def sn_showroom(d, sl):
     fit(d, t, [("bs", -1, -1), ("t", -2, -1, "book"), ("t", -3, -1, "lectern", "north"), ("bs", -4, -1),
                ("t", -5, -1, "carto"), ("slab", -4, 3, CANDLE), ("chair", -4, 4, "south"), ("t", -1, 0, "plant"),
                ("rug", -6, 2, 4, 3), ("lamp", -3, 2)], "stonemason")
+    # more monuments on plinths (a second row in deeper rooms), a price board corner, carving studio benches
+    fit(d, g, [("b", -8, 3, "polished_andesite", "chiseled_stone_bricks"), ("b", -10, 3, "polished_andesite", DPOT),
+               ("b", -12, 3, "stone_bricks", WALLST("stone_brick_wall")), ("b", -3, -4, "smooth_stone", DPOT),
+               ("b", -5, -4, "polished_andesite", WALLST("andesite_wall")), ("b", -7, -1, "stone_bricks", wall),
+               ("b", -8, -1, "polished_andesite", DPOT), ("b", -9, -1, "chiseled_stone_bricks", "stone_brick_slab[type=bottom,waterlogged=false]"),
+               ("t", 2, -1, "lectern", "north"), ("chair", 3, -2, "south"), ("slab", 4, -1, CANDLE), ("t", -1, 3, "plant"),
+               ("lamp", -9, 2), ("lamp", -4, -3), ("lamp", 3, 2)], "stonemason")
+    fit(d, u, [("t", -5, -1, "cutter", "north"), ("b", -6, -1, "stone_bricks", "stone_bricks"), ("t", -7, -1, "grind", "north"),
+               ("b", -8, 3, "stone", "polished_andesite"), ("chair", -8, 4, "south"), ("b", -10, 3, "smooth_stone", DPOT),
+               ("chair", -10, 4, "south"), ("rack", -1, 3, "west"), ("t", -1, 4, "barrel"), ("t", 6, -1, "barrel"),
+               ("b", 7, -1, "chiseled_stone_bricks"), ("t", 8, -1, "chest", "north"), ("hook", -1, 1, "west"),
+               ("b", -4, -4, "stone_bricks", WALLST("stone_brick_wall")), ("lamp", -8, 2), ("lamp", -5, -3), ("lamp", 7, 2)],
+        "stonemason")
+    fit(d, t, [("bs", -6, -1), ("t", -7, -1, "book"), ("bs", -8, -1), ("table", -8, 3), ("chair", -8, 4, "south"),
+               ("chair", -9, 3, "west"), ("t", 6, -1, "plant"), ("t", -1, 3, "lectern", "west"), ("lamp", -8, 2)], "stonemason")
     for ox in (-3, 4):                               # obelisks either side of the entrance
         x = info["mx"] + ox
         if d.bp.inside(x, 2, z1 - 2) and all(d.air(x, y, z1 - 2) for y in range(2, 8)):
@@ -3150,6 +3251,24 @@ def cr_orebins(d, sl):
         for x in range(x1, x2 + 1):
             for z in (zb1, zb2):
                 d.set(x, 9, z, MAT[d.pack]["board"])
+    # the loading tunnel under the bins: lanterns under the deck, ore tubs and the loader's tools beside the rails
+    lz = (zb1 + zb2) // 2 + 1
+    for x in (x1 + 1, x1 + 4, x1 + 7, x2 - 1):
+        if d.air(x, 4, lz) and d.air(x, 3, lz):
+            hang(d, x, 4, lz)
+    for x, b, top in ((x1 + 2, "barrel[facing=up,open=false]", "gravel"), (x1 + 5, "barrel[facing=up,open=false]", None),
+                      (x1 + 8, "cauldron", None), (x2 - 2, "grindstone[face=floor,facing=east]", None)):
+        if x <= x2 and d.air(x, 2, lz) and d.air(x, 3, lz):
+            d.set(x, 2, lz, b)
+            if top:
+                d.set(x, 3, lz, top)
+    if z2 - zb2 >= 6:
+        for x in (x1 + 1, x1 + 4, x1 + 7):
+            if d.air(x, 4, zb2 + 4) and d.air(x, 3, zb2 + 4):
+                hang(d, x, 4, zb2 + 4)
+        for x in (x1 + 2, x1 + 5):
+            if d.air(x, 2, zb2 + 4):
+                d.set(x, 2, zb2 + 4, "barrel[facing=up,open=false]")
     d.rack(x1 + 1, 2, z2, "north")
     d.set(x1 + 2, 2, z2, "barrel[facing=up,open=false]")
     lamp_post(d, x1 + 3, z2)
@@ -3213,6 +3332,18 @@ def cr_screenhouse(d, sl):
         [("rack", -1, -1, "north"), ("b", -2, -1, "gravel"), ("b", -3, -1, "sand"), ("lamp", -3, 2)], "crusher")
     fit(d, u2, [("b", -1, -1, "white_wool", "brown_wool"), ("b", -2, -1, "white_wool"), ("rack2", -3, -1, "north"),
                 ("keg", -1, 1, "west", "white_wool"), ("rack2", -4, -1, "north"), ("lamp", -3, 2)], "crusher")
+    fit(d, g, [("t", -5, -1, "grind", "north"), ("b", -6, -1, "gravel"), ("t", -7, -1, "barrel"), ("rack", -8, -1, "north"),
+               ("t", -1, 3, "barrel"), ("t", -1, 4, "barrel"), ("b", -5, 3, "cobblestone", "gravel"), ("chair", -5, 4, "south"),
+               ("slab", -6, 3, CANDLE), ("t", 2, -1, "barrel"), ("t", 3, -1, "chest", "north"), ("lamp", -6, 4), ("lamp", 3, 2)],
+        "crusher")
+    fit(d, u, [("t", -4, -1, "barrel"), ("t", -5, -1, "barrel"), ("keg", -6, -1, "north", "sand"), ("rack", -7, -1, "north"),
+               ("t", -1, 1, "barrel"), ("keg", -1, 2, "west", "gravel"), ("chair", -3, 3, "north"), ("chair", -5, 5, "south"),
+               ("t", 4, -1, "chest", "north"), ("t", 5, -1, "barrel"), ("lamp", -5, 6), ("lamp", 5, 2)], "crusher")
+    fit(d, u2, [("b", -5, -1, "white_wool", "white_wool"), ("b", -6, -1, "brown_wool"), ("b", -7, -1, "white_wool"),
+                ("rack2", -1, 2, "west"), ("rack2", -1, 3, "west"), ("keg", -1, 4, "west", "brown_wool"),
+                ("rack2", -3, 3, "north"), ("rack2", -4, 3, "north"), ("rack2", -5, 3, "north"),
+                ("t", -6, 4, "barrel"), ("t", 4, -1, "barrel"), ("t", 5, -1, "barrel"), ("b", 6, -1, "white_wool", "white_wool"),
+                ("lamp", -3, 2), ("lamp", -6, 6), ("lamp", 5, 2)], "crusher")
     gx = x1 + 1
     for i, z in enumerate(range(z2, z1 + 1, -1)):   # conveyor gallery rising toward the street
         y = 2 + i // 2
@@ -3335,6 +3466,11 @@ def sf_ponds(d, sl):
     fit(d, ph["rooms"][1], [("slab", -1, -1, "flower_pot"), ("slab", -2, -1, DPOT), ("t", -3, -1, "sieve"),
                             ("rack", -1, 1, "west"), ("b", -4, -1, "white_wool", "sand"), ("chair", -2, -2, "south"),
                             ("lamp", -2, 1)], "sifter")
+    fit(d, ph["rooms"][1], [("t", -1, 3, "barrel"), ("slab", -1, 4, CANDLE), ("t", -1, 5, "lectern", "west"),
+                            ("b", -4, 3, "water_cauldron[level=3]"), ("chair", -3, 3, "east"), ("t", 3, -1, "chest", "north"),
+                            ("lamp", -3, 4)], "sifter")
+    fit(d, ph["rooms"][0], [("t", -1, 3, "barrel"), ("b", -1, 4, "water_cauldron[level=3]"), ("t", -4, -1, "chest", "north"),
+                            ("lamp", -3, 4)], "sifter")
     post_sign(d, x1 + 2, z1 - 1, ["SETTLING", "PONDS"])
 
 
@@ -3375,7 +3511,8 @@ def sf_screen(d, sl):
                        ("t", -7, -1, "barrel"), ("rack", -1, 1, "west"), ("t", -1, 2, "barrel"),
                        ("t", -5, -5, "sieve"), ("b", -6, -5, "water_cauldron[level=3]"), ("t", -9, -5, "sieve"),
                        ("rack", 2, 0, "south"), ("slab", 3, 0, CANDLE), ("t", 4, 0, "barrel"), ("t", -3, 0, "barrel"),
-                       ("keg", -4, 0, "south", "sand"), ("lamp", -4, 1), ("lamp", -9, 1), ("lamp", 4, 2),
+                       ("keg", -4, 0, "south", "sand"), ("t", -1, -3, "barrel"), ("rack", 5, 0, "south"),
+                       ("lamp", -4, 1), ("lamp", -9, 1), ("lamp", 4, 2),
                        ("lamp", -7, -3)], "sifter")
     # upper screen deck: finer screens on a stone bench, sieving stools
     deck2 = [("b", x, 4, "smooth_stone", trap) for x in (-2, -3, -4, -5, -6, -7)]

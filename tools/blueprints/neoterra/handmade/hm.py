@@ -590,6 +590,19 @@ class Design:
             self.set(x, y, z, f"{self.req['hut']}[facing={facing}]")
         self.hut_pos = (x, y, z)
 
+    def farm_test(self, expect, inputs=None, spawns=None, ticks=6000, min_count=1, light=None):
+        """Farmworks: how the in-game farm test runs this farm (python handmade.py writes it for the mod's test).
+        expect   : {"minecraft:sugar_cane": 8, ...} items that must turn up in the farm's output containers
+                   (containers tagged with d.tag(x, y, z, "farm_output")) after `ticks` game ticks;
+        inputs   : {(x, y, z): [("minecraft:bone_meal", 64), ...]} items put into containers / dispensers first
+                   (what a player would load: fuel, bone meal, seeds, buckets...);
+        spawns   : [("minecraft:cow", x, y, z, count), ...] mobs / animals / villagers the player brings in
+                   (mob farms: mobs put on the spawning floor, as if they had spawned there);
+        Coordinates are this design's grid coordinates. Blocks that random-tick (crops, cane, bamboo, kelp, cocoa,
+        saplings, ...) are random-ticked by the test at the default rate x 10."""
+        self.farm = dict(expect=dict(expect), inputs={f"{x},{y},{z}": list(v) for (x, y, z), v in (inputs or {}).items()},
+                         spawns=[list(s) for s in (spawns or [])], ticks=ticks, light=light)
+
     def anchor(self, x, y, z):
         """Plain pieces (walls, roads, rails, canals, bridges, subway, boardwalk, cliff climb): the placement anchor
         (the cell the build tool's cursor sits on). No block is placed. Keep it where the pack's other pieces of the
@@ -724,6 +737,14 @@ class Design:
         name = Path(self.rel).stem
         if self.req.get("piece"):
             bp.primary_offset = self.hut_pos
+            farm = getattr(self, "farm", None)
+            if farm is not None:
+                hx, hy, hz = self.hut_pos
+                rel = lambda k: ",".join(str(int(a) - b) for a, b in zip(k.split(","), (hx, hy, hz)))
+                outs = [f"{x - hx},{y - hy},{z - hz}" for (x, y, z), ns in self.tags.items() if "farm_output" in ns]
+                bp.farm_test = dict(expect=farm["expect"], ticks=farm["ticks"], outputs=outs,
+                                    inputs={rel(k): v for k, v in farm["inputs"].items()},
+                                    spawns=[[s[0], s[1] - hx, s[2] - hy, s[3] - hz, s[4]] for s in farm["spawns"]])
             bp.architects = [self.pack]
             bp.name = f"{name}.blueprint"
             if self.req.get("hut") is None:          # plain piece: no controller, no tags
