@@ -724,20 +724,20 @@ def nt_roof(d, n, L):
     d.set(23, y0, 25, "potted_flowering_azalea_bush")
 
 
-def nt_supertree(d, x, z, h, plat=None, gaps=(), L=5):
-    """One super-tree: planted base ring, a 3x3 trunk clad as a vertical garden, a funnel canopy of purple glass
-    and iron ribs with a lit rim. plat = deck height of a sky-walk platform around the trunk, gaps = rail cells
-    left open for the walkways."""
+def nt_supertree(d, x, z, h, plat=None, gaps=(), L=5, by=1):
+    """One super-tree standing on the ground at height `by`: planted base ring, a 3x3 trunk clad as a vertical
+    garden, a funnel canopy of purple glass on iron ribs with a lit rim. plat = deck height of a sky-walk
+    platform around the trunk, gaps = rail cells left open for the walkways."""
     for dx in range(-2, 3):
         for dz in range(-2, 3):
             if max(abs(dx), abs(dz)) == 2:
-                d.set(x + dx, 1, z + dz, "polished_andesite")
-                d.set(x + dx, 2, z + dz, "moss_block")
-                d.set(x + dx, 3, z + dz, ("fern", "azalea", "fern", "flowering_azalea")[(dx * 3 + dz) % 4]
+                d.set(x + dx, by, z + dz, "polished_andesite")
+                d.set(x + dx, by + 1, z + dz, "moss_block")
+                d.set(x + dx, by + 2, z + dz, ("fern", "azalea", "fern", "flowering_azalea")[(dx * 3 + dz) % 4]
                       if (dx + dz) % 2 == 0 else AIR)
-    top = 2 + h
+    top = by + 1 + h
     clad = ("moss_block", lv("azalea"), "moss_block", lv("flowering_azalea"))
-    for y in range(2, top):
+    for y in range(by + 1, top):
         for dx in (-1, 0, 1):
             for dz in (-1, 0, 1):
                 if dx == 0 and dz == 0:
@@ -747,8 +747,7 @@ def nt_supertree(d, x, z, h, plat=None, gaps=(), L=5):
                 else:
                     st = clad[(y + dx * 2 + dz) % 4]
                 d.set(x + dx, y, z + dz, st)
-    # funnel canopy
-    glass = "purple_stained_glass_pane" if L >= 3 else "magenta_stained_glass_pane"
+    # funnel canopy: iron ribs fanning out, purple glass between, a lit concrete rim
     for k, r in enumerate((2, 3, 4, 5)):
         yy = top - 3 + k
         for (cx, cz) in ring(r, x, z):
@@ -757,9 +756,11 @@ def nt_supertree(d, x, z, h, plat=None, gaps=(), L=5):
             ddx, ddz = cx - x, cz - z
             spoke = ddx == 0 or ddz == 0 or abs(ddx) == abs(ddz)
             if r == 5:
-                d.set(cx, yy, cz, "light_gray_concrete" if spoke else "iron_bars")
+                d.set(cx, yy, cz, "light_gray_concrete" if spoke else "purple_stained_glass")
+            elif r == 4:
+                d.set(cx, yy, cz, "iron_bars" if spoke else "magenta_stained_glass")
             else:
-                d.set(cx, yy, cz, "iron_bars" if spoke else glass)
+                d.set(cx, yy, cz, "iron_bars" if spoke else "purple_stained_glass_pane")
     for dx in (-1, 0, 1):
         for dz in (-1, 0, 1):
             d.set(x + dx, top, z + dz, "light_gray_concrete" if (dx, dz) != (0, 0) else "glowstone")
@@ -775,7 +776,7 @@ def nt_supertree(d, x, z, h, plat=None, gaps=(), L=5):
                 d.set(x + dx, plat, z + dz, "light_gray_concrete" if max(abs(dx), abs(dz)) == 3 else "smooth_stone")
                 if max(abs(dx), abs(dz)) == 3 and (x + dx, z + dz) not in gaps:
                     d.set(x + dx, plat + 1, z + dz, "glass_pane")
-        # platform furniture: two benches against the trunk, planters at the corners, a lamp
+        # platform furniture: two benches against the trunk, planters at the corners, lamps underneath
         d.chair(x - 2, plat + 1, z, "east", "birch")
         d.chair(x + 2, plat + 1, z, "west", "birch")
         for cx, cz in ((x - 2, z - 2), (x + 2, z + 2)):
@@ -787,27 +788,24 @@ def nt_supertree(d, x, z, h, plat=None, gaps=(), L=5):
 
 
 def nt_skyway(d, x1, z1, x2, z2, y, along):
-    """Two-wide sky walk deck at y between (x1,z1)-(x2,z2) with glass rails on both sides."""
+    """Two-wide sky walk deck at y between (x1,z1)-(x2,z2) with glass rails on both sides, lamps on the rail."""
     for x in range(x1, x2 + 1):
         for z in range(z1, z2 + 1):
             d.set(x, y, z, "smooth_stone")
-            d.set(x, y - 1, z, stair("smooth_stone_stairs" if False else "polished_andesite_stairs",
-                                     "north" if along == "x" and z == z1 else "south" if along == "x"
-                                     else "west" if x == x1 else "east", "top"))
     if along == "x":
         for x in range(x1, x2 + 1):
-            d.set(x, y + 1, z1 - 1, "glass_pane")
-            d.set(x, y + 1, z2 + 1, "glass_pane")
-            d.set(x, y, z1 - 1, "light_gray_concrete")
-            d.set(x, y, z2 + 1, "light_gray_concrete")
+            for z, f in ((z1 - 1, "south"), (z2 + 1, "north")):
+                d.set(x, y, z, "light_gray_concrete")
+                d.set(x, y + 1, z, "glass_pane")
+                d.set(x, y - 1, z, stair("polished_andesite_stairs", f, "top"))
             if (x - x1) % 4 == 2:
                 d.set(x, y + 2, z1 - 1, lantern())
     else:
         for z in range(z1, z2 + 1):
-            d.set(x1 - 1, y + 1, z, "glass_pane")
-            d.set(x2 + 1, y + 1, z, "glass_pane")
-            d.set(x1 - 1, y, z, "light_gray_concrete")
-            d.set(x2 + 1, y, z, "light_gray_concrete")
+            for x, f in ((x1 - 1, "east"), (x2 + 1, "west")):
+                d.set(x, y, z, "light_gray_concrete")
+                d.set(x, y + 1, z, "glass_pane")
+                d.set(x, y - 1, z, stair("polished_andesite_stairs", f, "top"))
             if (z - z1) % 4 == 2:
                 d.set(x1 - 1, y + 2, z, lantern())
 
@@ -821,6 +819,92 @@ def nt_column(d, x, z, h):
     d.set(x, 2 + h, z, "glass")
     for dx, dz in D4.values():
         d.set(x + dx, 2 + h, z + dz, slab("smooth_stone_slab"))
+
+
+# step garden ("hanging gardens") behind the lake: steps inset 2 on north / east / west, back flush at z=55
+NT_STEPS = [(12, 34, 41, 3), (14, 32, 43, 6), (16, 30, 45, 9), (18, 28, 47, 12), (20, 26, 49, 15)]
+NT_FALLS = (17, 29)                                      # x of the two cascades
+
+
+def nt_step_garden(d, L):
+    """ACROS-style stepped garden: every step has a planted outer row with draping azalea and a walk behind it,
+    stairs up the middle, and two cascades of basins whose lips spill down the risers into the lake."""
+    nsteps = 3 if L == 4 else 5
+    zb = 55
+    for k, (x1, x2, z1, top) in enumerate(NT_STEPS[:nsteps]):
+        y1 = 2 if k == 0 else NT_STEPS[k - 1][3] + 1
+        for x in range(x1, x2 + 1):
+            for z in range(z1, zb + 1):
+                for y in range(y1, top + 1):
+                    face = x in (x1, x2) or z in (z1, zb) or y == top
+                    d.set(x, y, z, ("white_concrete" if y == top else "light_gray_concrete") if face else SOLIDSUB)
+        # outer planted row (front and sides) and the walk behind it
+        for x in range(x1, x2 + 1):
+            for z in range(z1, zb + 1):
+                if x in (x1, x2) or z == z1:
+                    if 22 <= x <= 24 and z == z1:
+                        continue
+                    d.set(x, top, z, "moss_block")
+                    c = (x * 7 + z * 3 + k) % 6
+                    d.set(x, top + 1, z, (lv("azalea"), "fern", lv("flowering_azalea"), "azalea", "fern",
+                                          "flowering_azalea")[c])
+                    if c in (0, 2) and z == z1 and d.air(x, top - 1, z - 1):
+                        d.set(x, top, z - 1, lv("azalea")) if d.air(x, top, z - 1) else None
+        # stairs up the middle of the riser
+        for x in (22, 23, 24):
+            for i in range(3):
+                d.set(x, y1 + i, z1 - 1 + 0, AIR) if False else None
+        for x in (22, 23, 24):
+            d.set(x, top - 2, z1 - 1, stair("smooth_stone_stairs", "south")) if k > 0 else None
+        if k == 0:
+            for x in (22, 23, 24):
+                d.set(x, 2, z1 - 1, stair("smooth_stone_stairs", "south"))
+                d.set(x, 3, z1, stair("smooth_stone_stairs", "south"))
+                d.set(x, 2, z1, "white_concrete")
+        else:
+            py = NT_STEPS[k - 1][3]
+            for x in (22, 23, 24):
+                d.set(x, py + 1, z1, stair("smooth_stone_stairs", "south"))
+                d.set(x, py + 2, z1 + 1, stair("smooth_stone_stairs", "south"))
+                d.set(x, py + 3, z1 + 2, stair("smooth_stone_stairs", "south"))
+                for y in range(py + 2, top + 3):
+                    if y > py + 1:
+                        d.set(x, y, z1, AIR)
+                for y in range(py + 3, top + 3):
+                    d.set(x, y, z1 + 1, AIR)
+                for y in range(py + 4, top + 3):
+                    d.set(x, y, z1 + 2, AIR)
+                d.set(x, top + 1, z1 + 2, AIR) if False else None
+            for x in (22, 23, 24):
+                d.set(x, top, z1 + 2, stair("smooth_stone_stairs", "south"))
+                d.set(x, top + 1, z1 + 2, AIR)
+                d.set(x, top + 2, z1 + 2, AIR)
+        # cascades: a two-cell basin on every step, the riser notch below the lip shows the falling water
+        for xw in NT_FALLS:
+            d.set(xw, top, z1, WATER)
+            d.set(xw, top, z1 + 1, WATER)
+            d.set(xw, top + 1, z1, AIR)
+            d.set(xw, top + 1, z1 + 1, AIR)
+            for side in (xw - 1, xw + 1):
+                d.set(side, top + 1, z1 + 1, "white_concrete") if d.get(side, top + 1, z1 + 1) == AIR else None
+            if k > 0:
+                for y in range(NT_STEPS[k - 1][3] + 1, top):
+                    d.set(xw, y, z1, WATER)
+    # spring on top: the highest basin is fed by a stone spout
+    tx1, tx2, tz1, ttop = NT_STEPS[nsteps - 1]
+    for xw in NT_FALLS:
+        d.set(xw, ttop, tz1 + 2, WATER)
+        d.set(xw, ttop + 1, tz1 + 3, "white_concrete")
+        d.set(xw, ttop + 1, tz1 + 2, AIR)
+    # benches and lamps on the step walks (hand-placed)
+    seats = [(14, 4, 46, "east"), (32, 4, 46, "west"), (15, 7, 48, "east"), (31, 7, 48, "west")]
+    if nsteps == 5:
+        seats += [(19, 13, 51, "east"), (27, 13, 51, "west")]
+    for x, y, z, f in seats:
+        d.chair(x, y, z, f, "birch")
+    for x, y, z in ((13, 4, 44), (33, 4, 44), (15, 7, 50), (31, 7, 50), (17, 10, 53), (29, 10, 53)):
+        lamppost(d, x, z, y, 2, "diorite_wall", lantern())
+    return NT_STEPS[nsteps - 1]
 
 
 def nt_gardens(rel, L):

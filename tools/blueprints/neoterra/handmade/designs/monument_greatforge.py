@@ -544,6 +544,10 @@ def hw_main(rel, L):
         hw_bank(d, L)
         hw_river(d, L)
         hw_tollhouse(d, L)
+        hw_chimney(d, L)
+    if L >= 4:
+        hw_new_furnace(d, L)
+        hw_engine_house(d, L)
     place_wings(d, HW_WX, HW_WZ, HW_WSIZE, HW_WHUT)
     connect_walls(d)
     return d
@@ -748,3 +752,161 @@ def hw_tollhouse(d, L):
             (42, 7, 32, "white_carpet"), (43, 7, 32, "white_carpet"), (44, 7, 32, "white_carpet"),
             (43, 7, 31, "white_carpet")])
     lamp(d, 43, 9, 32)
+
+
+def hw_chimney(d, L):
+    """The great chimney (L3, raised at L4/L5): square brick shaft with stone bands, corbelled cap, flue duct."""
+    top = {3: 29, 4: 34, 5: 37}[L]
+    X1, Z1 = 1, 31
+    for y in range(2, top + 1):
+        for x in range(X1, X1 + 3):
+            for z in range(Z1, Z1 + 3):
+                if (x, z) == (X1 + 1, Z1 + 1) and y >= 3:
+                    continue
+                band = y in (2, 12, 20, 28) or (y == top)
+                d.set(x, y, z, "stone_bricks" if band else "bricks")
+    for x in range(X1 - 1, X1 + 4):                       # corbel ring
+        for z in range(Z1 - 1, Z1 + 4):
+            if x in (X1 - 1, X1 + 3) or z in (Z1 - 1, Z1 + 3):
+                if not d.bp.inside(x, top, z):
+                    continue
+                f = "north" if z == Z1 - 1 else "south" if z == Z1 + 3 else "west" if x == X1 - 1 else "east"
+                d.set(x, top, z, stair("stone_brick_stairs", f, "top"))
+    for x, z in ((X1, Z1), (X1 + 2, Z1), (X1, Z1 + 2), (X1 + 2, Z1 + 2)):
+        d.set(x, top + 1, z, "bricks")
+    # plinth with a stoke-hole arch and the flue duct to the engine house boiler
+    put(d, [(X1 + 1, 2, Z1, "iron_bars"), (X1 + 1, 2, Z1 - 1, "stone_brick_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")])
+    for x in range(X1 + 3, 6):
+        d.set(x, 2, Z1 + 1, "bricks")
+        d.set(x, 3, Z1 + 1, stair("brick_stairs", "north"))
+
+
+def hw_new_furnace(d, L):
+    """L4 New Furnace: second furnace hall (ridge north-south) with its own stack; blast furnaces 4 (+5 at L5)."""
+    X1, X2, Z1, Z2 = 5, 17, 16, 26
+    rect(d, X1, Z1, X2, Z2, 1, "packed_mud")
+    hw_brick_walls(d, X1, Z1, X2, Z2, 2, 8)
+    ring(d, X1, Z1, X2, Z2, 5, "stone_bricks")
+    d.gable(X1, Z1, X2, Z2, 9, "z", "deepslate_tile_stairs", "deepslate_tile_slab", "bricks", overhang=1)
+    hw_arch(d, 10, 2, Z1, "x", 3, 3)
+    hw_arch(d, X2, 2, 22, "z", 3, 3)                       # side arch to the yard
+    for x in (7, 15):
+        hw_window(d, x, Z1, 4, 2)
+        hw_window(d, x, Z2, 4, 2)
+    for z in (18, 24):
+        hw_window(d, X1, z, 4, 2)
+    hw_window(d, X2, 18, 4, 2)
+    d.window(11, 12, Z1, 11, 13, Z1)
+    T = HW_STACK[L] - 2
+    for y in range(2, 11):
+        for x in range(9, 14):
+            for z in range(19, 24):
+                hollow = 10 <= x <= 12 and 20 <= z <= 22 and y >= 5
+                d.set(x, y, z, AIR if hollow else ("stone_bricks" if y == 2 else "bricks"))
+    for y in range(11, T + 1):
+        for x in range(10, 13):
+            for z in range(20, 23):
+                d.set(x, y, z, AIR if (x, z) == (11, 21) else ("stone_bricks" if y % 6 == 0 else "bricks"))
+    for x in range(9, 14):
+        for z in range(19, 24):
+            if x in (9, 13) or z in (19, 23):
+                f = "north" if z == 19 else "south" if z == 23 else "west" if x == 9 else "east"
+                d.set(x, T, z, stair("stone_brick_stairs", f, "top"))
+    # tapping arch north: blast furnace no. 4 and its pig bed
+    d.item(11, 2, 19, "blast_furnace", "north")
+    put(d, [(10, 3, 19, stair("brick_stairs", "west", "top")), (12, 3, 19, stair("brick_stairs", "east", "top")),
+            (11, 3, 19, AIR), (11, 4, 19, "chiseled_stone_bricks")])
+    rect(d, 9, 17, 13, 18, 1, "sand")
+    for x, z in ((11, 17), (11, 18), (9, 17), (10, 17), (12, 17), (13, 17)):
+        d.set(x, 2, z, plate())
+    # blast main from the blowing engine (iron pipe along the east bay into the stack)
+    for z in range(21, 26):
+        d.set(15, 4, z, "iron_bars")
+    for x in (14,):
+        d.set(x, 4, 21, "iron_bars")
+    put(d, [(15, 2, 25, "polished_deepslate"), (15, 3, 25, "polished_deepslate"),
+            (16, 2, 19, "anvil[facing=north]"), (16, 2, 17, "water_cauldron[level=3]"),
+            (16, 2, 25, "barrel[facing=up,open=false]"), (16, 3, 25, "barrel[facing=west,open=false]"),
+            (14, 2, 25, "chest[facing=north,type=single,waterlogged=false]"),
+            (6, 2, 25, "coal_block"), (7, 2, 25, "coal_block"), (6, 2, 24, "coal_block"), (6, 3, 25, "black_carpet"),
+            (7, 3, 25, "black_carpet"), (6, 3, 24, "black_carpet"),
+            (6, 2, 17, "lava_cauldron"), (7, 2, 17, "cauldron"), (6, 2, 18, "grindstone[face=floor,facing=east]")])
+    for x, z in ((7, 21), (15, 18), (11, 25), (7, 18)):
+        lamp(d, x, 5, z)
+    if L >= 5:
+        # second tap on the west face: blast furnace no. 5, with its own sow channel
+        d.item(9, 2, 21, "blast_furnace", "west")
+        put(d, [(9, 3, 20, stair("brick_stairs", "north", "top")), (9, 3, 22, stair("brick_stairs", "south", "top")),
+                (9, 3, 21, AIR), (9, 4, 21, "chiseled_stone_bricks")])
+        for x in (6, 7, 8):
+            d.set(x, 1, 21, "sand")
+            d.set(x, 2, 21, plate())
+        for z in (20, 22):
+            d.set(7, 1, z, "sand")
+            d.set(7, 2, z, plate())
+
+
+def hw_engine_house(d, L):
+    """L4 blowing-engine house: tall three-storey brick house, the beam rocking out of the bob wall."""
+    X1, X2, Z1, Z2 = 6, 14, 28, 36
+    rect(d, X1, Z1, X2, Z2, 1, "stone_bricks")
+    hw_brick_walls(d, X1, Z1, X2, Z2, 2, 15)
+    for y in (7, 11):
+        ring(d, X1, Z1, X2, Z2, y, "stone_bricks")
+        for x in range(X1 + 1, X2):
+            for z in range(Z1 + 1, Z2):
+                d.set(x, y, z, "spruce_planks")
+    d.gable(X1, Z1, X2, Z2, 16, "x", "deepslate_tile_stairs", "deepslate_tile_slab", "bricks", overhang=1)
+    hw_arch(d, 9, 2, Z2, "x", 3, 3)                        # cylinder door (engine erected through it)
+    d.door(10, 2, Z2, "south", "dark_oak")
+    d.fill(9, 2, Z2, 9, 3, Z2, "dark_oak_planks")
+    d.fill(11, 2, Z2, 11, 3, Z2, "dark_oak_planks")
+    for z in (30, 34):
+        for y0 in (3, 8, 12):
+            d.window(X1, y0, z, X1, y0 + 1, z)
+            d.window(X2, y0, z, X2, y0 + 1, z)
+    # the beam (bob) rocking out over the bob wall
+    for z in range(25, 35):
+        d.set(10, 13, z, logb("stripped_dark_oak_log", "z"))
+    d.set(10, 14, 32, "stone_bricks")
+    for y in range(9, 13):
+        d.set(10, y, 25, "chain[axis=y,waterlogged=false]")
+    d.set(10, 13, 24, logb("stripped_dark_oak_log", "z"))
+    # ground floor: blowing cylinder, boiler with fire door, coal, ladder
+    for x in range(8, 11):
+        for z in range(30, 33):
+            for y in range(2, 5):
+                d.set(x, y, z, "polished_deepslate" if (x, z) != (9, 31) or y < 4 else "iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
+    for y in range(5, 7):
+        d.set(9, y, 31, "chain[axis=y,waterlogged=false]")
+    put(d, [(7, 2, 35, "furnace[facing=east,lit=true]"), (7, 2, 34, "furnace[facing=east,lit=true]"),
+            (7, 3, 35, "bricks"), (7, 3, 34, "bricks"), (8, 2, 35, "water_cauldron[level=3]"),
+            (13, 2, 35, "coal_block"), (13, 3, 35, "black_carpet"), (12, 2, 35, "coal_block"),
+            (13, 2, 32, "barrel[facing=up,open=false]"), (13, 2, 33, "barrel[facing=up,open=false]"),
+            (11, 2, 29, "lever[face=floor,facing=north,powered=false]"), (12, 2, 29, "grindstone[face=floor,facing=north]")])
+    for y in range(2, 8):
+        d.set(13, y, 29, "ladder[facing=west,waterlogged=false]")
+    lamp(d, 11, 6, 34)
+    lamp(d, 7, 6, 30)
+    # middle floor: valve gear and the engineman's bench
+    put(d, [(9, 8, 31, "chain[axis=y,waterlogged=false]"), (9, 9, 31, "chain[axis=y,waterlogged=false]"),
+            (8, 8, 30, "lever[face=wall,facing=east,powered=false]"), (7, 8, 30, "polished_deepslate"),
+            (7, 9, 30, "lever[face=wall,facing=east,powered=false]"),
+            (7, 8, 33, "crafting_table"), (7, 8, 34, slab("spruce_slab", "top")), (7, 9, 34, cand(2)),
+            (8, 8, 34, stair("spruce_stairs", "east")),
+            (13, 8, 34, "chest[facing=west,type=single,waterlogged=false]"), (13, 8, 33, "barrel[facing=up,open=false]"),
+            (12, 8, 35, "barrel[facing=up,open=false]"), (13, 9, 33, "candle[candles=3,lit=false,waterlogged=false]"),
+            (11, 8, 31, "grindstone[face=floor,facing=east]"), (11, 8, 32, "grindstone[face=floor,facing=east]")])
+    d.set(13, 7, 29, "ladder[facing=west,waterlogged=false]")
+    for y in range(8, 12):
+        d.set(7, y, 35, "ladder[facing=east,waterlogged=false]")
+    lamp(d, 10, 10, 33)
+    # beam floor: the bob's pivot on the bob wall, oil cans, the works bell
+    put(d, [(10, 12, 32, "polished_deepslate"), (9, 12, 32, "polished_deepslate"), (11, 12, 32, "polished_deepslate"),
+            (12, 12, 34, slab("spruce_slab", "top")), (12, 13, 34, cand(4)), (13, 12, 34, "barrel[facing=up,open=false]"),
+            (13, 12, 35, "barrel[facing=up,open=false]"), (8, 12, 30, "chest[facing=east,type=single,waterlogged=false]"),
+            (7, 12, 31, slab("spruce_slab", "top")), (7, 13, 31, "lantern[hanging=false,waterlogged=false]"),
+            (12, 12, 30, "bell[attachment=floor,facing=north,powered=false]"),
+            (9, 12, 34, "yellow_carpet"), (10, 12, 34, "yellow_carpet"), (9, 12, 35, "yellow_carpet"), (10, 12, 35, "yellow_carpet")])
+    lamp(d, 11, 14, 34)
+    d.sign(10, 5, Z2 + 1, "south", ["BLOWING", "ENGINE", "1776", ""], "dark_oak")

@@ -2,8 +2,9 @@
 Farmworks resource farms (decorations/resourcefarms/): small stone-and-spruce work sheds around proven vanilla
 (Java 1.21.1) block-forming mechanics. None of these can deliver items into a chest on their own (cobblestone, stone,
 basalt, ice, clay and concrete must be mined by a player; lava ends up in cauldrons; snow layers only drop snowballs
-when a player breaks them with a shovel), so every farm_test has expect={} and only checks that the farm builds and
-its fluids settle without breaking anything.
+when a player breaks them with a shovel), so every farm_test has expect={} and instead plays the player: it mines the
+generator cells (mine=, they must regenerate), presses the mud dispensers' buttons (presses=) and checks end-state
+blocks (blocks=: lava cauldrons, clay, snow under the golems, water columns that stay where they should).
 
 Fluid tricks used (checked against the 1.21.1 FlowingFluid / LiquidBlock code):
   * "water over a hole": a NON-source water block that has water (or air) below it never spreads sideways
@@ -45,6 +46,7 @@ def chest(facing="north"):
     return f"chest[facing={facing},type=single,waterlogged=false]"
 
 
+GEN_CELLS = [(g, 3, 8) for a in (3, 7, 11) for g in (a, a + 2)]      # the six generator cells (gens)
 FENCE = "spruce_fence[east=false,north=false,south=false,waterlogged=false,west=false]"
 
 
@@ -153,7 +155,10 @@ def cobblegen(pack, rel, L):
     d.set(14, 2, 4, "stonecutter[facing=west]")
     d.set(2, 2, 6, "barrel[facing=up,open=false]")
     approach(d, cx, Z1, ["Cobblestone", "Generator", "Bring:", "a pickaxe"])
-    d.farm_test(expect={}, ticks=1200)   # player-mined: checks it builds and lava/water settle
+    # the test mines every generator cell every 40 ticks; each must regenerate (lava 30 ticks)
+    d.farm_test(expect={}, ticks=1200, mine=[(x, y, z, "minecraft:cobblestone", 10) for (x, y, z) in GEN_CELLS],
+                blocks=[(b, 3, 8, "minecraft:water") for b in (4, 8, 12)] + [(g, 3, 7, "minecraft:air")
+                        for a in (3, 7, 11) for g in (a, a + 2)])
     return d
 
 
@@ -197,7 +202,9 @@ def stonegen(pack, rel, L):
     d.set(14, 2, 4, "crafting_table")
     d.set(14, 2, 5, "stonecutter[facing=west]")
     approach(d, cx, Z1, ["Stone Generator", "Bring: Silk", "Touch pickaxe,", "furnace fuel"])
-    d.farm_test(expect={}, ticks=1200)
+    d.farm_test(expect={}, ticks=1200, mine=[(x, y, z, "minecraft:stone", 10) for (x, y, z) in GEN_CELLS],
+                blocks=[(g, 3, 7, "minecraft:air") for a in (3, 7, 11) for g in (a, a + 2)]
+                + [(b, 3, 8, "minecraft:water") for b in (4, 8, 12)])
     return d
 
 
@@ -236,7 +243,7 @@ def basaltgen(pack, rel, L):
     d.set(14, 2, 3, "stonecutter[facing=west]")
     d.set(14, 2, 4, "crafting_table")
     approach(d, cx, Z1, ["Basalt", "Generator", "Bring:", "a pickaxe"])
-    d.farm_test(expect={}, ticks=1200)
+    d.farm_test(expect={}, ticks=1200, mine=[(x, y, z, "minecraft:basalt", 10) for (x, y, z) in GEN_CELLS])
     return d
 
 
@@ -279,7 +286,9 @@ def lavafarm(pack, rel, L):
     d.tag(12, 2, 6, "farm_output")
     d.set(2, 2, 6, "barrel[facing=up,open=false]")
     approach(d, cx, Z1, ["Lava Dripstone", "Farm", "Bring:", "buckets"])
-    d.farm_test(expect={}, ticks=1200)   # output is lava in cauldrons (blocks), collected by bucket
+    # output is lava in cauldrons (blocks, collected by bucket): ~2300 ticks per cauldron at the test's x10 ticks
+    d.farm_test(expect={}, ticks=8000, blocks=[(x, 2, z, "minecraft:lava_cauldron") for (x, z) in spots],
+                blocks_min=7)
     return d
 
 
@@ -320,7 +329,8 @@ def snowfarm(pack, rel, L):
     d.set(12, 3, 4, "carved_pumpkin[facing=west]")
     approach(d, cx, Z1, ["Snow Golem Yard", "Bring: 2 snow", "golems, shovel", "(no desert)"])
     d.farm_test(expect={}, spawns=[("minecraft:snow_golem", 5, 2, 8, 1), ("minecraft:snow_golem", 9, 2, 9, 1)],
-                ticks=1200)
+                ticks=1200, blocks=[(x, 2, z, "minecraft:snow") for (x, z) in ((5, 8), (9, 9), (4, 8), (6, 8),
+                                                                                (8, 9), (10, 9))], blocks_min=2)
     return d
 
 
@@ -389,7 +399,9 @@ def icefarm(pack, rel, L):
         d.set(x, 2, z, FENCE)
         lantern(d, x, 3, z, hanging=False, soul=True)
     approach(d, cx, Z1, ["Ice Pond", "Snowy biomes", "Bring: Silk", "Touch, bucket"])
-    d.farm_test(expect={}, ticks=1200)
+    # the 2x2 well stays four sources (roofed: never freezes); pool cells stay water (or ice in snowy biomes)
+    d.farm_test(expect={}, ticks=1200, blocks=[(x, 1, z, "minecraft:water") for x in (7, 8) for z in (4, 5)]
+                + [(x, 1, z, "minecraft:water") for x in (3, 8, 13) for z in (10, 16)], blocks_min=4)
     return d
 
 
@@ -435,7 +447,10 @@ def mudclay(pack, rel, L):
     d.set(12, 2, 6, "barrel[facing=up,open=false]")
     tie_beams(d, (5, 9), 3, 6, top)
     approach(d, cx, Z1, ["Mud & Clay Works", "Bring: water", "bottles, dirt"])
-    d.farm_test(expect={}, ticks=1200)   # clay forms as blocks (mined by the player)
+    # the test presses the buttons (dirt -> mud), the dripstone then dries the mud into clay
+    d.farm_test(expect={}, ticks=4000, inputs={(x, 5, 8): [("minecraft:potion", 1)] for x in (3, 5, 7, 9, 11)},
+                presses=[(x, 5, 7) for x in (3, 5, 7, 9, 11)],
+                blocks=[(x, 4, 8, "minecraft:clay") for x in (3, 5, 7, 9, 11)], blocks_min=4)
     return d
 
 
@@ -483,5 +498,9 @@ def concretestation(pack, rel, L):
     tie_beams(d, (7,), 3, 9, top)
     lantern(d, 7, top - 1, 3)
     approach(d, cx, Z1, ["Concrete", "Station", "Bring: concrete", "powder, pickaxe"])
-    d.farm_test(expect={}, ticks=1200)
+    # water columns stand (falling water in both column cells and the pit), pedestal cells stay dry
+    d.farm_test(expect={}, ticks=1200,
+                blocks=[(fx, y, 6, "minecraft:water") for fx in (4, 10) for y in (2, 3, 4, 5)]
+                + [(fx, 3, z, "minecraft:air") for fx in (4, 10) for z in (5, 7)]
+                + [(fx, 2, z, "minecraft:air") for fx in (2, 6, 8, 12) for z in (6,)])
     return d

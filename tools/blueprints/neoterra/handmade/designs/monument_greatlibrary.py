@@ -376,8 +376,16 @@ def hw_rotunda(d, L):
     for x, z in rg:
         d.set(x, 9, z, HQ)
     hw_rotunda_ground(d, L)
-    if L == 1:                                         # temporary low lead dome with a finial lantern
-        top = dome(d, cx, cz, 10, R, 3, "deepslate_tiles", "polished_deepslate", 16, stairs="deepslate_tile_stairs")
+    if L == 1:                                         # balustrade and a temporary low lead dome with a lantern
+        for x, z in disk(cx, cz, 9):
+            if not inside(cx, cz, x, z, R):
+                a = ang(cx, cz, x, z)
+                pier = min(adiff(a, 22.5 + 45 * k) for k in range(8)) * math.pi / 180 * 9 < 1.0
+                d.set(x, 10, z, HQ if pier else wallb("sandstone_wall"))
+        for x, z in rg:
+            d.set(x, 10, z, HS)
+        top = dome(d, cx, cz, 11, R - 1, 3, "deepslate_tiles", "polished_deepslate", 16,
+                   stairs="deepslate_tile_stairs")
         d.set(cx, top + 1, cz, HQ)
         d.set(cx, top + 2, cz, wallb("sandstone_wall"))
         d.set(cx, top + 3, cz, lantern(False))
@@ -434,7 +442,7 @@ def hw_rotunda(d, L):
     for x, z in disk(cx, cz, 8):
         if not inside(cx, cz, x, z, 7):
             d.set(x, 24, z, slab("smooth_sandstone_slab", "top"))
-    top = dome(d, cx, cz, 25, 7, 8, "deepslate_tiles", "polished_deepslate", 16, hole=1.5,
+    top = dome(d, cx, cz, 25, 7, 8, "deepslate_tiles", "polished_deepslate", 8, hole=1.5,
                stairs="deepslate_tile_stairs")
     for dx in (-1, 0, 1):                              # lantern
         for dz in (-1, 0, 1):
@@ -554,6 +562,7 @@ def hw_library(rel, L):
     if L >= 5:
         hw_south_range(d)
         hw_screen(d)
+        hw_forecourt(d)
     for tx in HW_TX:
         d.reserve(tx, 1, HW_TZ, tx + HW_TW - 1, 34, HW_TZ + HW_TW - 1)
         d.child_hut(tx + HW_WHUT[0], 1 + HW_WHUT[1], HW_TZ + HW_WHUT[2], WING)
@@ -821,10 +830,14 @@ def hw_south_range(d):
         for z in (z1 + 2, z1 + 4):
             hw_lancet(d, x, z, 3, 5, None)
             hw_lancet(d, x, z, 9, 11, None)
-    # common-room chimney on the east gable
-    for y in range(2, 18):
+    # common-room chimney stack against the east gable
+    for y in range(2, 19):
+        for z in (39, 40, 41):
+            d.set(44, y, z, "bricks")
+    for y in range(13, 19):
         d.set(43, y, 40, "bricks")
-    d.set(43, 18, 40, "bricks")
+    for z in (39, 41):
+        d.set(44, 19, z, "bricks")
     hw_exam(d)
     hw_tearoom(d)
     hw_gallery_south(d)
@@ -962,6 +975,9 @@ def hw_gate_tower(d):
             for z in (z1, z2):
                 d.set(x, F, z, HQ)
     d.fill(x1 + 1, top, z1 + 1, x2 - 1, top, z2 - 1, "stone_bricks")
+    d.hip(20, 37, 24, 41, top + 1, "deepslate_tile_stairs", "deepslate_tile_slab", overhang=0)   # leaded cap
+    d.set(22, top + 4, 39, wallb("sandstone_wall"))
+    d.set(22, top + 5, 39, "lightning_rod[facing=up,powered=false,waterlogged=false]")
     for i in range(0, 9):                              # battlements
         for x, z in ((x1 + i, z1), (x1 + i, z2), (x1, z1 + i), (x2, z1 + i)):
             d.set(x, top + 1, z, HS)
@@ -1042,6 +1058,26 @@ def hw_gate_tower(d):
     d.bookshelf(25, y, 42, 2)
     d.rug(21, 38, 24, 40, y, ("purple_carpet", "magenta_carpet"))
     chandelier(d, 22, 39, 24, 23)
+
+
+def hw_forecourt(d):
+    """L5: the forecourt behind the screen – box hedges, two basins with spouts, lamp standards."""
+    for x in list(range(8, 19)) + list(range(26, 37)):
+        d.set(x, 2, 5, "oak_leaves[distance=1,persistent=true,waterlogged=false]")
+        if x not in (8, 18, 26, 36):
+            d.set(x, 3, 5, "oak_leaves[distance=1,persistent=true,waterlogged=false]")
+    for bx in (15, 29):                                # basins
+        for dx in (-1, 0, 1):
+            for dz in (-1, 0, 1):
+                if (dx, dz) == (0, 0):
+                    d.set(bx, 1, 8, "water")
+                    continue
+                d.set(bx + dx, 2, 8 + dz, wallb("stone_brick_wall") if dx and dz else "stone_brick_slab[type=bottom,waterlogged=false]")
+        d.set(bx, 2, 8, "stone_bricks")
+        d.set(bx, 3, 8, wallb("sandstone_wall"))
+        d.set(bx, 4, 8, HC)
+    for x in (10, 34):
+        lamp_post(d, x, 7, 2, "stone_bricks", fence("dark_oak_fence"), h=2)
 
 
 def hw_screen(d):
