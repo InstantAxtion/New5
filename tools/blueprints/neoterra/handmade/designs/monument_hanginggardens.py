@@ -823,14 +823,21 @@ def nt_column(d, x, z, h):
 
 # step garden ("hanging gardens") behind the lake: steps inset 2 on north / east / west, back flush at z=55
 NT_STEPS = [(12, 34, 41, 3), (14, 32, 43, 6), (16, 30, 45, 9), (18, 28, 47, 12), (20, 26, 49, 15)]
-NT_FALLS = (17, 29)                                      # x of the two cascades
+NT_FALLS = (17, 29)                                      # x of the two cascades (steps 0-2)
+NT_STAIR = {1: (20, "east"), 2: (26, "west"), 3: (20, "east"), 4: (26, "west")}
 
 
 def nt_step_garden(d, L):
     """ACROS-style stepped garden: every step has a planted outer row with draping azalea and a walk behind it,
-    stairs up the middle, and two cascades of basins whose lips spill down the risers into the lake."""
+    zig-zag stairs cut into the risers, and two cascades of basins whose lips spill down the risers."""
     nsteps = 3 if L == 4 else 5
     zb = 55
+    stairs = set()
+    for k in range(1, nsteps):
+        x0, f = NT_STAIR[k]
+        sgn = 1 if f == "east" else -1
+        for i in range(3):
+            stairs.add((x0 + sgn * i, NT_STEPS[k][2]))
     for k, (x1, x2, z1, top) in enumerate(NT_STEPS[:nsteps]):
         y1 = 2 if k == 0 else NT_STEPS[k - 1][3] + 1
         for x in range(x1, x2 + 1):
@@ -838,72 +845,61 @@ def nt_step_garden(d, L):
                 for y in range(y1, top + 1):
                     face = x in (x1, x2) or z in (z1, zb) or y == top
                     d.set(x, y, z, ("white_concrete" if y == top else "light_gray_concrete") if face else SOLIDSUB)
-        # outer planted row (front and sides) and the walk behind it
+        # planted outer row (front and sides); azalea drapes over the riser
         for x in range(x1, x2 + 1):
             for z in range(z1, zb + 1):
-                if x in (x1, x2) or z == z1:
-                    if 22 <= x <= 24 and z == z1:
-                        continue
-                    d.set(x, top, z, "moss_block")
-                    c = (x * 7 + z * 3 + k) % 6
-                    d.set(x, top + 1, z, (lv("azalea"), "fern", lv("flowering_azalea"), "azalea", "fern",
-                                          "flowering_azalea")[c])
-                    if c in (0, 2) and z == z1 and d.air(x, top - 1, z - 1):
-                        d.set(x, top, z - 1, lv("azalea")) if d.air(x, top, z - 1) else None
-        # stairs up the middle of the riser
-        for x in (22, 23, 24):
-            for i in range(3):
-                d.set(x, y1 + i, z1 - 1 + 0, AIR) if False else None
-        for x in (22, 23, 24):
-            d.set(x, top - 2, z1 - 1, stair("smooth_stone_stairs", "south")) if k > 0 else None
-        if k == 0:
-            for x in (22, 23, 24):
-                d.set(x, 2, z1 - 1, stair("smooth_stone_stairs", "south"))
-                d.set(x, 3, z1, stair("smooth_stone_stairs", "south"))
-                d.set(x, 2, z1, "white_concrete")
-        else:
-            py = NT_STEPS[k - 1][3]
-            for x in (22, 23, 24):
-                d.set(x, py + 1, z1, stair("smooth_stone_stairs", "south"))
-                d.set(x, py + 2, z1 + 1, stair("smooth_stone_stairs", "south"))
-                d.set(x, py + 3, z1 + 2, stair("smooth_stone_stairs", "south"))
-                for y in range(py + 2, top + 3):
-                    if y > py + 1:
-                        d.set(x, y, z1, AIR)
-                for y in range(py + 3, top + 3):
-                    d.set(x, y, z1 + 1, AIR)
-                for y in range(py + 4, top + 3):
-                    d.set(x, y, z1 + 2, AIR)
-                d.set(x, top + 1, z1 + 2, AIR) if False else None
-            for x in (22, 23, 24):
-                d.set(x, top, z1 + 2, stair("smooth_stone_stairs", "south"))
-                d.set(x, top + 1, z1 + 2, AIR)
-                d.set(x, top + 2, z1 + 2, AIR)
-        # cascades: a two-cell basin on every step, the riser notch below the lip shows the falling water
-        for xw in NT_FALLS:
-            d.set(xw, top, z1, WATER)
-            d.set(xw, top, z1 + 1, WATER)
-            d.set(xw, top + 1, z1, AIR)
-            d.set(xw, top + 1, z1 + 1, AIR)
-            for side in (xw - 1, xw + 1):
-                d.set(side, top + 1, z1 + 1, "white_concrete") if d.get(side, top + 1, z1 + 1) == AIR else None
-            if k > 0:
-                for y in range(NT_STEPS[k - 1][3] + 1, top):
+                if not (x in (x1, x2) or z == z1) or (x, z) in stairs or (k == 0 and 22 <= x <= 24 and z == z1):
+                    continue
+                d.set(x, top, z, "moss_block")
+                c = (x * 7 + z * 3 + k) % 6
+                d.set(x, top + 1, z, (lv("azalea"), "fern", lv("flowering_azalea"), "azalea", "fern",
+                                      "flowering_azalea")[c])
+        # cascade basins (steps 0-2)
+        if k <= 2:
+            for xw in NT_FALLS:
+                for z in (z1, z1 + 1):
+                    d.set(xw, top, z, WATER)
+                    d.set(xw, top + 1, z, AIR)
+                for y in range(y1, top):                 # riser notch under the lip
                     d.set(xw, y, z1, WATER)
-    # spring on top: the highest basin is fed by a stone spout
-    tx1, tx2, tz1, ttop = NT_STEPS[nsteps - 1]
+    # zig-zag stairs cut into the risers
+    for x in (22, 23, 24):
+        d.set(x, 2, 40, stair("smooth_stone_stairs", "south"))
+        d.set(x, 3, 41, stair("smooth_stone_stairs", "south"))
+    for k in range(1, nsteps):
+        x0, f = NT_STAIR[k]
+        sgn = 1 if f == "east" else -1
+        z1, top = NT_STEPS[k][2], NT_STEPS[k][3]
+        py = NT_STEPS[k - 1][3]
+        for i in range(3):
+            x = x0 + sgn * i
+            d.set(x, py + 1 + i, z1, stair("smooth_stone_stairs", f))
+            for y in range(py + 2 + i, top + 3):
+                d.set(x, y, z1, AIR)
+    # plunge pools where the lowest falls reach the lake
     for xw in NT_FALLS:
-        d.set(xw, ttop, tz1 + 2, WATER)
-        d.set(xw, ttop + 1, tz1 + 3, "white_concrete")
-        d.set(xw, ttop + 1, tz1 + 2, AIR)
-    # benches and lamps on the step walks (hand-placed)
-    seats = [(14, 4, 46, "east"), (32, 4, 46, "west"), (15, 7, 48, "east"), (31, 7, 48, "west")]
+        d.set(xw, 1, 40, WATER)
+        d.set(xw, 1, 39, WATER)
+    # spring: a third source and a spout behind the highest basins
+    for xw in NT_FALLS:
+        d.set(xw, 9, 47, WATER)
+        d.set(xw, 10, 47, AIR)
+        d.set(xw, 10, 48, "white_concrete")
+        d.set(xw, 11, 48, stair("smooth_stone_stairs", "south"))
+    # seats on the step walks facing the lake, lamps (hand-placed)
+    seats = [(14, 4, 42), (15, 4, 42), (31, 4, 42), (32, 4, 42), (16, 7, 44), (30, 7, 44), (19, 10, 46),
+             (27, 10, 46)]
+    lamps = [(13, 4, 42), (33, 4, 42), (15, 7, 44), (31, 7, 44)]
     if nsteps == 5:
-        seats += [(19, 13, 51, "east"), (27, 13, 51, "west")]
-    for x, y, z, f in seats:
-        d.chair(x, y, z, f, "birch")
-    for x, y, z in ((13, 4, 44), (33, 4, 44), (15, 7, 50), (31, 7, 50), (17, 10, 53), (29, 10, 53)):
+        seats += [(25, 13, 48), (21, 16, 50) if False else (25, 13, 48)]
+        lamps += [(19, 13, 48), (27, 13, 48)]
+    for x, y, z in seats:
+        if d.air(x, y, z):
+            d.chair(x, y, z, "south", "birch")
+    for x, y, z in lamps:
         lamppost(d, x, z, y, 2, "diorite_wall", lantern())
+    if nsteps == 5:                                     # top terrace: the tallest super-tree stands on it
+        pass
     return NT_STEPS[nsteps - 1]
 
 
