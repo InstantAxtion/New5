@@ -1313,9 +1313,9 @@ def gt_cascadia(rel, L):
     if L >= 5:                                                    # radio room / mess hall and a second lookout
         building(d, 21, 26, 37, 32, nf=2, axis="x", doors=(("north", 29), ("north", 24)), chimney=(29, 33),
                  kinds=["kitchen", "office"])
-        t2 = building(d, 35, 8, 39, 12, nf=4, roof="hip", doors=(("west", None),),
-                      kinds=["office", "store", "office", "office"], stairs=False)
-        ladder(d, 38, 11, 2, 17, "north")
+        t2 = building(d, 35, 8, 39, 12, nf=5, roof="hip", doors=(("west", None),),
+                      kinds=["office", "store", "office", "bunks", "office"], stairs=False)
+        ladder(d, 38, 11, 2, 22, "north")
         for y in range(t2.ridge + 1, t2.ridge + 4):
             d.set(37, y, 10, "iron_bars")
         d.set(37, t2.ridge + 4, 10, ROD())
@@ -1807,6 +1807,17 @@ def ar_cascadia(rel, L):
         d.sign(39, 4, 0, "north", ["OUTFITTER", "bows-traps"], "spruce")
         bench(d, 34, 2, "south", 2)
         d.keg(41, 2, 2, "north")
+        for x in (44, 45):                                        # hide-stretching frame beside the cabin
+            for y in (2, 3, 4):
+                d.set(x, y, 5, "spruce_fence")
+        d.set(44, 4, 6, "spruce_fence")
+        d.set(45, 4, 6, "spruce_fence")
+        for y in (2, 3):
+            d.set(44, y, 6, "brown_wool") if False else None
+        d.set(45, 3, 7, "brown_carpet") if False else None
+        for z in range(11, 14):
+            for y in (2, 3):
+                d.set(44, y, z, LOG("spruce_log" if (y + z) % 2 else "birch_log", "z"))
     if L >= 3:                                                    # smokehouse and game larder
         building(d, 33, 14, 40, 20, nf=1, axis="z", doors=(("north", 36),), chimney=(41, 17), kinds=["store"])
         for z in range(15, 20):
@@ -1976,7 +1987,7 @@ def ar_neoterra(rel, L):
             d.set(x, 1, 12, "moss_block")
             d.set(x, 2, 12, "azalea" if x % 2 else "flowering_azalea")
     if L >= 4:                                                    # residence for the archers
-        building(d, 25, 20, 40, 30, nf=3 if L == 4 else 4, roof="flat", doors=(("north", 30), ("west", 25)),
+        building(d, 25, 20, 42, 30, nf=3 if L == 4 else 4, roof="flat", doors=(("north", 30), ("west", 25)),
                  kinds=["lounge", "bunks", "bunks", "lounge"])
         path(d, 22, 25, 24, 25)
     if L >= 5:                                                    # field range with clubhouse and covered stand
@@ -2174,7 +2185,7 @@ def ca_hearthwood(rel, L):
         lamp_post(d, 43, 16)
         bench(d, 37, 16, "north", 3)
     if L >= 4:                                                    # masters' house: library, office, rooms
-        building(d, 2, 27, 16, 36, nf=2, axis="x", doors=(("north", 9), ("east", 31)), chimney=(17, 31),
+        building(d, 2, 27, 17, 36, nf=2, axis="x", doors=(("north", 9), ("east", 31)), chimney=(18, 31),
                  kinds=["library", "office"])
         flowerbed(d, 3, 25, 6, 26)
         flowerbed(d, 12, 25, 15, 26)
@@ -2355,7 +2366,7 @@ def ca_cascadia(rel, L):
         bench(d, 24, 3, "south", 2)
         lamp_post(d, 21, 1)
     if L >= 3:                                                    # cook shack and mess with a sauna loft
-        building(d, 23, 14, 36, 21, nf=2, axis="z", doors=(("north", 28), ("west", 18)), chimney=(37, 18),
+        building(d, 23, 13, 36, 21, nf=2, axis="z", doors=(("north", 28), ("west", 18)), chimney=(37, 18),
                  kinds=["kitchen", "lounge"])
         cart(d, 39, 14, "z")
         for z in range(14, 22):                                   # sauna woodpile
@@ -2373,7 +2384,7 @@ def ca_cascadia(rel, L):
         for x in range(2, 21):
             for z in (28, 34):
                 d.set(x, 2, z, "spruce_fence")
-        building(d, 23, 24, 41, 34, nf=2, axis="x", doors=(("north", 29), ("west", 29)), chimney=(42, 29),
+        building(d, 23, 24, 42, 34, nf=2, axis="x", doors=(("north", 29), ("west", 29)), chimney=(43, 29),
                  kinds=["gym", "bunks"])
     if L >= 5:                                                    # trophy lodge and boathouse-style gym
         building(d, 2, 36, 20, 44, nf=2, axis="x", doors=(("north", 11), ("east", 40)), chimney=(1, 40),
@@ -2540,7 +2551,7 @@ def ca_neoterra(rel, L):
         bench(d, 26, 13, "north", 3)
         bench(d, 36, 13, "north", 3)
     if L >= 4:                                                    # athletes' residence tower
-        building(d, 2, 24, 15, 36, nf=3 if L == 4 else 5, roof="flat", doors=(("north", 8), ("east", 30)),
+        building(d, 2, 24, 16, 36, nf=3 if L == 4 else 5, roof="flat", doors=(("north", 8), ("east", 30)),
                  kinds=["lounge", "bunks", "bunks", "bunks", "lounge"])
         path(d, 8, 20, 8, 23)
         for z in range(25, 36, 2):                                # planter strip along the residence
@@ -3148,7 +3159,7 @@ def al_hearthwood(rel, L):
     if L >= 5:                                                    # guild hall of apothecaries
         building(d, 27, 13, 40, 21, nf=2, axis="x", doors=(("north", 33), ("west", 17)), chimney=(41, 17),
                  kinds=["library", "office"])
-        building(d, 32, 24, 40, 31, nf=1, axis="z", doors=(("north", 36),), kinds=["lab"])
+        building(d, 32, 24, 41, 32, nf=1, axis="z", doors=(("north", 36),), kinds=["lab"])
         for x in (36, 38):
             tree(d, x, 2, 34, "oak_log", "flowering_azalea_leaves", 3, 1)
     return d
@@ -4001,7 +4012,7 @@ def ms_cascadia(rel, L):
         for x in range(2, 26):
             d.set(x, 1, 26, "spruce_planks")
     if L >= 5:                                                    # great hall for gatherings
-        building(d, 27, 25, 43, 36, nf=2, axis="x", doors=(("north", 35), ("west", 30)), chimney=(35, 37),
+        building(d, 26, 25, 44, 37, nf=2, axis="x", doors=(("north", 35), ("west", 30)), chimney=(35, 38),
                  kinds=["mess", "lounge"])
         for z in range(3, 22, 6):
             tree(d, 42, 2, z, "spruce_log", "spruce_leaves", 7, 2, cone=True)
