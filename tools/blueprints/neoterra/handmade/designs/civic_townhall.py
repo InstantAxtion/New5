@@ -895,7 +895,7 @@ def nt_rooms(d, L, B):
     pts(d, Y0 + 1, [(21, 13)], "end_rod[facing=up]")
     pts(d, Y0 + 1, [(22, 19), (28, 16)], "potted_bamboo")
     pts(d, Y0 + 1, [(31, 20)], LANT())
-    hang(d, Y0, [(22, 15), (27, 16), (24, 19), (29, 20)], kind="sea_lantern")
+    hang(d, Y0, [(22, 15), (27, 16), (24, 19), (29, 20)], kind="glowstone" if L >= 3 else "sea_lantern")
     # ---------------------------------------------------------------- plaza
     for x in range(10, 41):
         for z in range(1, 11):
@@ -935,7 +935,7 @@ def nt_wings(d, L, leg):
     ], lg, w=11)
     pts(d, Y0 + 1, [(10, 15), (15, 15)], "end_rod[facing=up]")
     pts(d, Y0 + 1, [(12, 15)], "potted_bamboo")
-    hang(d, Y0, [(9, 17), (15, 17)], kind="sea_lantern")
+    hang(d, Y0, [(9, 17), (15, 17)], kind="glowstone" if L >= 3 else "sea_lantern")
     # ---------------------------------------------------------------- stores (east wing)
     nb = need(d, "barrel") - 4
     north = {5: ".KKKKK.sss.", 9: ".KKKKKKKKK."}[(nb + 1) // 2]
@@ -952,7 +952,7 @@ def nt_wings(d, L, leg):
     ], leg | {"K": BAR("south"), "j": "cyan_shulker_box[facing=up]"}, w=11)
     pts(d, Y0 + 1, [(43, 14)], "end_rod[facing=up]")
     pts(d, Y0 + 1, [(33, 21), (36, 21)], "light_gray_shulker_box[facing=up]")
-    hang(d, Y0, [(36, 17), (40, 17)], kind="sea_lantern")
+    hang(d, Y0, [(36, 17), (40, 17)], kind="glowstone" if L >= 3 else "sea_lantern")
 
 
 def nt_upper(d, L, leg):
@@ -1051,7 +1051,7 @@ def nt_rear(d, L, leg):
     pts(d, Y0 + 1, [(22, 26), (27, 30)], "potted_bamboo")
     pts(d, Y0 + 1, [(25, 26), (24, 30)], LANT())
     pts(d, Y0 + 1, [(20, 33)], "cake[bites=0]")
-    hang(d, Y0, [(23, 26), (27, 26), (23, 30), (27, 30)], kind="sea_lantern")
+    hang(d, Y0, [(23, 26), (27, 26), (23, 30), (27, 30)], kind="glowstone")
     # ---------------------------------------------------------------- open-plan offices (rear floor 2)
     y = 7
     plan(d, y, 19, 23, [
@@ -1069,7 +1069,7 @@ def nt_rear(d, L, leg):
     ], leg | {"E": IT("ender_chest", "west")}, w=13)
     pts(d, y + 1, [(22, 25), (27, 26), (23, 30), (26, 29)], "potted_bamboo")
     pts(d, y + 1, [(30, 33)], "end_rod[facing=up]")
-    hang(d, y, [(24, 26), (24, 30), (28, 31)], kind="sea_lantern")
+    hang(d, y, [(24, 26), (24, 30), (28, 31)], kind="glowstone")
     # ---------------------------------------------------------------- planning studio (rear floor 3)
     y = 12
     plan(d, y, 19, 23, [
@@ -1171,7 +1171,7 @@ def nt_tower(d, L, leg):
     pts(d, Y0 + 1, [(40, 27), (39, 28)], "lime_carpet")
     pts(d, Y0 + 1, [(39, 33)], "end_rod[facing=up]")
     pts(d, Y0 + 1, [(41, 33), (37, 35), (43, 35)], "potted_bamboo")
-    hang(d, Y0, [(38, 30), (42, 30), (40, 36), (40, 26)], kind="sea_lantern")
+    hang(d, Y0, [(38, 30), (42, 30), (40, 36), (40, 26)], kind="glowstone")
     # F1 planning office
     y = 7
     plan(d, y, X, 25, [
@@ -1193,7 +1193,7 @@ def nt_tower(d, L, leg):
     ], leg | {"c": "chest[facing=east,type=single,waterlogged=false]"}, w=11)
     pts(d, y + 1, [(38, 26), (43, 27), (37, 32), (42, 31)], "potted_bamboo")
     pts(d, y + 1, [(39, 37)], "end_rod[facing=up]")
-    hang(d, y, [(40, 27), (40, 31), (39, 37)], kind="sea_lantern")
+    hang(d, y, [(40, 27), (40, 31), (39, 37)], kind="glowstone")
     # F2 records hall
     y = 12
     plan(d, y, X, 25, [
@@ -1214,7 +1214,7 @@ def nt_tower(d, L, leg):
         "B.......p. ",
     ], leg | {"I": "lectern[facing=east,has_book=false,powered=false]"}, w=11)
     pts(d, y + 1, [(37, 33), (43, 33)], LANT())
-    hang(d, y, [(40, 26), (40, 28), (40, 31)], kind="sea_lantern")
+    hang(d, y, [(40, 26), (40, 28), (40, 31)], kind="glowstone")
     # F3 meeting rooms
     y = 17
     plan(d, y, X, 25, [
@@ -1235,7 +1235,7 @@ def nt_tower(d, L, leg):
         ".......p.. ",
     ], leg, w=11)
     pts(d, y + 1, [(41, 28), (40, 35)], "potted_bamboo")
-    hang(d, y, [(41, 29), (40, 35)], kind="sea_lantern")
+    hang(d, y, [(41, 29), (40, 35)], kind="glowstone")
     # F4 staff canteen
     y = 22
     plan(d, y, X, 25, [
@@ -1257,7 +1257,7 @@ def nt_tower(d, L, leg):
     ], leg | {"M": "smoker[facing=south,lit=false]", "c": "chest[facing=south,type=single,waterlogged=false]"}, w=11)
     pts(d, y + 1, [(37, 29), (42, 33)], "potted_bamboo")
     pts(d, y + 1, [(38, 25)], "cake[bites=0]")
-    hang(d, y, [(39, 29), (39, 33), (37, 37)], kind="sea_lantern")
+    hang(d, y, [(39, 29), (39, 33), (37, 37)], kind="glowstone")
     # F5 mayor's sky office and lounge
     y = 27
     plan(d, y, X, 25, [
@@ -1306,6 +1306,407 @@ def nt_tower(d, L, leg):
     pts(d, Y0 + 2, [(39, 41), (42, 41)], "end_rod[facing=up]") if False else None
 
 
+# ============================================================================================ CASCADIA
+# Grange hall of a logging town: long log hall with a deep porch (L1), rear workshop and barrel shed (L2),
+# loft library & bunk room plus a fire-lookout bell tower (L3), the mayor's house (L4), fire hall with hose
+# tower, jail and livery stable on a boardwalk main street (L5).
+def th_cascadia(rel, L):
+    d = new("Cascadia", rel, (55, 34, 55), paving="coarse_dirt")
+    loft = L >= 3
+    c = shell(d, 14, 10, 28, 22, 2 if loft else 1, "gable", "z", ties=(13, 17))
+    edoor(d, 21, Y0, 10, "south")
+    d.fill(13, 1, 5, 29, 1, 9, "spruce_planks")                   # porch deck
+    for x in (13, 17, 25, 29):
+        for y in range(Y0, 6):
+            d.set(x, y, 5, log("spruce_log"))
+    for x in range(12, 31):
+        d.set(x, 6, 4, st("spruce_stairs", "south"))
+        for z in range(5, 10):
+            d.set(x, 6, z, slab("spruce_slab"))
+    for x in list(range(14, 17)) + list(range(18, 20)) + list(range(23, 25)) + list(range(26, 29)):
+        d.set(x, Y0, 5, "spruce_fence")                              # porch rail, gap at the steps
+    d.hut(15, Y0, 11)
+    keep(d, 16, Y0, 11)
+    d.hearth(15, Y0, 16, "east", c["ridge"] + 2, "cobblestone", "campfire")
+    chim(d, 13, 16, Y0, c["ridge"] + 1)
+    if L >= 2:
+        shell(d, 14, 22, 28, 32, 1, "gable", "z", ties=(25, 29))
+        link(d, 21, Y0, 22, "south")
+        edoor(d, 21, Y0, 32, "north", double=True)
+        chim(d, 28, 27, Y0, 11)
+        shell(d, 29, 12, 35, 22, 1, "gable", "z", win="e", ties=(17,))
+        edoor(d, 32, Y0, 12, "south")
+    if loft:
+        d.clear(15, 7, 21, 27, 10, 21)                              # rear roof overhang must not enter the loft
+        stairs(d, 16, 21, Y0, 7, "east", rails=[(16, 21), (17, 20), (18, 20), (19, 20)])
+        tx1, tz1 = 40, 4                                              # fire-lookout bell tower
+        for x, z in ((tx1, tz1), (tx1 + 4, tz1), (tx1, tz1 + 4), (tx1 + 4, tz1 + 4)):
+            for y in range(Y0, 21):
+                d.set(x, y, z, log("spruce_log"))
+        for y in (7, 12):
+            for a in range(1, 4):
+                for (x, z, ax) in ((tx1 + a, tz1, "x"), (tx1 + a, tz1 + 4, "x"), (tx1, tz1 + a, "z"),
+                                   (tx1 + 4, tz1 + a, "z")):
+                    d.set(x, y, z, log("spruce_log", ax))
+        d.fill(tx1, 17, tz1, tx1 + 4, 17, tz1 + 4, "spruce_planks")
+        for x in range(tx1, tx1 + 5):
+            for z in range(tz1, tz1 + 5):
+                if (x in (tx1, tx1 + 4) or z in (tz1, tz1 + 4)) and d.air(x, 18, z):
+                    d.set(x, 18, z, "spruce_fence")
+        d.hip(tx1, tz1, tx1 + 4, tz1 + 4, 21, "dark_oak_stairs", "dark_oak_slab", overhang=1)
+        d.set(tx1 + 2, 21, tz1 + 2, "spruce_planks")
+        bell(d, tx1 + 2, 20, tz1 + 2)
+        d.fill(tx1 + 1, 1, tz1 + 1, tx1 + 3, 1, tz1 + 3, "cobblestone")
+    else:
+        for y in range(Y0, 6):
+            d.set(32, y, 6, log("spruce_log"))
+            d.set(34, y, 6, log("spruce_log"))
+        d.fill(32, 6, 6, 34, 6, 6, log("spruce_log", "x"))
+        bell(d, 33, 5, 6)
+    if L >= 4:
+        m = shell(d, 2, 10, 12, 24, 2, "gable", "z", ties=(13, 20))
+        edoor(d, 7, Y0, 10, "south")
+        stairs(d, 11, 12, Y0, 7, "south", rails=[(11, 12), (10, 13), (10, 14), (10, 15)])
+        for x in (3, 11):                                            # porch posts and roof over the door
+            for y in range(Y0, 5):
+                d.set(x, y, 9, log("spruce_log"))
+        for x in range(2, 13):
+            for z in (8, 9):
+                d.set(x, 5, z, slab("spruce_slab"))
+        chim(d, 2, 16, Y0, m["ridge"] + 1)
+    if L >= 5:
+        shell(d, 36, 14, 48, 28, 2, "gable", "z", mat="mangrove_planks", up="mangrove_planks", ties=(18, 24))
+        for x in range(40, 44):                                      # engine bay doors
+            for y in range(Y0, Y0 + 3):
+                d.set(x, y, 14, AIR)
+        d.double_door(41, Y0, 14, "x", "south", "spruce")
+        stairs(d, 47, 22, Y0, 7, "south", rails=[(47, 22), (46, 23), (46, 24), (46, 25)])
+        for y in range(Y0, 24):                                      # hose-drying tower
+            for x, z in ((50, 22), (52, 22), (50, 24), (52, 24)):
+                d.set(x, y, z, log("spruce_log"))
+        for y in (5, 10, 15, 20):
+            for x in (50, 51, 52):
+                d.set(x, y, 22, log("spruce_log", "x"))
+                d.set(x, y, 24, log("spruce_log", "x"))
+        d.hip(50, 22, 52, 24, 24, "dark_oak_stairs", "dark_oak_slab", overhang=1)
+        shell(d, 36, 34, 46, 42, 1, "gable", "x", mat="cobblestone", up="cobblestone", gable_end="cobblestone",
+              ties=(41,))
+        edoor(d, 41, Y0, 34, "south")
+        shell(d, 2, 28, 12, 42, 1, "gable", "z", mat="stripped_spruce_log", ties=(33, 37))
+        edoor(d, 7, Y0, 28, "south", double=True)
+    cs_rooms(d, L)
+    return d
+
+
+def lamppost_cs(d, x, z):
+    pts(d, Y0, [(x, z)], "spruce_log[axis=y]")
+    pts(d, Y0 + 1, [(x, z)], "spruce_fence")
+    pts(d, Y0 + 2, [(x, z)], "spruce_fence")
+    pts(d, Y0 + 3, [(x, z)], LANT())
+
+
+def spruce(d, x, z, h=6):
+    """One hand-placed spruce (trunk + layered cone) at (x, z)."""
+    d.set(x, 1, z, "podzol[snowy=false]")
+    for k in range(h):
+        d.set(x, Y0 + k, z, log("spruce_log"))
+    lv = "spruce_leaves[distance=1,persistent=true,waterlogged=false]"
+    for y, r in ((4, 2), (5, 1), (6, 2), (7, 1), (8, 0)):
+        for a in range(-r, r + 1):
+            for b in range(-r, r + 1):
+                if abs(a) + abs(b) <= r + (1 if r == 2 else 0) and d.air(x + a, y, z + b):
+                    d.set(x + a, y, z + b, lv)
+    if d.air(x, 8, z):
+        d.set(x, 8, z, lv)
+
+
+def cs_rooms(d, L):
+    W = "spruce"
+    loft = L >= 3
+    leg = base_leg(d, W, plant="potted_fern") | {"h": "hay_block[axis=y]", "e": "barrel[facing=west,open=false]",
+                                               "u": "water_cauldron[level=3]", "f": "spruce_fence"}
+    # ---------------------------------------------------------------- grange hall (core ground)
+    lg = leg | {"C": IT("crafting_table"), "F": IT("furnace", "west"), "K": BAR("west"), "Z": BED("west")}
+    plan(d, Y0, 15, 11, [
+        " ...........C",
+        "p...........F",
+        ".....<T>....F",          # long trestle table down the middle of the hall
+        ".....<T>.....",
+        " k>..<T>....K",          # fireside chairs at the hearth, barrels on the east wall
+        " k...<T>....K",
+        " k>..<T>.....",
+        "......v......",
+        "Z............",          # caretaker's bunk by the fire
+        "_............",
+        ("..vvv........" if L <= 2 else "." + "     " + "......."),
+    ], lg, w=13)
+    pts(d, Y0 + 1, [(21, 13)], "flower_pot")
+    pts(d, Y0 + 1, [(21, 15), (15, 20)], LANT())
+    pts(d, Y0 + 1, [(21, 17)], CAN(3))
+    hang(d, Y0, [(18, 13), (24, 17)])
+    # ---------------------------------------------------------------- porch, street front
+    plan(d, Y0, 15, 7, ["v" + "." * 11 + "v"], {"v": OUTSEAT("south", W)})
+    pts(d, Y0, [(16, 9), (26, 9)], "potted_fern")
+    d.sign(21, 5, 9, "north", ["GRANGE", "HALL"], W)
+    pts(d, 4, [(20, 9), (22, 9)], LANT(True)) if False else None
+    for x in (20, 22):
+        _put(d, x, 5, 9, LANT(True))
+    lamppost_cs(d, 11, 6) if L < 4 else None
+    lamppost_cs(d, 31, 6)
+    if L >= 2:
+        cs_back(d, L, leg)
+    if loft:
+        cs_loft(d, L, leg)
+    if L >= 4:
+        cs_mayor(d, L, leg)
+    if L >= 5:
+        cs_street(d, L, leg)
+
+
+def cs_back(d, L, leg):
+    W = "spruce"
+    # ---------------------------------------------------------------- workshop (rear wing)
+    lg = leg | {"C": IT("crafting_table", None), "O": IT("stonecutter", "east"), "X": IT("fletching_table"),
+                "P": IT("cartography_table"), "N": IT("loom", "east"), "G": IT("grindstone", "west"),
+                "M": IT("smithing_table"), "A": IT("anvil", "east"), "S": IT("blast_furnace", "west"),
+                "F": IT("furnace", "west"), "H": IT("smoker", "north"), "V": IT("brewing_stand"),
+                "Q": IT("water_cauldron[level=3]"), "l": "stripped_spruce_log[axis=x]", "w": "white_wool",
+                "c": "chest[facing=north,type=single,waterlogged=false]"}
+    plan(d, Y0, 15, 23, [
+        ".............",
+        "C...........G",          # carpenter's benches on the west wall, forge on the east wall
+        "O...........M",
+        "X.........A..",
+        "P..ll.......S",          # saw horse with a log
+        "N........." + ("A" if L >= 3 else ".") + ".F",
+        "............" + ("G" if L >= 3 else "."),
+        "w............",
+        "HVQ......c.ee",
+    ], lg, w=13)
+    pts(d, Y0 + 1, [(18, 27)], "stripped_spruce_log[axis=x]")
+    hang(d, Y0, [(18, 25), (24, 29)])
+    # ---------------------------------------------------------------- barrel shed
+    nb = need(d, "barrel") - 4
+    if nb <= 10:
+        rows = [".....", "....h", "K...h", "K....", "K...c", "K....", "K...e", "....e", "l...l"]
+    else:
+        rows = [".....", "K...h", "K...h", "K....", "K...c", "K....", "K...e", "K....", "K...K"]
+    plan(d, Y0, 30, 13, rows, leg | {"K": BAR("east"), "l": "spruce_log[axis=z]",
+                                    "c": "chest[facing=west,type=single,waterlogged=false]"}, w=5)
+    hang(d, Y0, [(32, 17)])
+    if L <= 4:                                                         # log pile and hand cart by the shed
+        for x in (38, 39):
+            for y in (2, 3):
+                _put(d, x, y, 14, log("spruce_log", "z"))
+        plan(d, Y0, 37, 17, ["f", "_", "_"], {"f": "spruce_fence", "_": slab("spruce_slab", "top")})
+        _put(d, 37, 3, 19, "hay_block[axis=y]")
+
+
+def cs_loft(d, L, leg):
+    W = "spruce"
+    y = 7
+    plan(d, y, 15, 11, [
+        "B1BB1BB1BB1BB",          # book wall under the north windows
+        "1............",
+        "B..bb...<T>.I",          # record press, reading table, charter lectern
+        "B....E..<T>..",
+        "1............",
+        " ............",
+        "_...........H",          # bunk beds along both eaves walls
+        "W...........c",
+        "c...........H",
+        "W.   .......c",
+        ".     ......H",
+    ], leg | {"I": IT("lectern", "west"), "E": IT("enchanting_table"), "H": BED("east"), "W": BED("west"),
+              "c": "chest[facing=west,type=single,waterlogged=false]"}, w=13)
+    pts(d, y + 1, [(24, 13)], LANT())
+    pts(d, y + 1, [(15, 17)], CAN(1))
+    hang(d, y, [(21, 13), (21, 17)])
+    # covered back porch on the workshop: posts, shed roof, rail and a bench either side of the doors
+    for x in (14, 18, 25, 28):
+        for yy in range(Y0, 6):
+            d.set(x, yy, 35, log("spruce_log"))
+    for x in range(14, 29):
+        d.set(x, 6, 36, st("spruce_stairs", "north"))
+        for z in (33, 34, 35):
+            d.set(x, 6, z, slab("spruce_slab"))
+    for x in (15, 16, 17, 19, 24, 26, 27):
+        _put(d, x, Y0, 35, "spruce_fence")
+    plan(d, Y0, 16, 34, ["vv......vv"], {"v": OUTSEAT("south", W)})
+    _put(d, 20, 5, 33, LANT(True))
+    _put(d, 23, 5, 33, LANT(True))
+
+
+def cs_mayor(d, L, leg):
+    W = "spruce"
+    d.hearth(3, Y0, 16, "east", 6, "cobblestone", "campfire")
+    plan(d, Y0, 3, 11, [
+        "p.c......",
+        "........ ",
+        "bb...... ",
+        "...._... ",
+        " kk>.... ",              # settle facing the parlour fire
+        " kk>.... ",
+        " kk>.....",
+        ".........",
+        "..^^^....",
+        ".<TTT>...",              # family dining table
+        "..vvv....",
+        ".........",
+        "FM_u__c.e",              # kitchen wall
+    ], leg | {"F": "furnace[facing=north,lit=false]", "M": "smoker[facing=north,lit=false]",
+              "c": "chest[facing=north,type=single,waterlogged=false]"}, w=9)
+    pts(d, Y0 + 1, [(6, 14)], LANT())
+    pts(d, Y0 + 1, [(6, 20)], CAN(3))
+    pts(d, Y0 + 1, [(5, 23)], "flower_pot")
+    hang(d, Y0, [(6, 13), (6, 20)])
+    y = 7
+    plan(d, y, 3, 11, [
+        "JE..bbb..",              # mayor's office: record player, town safe, book cases
+        "..^..... ",
+        "..__...  ",
+        "..v.v..  ",
+        ".......  ",
+        ".........",
+        ".........",
+        ".........",
+        "_........",
+        "W..kk...c",              # bedroom
+        "W..kk...c",
+        "_........",
+        "p......u.",
+    ], leg | {"J": IT("jukebox"), "E": IT("ender_chest", "south"), "W": BED("west"),
+              "c": "chest[facing=west,type=single,waterlogged=false]"}, w=9)
+    pts(d, y + 1, [(5, 13)], CAN(2))
+    pts(d, y + 1, [(3, 19), (3, 22)], CAN(1))
+    hang(d, y, [(6, 13), (6, 20)])
+    d.sign(7, 5, 9, "north", ["MAYOR"], W)
+    # front yard: rail fence, flower beds, two spruces
+    for x in range(1, 13):
+        if x not in (6, 7, 8):
+            d.set(x, Y0, 6, "spruce_fence")
+    for x0, row in ((2, "fbaf"), (9, "afbf")):
+        d.fill(x0, 1, 7, x0 + 3, 1, 8, "grass_block[snowy=false]")
+        plan(d, Y0, x0, 7, [row, row[::-1]], {"f": "fern", "b": "blue_orchid", "a": "allium"})
+    spruce(d, 4, 3)
+    spruce(d, 10, 3)
+    d.fill(6, 1, 3, 8, 1, 9, "spruce_planks")
+    # water tower on trestle legs east of the lookout
+    for x, z in ((48, 4), (52, 4), (48, 8), (52, 8)):
+        for yy in range(Y0, 14):
+            d.set(x, yy, z, log("spruce_log"))
+    for yy in (6, 10):
+        for a in range(49, 52):
+            d.set(a, yy, 4, log("spruce_log", "x"))
+            d.set(a, yy, 8, log("spruce_log", "x"))
+        for a in range(5, 8):
+            d.set(48, yy, a, log("spruce_log", "z"))
+            d.set(52, yy, a, log("spruce_log", "z"))
+    d.fill(48, 13, 4, 52, 13, 8, "spruce_planks")
+    for yy in range(14, 19):                                         # stave tank with iron hoops
+        for x in range(48, 53):
+            for z in range(4, 9):
+                if x in (48, 52) or z in (4, 8):
+                    if (x, z) in ((48, 4), (52, 4), (48, 8), (52, 8)):
+                        continue
+                    d.set(x, yy, z, "iron_bars" if False else (log("stripped_spruce_log", "y") if yy not in (15, 17) else "spruce_planks"))
+    d.hip(48, 4, 52, 8, 19, "dark_oak_stairs", "dark_oak_slab", overhang=1)
+    for yy in range(Y0, 13):                                         # service ladder on the street-side leg
+        d.set(50, yy, 3, "ladder[facing=north,waterlogged=false]") if False else None
+
+
+def cs_street(d, L, leg):
+    W = "spruce"
+    # ---------------------------------------------------------------- fire hall
+    plan(d, Y0, 37, 15, [
+        "c..p....p..",
+        "c..........",
+        "c..........",
+        "c...ww.....",            # hose wagon
+        "....ww....u",
+        "....ww....u",
+        "....ww.....",
+        ".......... ",
+        ".^^^...... ",
+        "<TTT>..... ",            # crew mess table
+        ".vvv...... ",
+        ".......... ",
+        "FM_u_...ee.",
+    ], leg | {"w": "red_wool", "F": "furnace[facing=north,lit=false]", "M": "smoker[facing=north,lit=false]",
+              "c": "chest[facing=east,type=single,waterlogged=false]"}, w=11)
+    pts(d, Y0 + 1, [(41, 19), (42, 19)], "barrel[facing=north,open=false]")
+    pts(d, Y0 + 1, [(41, 21), (42, 21)], "hay_block[axis=y]") if False else None
+    pts(d, Y0 + 1, [(39, 24)], LANT())
+    hang(d, Y0, [(39, 20), (44, 20)])
+    plan(d, 7, 37, 15, [
+        "H..........",
+        "c..........",
+        "H......^^..",
+        "c.....<TT>.",            # card table
+        "H......vv..",
+        "c..........",
+        "H..........",
+        "c......... ",
+        "H........  ",
+        "c........  ",
+        "H........  ",
+        "...........",
+        "p.._.....p.",
+    ], leg | {"H": BED("west"), "c": "chest[facing=east,type=single,waterlogged=false]"}, w=11)
+    pts(d, 8, [(44, 18)], LANT())
+    hang(d, 7, [(41, 18), (41, 24)])
+    d.sign(42, 6, 13, "north", ["FIRE", "HALL"], W)
+    # ---------------------------------------------------------------- jail
+    plan(d, Y0, 37, 35, [
+        "c.......p",
+        ".^......>",
+        ".__.....>",              # sheriff's desk, bench for visitors
+        "bbIbbbIbb",              # cell front: bars and iron doors
+        ".........",
+        ".........",
+        "h..u.h..u",
+    ], leg | {"b": "iron_bars", "I": "iron_door[facing=south,half=lower,hinge=left,open=false,powered=false]",
+              "u": "cauldron", "c": "chest[facing=south,type=single,waterlogged=false]"}, w=9)
+    for x in (39, 43):
+        d.set(x, Y0 + 1, 38, "iron_door[facing=south,half=upper,hinge=left,open=false,powered=false]")
+    for x in range(37, 46):
+        if x not in (39, 43):
+            for yy in (Y0 + 1, Y0 + 2):
+                d.set(x, yy, 38, "iron_bars")
+    for z in range(39, 42):
+        for yy in (Y0, Y0 + 1, Y0 + 2):
+            d.set(41, yy, z, "iron_bars")
+    pts(d, Y0 + 1, [(38, 37)], CAN(1))
+    hang(d, Y0, [(41, 36)])
+    d.sign(41, 5, 33, "north", ["JAIL"], W)
+    # ---------------------------------------------------------------- livery stable
+    plan(d, Y0, 3, 29, [
+        "p.......p",
+        "h.......h",              # hay feeders in each stall
+        ".........",
+        "ff.....ff",
+        "h.......h",
+        ".........",
+        "ff.....ff",
+        "h.......h",
+        ".........",
+        "ff.....ff",
+        "h.......h",
+        ".........",
+        "uu.ccc.ee",              # water trough, tack chests, feed kegs
+    ], leg | {"u": "water_cauldron[level=3]", "c": "chest[facing=north,type=single,waterlogged=false]",
+              "e": "barrel[facing=north,open=false]"}, w=9)
+    hang(d, Y0, [(7, 33), (7, 37)])
+    d.sign(7, 5, 27, "north", ["LIVERY"], W)
+    # ---------------------------------------------------------------- boardwalk main street
+    for x in range(0, 55):
+        for z in range(0, 3):
+            d.set(x, 1, z, "spruce_planks")
+    for x in (2, 8, 14, 20, 26, 32, 38, 44, 50):                    # hitching posts with lanterns
+        _put(d, x, Y0, 3, "spruce_fence")
+        _put(d, x, Y0 + 1, 3, LANT())
+
+
 @design("townhall")
 def townhall_v2(pack, rel, L):
-    return common_materials({"Hearthwood": th_hearthwood, "Neoterra": th_neoterra}[pack](rel, L))
+    return common_materials({"Hearthwood": th_hearthwood, "Cascadia": th_cascadia, "Neoterra": th_neoterra}[pack](rel, L))
