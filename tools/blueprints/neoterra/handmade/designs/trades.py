@@ -2098,8 +2098,6 @@ def fl_neo(rel, L):
         h = build(d, 3, 15, 13, 32, 1, H=5, roof="flat")
         h.door(8, 15, "north", double=True)
         range_lanes(d, 4, 16, 12, 31, y0, "south", "birch")
-        rh = h.room(0)
-        rh.keep |= {(x, z) for x in range(4, 13) for z in range(16, 32)}
         for x in (5, 8, 11):
             d.set(x, 5, 24, "sea_lantern")
         neo_roof(d, h, [(5, 11, 17, SOLAR), (5, 11, 20, SOLAR), (5, 11, 23, SOLAR), (5, 11, 26, SOLAR), (5, 11, 29, SOLAR)])

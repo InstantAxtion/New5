@@ -1172,7 +1172,7 @@ def cottage_ca(rel, L, v=0):
     return d
 
 
-def cottage_nt(rel, L):
+def cottage_nt(rel, L, v=0):
     d = Design("Neoterra", rel, (21, 20, 23), paving="grass_block[snowy=false]")
     W = "birch"
     x1, x2, z1, z2 = 4, 14, 5, 12
@@ -1206,8 +1206,26 @@ def cottage_nt(rel, L):
     d.window(7, 3, z2, 8, 4, z2)
     # ---- open plan
     fireplace(d, x1, 8, y0, "east", 9, "polished_blackstone_bricks", fire="soul_campfire")
-    rugc(d, 5, 7, 6, 9, y0, "light_gray")
-    sofa(d, 7, 7, y0, 3, "south", "east", W, arms=False)
+    if v == 0:      # sofa facing the linear fire
+        rugc(d, 5, 7, 6, 9, y0, "light_gray")
+        sofa(d, 7, 7, y0, 3, "south", "east", W, arms=False)
+    elif v == 1:    # two armchairs and a small table for two by the window
+        rugc(d, 5, 7, 6, 9, y0, "cyan")
+        fit(d, [(6, y0, 7, stair(W, "east")), (6, y0, 9, stair(W, "east")), (8, y0, 8, slab("smooth_quartz", "top")),
+                (8, y0 + 1, 8, "potted_azure_bluet"), (8, y0, 7, stair(W, "north")), (8, y0, 9, stair(W, "south"))])
+    elif v == 2:    # dining pavilion: table for four, rug, plant
+        rugc(d, 5, 7, 5, 9, y0, "orange")
+        d.dining(7, y0, 8, 2, "x", W, ("n", "s"), sit=False)
+        d.set(9, y0, 6, "potted_bamboo")
+    elif v == 3:    # yoga / music room: mats, a lute (note block), plants
+        rugc(d, 5, 7, 8, 9, y0, "lime")
+        fit(d, [(9, y0, 9, "note_block[instrument=guitar,note=0,powered=false]"), (9, y0, 7, "potted_fern"),
+                (5, y0, 10, "potted_bamboo")])
+    else:           # painter's pavilion: easel, desk and stool
+        rugc(d, 5, 8, 6, 9, y0, "magenta")
+        fit(d, [(7, y0, 7, fence(W)),
+                (7, y0 + 1, 7, "birch_trapdoor[facing=south,half=top,open=true,powered=false,waterlogged=false]"),
+                (8, y0, 9, slab("smooth_quartz", "top")), (8, y0, 8, stair(W, "north")), (9, y0, 9, "potted_bamboo")])
     d.hut(5, y0, 6)
     kitchen(d, [(5, 11, "barrel"), (6, 11, "furnace"), (7, 11, "sink"), (8, 11, "smoker"),
                 (9, 11, "crafting_table")], y0, "north", W, top="smooth_quartz")
@@ -3960,7 +3978,7 @@ def cottage_pavilions_nt(rel, L):
         recolor(d, [("white_concrete", "glass")], (24, 3, 34, 10, 3))
         planter(d, 24, 13, 34, 13, 1)
     if L >= 3:
-        p2 = cottage_nt(rel, 1)
+        p2 = cottage_nt(rel, 1, v=1)
         recolor(p2, [("stripped_birch_log", "stripped_cherry_log"), ("white_concrete", "light_gray_concrete")])
         stamp(d, p2, 26, 15)
     if L >= 4:
@@ -3974,7 +3992,7 @@ def cottage_pavilions_nt(rel, L):
                 (40, 6, 6, "sea_lantern"), (46, 6, 6, "sea_lantern")])
         recolor(d, [("white_concrete", "orange_terracotta")], (37, 3, 49, 11, 2))
         planter(d, 37, 13, 49, 13, 1)
-        p3 = cottage_nt(rel, 3)
+        p3 = cottage_nt(rel, 3, v=2)
         recolor(p3, [("stripped_birch_log", "stripped_mangrove_log")])
         stamp(d, p3, 0, 33)
         for x, z in cells(24, 29, 45, 33):
@@ -3985,8 +4003,8 @@ def cottage_pavilions_nt(rel, L):
         for z in (30, 40, 50):
             lamp_post(d, 21, z, 1, "nt")
     if L >= 5:
-        stamp(d, cottage_nt(rel, 1), 26, 38)
-        p5 = cottage_nt(rel, 1)
+        stamp(d, cottage_nt(rel, 1, v=3), 26, 38)
+        p5 = cottage_nt(rel, 1, v=4)
         recolor(p5, [("stripped_birch_log", "stripped_dark_oak_log"), ("white_concrete", "white_terracotta")])
         stamp(d, p5, 44, 15)
         addon(d, 26, 51, 36, 57, "teahouse", h=3)

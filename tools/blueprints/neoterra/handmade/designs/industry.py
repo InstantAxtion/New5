@@ -2561,18 +2561,20 @@ def sm_oreyard(d, sl):
     for i, bx in enumerate((x1 + 1, x1 + 5)):
         heap(d, bx + 1.5, z2 - 2, 1.8, [ores[i], ores[i], "gravel"])
     rails(d, [(x1 + 2, z) for z in range(z1 - 3, z2 - 3)], "north_south")
-    wh = hall(d, x2 - 5, z1 + 2, x2, z1 + 7, 1, "x", "WEIGH HOUSE")
+    narrow = (x2 - x1) < 10
+    wh = hall(d, x2 - (4 if narrow else 5), z1 + 2, x2, z1 + 7, 1, "x", "WEIGH HOUSE")
     fit(d, wh["rooms"][0], [("t", -1, -1, "lectern", "north"), ("b", 0, -1, "cauldron"), ("t", -1, 0, "barrel"),
                             ("slab", -2, -1, CANDLE), ("lamp", 1, 1)], "smeltery")
     open_shed(d, x1, z2 - 4, x2 - 7, z2, 4, "x", back="south")
     post_sign(d, x1 + 5, z1 - 1, ["ORE YARD"])
-    for x, z in ((x1 + 1, z1 + 1), (x1 + 3, z1 + 1), (x1 + 1, z1 + 3), (x1 + 3, z1 + 3)):   # tipping bin over the rails
+    bx = x1 if narrow else x1 + 1                    # tipping bin straddling the rails
+    for x, z in ((bx, z1 + 1), (bx + 2, z1 + 1), (bx, z1 + 3), (bx + 2, z1 + 3)):
         col(d, x, z, 2, 4, M["post"])
-    d.fill(x1 + 1, 5, z1 + 1, x1 + 3, 5, z1 + 3, M["deck"])
-    for x, z in perim(x1 + 1, z1 + 1, x1 + 3, z1 + 3):
+    d.fill(bx, 5, z1 + 1, bx + 2, 5, z1 + 3, M["deck"])
+    for x, z in perim(bx, z1 + 1, bx + 2, z1 + 3):
         d.set(x, 6, z, M["board"])
         d.set(x, 7, z, M["board"])
-    d.set(x1 + 2, 6, z1 + 2, "raw_iron_block")
+    d.set(bx + 1, 6, z1 + 2, "raw_iron_block")
     d.set(x1 + 2, 4, z1 + 2, "hopper[enabled=true,facing=down]")
 
 

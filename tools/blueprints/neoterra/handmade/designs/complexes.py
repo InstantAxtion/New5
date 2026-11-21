@@ -472,7 +472,7 @@ def skytower_nt(rel, L):
         d.set(12, s + 1, 3, slab("smooth_quartz", "top"))
         for x in range(5, 18):
             d.set(x, s - 1, 3, "light_gray_concrete") if s > 7 else None
-    for x in range(5, 18, 4):
+    for x in (5, 9, 13, 17):                              # canopy downlights over the entrance
         d.set(x, 6, 3, endrod("down"))
     # ---- lobby (y 2..6)
     d.fill(X1 + 1, 1, Z1 + 1, X2 - 1, 1, 13, "polished_diorite")
@@ -589,10 +589,9 @@ def skytower_nt(rel, L):
     for x, z in ((6, 15), (14, 15), (10, PZ + 2)):
         d.set(x, Y + 3, z, endrod("down"))
     # roof terrace
-    for x in range(X1 + 1, X2):
-        if x % 3 == 0:
-            d.set(x, Y, Z1 + 1, "moss_block")
-            d.set(x, Y + 1, Z1 + 1, "azalea")
+    for x in (6, 9, 12, 15, 18):                          # planters along the roof parapet
+        d.set(x, Y, Z1 + 1, "moss_block")
+        d.set(x, Y + 1, Z1 + 1, "azalea")
     if PZ >= 11:
         d.chair(6, Y, PZ - 2, "south", "birch", sit=False)
         d.chair(7, Y, PZ - 2, "south", "birch", sit=False)
@@ -619,8 +618,9 @@ def skytower_nt(rel, L):
     else:
         for x, z in cells(px1 + 1, PZ + 1, px2 - 1, Z2 - 1):
             d.set(x, RY - 1, z, "moss_block" if (x + z) % 4 else "grass_block[snowy=false]")
-            if (x * 3 + z) % 5 == 0:
-                d.set(x, RY, z, "azalea" if x % 2 else "flowering_azalea")
+
+        for x, z in ((6, PZ + 2), (8, 16), (14, PZ + 2), (16, 16), (6, 16), (15, 12)):
+            d.set(x, RY, z, "azalea" if x % 2 else "flowering_azalea")
         tree(d, 11, 14, RY, h=3)
     if L >= 5:
         for x, z in ((X1, Z1), (X2, Z1), (X1, Z2), (X2, Z2)):
@@ -1355,9 +1355,8 @@ def annex_nt(rel, L):
     if L >= 2:
         d.set(10, 1, 5, "cartography_table")
     if L >= 4:
-        for x in range(1, 11, 2):
-            for z in range(1, 11, 3):
-                d.set(x, 7, z, "daylight_detector[inverted=false,power=0]")
+        for x, z in ((1, 1), (3, 1), (5, 1), (7, 1), (9, 1), (1, 4), (3, 4), (5, 4), (7, 4), (9, 4)):
+            d.set(x, 7, z, "daylight_detector[inverted=false,power=0]")
     if L >= 5:
         for x in range(1, 11):
             d.set(x, 4, 0, "cyan_terracotta")

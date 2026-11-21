@@ -3103,8 +3103,15 @@ def _g_cook_hw(d, L):
                          "........l........",
                          ".wte..wte..wte.Z.",
                          "p......UUU......p"], ["Garden", "Room"])
-        tree(d, 23, 25)
-        bench(d, 21, 27, "north", 2)
+        for x in (5, 14, 31, 40):                                    # orchard along the back of the site
+            tree(d, x, 45)
+        tree(d, 48, 34)
+        tree(d, 22, 47)
+        tree(d, 48, 46)
+        lamp_post(d, 10, 44)
+        lamp_post(d, 26, 44)
+        bench(d, 19, 44, "north", 3)
+        bench(d, 35, 44, "north", 3)
 
 
 @growth("cook", "Cascadia")
@@ -3171,8 +3178,12 @@ def _g_cook_cas(d, L):
                          "..rrrrrrrrrrrrr..",
                          ".................",
                          "wte.wte.kYk.wte.p"], ["Dance", "Barn"])
-        spruce_tree(d, 44, 6)
-        bench(d, 26, 21, "north", 3)
+        for x in (6, 16, 30, 40):
+            spruce_tree(d, x, 40)
+        spruce_tree(d, 50, 30)
+        lamp_post(d, 11, 38)
+        lamp_post(d, 35, 38)
+        bench(d, 22, 38, "north", 3)
 
 
 @growth("cook", "Neoterra")
@@ -3242,4 +3253,11 @@ def _g_cook_neo(d, L):
                          ".................",
                          "p.kk..Z...Z..kk.p"], ["ORBIT", "HOTEL"],
              roofitems=SOLAR + GREEN([9, 11, 13, 15], 8))
-        tree(d, 23, 33, "birch")
+        for x in (6, 16, 30, 40):
+            tree(d, x, 39, "birch")
+        tree(d, 46, 28, "birch")
+        tree(d, 25, 41, "birch")
+        tree(d, 46, 40, "birch")
+        lamp_post(d, 11, 37)
+        lamp_post(d, 35, 37)
+        bench(d, 21, 37, "north", 3)
