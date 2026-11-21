@@ -768,3 +768,8 @@ def sch_hearthwood(rel, L):
         d.set(44, 1, 32, "gravel")
         lamp_post(d, 41, 31)
     return d
+
+
+@design("school")
+def school_v2(pack, rel, L):
+    return common_materials({"Hearthwood": sch_hearthwood}[pack](rel, L))

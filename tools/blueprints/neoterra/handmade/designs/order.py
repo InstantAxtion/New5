@@ -3472,13 +3472,21 @@ def al_cascadia(rel, L):
                    (5, 7, SL("spruce", "top"), POT.replace("FACE", "south"))])
     # ---- growth: a forest herb farm
     if L >= 2:                                                    # root cellar & seed store
-        building(d, 3, 15, 10, 20, nf=1, axis="x", doors=(("north", 6),))
+        b = building(d, 3, 15, 10, 20, nf=1, axis="x", doors=(("north", 6),))
+        room(d, b, 0, ["KK   K", "      ", "m    H", "K mKhH"], lights=[(3, 1)])      # root cellar & seed store
         lamp_post(d, 12, 15)
     if L >= 3:                                                    # tincture workshop with a loft
-        building(d, 18, 15, 26, 21, nf=2, axis="z", doors=(("north", 22),), chimney=(27, 18))
+        b = building(d, 18, 15, 26, 21, nf=2, axis="z", doors=(("north", 22),), chimney=(27, 18))
+        room(d, b, 0, ["VpV   W", "       ", "   == C", "    s K", "     mc"], lights=[(3, 2)])   # tincture bench
+        room(d, b, 1, ["KK m KK", "H     H", "      c", "       ", "      K"], lights=[(3, 1)])   # bottle store
+        wlamp(d, 21, 4, 14)
         cart(d, 13, 18, "z")
     if L >= 4:                                                    # bunk cabin for the pickers
-        building(d, 3, 24, 13, 31, nf=2, axis="x", doors=(("north", 8),), chimney=(14, 27))
+        b = building(d, 3, 24, 13, 31, nf=2, axis="x", doors=(("north", 8),), chimney=(14, 27))
+        room(d, b, 0, ["MFW=   $K", "         ", "  nnnn   ", "  TTTT  k", "  ssss  K", "      h c"],
+             lights=[(4, 2)])                                                                 # pickers' cookroom
+        room(d, b, 1, ["1l1l1C1l1", "2 2 2 2 2", "c       c", "        K", "      4 4", "      3l3"],
+             lights=[(4, 2)])                                                                 # pickers' bunks
         for x in range(3, 14):
             d.set(x, 1, 23, "spruce_planks")
             d.set(x, 1, 22, "spruce_planks")
@@ -3488,7 +3496,13 @@ def al_cascadia(rel, L):
             for y in (2, 3, 4):
                 d.set(x, y, 22, LOG("spruce_log"))
     if L >= 5:                                                    # trading post for remedies
-        building(d, 17, 25, 30, 32, nf=2, axis="x", doors=(("north", 23), ("west", 29)), chimney=(31, 29))
+        b = building(d, 17, 25, 30, 32, nf=2, axis="x", doors=(("north", 23), ("west", 29)), chimney=(31, 29))
+        room(d, b, 0, ["KKmK    pBBC", "            ", "  ===  ===  ", "            ", "   s    s  K",
+                       "      HmK  c"], lights=[(3, 2), (8, 2)])                              # trading post shop
+        room(d, b, 1, ["BC f    f CB", "   t    t   ", "  sss  sss  ", "            ", "      r  r  ",
+                       "      PP  KK"], lights=[(3, 2), (8, 2)])                              # traders' lounge
+        wlamp(d, 22, 4, 24)
+        wlamp(d, 24, 4, 24)
         for z in range(3, 33, 6):
             tree(d, 34, 2, z, "spruce_log", "spruce_leaves", 7, 2, cone=True)
     return d
@@ -3606,17 +3620,49 @@ def al_neoterra(rel, L):
             d.set(30, 2, z, "smooth_quartz")
             d.set(30, 3, z, "potted_allium")
     if L >= 3:                                                    # research labs
-        building(d, 20, 15, 34, 25, nf=2, roof="flat", doors=(("north", 26), ("west", 20)))
+        b = building(d, 20, 15, 34, 25, nf=2, roof="flat", doors=(("north", 26), ("west", 20)))
+        room(d, b, 0, ["VpVpV   VpVpV", "             ", "  =V=V=  =V=V", "             ", "            W",
+                       "  =V=V=  =V=C", "             ", "            c", "      PP  KKu"],
+             lights=[(3, 2), (9, 2), (3, 5), (9, 5)])                                         # R&D lab
+        room(d, b, 1, ["xC t  t  t Cx", "   s  s  s   ", "             ", "  fff   VVV  ", "             ",
+                       "W     ===   c", "             ", "      g    g ", "      PPP  PP"],
+             lights=[(3, 3), (9, 3), (6, 6)])                                                 # analysis lab
+        wlamp(d, 25, 4, 14)
+        wlamp(d, 27, 4, 14)
         d.sign(31, 5, 14, "north", ["", "R&D LABS"], "birch", glow=True, color="lime")
         bench(d, 22, 13, "north", 2)
     if L >= 4:                                                    # compounding plant
-        building(d, 2, 17, 16, 27, nf=2, roof="flat", doors=(("north", 9), ("east", 22)))
+        b = building(d, 2, 17, 16, 27, nf=2, roof="flat", doors=(("north", 9), ("east", 22)))
+        room(d, b, 0, ["XOGu      WWW", "             ", "  KK  KK  KK ", "             ", "  KK  KK  KK ",
+                       "             ", "  ===  ===  c", "             ", "      mmm  mm"],
+             lights=[(3, 3), (9, 3), (6, 6)])                                                 # compounding floor
+        room(d, b, 1, ["KKmKK  KKmKK ", "             ", "c  KK  KK  KK", "             ", "m  KK  KK  KK",
+                       "             ", "             ", "      mm  KKc", "      mmmm  m"],
+             lights=[(3, 3), (9, 3)])                                                         # stock room
+        wlamp(d, 8, 4, 16)
+        wlamp(d, 10, 4, 16)
         for x in range(3, 16, 4):
             d.set(x, 1, 15, "moss_block")
             d.set(x, 2, 15, "azalea")
     if L >= 5:                                                    # teaching pharmacy and staff residence
-        building(d, 2, 29, 20, 37, nf=3, roof="flat", doors=(("north", 11), ("east", 33)))
-        building(d, 24, 28, 38, 37, nf=2, roof="flat", doors=(("north", 31),))
+        b = building(d, 2, 29, 20, 37, nf=3, roof="flat", doors=(("north", 11), ("east", 33)))
+        room(d, b, 0, ["P N         N  jP", "  t         t    ", " sss       sss   ", "                 ",
+                       "     nn  nn     C", "     TT  TT     c", "      ss  ss    K"],
+             lights=[(3, 2), (12, 2), (8, 4)])                                                # staff lounge
+        room(d, b, 1, ["xC t   t   t  Cx", "   s   s   s     ", "                 ", "     nnnn        ",
+                       "C    TTTT       C", "      ssss      K", "      PP     ggg "],
+             lights=[(4, 2), (11, 2)])                                                        # pharmacists' offices
+        room(d, b, 2, ["1l1l1C1l1l1C1l1l1", "2 2 2 2 2 2 2 2 2", "c               c", "                K",
+                       "      4 4 4 4 4  ", "      3l3l3l3l3  ", "      PPP  PPP   "], lights=[(4, 2), (11, 2)])
+        wlamp(d, 10, 4, 28)
+        wlamp(d, 12, 4, 28)
+        b = building(d, 24, 28, 38, 37, nf=2, roof="flat", doors=(("north", 31),))
+        room(d, b, 0, ["C  V=V V=V  C", "             ", " =V=  =V=  W ", " sss  sss    ", " =V=  =V=    ",
+                       " sss  sss    ", "            c", "      PP  KKu"], lights=[(3, 2), (9, 2), (6, 5)])   # teaching lab
+        room(d, b, 1, ["BBBB  z  BBBB", "             ", "  nnn   nnn  ", "  TTT   TTT  ", "  sss   sss  ",
+                       "B           B", "      gg   gg", "      PPP    "], lights=[(3, 3), (9, 3)])           # study library
+        wlamp(d, 30, 4, 27)
+        wlamp(d, 32, 4, 27)
     return d
 
 
