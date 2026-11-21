@@ -2354,6 +2354,23 @@ CANDLE = "candle[candles=3,lit=false,waterlogged=false]"
 DPOT = "decorated_pot[cracked=false,facing=north,waterlogged=false]"
 CHAIN = "chain[axis=y,waterlogged=false]"
 
+LANDING = {   # furniture group for the front-west corner of an upper hall floor, next to the stair landing
+    "office": [("t", 6, 0, "chest", "south"), ("slab", 7, 0, CANDLE), ("t", 8, 0, "chest", "south"), ("t", 9, 0, "plant"),
+               ("desk", 6, 2, "south"), ("desk", 8, 2, "south"), ("lamp", 7, 2)],
+    "store": [("rack2", 6, 0, "south"), ("rack2", 7, 0, "south"), ("rack2", 8, 0, "south"), ("t", 9, 0, "barrel"),
+              ("t", 6, 2, "barrel"), ("t", 7, 2, "barrel"), ("lamp", 8, 2)],
+    "library": [("bs", 6, 0), ("t", 7, 0, "book", "south"), ("bs", 8, 0), ("table", 7, 2), ("chair", 6, 2, "west"),
+                ("chair", 8, 2, "east"), ("lamp", 7, 2)],
+    "work": [("t", 6, 0, "craft"), ("slab", 7, 0, CANDLE), ("slab", 8, 0), ("t", 9, 0, "barrel"), ("slab", 7, 2),
+             ("chair", 7, 3, "south"), ("lamp", 7, 2)],
+}
+
+
+def landing(d, rooms, kinds, base):
+    for rm, k in zip(rooms, kinds):
+        fit(d, rm, LANDING[k], base)
+
+
 
 def open_shed(d, x1, z1, x2, z2, h=4, axis="x", back=None, step=4, floor=None, sides=()):
     """Open-sided pole shed (posts, beams, pack roof) - optional closed back/sides. Returns roof top y."""
@@ -2570,6 +2587,7 @@ def bs_ironworks(d, sl):
     x1, z1, x2, z2, s, ax = sl
     info = hall(d, x1, z1, x2, z2, 4, ax, "IRONWORKS")
     g, m, u, t = info["rooms"]
+    landing(d, (m, u, t), ("office", "store", "library"), "blacksmith")
     fx1, fz1, fx2, fz2, y = g[:5]
     frame = {"Hearthwood": "bricks", "Cascadia": "cobblestone", "Neoterra": "polished_blackstone_bricks"}[d.pack]
     for fx in range(fx1 + 4, fx2 - 1, 5):           # forges every 5 cells along the back wall
@@ -2741,6 +2759,7 @@ def sm_foundry(d, sl):
     x1, z1, x2, z2, s, ax = sl
     info = hall(d, x1, z1, x2, z2, 4, ax, "FOUNDRY")
     g, m, u, t = info["rooms"]
+    landing(d, (m, u, t), ("work", "store", "office"), "smeltery")
     # moulding floor: furnace bank on the back wall, sand moulding boxes in two rows, ladle cauldrons, coke store
     fit(d, g, [("t", -1, -1, "furnace", "north"), ("t", -2, -1, "furnace", "north"), ("t", -3, -1, "furnace", "north"),
                ("b", -4, -1, "coal_block", "coal_block"), ("t", -5, -1, "furnace", "north"), ("t", -6, -1, "furnace", "north"),
@@ -2881,6 +2900,7 @@ def ss_works(d, sl):
     x1, z1, x2, z2, s, ax = sl
     info = hall(d, x1, z1, x2, z2, 4, ax, "POTTERY WORKS")
     g, m, u, t = info["rooms"]
+    landing(d, (m, u, t), ("work", "store", "office"), "stonesmeltery")
     fen = MAT[d.pack]["fence"]
     wheel = "smooth_stone_slab[type=bottom,waterlogged=false]"
     # throwing room: a row of wheels with stools, clay bins and the pug bench on the back wall, ware boards
@@ -3012,6 +3032,7 @@ def mc_machinehall(d, sl):
     x1, z1, x2, z2, s, ax = sl
     info = hall(d, x1, z1, x2, z2, 4, ax, "MACHINE HALL")
     g, m, u, t = info["rooms"]
+    landing(d, (m, u, t), ("work", "store", "office"), "mechanic")
     fx1, fz1, fx2, fz2, y = g[:5]
     zc = (fz1 + fz2) // 2
     for x in range(fx1 + 4, fx2 + 1):                # crane girder across the hall
@@ -3175,6 +3196,7 @@ def sn_lodge(d, sl):
     x1, z1, x2, z2, s, ax = sl
     info = hall(d, x1, z1, x2, z2, 4, ax, "MASONS' LODGE")
     g, m, u, t = info["rooms"]
+    landing(d, (m, u, t), ("office", "library", "office"), "stonemason")
     # carving hall: bankers (work stones) in a row with blocks being dressed, saws on the back wall
     fit(d, g, [("t", -1, -1, "cutter", "north"), ("b", -2, -1, "stone_bricks"), ("t", -3, -1, "cutter", "north"),
                ("t", -4, -1, "grind", "north"), ("b", -5, -1, "chiseled_stone_bricks", "stone_brick_slab[type=bottom,waterlogged=false]"),
@@ -3365,6 +3387,7 @@ def cr_plant(d, sl):
     x1, z1, x2, z2, s, ax = sl
     info = hall(d, x1, z1, x2, z2, 4, ax, "CRUSHING PLANT")
     g, m, u, t = info["rooms"]
+    landing(d, (m, u, t), ("work", "store", "store"), "crusher")
     jaw = [("b", -5, 3, "piston[extended=false,facing=east]"), ("b", -4, 3, "gravel", "hopper[enabled=true,facing=down]"),
            ("b", -3, 3, "sticky_piston[extended=false,facing=west]"),
            ("b", -10, 3, "piston[extended=false,facing=east]"), ("b", -9, 3, "gravel", "hopper[enabled=true,facing=down]"),
@@ -3503,6 +3526,7 @@ def sf_screen(d, sl):
     x1, z1, x2, z2, s, ax = sl
     info = hall(d, x1, z1, x2, z2, 4, ax, "SCREENING")
     g, m, u, t = info["rooms"]
+    landing(d, (m, u, t), ("work", "store", "office"), "sifter")
     trap = "iron_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]"
     # lower screen deck: a long run of screens over hoppers, sieves and wash tubs
     deck1 = [("b", x, 3, "hopper[enabled=true,facing=down]", trap) for x in (-3, -4, -5, -6, -8, -9, -10, -11)]

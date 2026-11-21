@@ -556,6 +556,52 @@ def put_all(d, y, items):
                 d.set(x, y + 1, z, it[3])
 
 
+def well(d, cx, cz, rim="stone_bricks", post="dark_oak_fence", roof="dark_oak"):
+    """Village well centred on (cx, cz): 3x3 rim round a water cell, four posts, a slab roof and a bucket chain."""
+    for x in range(cx - 1, cx + 2):
+        for z in range(cz - 1, cz + 2):
+            if (x, z) == (cx, cz):
+                d.set(x, 1, z, "water[level=0]")
+                continue
+            d.set(x, 2, z, rim)
+            if abs(x - cx) == 1 and abs(z - cz) == 1:
+                d.set(x, 3, z, post)
+                d.set(x, 4, z, post)
+            d.set(x, 5, z, SL(roof))
+    d.set(cx, 5, cz, f"{roof}_planks")
+    d.set(cx, 4, cz, "chain[axis=y,waterlogged=false]")
+    d.set(cx, 3, cz, LANT)
+
+
+def water_tower(d, x1, z1, h=5, log="stripped_spruce_log", wood="spruce"):
+    """Camp water tower on a 3x3 footprint at x1/z1: corner legs h high, a plank deck, a log-staved tank with
+    water inside and a slab cap."""
+    yd = 2 + h
+    for x in range(x1, x1 + 3):
+        for z in range(z1, z1 + 3):
+            corner = x in (x1, x1 + 2) and z in (z1, z1 + 2)
+            if corner:
+                for y in range(2, yd):
+                    d.set(x, y, z, LOG(f"{wood}_log"))
+            d.set(x, yd, z, f"{wood}_planks")
+            for y in (yd + 1, yd + 2, yd + 3):
+                d.set(x, y, z, "water[level=0]" if (x, z) == (x1 + 1, z1 + 1) and y < yd + 3 else LOG(log))
+            d.set(x, yd + 4, z, SL(wood))
+    d.set(x1 + 1, yd + 3, z1 + 1, AIR)
+
+
+def woodpile(d, x1, z1, x2, z2, h, roof="spruce"):
+    """Stacked firewood (spruce and birch rounds, end grain out) on x1..x2/z1..z2, h high from y=2, under a slab
+    roof (roof=None: open)."""
+    ax = "z" if x2 - x1 >= z2 - z1 else "x"
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            for y in range(2, 2 + h):
+                d.set(x, y, z, LOG("spruce_log" if (x + y + z) % 3 else "birch_log", ax))
+            if roof:
+                d.set(x, 2 + h, z, SL(roof))
+
+
 def solar(d, b, x1, x2, rows):
     """Rooftop solar array on flat-roofed building b: panels (daylight detectors on raised slab frames) in the
     hand-chosen rows, from x1 to x2, with walkways between the rows."""
@@ -1245,7 +1291,7 @@ def gt_neoterra(rel, L):
     # ---- growth: a security campus
     if L >= 2:                                                    # vehicle bay / checkpoint
         b = building(d, 23, 3, 33, 10, nf=1, roof="flat", doors=(("north", 26), ("west", 7)))
-        solar(d, b, 25, 31, (5, 7))
+        solar(d, b, 25, 31, (5, 7, 9))
         room(d, b, 0, ["XY       ",           # vehicle bay: a patrol rover parked inside the roller door,
                        "O   qqq  ",           # tool benches on the west wall, spares at the back
                        "G   qqq k",
@@ -1393,10 +1439,9 @@ def ar_hearthwood(rel, L):
     for x in range(x1 + 2, X2 - 1, 3):
         if abs(x - door) > 1:
             d.window(x, 3, z1, x, 4, z1)
-    for x in range(x1 + 1, X2, 2):
-        if x % 4 == 1:
-            d.window(x, 8, z1, x, 9, z1)
-            d.window(x, 8, z2, x, 9, z2)
+    for x in range(x1 + 2, X2 - 1, 4):                            # bunk-room windows front and back
+        d.window(x, 8, z1, x, 9, z1)
+        d.window(x, 8, z2, x, 9, z2)
     d.window(x1, 3, 6, x1, 4, 6)
     d.window(X2, 3, 6, X2, 4, 6)
     d.window(x1, 8, 6, x1, 9, 6)
@@ -1441,6 +1486,29 @@ def ar_hearthwood(rel, L):
     if X2 >= 21:
         front += [(19, 2, KEG.replace("FACE", "north"), "potted_red_tulip"), (20, 2, "dark_oak_fence", LANT_S)]
     put_all(d, 2, front)
+    if L >= 2:                                                    # cottage flower border along the street
+        flowerbed(d, 11, 1, 17, 1)
+    if L >= 2:                                                    # window boxes under the bunk-room windows
+        for x in range(x1 + 2, X2 - 1, 4):
+            fbox(d, x, 7, z1 - 1, "north", FLOWERS[x % 8])
+            fbox(d, x, 7, z2 + 1, "south", FLOWERS[(x + 3) % 8])
+    if L >= 5:                                                    # wildflower strip behind the berm
+        flowerbed(d, 3, 31, 23, 31)
+    if L >= 5:                                                    # rose pergola walk along the range hedge
+        for z in range(11, 28):
+            d.set(1, 5, z, LOG("stripped_dark_oak_log", "z"))
+            if (z - 11) % 4 == 0:
+                for y in (2, 3, 4):
+                    d.set(1, y, z, LOG("stripped_dark_oak_log"))
+            elif z % 2:
+                d.set(1, 6, z, "flowering_azalea_leaves[distance=1,persistent=true,waterlogged=false]")
+            d.set(0, 1, z, "grass_block[snowy=false]")
+            d.set(0, 2, z, ["rose_bush[half=lower]", "peony[half=lower]", "lilac[half=lower]"][z % 3])
+            d.set(0, 3, z, ["rose_bush[half=upper]", "peony[half=upper]", "lilac[half=upper]"][z % 3])
+        for z in (13, 21):
+            bench(d, 1, z, "west", 2) if False else None
+            d.chair(1, 2, z, "west", "dark_oak", sit=False)
+            d.chair(1, 2, z + 1, "west", "dark_oak", sit=False)
     # stair up along the back wall
     flight(d, x1 + 1, 2, z2 - 1, "east", 4, "dark_oak", "dark_oak_planks")
     for x in range(x1 + 2, x1 + 5):
@@ -1729,6 +1797,12 @@ def ar_cascadia(rel, L):
     put_all(d, 2, [(3, 4, KEG.replace("FACE", "north"), KEG.replace("FACE", "up")), (8, 4, SL("spruce", "top"), "potted_fern"), (9, 8, CHISEL.replace("FACE", "west")),
                    (9, 10, "hay_block[axis=y]", "target[power=0]"), (8, 12, SL("spruce", "top"), POT.replace("FACE", "north"))])
     # ---- growth: a hunting camp round the range
+    if L >= 2:                                                    # winter firewood behind the lodge
+        woodpile(d, 3, 18, 9, 19, 3)
+    if L >= 3:                                                    # smokehouse fuel: oak-free spruce and birch
+        woodpile(d, 31, 15, 32, 19, 3)
+        woodpile(d, 42, 15, 42, 16, 3)
+        woodpile(d, 42, 18, 42, 19, 3)
     if L >= 2:                                                    # outfitter's cabin (L3: loft with bunks)
         b = building(d, 33, 3, 42, 10, nf=1 if L == 2 else 2, axis="x", doors=(("north", 37), ("west", 7)),
                      chimney=(43, 7))
@@ -1824,9 +1898,19 @@ def ar_cascadia(rel, L):
              lights=[(2, 2), (6, 2)])
         wlamp(d, 37, 4, 23)
         wlamp(d, 39, 4, 23)
-        for z in range(24, 29):                                   # firewood stacked against the lodge
+        woodpile(d, 30, 24, 31, 28, 3)                            # firewood stacked against the lodge
+        woodpile(d, 3, 38, 16, 38, 3)                             # and behind the lodge hall and the guest cabin
+        woodpile(d, 19, 30, 20, 36, 3)
+        woodpile(d, 44, 29, 45, 31, 3)
+        woodpile(d, 33, 34, 36, 34, 3)
+        for x in range(21, 30):                                   # guest cabin porch: rail, posts, shed roof
+            d.set(x, 1, 28, "spruce_planks")
+            d.set(x, 5, 28, SL("spruce", "top"))
+            d.set(x, 2, 27, "spruce_fence" if x not in (24, 25, 26) else AIR)
+            d.set(x, 5, 27, ST("spruce", "south"))
+        for x in (21, 29):
             for y in (2, 3, 4):
-                d.set(31, y, z, LOG("spruce_log" if (y + z) % 2 else "birch_log", "z"))
+                d.set(x, y, 27, LOG("spruce_log"))
         lamp_post(d, 31, 22)
         lamp_post(d, 31, 31)
         for x in range(18, 45):
@@ -2088,6 +2172,14 @@ def ar_neoterra(rel, L):
         for x in range(fx1, fx2, 6):
             for y in range(2, 7):
                 d.set(x, y, fz1 - 1, "light_gray_concrete")
+        for z in (14, 18, 22, 26):                                # solar strips between the range-hall skylights
+            for x in range(5, 20):
+                d.set(x, 9, z, "smooth_stone_slab[type=top,waterlogged=false]")
+                d.set(x, 10, z, "daylight_detector[inverted=false,power=0]")
+        for z in (4, 6, 8):                                       # and on the pro shop roof
+            for x in range(27, 36):
+                d.set(x, 12, z, "smooth_stone_slab[type=top,waterlogged=false]")
+                d.set(x, 13, z, "daylight_detector[inverted=false,power=0]")
         b = building(d, 2, 33, 14, 44, nf=4, roof="flat", doors=(("north", 8), ("east", 38)))
         solar(d, b, 4, 12, (35, 37, 39, 41))
         room(d, b, 0, ["MFW==  KKuc", "           ", " nnn   nnn ", " TTT   TTT ", " sss   sss ", "           ",
@@ -2295,6 +2387,7 @@ def ca_hearthwood(rel, L):
         d.set(30, 2, 18, "anvil[facing=north]")
         d.set(30, 2, 19, "water_cauldron[level=3]") if False else None
         d.sign(34, 4, 17, "north", ["Armourer"], "dark_oak")
+        woodpile(d, 29, 20, 30, 23, 2, "dark_oak")                # charcoal wood for the forge
         lamp_post(d, 30, 16)
         lamp_post(d, 43, 16)
         bench(d, 37, 16, "north", 3)
@@ -2320,6 +2413,12 @@ def ca_hearthwood(rel, L):
         wlamp(d, 10, 4, 26)
         flowerbed(d, 3, 25, 6, 26)
         flowerbed(d, 12, 25, 15, 26)
+        well(d, 22, 25)                                           # well and flower border by the masters' house
+        flowerbed(d, 25, 24, 28, 26)
+        flowerbed(d, 19, 27, 27, 27)
+        lamp_post(d, 19, 24)
+        bench(d, 24, 23, "north", 2)
+        woodpile(d, 19, 31, 19, 32, 2, "dark_oak")
         put_all(d, 2, [(1, 28, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")), (1, 30, "dark_oak_fence", LANT_S),
                        (1, 33, "composter[level=4]"), (1, 35, "water_cauldron[level=3]"), (4, 37, ST("dark_oak", "south")),
                        (5, 37, ST("dark_oak", "south")), (10, 37, KEG.replace("FACE", "south")), (14, 37, "potted_red_tulip"),
@@ -2551,6 +2650,8 @@ def ca_cascadia(rel, L):
         for z in range(14, 22):                                   # sauna woodpile
             for y in (2, 3, 4):
                 d.set(41, y, z, LOG("birch_log" if (y + z) % 2 else "spruce_log", "z"))
+        woodpile(d, 38, 19, 40, 21, 3)                            # cook shack firewood, roofed
+        woodpile(d, 42, 14, 42, 17, 3)
     if L >= 4:                                                    # timbersports yard: chopping blocks, log toss
         for x in range(2, 21):                                    # log-rolling logs and a judges' stand
             d.set(x, 2, 32, LOG("stripped_spruce_log", "x"))
@@ -2563,6 +2664,10 @@ def ca_cascadia(rel, L):
         for x in range(2, 21):
             for z in (28, 34):
                 d.set(x, 2, z, "spruce_fence")
+        woodpile(d, 2, 33, 20, 33, 3)                             # competition rounds stacked along the yard
+        woodpile(d, 0, 26, 1, 33, 2, None)
+        woodpile(d, 44, 25, 45, 28, 3)
+        woodpile(d, 44, 31, 44, 33, 2)
         b = building(d, 23, 24, 42, 34, nf=2, axis="x", doors=(("north", 29), ("west", 29)), chimney=(43, 29))
         put_all(d, 2, [(25, 35, KEG.replace("FACE", "south"), KEG.replace("FACE", "up")), (27, 35, "spruce_log[axis=y]", "spruce_fence"),
                        (22, 26, "spruce_fence", LANT_S),
@@ -2620,6 +2725,14 @@ def ca_cascadia(rel, L):
         wlamp(d, 31, 4, 35)
         for z in range(3, 44, 5):
             tree(d, 43, 2, z, "dark_oak_log", "spruce_leaves", 7, 2, cone=True)
+        water_tower(d, 39, 39)                                    # camp water tower, lumber and the lodge's firewood
+        woodpile(d, 39, 43, 42, 44, 2)
+        woodpile(d, 0, 36, 0, 43, 3)
+        woodpile(d, 38, 36, 42, 37, 4)
+        woodpile(d, 23, 44, 37, 44, 2)
+        for x in range(26, 44):                                   # split-rail fence along the street, gap at the path
+            if x not in (27, 28):
+                d.set(x, 2, 1, LOG("spruce_log") if x % 4 == 2 else "spruce_fence")
         for x in (8, 14):                                         # log gate arch to the timbersports yard
             for y in range(2, 7):
                 d.set(x, y, 27, LOG("spruce_log"))
@@ -3587,6 +3700,21 @@ def al_hearthwood(rel, L):
              lights=[(3, 2), (3, 5)])                                                         # assay laboratory
         for x in (36, 38):
             tree(d, x, 2, 34, "oak_log", "flowering_azalea_leaves", 3, 1)
+    if L >= 4:                                                    # physic garden: herb beds (L5: box hedge, sundial)
+        flowerbed(d, 3, 24, 7, 25)
+        flowerbed(d, 9, 24, 13, 25)
+    if L >= 5:
+        flowerbed(d, 3, 28, 7, 29)
+        flowerbed(d, 9, 28, 13, 29)
+        for x in range(2, 15):
+            for z in range(22, 32):
+                if (x in (2, 14) or z in (22, 31)) and x != 8:
+                    d.set(x, 2, z, "oak_leaves[distance=1,persistent=true,waterlogged=false]")
+        d.set(8, 2, 27, "chiseled_stone_bricks")
+        d.set(8, 3, 27, "stone_brick_slab[type=bottom,waterlogged=false]")
+        for z in (26, 27):
+            d.chair(3, 2, z, "west", "dark_oak", sit=False)
+            d.chair(13, 2, z, "east", "dark_oak", sit=False)
     return d
 
 
@@ -3727,6 +3855,12 @@ def al_cascadia(rel, L):
         wlamp(d, 24, 4, 24)
         for z in range(3, 33, 6):
             tree(d, 34, 2, z, "spruce_log", "spruce_leaves", 7, 2, cone=True)
+        for x in range(27, 33):                                   # fenced herb patch beside the trading post
+            for z in range(16, 22):
+                if x in (27, 32) or z in (16, 21):
+                    d.set(x, 2, z, "spruce_fence")
+        d.set(27, 2, 18, "spruce_fence_gate[facing=west,in_wall=false,open=false,powered=false]")
+        flowerbed(d, 28, 17, 31, 20)
     return d
 
 
