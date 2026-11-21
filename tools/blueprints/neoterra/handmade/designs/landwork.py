@@ -249,7 +249,8 @@ def bld(d, x1, z1, x2, z2, floors=1, fh=4, roof="gable", axis="x", doors=(), win
         x, z, side = dd[:3]
         k = dd[3] if len(dd) > 3 else 0
         dpos.append((x, z, side, k))
-    # windows with sills / shutters / boxes
+    # window openings (structural pattern); dressing is hand-placed per building
+    wins = []
     sides = {"n": [(x, z1) for x in range(x1 + 2, x2 - 1)], "s": [(x, z2) for x in range(x1 + 2, x2 - 1)],
              "w": [(x1, z) for z in range(z1 + 2, z2 - 1)], "e": [(x2, z) for z in range(z1 + 2, z2 - 1)]}
     for k in range(floors):
@@ -257,50 +258,19 @@ def bld(d, x1, z1, x2, z2, floors=1, fh=4, roof="gable", axis="x", doors=(), win
         for side, cells in sides.items():
             if side in blind:
                 continue
-            out = D4[SIDES[side]]
-            for i, (x, z) in enumerate(cells):
+            for x, z in cells:
                 p = x if side in "ns" else z
-                if (p - (x1 + 2 if side in "ns" else z1 + 2)) % win != (win // 2 if not ribbon else 0) and not ribbon:
+                if not ribbon and (p - (x1 + 2 if side in "ns" else z1 + 2)) % win != win // 2:
                     continue
-                if any(abs((x if side in "ns" else z) - (dx if side in "ns" else dz)) <= 1 and ds == side and dk == k
-                       for dx, dz, ds, dk in dpos):
+                if ribbon and p % 4 == 0:
+                    continue
+                if any(abs(p - (dx if side in "ns" else dz)) <= 1 and ds == side and dk == k for dx, dz, ds, dk in dpos):
                     continue
                 if (x, z) in nowin or (x, z, k) in nowin:
                     continue
-                if ribbon and pack == "Neoterra" and p % 4 == 0:
-                    continue
-                ys = range(yb + 1, yb + fh - 1)
-                for y in ys:
+                for y in range(yb + 1, yb + fh - 1):
                     d.set(x, y, z, glass)
-                if not deco:
-                    continue
-                ox, oz = x + out[0], z + out[1]
-                ylo, yhi = yb + 1, yb + fh - 2
-                if not d.bp.inside(ox, ylo, oz):
-                    continue
-                if pack == "Hearthwood":
-                    d.set(ox, ylo - 1, oz, trap(S["frame"].replace("stripped_", "").replace("_log", ""), SIDES[side], "top", False))
-                    d.set(ox, ylo, oz, S["flowers"][(x + z) % 4])
-                    if not ribbon:
-                        sx, sz = (1, 0) if side in "ns" else (0, 1)
-                        for s in (-1, 1):
-                            for y in range(ylo, yhi + 1):
-                                c = (ox + sx * s, y, oz + sz * s)
-                                if d.bp.inside(*c) and d.air(*c):
-                                    d.set(*c, trap(S["shutter"], OPP[SIDES[side]], "bottom", True))
-                elif pack == "Cascadia":
-                    sx, sz = (1, 0) if side in "ns" else (0, 1)
-                    for s in (-1, 1):
-                        for y in range(ylo, yhi + 1):
-                            c = (ox + sx * s, y, oz + sz * s)
-                            if d.bp.inside(*c) and d.air(*c):
-                                d.set(*c, trap(S["shutter"], OPP[SIDES[side]], "bottom", True))
-                    if d.air(x, yhi + 1, z) is False:
-                        d.set(x, yhi + 1, z, logb(S["batten"], "x" if side in "ns" else "z"))
-                    if k > 0:
-                        d.set(ox, ylo - 1, oz, "spruce_slab[type=top,waterlogged=false]")
-                else:
-                    d.set(ox, yhi + 1, oz, slab("smooth_quartz", "top"))
+                wins.append((x, yb + 1, z, side))
     for x, z, side, k in dpos:
         y = 2 + k * fh
         d.door(x, y, z, OPP[SIDES[side]], S["doorwood"])
@@ -308,38 +278,11 @@ def bld(d, x1, z1, x2, z2, floors=1, fh=4, roof="gable", axis="x", doors=(), win
         out = D4[SIDES[side]]
         dl.add((x + out[0], y, z + out[1]))
         dl.add((x - out[0], y, z - out[1]))
-        if deco and pack != "Neoterra" and d.bp.inside(x, y + 2, z):
-            d.set(x, y + 2, z, logb(S["post"] if pack == "Cascadia" else S["frame"], "x" if side in "ns" else "z"))
-        if deco and d.bp.inside(x + out[0], y + 2, z + out[1]) and k == 0:
-            if pack == "Neoterra":
-                for s in (-1, 0, 1):
-                    sx, sz = (1, 0) if side in "ns" else (0, 1)
-                    c = (x + out[0] + sx * s, y + 3, z + out[1] + sz * s)
-                    if d.bp.inside(*c) and d.air(*c):
-                        d.set(*c, slab("smooth_quartz", "top"))
-            else:
-                sx, sz = (1, 0) if side in "ns" else (0, 1)
-                c = (x + out[0] + sx, y + 2, z + out[1] + sz)
-                if d.bp.inside(*c) and d.air(*c) and not d.air(x + sx, y + 2, z + sz):
-                    d.set(*c, f"wall_torch[facing={SIDES[side]}]")
-    # ceiling lights
-    if lamps:
-        for k in range(floors):
-            yl = fh + k * fh
-            for x in range(x1 + 2, x2 - 1, 4):
-                for z in range(z1 + 2, z2 - 1, 4):
-                    if pack == "Neoterra":
-                        if not d.air(x, yl + 1, z) or k == floors - 1:
-                            d.set(x, yl + 1, z, "sea_lantern" if k == floors - 1 else "pearlescent_froglight[axis=y]")
-                    elif d.air(x, yl, z):
-                        d.set(x, yl, z, "lantern[hanging=true,waterlogged=false]")
     # roof
     ridge = top
     rm = roofmat or S["roof"]
     if roof == "gable":
         ridge = d.gable(x1, z1, x2, z2, top + 1, axis, f"{rm}_stairs", f"{rm}_slab", S["end"], overhang=overhang)
-        if deco:
-            gable_deco(d, x1, z1, x2, z2, top, ridge, axis, S)
     elif roof == "hip":
         ridge = d.hip(x1, z1, x2, z2, top + 1, f"{rm}_stairs", f"{rm}_slab", overhang=overhang)
     elif roof == "flat":
@@ -365,31 +308,7 @@ def bld(d, x1, z1, x2, z2, floors=1, fh=4, roof="gable", axis="x", doors=(), win
         d.set(cx, ridge + 3, cz, slab("brick" if pack == "Hearthwood" else
                                       ("cobblestone" if pack == "Cascadia" else "smooth_quartz")))
     return R(x1=x1, z1=z1, x2=x2, z2=z2, top=top, ridge=ridge, fh=fh, floors=floors,
-             ys=[2 + k * fh for k in range(floors)])
-
-
-def gable_deco(d, x1, z1, x2, z2, top, ridge, axis, S=None):
-    """Gable ends: timber king post (Hearthwood) / battens (Cascadia), loft window, bargeboard lantern."""
-    pack = d.pack
-    if axis == "x":
-        ends = [(x1, z) for z in range(z1 + 1, z2)], [(x2, z) for z in range(z1 + 1, z2)]
-        mid = (z1 + z2) // 2
-        cells = [(x1, mid), (x2, mid)]
-    else:
-        mid = (x1 + x2) // 2
-        cells = [(mid, z1), (mid, z2)]
-    for cx, cz in cells:
-        for y in range(top + 1, ridge):
-            S = S or STY[pack]
-            if pack == "Hearthwood" and d.get(cx, y, cz).endswith(S["end"]):
-                d.set(cx, y, cz, logb(S["frame"], "y"))
-            if pack == "Cascadia" and d.get(cx, y, cz).endswith(S["end"]):
-                d.set(cx, y, cz, logb(S["batten"], "y"))
-        if ridge - top >= 4:
-            for dd in (-1, 1):
-                ax, az = (cx, cz + dd) if axis == "x" else (cx + dd, cz)
-                if not d.air(ax, top + 2, az) and "stairs" not in d.get(ax, top + 2, az):
-                    d.set(ax, top + 2, az, (S or STY[pack])["glass"])
+             ys=[2 + k * fh for k in range(floors)], wins=wins)
 
 
 # ---- hand-placed rooms ------------------------------------------------------------------------------------------
@@ -536,114 +455,6 @@ def rack_bay(d, r, side, y, u0, n=None, v=0):
         rm.rack(u0 + i, v)
 
 
-def floor_rug(d, r, y, colors=None, inset=2):
-    """Rug on a fixed rectangle: the room minus `inset` cells along every wall."""
-    rm = Rm(d, r, y, "n")
-    rm.rug(inset - 1, inset - 1, rm.W - inset, rm.D - inset, colors or sty(d)["rug"])
-
-
-def lay_kitchen(rm, dining=True):
-    """Counter run on the back wall (range, worktop, sink, worktop, sack) and a dining table in the middle."""
-    for u, (b, top) in enumerate([("smoker[facing={in},lit=true]", None), (SLAB, POT),
-                                  ("water_cauldron[level=3]", None), (SLAB, CANDLE), (BARREL, "white_wool")]):
-        if u < rm.W - 1 and rm.put(u, 0, b) and top:
-            rm.put(u, 0, top, 1)
-    if dining and rm.D >= 5:
-        c = rm.W // 2
-        v = min(3, rm.D - 3)
-        for u in (c - 1, c):
-            if rm.ok(u, v):
-                rm.put(u, v, "{w}_fence")
-                rm.put(u, v, "{w}_pressure_plate[powered=false]", 1)
-                rm.chair(u, v - 1, "back")
-                rm.chair(u, v + 1, "in")
-
-
-def lay_lounge(rm, u0=0):
-    """Fireside corner: two armchairs and a low table on a rug, a bookcase on the back wall."""
-    rm.put(u0, 0, BOOKS)
-    rm.put(u0 + 1, 0, BOOKS)
-    rm.put(u0 + 2, 0, SLAB)
-    rm.put(u0 + 2, 0, "potted_fern", 1)
-    rm.rug(u0, 1, u0 + 2, 3, sty(rm.d)["rug"])
-    rm.chair(u0, 2, "in")
-    rm.chair(u0 + 2, 2, "in")
-    rm.put(u0 + 1, 2, "{w}_slab[type=bottom,waterlogged=false]")
-
-
-def lay_office(rm):
-    """Desk facing the door with a chair behind it, bookcases and a lectern on the back wall, plant by the desk."""
-    c = rm.W // 2
-    rm.put(0, 0, BOOKS)
-    rm.put(1, 0, BOOKS)
-    rm.put(-1, 0, LECTERN)
-    rm.put(c, 2, SLAB)
-    rm.put(c, 2, CANDLE, 1)
-    rm.put(c + 1, 2, SLAB)
-    rm.put(c + 1, 2, "potted_azalea_bush", 1)
-    rm.chair(c, 1, "back")
-    rm.put(-1, 2, "potted_bamboo" if rm.d.pack == "Neoterra" else "potted_fern")
-    rm.rug(c - 1, 3, c + 1, 4, sty(rm.d)["rug"])
-
-
-def lay_bunks(rm, n=3, color=None):
-    """Beds with their heads on the back wall, a nightstand with a candle between each pair, chests at the feet."""
-    u = 0
-    for i in range(n):
-        if u + 1 > rm.W:
-            break
-        rm.bed(u, 0, color)
-        rm.put(u + 1, 0, SLAB)
-        rm.put(u + 1, 0, "candle[candles=1,lit=false,waterlogged=false]", 1)
-        rm.put(u, 3, CHEST)
-        u += 2
-
-
-def lay_store(rm, racks=0, rows=(0,), kinds=(BARREL, "{w}_planks", BARREL)):
-    """Shelving bays: racks first, then barrels stacked two high, on the given back-wall rows."""
-    for v in rows:
-        for u in range(0, rm.W - 1):
-            if racks > 0:
-                if rm.rack(u, v):
-                    racks -= 1
-                continue
-            if rm.put(u, v, kinds[u % len(kinds)]):
-                rm.put(u, v, BARREL if u % 2 else "brown_wool", 1)
-    return racks
-
-
-def lay_workshop(rm, bench):
-    """Work bench run on the back wall (list of states), tool rack lanterns and a stool at a centre table."""
-    for u, b in enumerate(bench):
-        rm.put(u, 0, b)
-    c = rm.W // 2
-    if rm.D >= 5:
-        rm.put(c, 2, SLAB)
-        rm.put(c, 2, LANT, 1)
-        rm.chair(c, 3, "in")
-
-
-def lay_lab(rm):
-    rm.put(0, 0, SLAB)
-    rm.put(0, 0, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]", 1)
-    rm.put(1, 0, "water_cauldron[level=3]")
-    rm.put(2, 0, SLAB)
-    rm.put(2, 0, "potted_cactus", 1)
-    rm.put(3, 0, BOOKS)
-    rm.put(-1, 0, LECTERN)
-    rm.chair(1, 2, "back")
-
-
-def lay_shop(rm, goods=("melon", "pumpkin", BARREL)):
-    """Shop counter across the room with the till, goods on shelves behind it."""
-    for u in range(0, rm.W - 1):
-        rm.put(u, 0, SLAB)
-        rm.put(u, 0, goods[u % len(goods)], 1)
-    for u in range(1, rm.W - 1):
-        rm.put(u, 2, SLAB if u != rm.W - 2 else AIR)
-    rm.put(1, 2, CANDLE, 1)
-
-
 # ---- material economy on levels 1-3 ------------------------------------------------------------------------------
 # Early levels are built from common materials; premium blocks (quartz, blackstone, prismarine, sea lanterns, ...)
 # arrive with the L4-5 upgrades. Only the hut's own construction is converted - the functional cluster keeps its
@@ -693,6 +504,56 @@ def paste_cluster(d, x0, z0):
     d.cluster(x0, z0)
 
 
+# ---- single dressing pieces at coordinates chosen per building -------------------------------------------------
+def _out(side):
+    return D4[SIDES[side]]
+
+
+def wbox(d, x, y, z, side, flower, wood=None):
+    """Flower box under the window whose lower pane is (x, y, z) in wall `side`: trapdoor ledge + potted flower."""
+    assert "pane" in d.get(x, y, z) or "glass" in d.get(x, y, z), f"no window at {(x, y, z)}: {d.get(x, y, z)}"
+    ox, oz = x + _out(side)[0], z + _out(side)[1]
+    d.set(ox, y - 1, oz, trap(wood or sty(d)["shutter"], SIDES[side], "top", False))
+    d.set(ox, y, oz, flower)
+
+
+def shutters(d, x, y, z, side, wood=None, h=2):
+    """Pair of open shutters beside the window whose lower pane is (x, y, z)."""
+    assert "pane" in d.get(x, y, z) or "glass" in d.get(x, y, z), f"no window at {(x, y, z)}: {d.get(x, y, z)}"
+    ox, oz = x + _out(side)[0], z + _out(side)[1]
+    ax, az = (1, 0) if side in "ns" else (0, 1)
+    for sgn in (-1, 1):
+        for yy in range(y, y + h):
+            c = (ox + ax * sgn, yy, oz + az * sgn)
+            if d.air(*c):
+                d.set(*c, trap(wood or sty(d)["shutter"], OPP[SIDES[side]], "bottom", True))
+
+
+def hood(d, x, y, z, side, block="smooth_stone_slab[type=top,waterlogged=false]", w=1):
+    """Sun hood / canopy slab over a window or door at (x, y, z) (y = the row above the opening)."""
+    ox, oz = x + _out(side)[0], z + _out(side)[1]
+    ax, az = (1, 0) if side in "ns" else (0, 1)
+    for k in range(-w, w + 1):
+        c = (ox + ax * k, y, oz + az * k)
+        if d.air(*c):
+            d.set(*c, block)
+
+
+def hang(d, y, pts, kind="lantern"):
+    """Hanging lanterns (or chains + lantern) at the listed (x, z) under a ceiling at y + 1."""
+    for x, z in pts:
+        d.set(x, y, z, f"{kind}[hanging=true,waterlogged=false]")
+
+
+def ceil_light(d, y, pts, block="glowstone"):
+    for x, z in pts:
+        d.set(x, y, z, block)
+
+
+def torch(d, x, y, z, facing):
+    d.set(x, y, z, f"wall_torch[facing={facing}]")
+
+
 def stairs_up(d, x, z, dirn, y0, fh=4, wood=None, rail=True):
     """Straight flight from floor y0 rising fh to the next floor, heading `dirn`; clears the ceiling above."""
     wood = wood or sty(d)["wood"]
@@ -724,18 +585,16 @@ def stairs_up(d, x, z, dirn, y0, fh=4, wood=None, rail=True):
                     break
 
 
-def porch(d, x1, x2, zw, depth=3, side="n", gaps=(), chairs=True, ylevel=6):
-    """Covered porch along the front wall z = zw (side n: out toward -z, s: toward +z): deck, posts, shed roof,
-    railing with gaps at the door x positions, rocking chairs and lanterns."""
+def porch(d, x1, x2, zw, depth=3, side="n", gaps=(), ylevel=6, posts_at=None):
+    """Covered porch along the front wall z = zw (side n: out toward -z, s: toward +z): deck, posts at the x
+    positions given (default: the two ends), shed roof, railing between the posts with gaps at the given x."""
     S = sty(d)
     w = S["wood"] if d.pack != "Neoterra" else "birch"
     sg = -1 if side == "n" else 1
-    zo = zw + sg * depth                                            # outer row
+    zo = zw + sg * depth
     zs = sorted((zw + sg, zo))
     d.fill(x1, 1, zs[0], x2, 1, zs[1], f"{w}_planks")
-    for x in sorted({x1, x2} | set(range(x1, x2 + 1, 4))):
-        if x in gaps:
-            x += 1 if x < x2 else -1
+    for x in (posts_at or (x1, x2)):
         for y in range(2, ylevel):
             d.set(x, y, zo, logb(f"{w}_log" if d.pack != "Neoterra" else "stripped_birch_log", "y"))
     for x in range(x1 - 1, x2 + 2):
@@ -743,15 +602,8 @@ def porch(d, x1, x2, zw, depth=3, side="n", gaps=(), chairs=True, ylevel=6):
         for z in range(zs[0], zs[1] + 1):
             d.set(x, ylevel, z, slab(w))
     for x in range(x1 + 1, x2):
-        if d.air(x, 2, zo) and all(abs(x - g) > 0 for g in gaps):
+        if d.air(x, 2, zo) and x not in gaps:
             d.set(x, 2, zo, S["fence"])
-    if chairs:
-        for x in (x1 + 1, x2 - 1):
-            if d.air(x, 2, zw + sg) and all(abs(x - g) > 1 for g in gaps):
-                d.chair(x, 2, zw + sg, "north" if side == "s" else "south", w, sit=False)
-    for x in range(x1 + 2, x2 - 1, 4):
-        d.set(x, ylevel - 1, zw + sg * (1 + depth // 2) if depth > 1 else zw + sg,
-              "lantern[hanging=true,waterlogged=false]")
 
 
 def glasswall(pack, frame="white_concrete", glass="glass"):

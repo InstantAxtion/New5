@@ -2123,39 +2123,6 @@ POTS = ("potted_red_tulip", "decorated_pot[cracked=false,facing=north,waterlogge
         "candle[candles=3,lit=false,waterlogged=false]", "potted_fern", "potted_azure_bluet")
 
 
-def dress_windows(d, wood):
-    """Shutters beside single windows and sills under upper windows on every sky-facing glass pane."""
-    bp = d.bp
-    names = {(0, -1): "north", (0, 1): "south", (1, 0): "east", (-1, 0): "west"}
-
-    def sky(x, y, z):
-        return bp.inside(x, y, z) and all(bp.get(x, yy, z) == AIR for yy in range(y, bp.sy))
-
-    def pane(x, y, z):
-        return bp.inside(x, y, z) and bp.get(x, y, z).split("[")[0].endswith("glass_pane")
-    todo = []
-    for x, y, z, s in bp.blocks():
-        if y < 3 or not s.split("[")[0].endswith("glass_pane"):
-            continue
-        for (dx, dz), nm in names.items():
-            if sky(x + dx, y, z + dz) and not sky(x - dx, y, z - dz) and bp.get(x - dx, y, z - dz) == AIR:
-                todo.append((x, y, z, dx, dz, nm))
-                break
-    for x, y, z, dx, dz, nm in todo:
-        ox, oz = x + dx, z + dz
-        lx, lz = dz, dx
-        single = not pane(x + lx, y, z + lz) and not pane(x - lx, y, z - lz)
-        if not pane(x, y - 1, z) and y - 1 >= 4 and d.air(ox, y - 1, oz):
-            d.set(ox, y - 1, oz, trap(wood, nm, "top"))
-        if single:
-            for sgn in (1, -1):
-                sx_, sz_ = ox + sgn * lx, oz + sgn * lz
-                wx, wz = x + sgn * lx, z + sgn * lz
-                if bp.inside(sx_, y, sz_) and d.air(sx_, y, sz_) and sky(sx_, y, sz_) and not d.air(wx, y, wz) \
-                        and y >= 4:
-                    d.set(sx_, y, sz_, trap(wood, nm, "bottom", open_=True))
-
-
 # ------------------------------------------------------------------------------------------- L2: shed
 def shed(d, pack, x1, z1, w=7):
     """w x 5 shed, open to the north lane."""
@@ -3076,37 +3043,6 @@ def downgrade(d):
                     row[x] = "minecraft:" + PREMIUM_DOWN[n] + ("[" + rest if rest else "")
 
 
-def street_front(d, pack, paving):
-    """Street edge (z = 1): flower beds, hedges / rails, benches and lamp posts, kept clear of every path."""
-    M = MAT[pack]
-    pav = "minecraft:" + paving.split("[")[0]
-    for x in range(1, d.sx - 1):
-        if any(d.get(x + dx, 1, z).split("[")[0] != pav for dx in (-1, 0, 1) for z in (0, 1, 2)):
-            continue
-        if not all(d.air(x, y, 1) and d.air(x, y, 2) for y in (2, 3)):
-            continue
-        k = x % 9
-        if k == 0:
-            lamp_post(d, x, 1, pack)
-        elif k in (1, 2, 3):
-            d.set(x, 1, 1, GRASS if pack != "Neoterra" else "moss_block")
-            fl = {"Hearthwood": ("poppy", "cornflower", "oxeye_daisy", "allium", "azure_bluet"),
-                  "Cascadia": ("fern", "dandelion", "fern", "red_tulip", "short_grass"),
-                  "Neoterra": ("azalea", "azalea", "flowering_azalea", "azalea", "flowering_azalea")}[pack]
-            d.set(x, 2, 1, fl[(x * 7) % 5])
-        elif k in (4, 5, 6):
-            if pack == "Hearthwood":
-                d.set(x, 2, 1, "oak_leaves" + LEAVES)
-            elif pack == "Cascadia":
-                d.set(x, 2, 1, M["fence"])
-            else:
-                d.set(x, 1, 1, "moss_block")
-                d.set(x, 2, 1, "azalea")
-        elif k == 7:
-            d.set(x, 2, 1, st(f"{M['wood']}_stairs", "south"))
-
-
-# ------------------------------------------------------------------------------------------- assembly
 # ------------------------------------------------------------------------------------------- core rooms
 def _st(w, f):
     return f"{w}_stairs[facing={f},half=bottom,shape=straight,waterlogged=false]"
@@ -3234,96 +3170,49 @@ def core_rooms(d, pack, kind, L):
             d.set(x, y, z, b)
 
 
-_COUNTS = {}
-_SIZES = {}
-
-
-def count_blocks(d):
-    gy = d.gy
-    return sum(1 for _x, y, _z, b in d.bp.blocks() if y != gy and b != AIR and "substitution" not in b)
-
-
-def _snap(d):
-    return (copy.deepcopy(d.bp.grid), dict(d.bp.tile_entities), copy.deepcopy(d.placed),
-            copy.deepcopy(d.tags))
-
-
-def _restore(d, sn):
-    d.bp.grid, d.bp.tile_entities, d.placed, d.tags = copy.deepcopy(sn[0]), dict(sn[1]), \
-        copy.deepcopy(sn[2]), copy.deepcopy(sn[3])
-
-
-def _grow(d, target, sizes, build):
-    """Add one new structure, trying sizes in order until the farmstead reaches `target` blocks."""
-    sn = _snap(d)
-    for i, size in enumerate(sizes):
-        if i:
-            _restore(d, sn)
-        build(size)
-        if count_blocks(d) >= target:
-            return size
-    return size
+# Building sizes chosen per type and pack (shed (width, rick), cottage width, hall (width, loft, depth),
+# barn (length, depth, silo height)) so that every level has at least 1.5x the blocks of the one before.
+SIZES = {
+    "bee_cs": ((19, 1), 15, (17, True, 11), (25, 9, 16)), "bee_hw": ((17, 0), 9, (17, True, 11), (23, 9, 16)),
+    "bee_nt": ((13, 0), 9, (15, True, 9), (19, 11, 16)), "chicken_cs": ((17, 0), 11, (15, True, 9), (15, 9, 16)),
+    "chicken_hw": ((13, 0), 9, (19, True, 9), (21, 9, 16)), "chicken_nt": ((15, 0), 9, (15, True, 9), (21, 9, 16)),
+    "cow_cs": ((19, 2), 13, (25, True, 11), (23, 11, 20)), "cow_hw": ((19, 1), 9, (23, True, 13), (23, 11, 20)),
+    "cow_nt": ((19, 1), 9, (23, True, 9), (23, 11, 20)), "pig_cs": ((19, 1), 13, (19, True, 9), (21, 9, 16)),
+    "pig_hw": ((17, 0), 9, (21, True, 9), (21, 9, 16)), "pig_nt": ((19, 1), 13, (19, True, 11), (23, 11, 20)),
+    "rabbit_cs": ((15, 0), 9, (15, False, 9), (11, 9, 16)), "rabbit_hw": ((17, 0), 9, (15, True, 11), (19, 9, 16)),
+    "rabbit_nt": ((15, 0), 9, (13, True, 9), (19, 9, 16)), "sheep_cs": ((19, 1), 9, (19, True, 9), (21, 9, 16)),
+    "sheep_hw": ((17, 0), 9, (21, True, 9), (21, 9, 16)), "sheep_nt": ((13, 0), 9, (15, True, 9), (21, 9, 16)),
+    "stable_cs": ((19, 1), 15, (21, True, 13), (25, 11, 16)),
+    "stable_hw": ((19, 1), 15, (23, True, 13), (25, 11, 20)),
+    "stable_nt": ((19, 1), 13, (25, True, 11), (25, 11, 20)),
+}
 
 
 def farmstead(core, pack, rel, L, kind):
     d = core(rel, L)
     core_rooms(d, pack, kind, L)
     ex, ez = d.ex, d.ez
-    wood = {"Hearthwood": "dark_oak", "Cascadia": "spruce", "Neoterra": "birch"}[pack]
     lane = {"Hearthwood": "gravel", "Cascadia": "dirt_path", "Neoterra": "polished_andesite"}[pack]
-    target = 0
-    if L >= 2:
-        key = (core.__name__, pack, L - 1)
-        if key not in _COUNTS:
-            prev_rel = rels_for(REQ[rel]["base"])[L - 2]
-            _COUNTS[key] = count_blocks(farmstead(core, pack, prev_rel, L - 1, kind))
-        target = int(_COUNTS[key] * GROWTH) + 1
-    # structures of earlier levels at the size they were built with
+    sz_shed, sz_cot, sz_hall, sz_barn = SIZES[core.__name__]
+    flip = kind in ("cattle", "pig", "bees")                           # hall east / barn west in the south strip
+    hall_x = ex + 26 - sz_hall[0] + 1 if flip else 2
+    barn_x = 2 if flip else ex - 2
     if L >= 2:
         path(d, ex, 0, ex, ez, lane)
-        if L == 2:
-            _SIZES[(core.__name__, pack, 2)] = _grow(
-                d, target, [(w, 0) for w in (7, 9, 11, 13, 15, 17, 19)] + [(19, 1), (19, 2)],
-                lambda sz: (shed(d, pack, ex + 1, 2, sz[0]), shed_fit(d, pack, kind, ex + 1, 2, sz[0]),
-                            sz[1] and rick(d, pack, ex + 22, 2, sz[1] == 2)))
-        else:
-            sz = _SIZES.get((core.__name__, pack, 2), (7, 0))
-            shed(d, pack, ex + 1, 2, sz[0])
-            shed_fit(d, pack, kind, ex + 1, 2, sz[0])
-            if sz[1]:
-                rick(d, pack, ex + 22, 2, sz[1] == 2)
+        shed(d, pack, ex + 1, 2, sz_shed[0])
+        shed_fit(d, pack, kind, ex + 1, 2, sz_shed[0])
+        if sz_shed[1]:
+            rick(d, pack, ex + 22, 2, sz_shed[1] == 2)
     if L >= 3:
-        if L == 3:
-            _SIZES[(core.__name__, pack, 3)] = _grow(d, target, (9, 11, 13, 15), lambda w: cottage(d, pack, ex + 2, 10, w))
-        else:
-            cottage(d, pack, ex + 2, 10, _SIZES.get((core.__name__, pack, 3), 9))
-    flip = kind in ("cattle", "pig", "bees")                           # hall east / barn west in the south strip
+        cottage(d, pack, ex + 2, 10, sz_cot, kind)
     if L >= 4:
         path(d, 0, ez + 1, d.sx - 1, ez + 1, lane)
-        wr = range(11, ex - 3, 2)
-        ws = [(w, False, 9) for w in wr] + [(w, True, 9) for w in wr] + [(w, True, 11) for w in wr] + \
-            [(wr[-1], True, 13)]
-
-        def hx(sz):
-            return ex + 26 - sz[0] + 1 if flip else 2
-        if L == 4:
-            _SIZES[(core.__name__, pack, 4)] = _grow(d, target, ws,
-                                                     lambda w: hall(d, pack, kind, hx(w), ez + 2, w))
-        else:
-            hs = _SIZES.get((core.__name__, pack, 4), ws[-1])
-            hall(d, pack, kind, hx(hs), ez + 2, hs)
+        hall(d, pack, kind, hall_x, ez + 2, sz_hall)
     if L >= 5:
         extra(d, pack, kind, ex + 17, 8)
-        bs = [(n, 9, 16) for n in range(11, 26, 2)] + [(n, 11, 16) for n in range(11, 26, 2)] + [(25, 11, 20)]
-        if flip:
-            room = hx(hs) - 7
-            bs = [b for b in bs if b[0] <= room] or [(11, 9, 16)]
-            bs += [(b[0], b[1], 20) for b in bs if b[1] == 11][-1:]
-        _grow(d, target, bs, lambda n: haybarn(d, pack, 2 if flip else ex - 2, ez + 2, n))
-    street_front(d, pack, "smooth_stone" if pack == "Neoterra" else "grass_block")
+        haybarn(d, pack, barn_x, ez + 2, sz_barn)
+    front(d, pack, kind, L)
     recolor(d, RECOLOR[(pack, kind)])
     if L <= 3:
         downgrade(d)
-    if pack != "Neoterra":
-        dress_windows(d, wood)
     return d

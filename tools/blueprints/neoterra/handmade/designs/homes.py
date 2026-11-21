@@ -105,11 +105,10 @@ def partition(d, x1, z1, x2, z2, y1, y2, block, doors=(), wood=None):
 
 # ============================================================================================ furniture
 def kitchen(d, seq, y, facing, wood=None, top=None, shelf=True):
-    """A run of kitchen units against a wall: seq = [(x, z, kind)], kind in furnace / smoker / crafting_table /
-    barrel / sink / counter / fridge / cauldron. `facing` = the side the fronts face (into the room).
-    Wall shelves with pots above the counters."""
+    """A run of kitchen units listed cell by cell: seq = [(x, z, kind)], kind in furnace / smoker /
+    crafting_table / barrel / sink / counter / cauldron; `facing` = the side the fronts face."""
     wood = wood or d.P["wood"]
-    for i, (x, z, k) in enumerate(seq):
+    for x, z, k in seq:
         if k in ("furnace", "smoker", "crafting_table", "barrel", "blast_furnace"):
             d.item(x, y, z, k, facing if k != "crafting_table" else None)
         elif k == "sink":
@@ -118,11 +117,6 @@ def kitchen(d, seq, y, facing, wood=None, top=None, shelf=True):
             d.item(x, y, z, "water_cauldron[level=3]")
         else:
             d.set(x, y, z, top or stair(wood, OPP[facing], "top"))
-        if shelf and k in ("counter", "sink", "crafting_table", "barrel") and d.air(x, y + 2, z):
-            d.set(x, y + 2, z, slab(wood, "top"))
-        if k == "counter" and i % 2 == 0 and d.air(x, y + 1, z):
-            d.set(x, y + 1, z, "decorated_pot[cracked=false,facing=north,waterlogged=false]" if i % 4 == 0
-                  else "potted_azure_bluet")
 
 
 def nightstand(d, x, y, z, wood=None, light="candle"):
@@ -174,22 +168,22 @@ def rugc(d, x1, z1, x2, z2, y, color):
             d.set(x, y, z, f"{color}_carpet")
 
 
-def garden(d, x1, z1, x2, z2, y, wood, gates=(), flowers=("poppy", "oxeye_daisy", "cornflower", "allium",
-                                                            "azure_bluet", "dandelion"), border=True, beds=True):
-    """Fenced garden: grass with flower borders inside the fence, gates [(x, z, facing)]."""
+def garden(d, x1, z1, x2, z2, y, wood, gates=(), plants=(), border=True, **_):
+    """Fenced lawn x1..x2/z1..z2 with gates [(x, z, facing)] and hand-placed plants [(x, z, block)]."""
     for x, z in cells(x1, z1, x2, z2):
         d.set(x, y - 1, z, "grass_block[snowy=false]")
         d.set(x, y, z, AIR)
-    gs = {(gx, gz) for gx, gz, _ in gates}
-    for x, z in cells(x1, z1, x2, z2):
-        edge = x in (x1, x2) or z in (z1, z2)
-        if edge and border:
-            if (x, z) not in gs:
+    gs = {(gx, gz) for gx, gz, _f in gates}
+    if border:
+        for x, z in cells(x1, z1, x2, z2):
+            if (x in (x1, x2) or z in (z1, z2)) and (x, z) not in gs:
                 d.set(x, y, z, fence(wood))
-        elif beds and (x in (x1 + 1, x2 - 1) or z in (z1 + 1, z2 - 1)) and (x + z) % 2 == 0:
-            d.set(x, y, z, flowers[(x * 3 + z) % len(flowers)])
     for gx, gz, f in gates:
         d.set(gx, y, gz, gate(wood, f))
+    for x, z, b in plants:
+        d.set(x, y, z, b)
+        if b.endswith("[half=lower]"):
+            d.set(x, y + 1, z, b.replace("lower", "upper"))
 
 
 def path(d, pts, y, block):
@@ -3928,144 +3922,8 @@ def quadplex_ca(rel, L):
     return d
 
 
-# ============================================================================================ facade decor pass
-FLOWERS = ("potted_red_tulip", "potted_azure_bluet", "potted_cornflower", "potted_poppy", "potted_oxeye_daisy",
-           "potted_allium", "potted_pink_tulip", "potted_dandelion")
-
-
-def _outside(d):
-    """Per layer: the set of air cells connected to the plot edge (open air around the buildings)."""
-    from collections import deque
-    bp = d.bp
-    out = {}
-    for y in range(d.gy + 1, bp.sy):
-        seen = set()
-        q = deque()
-        layer = bp.grid[y]
-        for x in range(bp.sx):
-            for z in (0, bp.sz - 1):
-                if layer[z][x] == AIR:
-                    seen.add((x, z))
-                    q.append((x, z))
-        for z in range(bp.sz):
-            for x in (0, bp.sx - 1):
-                if layer[z][x] == AIR and (x, z) not in seen:
-                    seen.add((x, z))
-                    q.append((x, z))
-        while q:
-            x, z = q.popleft()
-            for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-                nx, nz = x + dx, z + dz
-                if 0 <= nx < bp.sx and 0 <= nz < bp.sz and (nx, nz) not in seen and layer[nz][nx] == AIR:
-                    seen.add((nx, nz))
-                    q.append((nx, nz))
-        out[y] = seen
-    return out
-
-
-def facade_decor(d, shutter=None, box="dark_oak", sill=None, light="wall_torch", flowers=FLOWERS):
-    """Dress every exterior window and door of the finished complex: flower boxes (or sills) under upper-floor
-    windows, coloured shutters beside them, and a light beside each outside door."""
-    bp = d.bp
-    O = _outside(d)
-    gy = d.gy
-    n = 0
-    for y in range(gy + 2, bp.sy - 1):
-        if y not in O:
-            continue
-        for z in range(1, bp.sz - 1):
-            for x in range(1, bp.sx - 1):
-                st = bp.grid[y][z][x]
-                if not st.split("[")[0].endswith("glass_pane"):
-                    continue
-                below = bp.grid[y - 1][z][x]
-                if below.split("[")[0].endswith("glass_pane") or below == AIR:
-                    continue
-                for dir_, (dx, dz) in D4.items():
-                    ox, oz = x + dx, z + dz
-                    ix, iz = x - dx, z - dz
-                    if (ox, oz) not in O[y] or (ix, iz) in O[y]:
-                        continue
-                    if bp.grid[y][iz][ix] != AIR and "pane" in bp.grid[y][iz][ix]:
-                        continue
-                    upper = y - 1 >= gy + 3
-                    if upper and (ox, oz) in O.get(y - 1, ()):
-                        if sill:
-                            d.set(ox, y - 1, oz, slab(sill, "top"))
-                        else:
-                            d.set(ox, y - 1, oz, trap(box, dir_, "top"))
-                            n += 1
-                            if n % 3:
-                                d.set(ox, y, oz, flowers[(x * 7 + z * 3 + y) % len(flowers)])
-                                O[y].discard((ox, oz))
-                    if shutter and upper:
-                        px, pz = D4[CW[dir_]]
-                        h = 1
-                        while y + h < bp.sy and bp.grid[y + h][z][x].split("[")[0].endswith("glass_pane"):
-                            h += 1
-                        for side, (sx, sz) in ((OPP[CW[dir_]], (-px, -pz)), (CW[dir_], (px, pz))):
-                            wx, wz = x + sx, z + sz
-                            cx, cz = wx + dx, wz + dz
-                            for k in range(h):
-                                if (cx, cz) in O.get(y + k, ()) and bp.grid[y + k][wz][wx] not in (AIR,) and \
-                                        "pane" not in bp.grid[y + k][wz][wx]:
-                                    d.set(cx, y + k, cz, trap(shutter, side, "bottom", True))
-                                    O[y + k].discard((cx, cz))
-                    break
-    # door lights
-    if light:
-        for y in range(gy + 1, bp.sy - 2):
-            for z in range(1, bp.sz - 1):
-                for x in range(1, bp.sx - 1):
-                    st = bp.grid[y][z][x]
-                    if "_door[" not in st or "half=lower" not in st or "trapdoor" in st:
-                        continue
-                    for dir_, (dx, dz) in D4.items():
-                        ox, oz = x + dx, z + dz
-                        if (ox, oz) not in O.get(y, ()) or (x - dx, z - dz) in O.get(y, ()):
-                            continue
-                        px, pz = D4[CW[dir_]]
-                        for sx, sz in ((px, pz), (-px, -pz)):
-                            wx, wz = x + sx, z + sz
-                            cx, cz = wx + dx, wz + dz
-                            yy = y + 1
-                            wall = bp.grid[yy][wz][wx]
-                            if (cx, cz) in O.get(yy, ()) and wall != AIR and "door" not in wall and \
-                                    "pane" not in wall and "stairs" not in wall and "slab" not in wall and \
-                                    "fence" not in wall and "trapdoor" not in wall:
-                                if light == "wall_torch":
-                                    d.set(cx, yy, cz, f"wall_torch[facing={dir_}]")
-                                else:
-                                    d.set(cx, yy, cz, f"end_rod[facing={dir_}]")
-                                O[yy].discard((cx, cz))
-                                break
-                        break
-    return d
-
-
-DECOR = {
-    # (shutter wood, box wood, sill, door light)
-    ("Hearthwood", "house"): ("mangrove", "dark_oak", None, "wall_torch"),
-    ("Hearthwood", "cottage"): ("warped", "spruce", None, "wall_torch"),
-    ("Hearthwood", "apartment"): (None, None, "stone_brick", "wall_torch"),
-    ("Hearthwood", "quadplex"): ("bamboo", "dark_oak", None, "wall_torch"),
-    ("Hearthwood", "playerhouse"): ("dark_oak", "dark_oak", None, "wall_torch"),
-    ("Cascadia", "house"): ("mangrove", "spruce", None, "wall_torch"),
-    ("Cascadia", "cottage"): ("spruce", "spruce", None, "wall_torch"),
-    ("Cascadia", "apartment"): ("dark_oak", "dark_oak", None, "wall_torch"),
-    ("Cascadia", "quadplex"): ("warped", "spruce", None, "wall_torch"),
-    ("Cascadia", "playerhouse"): ("crimson", "dark_oak", None, "wall_torch"),
-    ("Neoterra", "house"): (None, None, "smooth_quartz", "end_rod"),
-    ("Neoterra", "cottage"): (None, None, "birch", "end_rod"),
-    ("Neoterra", "apartment"): (None, None, "smooth_quartz", "end_rod"),
-    ("Neoterra", "quadplex"): (None, None, "smooth_quartz", "end_rod"),
-    ("Neoterra", "playerhouse"): (None, None, "polished_blackstone", "end_rod"),
-}
-
-
 def finish_decor(d, base):
-    sh, bx, sl, li = DECOR[(d.pack, base)]
-    facade_decor(d, sh, bx or "dark_oak", sl, li)
+    """Material cap only (no placement): levels 1-3 swap premium blocks for common ones."""
     if d.level <= 3:
         common_materials(d)
     return d

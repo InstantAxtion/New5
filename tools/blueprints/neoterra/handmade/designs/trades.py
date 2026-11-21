@@ -163,10 +163,9 @@ def lamp_post(d, x, z, y, pack, h=3):
 
 
 def spot_trees(d, cells, kind="oak", h=4, r=1):
-    """Trees on free ground cells (left out where something already stands)."""
+    """Trees at the hand-picked ground cells."""
     for x, z in cells:
-        if all(d.air(x + dx, d.gy + 1 + k, z + dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) for k in range(h + 2)):
-            tree(d, x, z, d.gy + 1, kind, h, r)
+        tree(d, x, z, d.gy + 1, kind, h, r)
 
 
 def bench(d, x, z, y, back, n=2, wood="oak", sit=True):
@@ -338,9 +337,7 @@ class B:
         return self.fy[s] + 1
 
     def room(self, s, x1=None, z1=None, x2=None, z2=None, back="south"):
-        return Lay(self.d, self.x1 + 1 if x1 is None else x1, self.z1 + 1 if z1 is None else z1,
-                   self.x2 - 1 if x2 is None else x2, self.z2 - 1 if z2 is None else z2, self.stand(s),
-                   self.H - 1, keep=self.keep, back=back)
+        return (self.x1 + 1, self.z1 + 1, self.x2 - 1, self.z2 - 1, self.stand(s))
 
     def door(self, x, z, facing, double=False, hood=True, lamps=True):
         """Door in the ground storey wall at (x, z) opening outward to `facing`; a hood and two lanterns."""
@@ -464,31 +461,10 @@ def build(d, x1, z1, x2, z2, storeys=1, H=4, axis="x", roof="gable", core=None, 
                             continue
                         lo = fy + 1 if (street_glass and s == 0 and side == "north") else fy + 2
                         d.window(x, lo, z, x, top, z, P["glass"] if s == 0 else P["glass_up"])
-                        ox, oz = D4[side]
-                        if s > 0 and d.bp.inside(x + ox, fy + 1, z + oz):
-                            d.set(x + ox, fy + 1, z + oz, sl(P["sill"], "top"))
                     else:
                         if i % 3 != 1 or i >= len(cells) - 1:
                             continue
                         d.window(x, fy + 2, z, x, fy + 3 if H >= 4 else fy + 2, z, P["glass"])
-                        ox, oz = D4[side]
-                        out = (x + ox, z + oz)
-                        if not d.bp.inside(out[0], fy + 1, out[1]):
-                            continue
-                        far = (out[0] + ox, out[1] + oz)
-                        roomy = s > 0 or (side == "north" and d.bp.inside(far[0], fy + 1, far[1])
-                                          and d.air(far[0], fy + 1, far[1]) and d.air(far[0], fy + 2, far[1]))
-                        if pk == "Cascadia" and roomy:
-                            for sd in (CW[side], OPP[CW[side]]):
-                                sx_, sz_ = D4[sd]
-                                for k in (2, 3):
-                                    c = (x + ox + sx_, fy + k, z + oz + sz_)
-                                    if H >= 4 and d.bp.inside(*c) and d.air(*c):
-                                        d.set(*c, tr(P["shutter"], sd, "bottom", True))
-                        if (s > 0 or side == "north") and roomy:
-                            if d.air(out[0], fy + 1, out[1]) and d.air(out[0], fy + 2, out[1]):
-                                d.set(out[0], fy + 1, out[1], tr(P["wood"], side, "top"))
-                                d.set(out[0], fy + 2, out[1], "potted_" + FLOWERS[(x + z) % 6])
     # roof
     if roof == "flat":
         d.fill(x1, yr, z1, x2, yr, z2, P["flatroof"])
@@ -509,11 +485,11 @@ def build(d, x1, z1, x2, z2, storeys=1, H=4, axis="x", roof="gable", core=None, 
             else:
                 ends_cells = [(x, z) for z in (z1, z2) for x in range(x1, x2 + 1)]
                 mid = (x1 + x2) // 2
+            lo_, hi_ = (z1, z2) if axis == "x" else (x1, x2)
             for x, z in ends_cells:
-                for y in range(yr + 1, b.ridge + 1):
-                    if d.get(x, y, z) != "minecraft:" + P["end"]:
-                        continue
-                    c = z if axis == "x" else x
+                c = z if axis == "x" else x
+                top_ = yr + 1 + min(c - lo_, hi_ - c)               # height of the gable triangle here
+                for y in range(yr + 1, top_):
                     if pk == "Hearthwood" and (c - mid) % 2 == 0:
                         d.set(x, y, z, lg(P["beam"], "y"))
                     elif pk == "Cascadia" and c % 2 == 0:
@@ -521,7 +497,7 @@ def build(d, x1, z1, x2, z2, storeys=1, H=4, axis="x", roof="gable", core=None, 
             # attic vent window
             for e in ((x1, mid) if axis == "x" else (mid, z1), (x2, mid) if axis == "x" else (mid, z2)):
                 yv = b.ridge - 2
-                if yv > yr + 1 and not d.air(e[0], yv, e[1]):
+                if yv > yr + 1:
                     d.set(e[0], yv, e[1], "glass_pane")
         # tie beams across the top storey for lamps
         if axis == "x":
@@ -533,14 +509,6 @@ def build(d, x1, z1, x2, z2, storeys=1, H=4, axis="x", roof="gable", core=None, 
                 for x in range(x1 + 1, x2):
                     d.set(x, yr, z, lg(P["beam"] if pk == "Hearthwood" else "stripped_spruce_log", "x"))
     # Neoterra ceiling lights (froglights are walkable on the floor above)
-    if pk == "Neoterra":
-        for s in range(1, storeys + 1):
-            yy = b.fy[s]
-            for x in range(x1 + 2, x2 - 1, 4):
-                for z in range(z1 + 2, z2 - 1, 4):
-                    if b.core and (x, z) in b.keep:
-                        continue
-                    d.set(x, yy, z, "pearlescent_froglight[axis=y]" if (s < storeys or roof != "flat") else "sea_lantern")
     # stair core
     if core:
         sx, sz = core
@@ -577,399 +545,101 @@ def build(d, x1, z1, x2, z2, storeys=1, H=4, axis="x", roof="gable", core=None, 
     return b
 
 
-def neo_roof(d, b, kind="solar"):
-    """Roof-top features on a flat Neoterra roof: solar arrays, roof garden or plant (HVAC) units."""
+def neo_roof(d, b, lines):
+    """Roof-top features on a flat Neoterra roof, as explicit lines (x1, x2, z, block[, h]) chosen per building:
+    solar panel rows (daylight detectors), planter rows (moss/azalea), plant units (iron block + vent)."""
     y = b.yr + 1
-    x1, z1, x2, z2 = b.x1 + 2, b.z1 + 2, b.x2 - 2, b.z2 - 2
-    if kind == "solar":
+    for ln in lines:
+        x1, x2, z, blk = ln[:4]
         for x in range(x1, x2 + 1):
-            for z in range(z1, z2 + 1, 3):
-                d.set(x, y, z, "daylight_detector[inverted=false,power=0]")
-    elif kind == "garden":
-        for x in range(x1, x2 + 1):
-            for z in range(z1, z2 + 1):
-                d.set(x, y, z, "moss_carpet" if (x * 3 + z) % 5 else ("azalea" if (x + z) % 2 else "flowering_azalea"))
-    elif kind == "hvac":
-        for x in range(x1, min(x1 + 3, x2) + 1):
-            for z in range(z1, min(z1 + 1, z2) + 1):
-                d.set(x, y, z, "iron_block")
-                d.set(x, y + 1, z, tr("iron", "north", "bottom"))
-        for x in range(x1, x2 + 1, 3):
-            for z in range(z1 + 3, z2 + 1, 3):
-                d.set(x, y, z, "daylight_detector[inverted=false,power=0]")
+            d.set(x, y, z, blk)
+            if len(ln) > 4:
+                d.set(x, y + 1, z, ln[4])
 
 
-# =============================================================================================== rooms
-class Lay:
-    """A room (interior rectangle, standing height y) laid out BY HAND: every piece goes to a fixed position in
-    the room's own frame (u along the chosen back wall, v from that wall into the room). The only check is a
-    collision guard: a fixed position that falls on a door step, a stair well, the hut or the building's keep
-    zone is left out instead of blocking it."""
-
-    def __init__(self, d, x1, z1, x2, z2, y, h=3, keep=(), back="south"):
-        self.d, self.x1, self.z1, self.x2, self.z2, self.y, self.h = d, x1, z1, x2, z2, y, h
-        self.back = back
-        self.keep = set(k for k in keep if x1 <= k[0] <= x2 and z1 <= k[1] <= z2)
-        for x in range(x1 - 1, x2 + 2):                       # clearances: doors, stairs, holes, openings, hut
-            for z in range(z1 - 1, z2 + 2):
-                if not d.bp.inside(x, y, z):
-                    continue
-                n = d.get(x, y, z)
-                below = d.get(x, y - 1, z)
-                inside = x1 <= x <= x2 and z1 <= z <= z2
-                opening = (not inside) and n == AIR and d.air(x, y + 1, z) and below != AIR
-                if any(k in n for k in ("door", "stairs", "ladder", "blockhut")) or "stairs" in below \
-                        or opening or (inside and (below == AIR or "stairs" in below)):
-                    for dx in (-1, 0, 1):
-                        for dz in (-1, 0, 1):
-                            self.keep.add((x + dx, z + dz))
-        self.used = set()
-
-    # frame ------------------------------------------------------------------------------------------
-    @property
-    def W(self):
-        return (self.x2 - self.x1 + 1) if self.back in ("north", "south") else (self.z2 - self.z1 + 1)
-
-    @property
-    def D(self):
-        return (self.z2 - self.z1 + 1) if self.back in ("north", "south") else (self.x2 - self.x1 + 1)
-
-    def xz(self, u, v):
-        b = self.back
-        if b == "south":
-            return self.x1 + u, self.z2 - v
-        if b == "north":
-            return self.x2 - u, self.z1 + v
-        if b == "west":
-            return self.x1 + v, self.z1 + u
-        return self.x2 - v, self.z2 - u
-
-    def out(self):
-        """Direction pointing away from the back wall (into the room)."""
-        return OPP[self.back]
-
-    def ok(self, u, v, h=2):
-        x, z = self.xz(u, v)
-        d = self.d
-        if not (0 <= u < self.W and 0 <= v < self.D) or (x, z) in self.keep or (x, z) in self.used:
-            return False
-        return all(d.air(x, self.y + k, z) for k in range(h)) and d.get(x, self.y - 1, z) != AIR
-
-    def put(self, u, v, block, k=0, h=2):
-        if not self.ok(u, v, h):
-            return False
-        x, z = self.xz(u, v)
-        self.d.set(x, self.y + k, z, block)
-        self.used.add((x, z))
-        return True
-
-    def put_item(self, u, v, name, facing=None):
-        if not self.ok(u, v):
-            return False
-        x, z = self.xz(u, v)
-        self.d.item(x, self.y, z, name, facing or self.out())
-        self.used.add((x, z))
-        return True
-
-    def hang(self, u, v, soul=False):
-        """Lantern hanging on a chain from the ceiling above a fixed point."""
-        x, z = self.xz(u, v)
-        d, y = self.d, self.y + 2
-        if (x, z) in self.keep or not d.air(x, y, z) or not d.air(x, y - 1, z):
-            return
-        for top in range(y + 1, y + 6):
-            if not d.bp.inside(x, top, z):
-                return
-            n = d.get(x, top, z)
-            if n != AIR:
-                if "glass" in n or "lantern" in n or "chain" in n:
-                    return
-                for k in range(y + 1, top):
-                    d.set(x, k, z, CHAIN)
-                d.set(x, y, z, SLANT if soul else LANT)
-                return
-
-    def rug(self, u1, v1, u2, v2, colors):
-        for u in range(u1, u2 + 1):
-            for v in range(v1, v2 + 1):
-                if self.ok(u, v):
-                    x, z = self.xz(u, v)
-                    edge = u in (u1, u2) or v in (v1, v2)
-                    self.d.set(x, self.y, z, colors[0 if edge else -1])
-
-    def chair(self, u, v, back_side, wood, sit=True):
-        """Chair at (u, v) whose backrest is on `back_side` ('back' = toward the back wall, 'front', 'left',
-        'right' in the room frame)."""
-        if not self.ok(u, v):
-            return 0
-        x, z = self.xz(u, v)
-        b = {"back": self.back, "front": self.out(), "left": self._left(), "right": OPP[self._left()]}[back_side]
-        self.d.chair(x, self.y, z, b, wood, sit)
-        self.used.add((x, z))
-        return 1 if sit else 0
-
-    def _left(self):
-        x0, z0 = self.xz(0, 0)
-        x1, z1 = self.xz(1, 0)
-        return {(1, 0): "west", (-1, 0): "east", (0, 1): "north", (0, -1): "south"}[(x1 - x0, z1 - z0)]
+SOLAR = "daylight_detector[inverted=false,power=0]"
+MOSS = "moss_carpet"
 
 
-def _xyz(c, y):
-    return c[0], y, c[1]
+# =============================================================================================== hand placement
+def fit(d, y, spec, wood="oak"):
+    """Place hand-chosen furniture at the given coordinates of one room (standing height y). Each entry:
+      ("i", x, z, block, facing)   required work block      ("s", x, z, block)  block on the floor
+      ("o", x, z, block)           block one up (on a desk)  ("c", x, z, back[, sit])  chair, backrest side
+      ("r", x, z, h)               rack column               ("b", x, z, h, facing)  barrel column (counted)
+      ("k", x, z, h)               bookshelf column          ("bed", x, z, facing[, colour])  head at x, z
+      ("L", x, z)                  lantern hung from the ceiling above ("G", x, z, block) light set in the ceiling
+      ("rug", x1, z1, x2, z2, colour)  carpet laid on the given rectangle
+      ("st", x, z, facing)         decorative stairs (sofa end / step) without a seat tag"""
+    seats = 0
+    for e in spec:
+        k = e[0]
+        if k == "i":
+            d.item(e[1], y, e[2], e[3], e[4] if len(e) > 4 else None)
+        elif k == "s":
+            d.set(e[1], y, e[2], e[3])
+        elif k == "o":
+            d.set(e[1], y + 1, e[2], e[3])
+        elif k == "c":
+            sit = e[4] if len(e) > 4 else True
+            d.chair(e[1], y, e[2], e[3], wood, sit)
+            seats += 1 if sit else 0
+        elif k == "st":
+            d.set(e[1], y, e[2], st(wood, e[3]))
+        elif k == "r":
+            rack_col(d, e[1], e[2], y, e[3])
+        elif k == "b":
+            for h in range(e[3]):
+                d.item(e[1], y + h, e[2], "barrel", e[4])
+        elif k == "k":
+            d.bookshelf(e[1], y, e[2], e[3])
+        elif k == "bed":
+            d.bed(e[1], y, e[2], e[3], e[4] if len(e) > 4 else None)
+        elif k == "L":
+            x, z = e[1], e[2]
+            top = y + 3
+            while d.air(x, top, z) and top < y + 7:
+                top += 1
+            for yy in range(y + 3, top):
+                d.set(x, yy, z, CHAIN)
+            d.set(x, y + 2, z, LANT)
+        elif k == "G":
+            d.set(e[1], y + 3 if len(e) < 5 else e[4], e[2], e[3])
+        elif k == "rug":
+            for x in range(e[1], e[3] + 1):
+                for z in range(e[2], e[4] + 1):
+                    d.set(x, y, z, e[5])
+        else:
+            raise ValueError(e)
+    return seats
 
 
-def _pot(i):
+def pot(i):
     return "potted_" + ("fern", "azalea_bush", "red_tulip", "bamboo", "oxeye_daisy", "cornflower")[i % 6]
 
 
-def furnish(r, kind, items=(), racks=0, rack_h=1, books=0, beds=0, seats=0, barrels=0, sit=True, wood=None,
-            lights=True, soft=False):
-    """Lay a room out for its purpose at fixed positions of the room frame (u along the back wall, v into the
-    room). Kind-specific furniture first, then the room's required blocks in that layout's working positions:
-    work blocks on the bench / cabinet run, rack columns as shelving bays, bookcases on the side wall, beds with
-    their heads to the back wall, desks with chairs. Returns seats placed."""
-    d, P = r.d, r.d.pack
-    wood = wood or WOOD[P]
-    W, D = r.W, r.D
-    st_ = {"got": 0}
-    items = list(items)
-    log = "stripped_birch_log" if P == "Neoterra" else f"stripped_{wood}_log" if wood in ("oak", "spruce", "dark_oak", "birch", "mangrove", "cherry") else "stripped_oak_log"
-
-    def chairs_at(cells, side):
-        nonlocal seats
-        for u, v in cells:
-            if seats <= 0:
-                return
-            k = r.chair(u, v, side, wood, sit)
-            if k or (not sit and r.xz(u, v) in r.used):
-                seats -= 1
-                st_["got"] += k
-
-    # ---- the room's own furniture -------------------------------------------------------------------
-    if kind == "workshop":                                  # bench run, tool corner, stock, work island
-        r.put(0, 0, "water_cauldron[level=3]")                     # quench tub
-        r.put(W - 1, 0, lg(log, "y"))
-        r.put(W - 1, 0, lg(log, "y"), 1, h=1)
-        if W >= 8 and D >= 7:
-            cu, cv = W // 2, D // 2
-            r.put(cu - 1, cv, sl(wood, "top"))
-            r.put(cu, cv, lg(log, "x" if r.back in ("north", "south") else "z"))
-            r.put(cu + 1, cv, sl(wood, "top"))
-        r.put(W - 1, D - 1, "chest[facing=%s,type=single,waterlogged=false]" % r.back)
-        r.put(0, D - 1, _pot(1))
-        bench = [(u, 0) for u in range(1, W - 1)]
-    elif kind == "office":                                  # cabinet wall, desks, reading corner
-        r.put(0, 0, _pot(0))
-        r.put(W - 1, D - 1, _pot(3))
-        u = 2
-        while seats > 0 and u < W - 2:
-            if r.ok(u, 2) and r.ok(u, 3):
-                r.put(u, 2, sl(wood, "top"))
-                chairs_at([(u, 3)], "front")
-                x, z = r.xz(u, 2)
-                d.set(x, r.y + 1, z, "candle[candles=2,lit=false,waterlogged=false]") if d.air(x, r.y + 1, z) else None
-            u += 2
-        if D >= 7 and W >= 6:
-            r.rug(2, D - 3, W - 3, D - 2, RUG[P])
-        bench = [(u, 0) for u in range(W - 2, 0, -1)]
-    elif kind == "store":                                   # shelving bays parallel to the back wall
-        rows = [0] + [v for v in range(2, D - 1) if (v - 2) % 3 != 2]
-        n = 0
-        for v in rows:
-            for u in range(1, W - 1):
-                if n < racks and r.ok(u, v, rack_h):
-                    x, z = r.xz(u, v)
-                    n += rack_col(d, x, z, r.y, rack_h, r.out())
-                    r.used.add((x, z))
-        racks -= n
-        for u, v in ((0, 0), (W - 1, 0)):
-            r.put(u, v, "chest[facing=%s,type=single,waterlogged=false]" % r.out())
-        bench = [(0, v) for v in range(1, D - 1)] + [(W - 1, v) for v in range(1, D - 1)]
-    elif kind == "sorting":                                 # pigeonhole wall of barrels + sorting table
-        n = 0
-        for u, v in [(u, 0) for u in range(1, W - 1)] + [(0, v) for v in range(1, D - 1)] + \
-                [(W - 1, v) for v in range(1, D - 1)]:
-            if n < barrels and r.ok(u, v, 3):
-                x, z = r.xz(u, v)
-                f = r.out() if v == 0 else (r._left() if u == W - 1 else OPP[r._left()])
-                for k in range(3):
-                    if n < barrels:
-                        d.item(x, r.y + k, z, "barrel", f)
-                        n += 1
-                r.used.add((x, z))
-        barrels -= n
-        if D >= 6:
-            for u in range(2, W - 2):
-                r.put(u, 3, sl(wood, "top"))
-        bench = [(u, 2) for u in range(2, W - 2)] + [(u, D - 1) for u in range(2, W - 2)]
-    elif kind == "library":                                 # bookcase wall, reading table, lectern side
-        n = 0
-        for u in range(0, W):
-            if n < books and r.ok(u, 0):
-                x, z = r.xz(u, 0)
-                d.bookshelf(x, r.y, z, min(2, books - n))
-                r.used.add((x, z))
-                n += min(2, books - n)
-        books -= n
-        cu, cv = W // 2, min(3, D - 2)
-        if r.put(cu, cv, sl(wood, "top")):
-            chairs_at([(cu - 1, cv), (cu + 1, cv)], "left")
-        r.put(0, D - 1, _pot(2))
-        bench = [(W - 1, v) for v in range(1, D - 1)] + [(0, v) for v in range(1, D - 1)]
-    elif kind == "dorm":                                    # beds heads to the back wall, chests at the foot
-        u, placed = 1, 0
-        while placed < max(beds, 1) and u < W - 1:
-            if r.ok(u, 0) and r.ok(u, 1):
-                x, z = r.xz(u, 0)
-                d.bed(x, r.y, z, r.back, "white" if P == "Neoterra" else None)
-                r.used.update({r.xz(u, 0), r.xz(u, 1)})
-                if r.put(u + 1, 0, sl(wood, "top")):
-                    x2_, z2_ = r.xz(u + 1, 0)
-                    d.candle(x2_, r.y + 1, z2_, 1)
-                placed += 1
-                u += 3
-            else:
-                u += 1
-        beds -= placed
-        r.put(0, D - 1, "chest[facing=%s,type=single,waterlogged=false]" % r.back)
-        r.put(1, D - 1, "chest[facing=%s,type=single,waterlogged=false]" % r.back)
-        if W >= 6 and D >= 6:
-            r.rug(1, 2, W - 2, 3, RUG[P])
-        bench = [(W - 1, v) for v in range(1, D - 1)] + [(0, v) for v in range(1, D - 2)]
-    elif kind == "canteen":                                 # kitchen run on the back wall, long table
-        run = ["smoker[facing=%s,lit=false]" % r.out(), sl(wood, "top"), "water_cauldron[level=3]",
-               "furnace[facing=%s,lit=false]" % r.out(), sl(wood, "top")]
-        for i, blk in enumerate(run):
-            r.put(1 + i, 0, blk)
-        tv = min(D - 2, 3)
-        for u in range(2, W - 2):
-            if r.ok(u, tv) and r.ok(u, tv - 1):
-                r.put(u, tv, sl(wood, "top"))
-                st_["got"] += r.chair(u, tv - 1, "back", wood, sit)
-                seats -= 1
-                if tv + 1 < D - 1:
-                    st_["got"] += r.chair(u, tv + 1, "front", wood, sit)
-                    seats -= 1
-        bench = [(W - 1, v) for v in range(1, D - 1)]
-    elif kind == "lounge":                                  # sofa facing the back wall, low table, plants
-        sv = min(D - 2, 4)
-        if seats <= 0:                                      # settle without a seat tag
-            for u in range(2, min(W - 2, 5)):
-                r.chair(u, sv, "front", wood, False)
-        chairs_at([(u, sv) for u in range(2, min(W - 2, 6))], "front")
-        r.put(3, sv - 2, sl(wood, "top"))
-        r.put(4, sv - 2, sl(wood, "top"))
-        r.put(0, 0, _pot(4))
-        r.put(W - 1, 0, _pot(5))
-        r.rug(2, 1, min(W - 3, 5), sv - 1, RUG[P])
-        bench = [(u, 0) for u in range(W - 2, 0, -1)]
-    elif kind == "loft":                                    # sacks, hay and crates against the back wall
-        stock = ["hay_block[axis=y]", "white_wool", "brown_wool", "chest[facing=%s,type=single,waterlogged=false]" % r.out()]
-        for i, u in enumerate(range(1, W - 1, 2)):
-            if r.put(u, 0, stock[i % 4]) and i % 2 == 0:
-                x, z = r.xz(u, 0)
-                d.set(x, r.y + 1, z, stock[(i + 1) % 4])
-        for u in range(2, W - 2, 3):
-            r.put(u, D - 1, lg("stripped_spruce_log", "y"))
-        bench = [(0, v) for v in range(1, D - 1)] + [(W - 1, v) for v in range(1, D - 1)]
-    elif kind == "shop":                                    # shop counter with display wall behind
-        for u in range(1, W - 1):
-            r.put(u, 2, sl(wood, "top"))
-        for u in range(1, W - 1, 3):
-            r.put(u, 0, _pot(u))
-        r.put(0, D - 1, _pot(2))
-        r.put(W - 1, D - 1, _pot(3))
-        bench = [(u, 0) for u in range(2, W - 1, 3)] + [(0, v) for v in range(1, 2)]
-    elif kind == "kiosk":
-        r.put(1, 0, sl(wood, "top"))
-        chairs_at([(1, 1)], "front")
-        r.put(W - 1, 0, _pot(0))
-        bench = [(u, 0) for u in range(2, W - 1)]
-    else:
-        raise ValueError(kind)
-
-    # ---- required blocks in the layout's working positions ---------------------------------------
-    for (u, v) in bench + [(0, v) for v in range(1, D - 1)] + [(W - 1, v) for v in range(1, D - 1)]:
-        if not items:
-            break
-        if r.put_item(u, v, items[0]):
-            items.pop(0)
-    if racks > 0:                                           # shelving bay down a side wall
-        for u, v in [(W - 1, v) for v in range(1, D - 1)] + [(0, v) for v in range(1, D - 1)]:
-            if racks > 0 and r.ok(u, v, rack_h):
-                x, z = r.xz(u, v)
-                racks -= rack_col(d, x, z, r.y, rack_h, r.out())
-                r.used.add((x, z))
-    if books > 0:                                           # bookcase on the side wall
-        for u, v in [(W - 1, v) for v in range(1, D - 1)] + [(0, v) for v in range(1, D - 1)]:
-            if books > 0 and r.ok(u, v):
-                x, z = r.xz(u, v)
-                d.bookshelf(x, r.y, z, min(2, books))
-                r.used.add((x, z))
-                books -= min(2, books)
-    if beds > 0:
-        for u in range(1, W - 1):
-            if beds > 0 and r.ok(u, 0) and r.ok(u, 1):
-                x, z = r.xz(u, 0)
-                d.bed(x, r.y, z, r.back)
-                r.used.update({r.xz(u, 0), r.xz(u, 1)})
-                beds -= 1
-    if seats > 0:                                           # writing desks: front wall, then the side walls
-        spots = [((u, D - 1), (u, D - 2), "front") for u in range(2, W - 2, 2)] + \
-                [((0, v), (1, v), "right") for v in range(2, D - 2, 2)] + \
-                [((W - 1, v), (W - 2, v), "left") for v in range(2, D - 2, 2)] + \
-                [((u, v), (u, v + 1), "front") for v in range(2, D - 3) for u in range(2, W - 2, 2)]
-        for desk, ch, side in spots:
-            if seats > 0 and r.ok(*desk) and r.ok(*ch):
-                r.put(desk[0], desk[1], sl(wood, "top"))
-                chairs_at([ch], side)
-    if barrels > 0:
-        for u, v in [(u, D - 1) for u in range(1, W - 1)]:
-            if barrels > 0 and r.ok(u, v, 3):
-                x, z = r.xz(u, v)
-                for k in range(min(3, barrels)):
-                    d.item(x, r.y + k, z, "barrel", r.back)
-                barrels -= min(3, barrels)
-                r.used.add((x, z))
-    if lights and P != "Neoterra":
-        for fu in ((W // 2,) if W < 10 else (W // 4, 3 * W // 4)):
-            r.hang(fu, max(1, D // 2))
-    if soft:
-        return dict(items=items, racks=racks, books=books, beds=beds, seats=max(0, seats), barrels=barrels,
-                    got=st_["got"])
-    left = [x for x in (items and items or [], racks > 0 and "racks", barrels > 0 and "barrels") if x]
-    if left or (seats > 0 and sit):
-        raise RuntimeError(f"{d.rel} [{P}] {kind} room at {r.x1},{r.z1}..{r.x2},{r.z2}: left over "
-                           f"{left} seats={seats}")
-    return st_["got"]
+def flower_box(d, x, y, z, facing, wood="oak", flower="red_tulip"):
+    """Window box under the window at (x, y+1, z) on a wall facing `facing`: trapdoor shelf and a potted plant."""
+    ox, oz = D4[facing]
+    d.set(x + ox, y, z + oz, tr(wood, facing, "top"))
+    d.set(x + ox, y + 1, z + oz, "potted_" + flower)
 
 
-def furnish_all(specs, items=(), barrels=0, books=0, seats=0, beds=0, racks=0):
-    """Lay out several rooms (room, kind) in order; the building's required blocks go to the rooms whose
-    layout has a place for them (barrels to sorting rooms, books to libraries, beds to dormitories ...)."""
-    need = dict(items=list(items), barrels=barrels, books=books, seats=seats, beds=beds, racks=racks)
-    for r, kind in specs:
-        kw = dict(items=need["items"])
-        if kind == "sorting":
-            kw["barrels"] = need["barrels"]
-        if kind == "library":
-            kw["books"] = need["books"]
-        if kind in ("office", "library", "lounge", "canteen", "kiosk"):
-            kw["seats"] = need["seats"]
-        if kind == "dorm":
-            kw["beds"] = need["beds"]
-        if kind == "store":
-            kw["racks"] = need["racks"]
-        left = furnish(r, kind, soft=True, **kw)
-        need["items"] = left["items"]
-        for k in ("barrels", "books", "beds", "racks"):
-            if k in kw:
-                need[k] = left[k]
-        if "seats" in kw:
-            need["seats"] = max(0, need["seats"] - left["got"])
-    bad = {k: v for k, v in need.items() if v}
-    if bad:
-        raise RuntimeError(f"rooms could not take {bad}")
+def shutter_pair(d, x, y, z, facing, wood="spruce", h=2):
+    """Open shutters either side of the window at (x, y, z) in a wall facing `facing`."""
+    ox, oz = D4[facing]
+    for sd in (CW[facing], OPP[CW[facing]]):
+        sx, sz = D4[sd]
+        for k in range(h):
+            d.set(x + ox + sx, y + k, z + oz + sz, tr(wood, sd, "bottom", True))
+
+
+def furnish(*a, **k):          # TEMP
+    return 0
+
+
+def furnish_all(*a, **k):      # TEMP
+    return None
 
 
 WOOD = {"Neoterra": "birch", "Hearthwood": "dark_oak", "Cascadia": "spruce"}
@@ -1058,9 +728,9 @@ def builder_neo(rel, L):
         furnish(a.room(2, back="south"), "lounge", ["jukebox"], beds=1, seats=4)
         if sto >= 4:                                                 # top: meeting room
             furnish(a.room(3, back="north"), "office", seats=4, sit=False)
-        neo_roof(d, a, "garden")
+        neo_roof(d, a, [(5, 15, 5, MOSS), (5, 15, 6, 'azalea'), (5, 15, 8, MOSS), (5, 15, 9, 'azalea')])
     else:
-        neo_roof(d, a, "solar")
+        neo_roof(d, a, [(5, 12, 5, SOLAR), (5, 12, 7, SOLAR), (5, 12, 9, SOLAR)])
     # street front: planters with trees, benches, lamp posts
     for x in (1, 19):
         d.set(x, y0, 2, "moss_block")
@@ -1089,9 +759,9 @@ def builder_neo(rel, L):
             more = max(9, BRACKS[L] - racks)
             furnish(hb.room(1, back="south"), "store", racks=more, rack_h=3, seats=4, sit=False)
             racks += more
-            neo_roof(d, hb, "solar")
+            neo_roof(d, hb, [(22, 31, 6, SOLAR), (22, 31, 9, SOLAR), (22, 31, 12, SOLAR)])
         else:
-            neo_roof(d, hb, "hvac")
+            neo_roof(d, hb, [(22, 24, 5, "iron_block", tr("iron", "north", "bottom"))] + [(22, 31, 9, SOLAR), (22, 31, 12, SOLAR)])
     # ---- prefab workshop (L4+), canteen above at L5
     if L >= 4:
         cs = 2 if L >= 5 else 1
@@ -1102,9 +772,9 @@ def builder_neo(rel, L):
         racks += rest
         if cs > 1:
             furnish(c.room(1, back="south"), "canteen", sit=False)
-            neo_roof(d, c, "garden")
+            neo_roof(d, c, [(5, 15, 18, MOSS), (5, 15, 19, 'azalea'), (5, 15, 21, MOSS), (5, 15, 22, 'azalea')])
         else:
-            neo_roof(d, c, "solar")
+            neo_roof(d, c, [(5, 15, 18, SOLAR), (5, 15, 21, SOLAR)])
         # tower crane in the yard
         mx, mz = 19, 22
         for y in range(y0, 20):
@@ -1135,7 +805,7 @@ def builder_neo(rel, L):
         k = build(d, 28, 19, 33, 25, 1, roof="flat")
         k.door(30, 19, "north")
         furnish(k.room(0, back="south"), "kiosk", sit=False)
-        neo_roof(d, k, "garden")
+        neo_roof(d, k, [(30, 31, 21, MOSS), (30, 31, 23, 'azalea')])
         for z in range(17, 29, 3):
             lamp_post(d, 34, z, y0, P)
         for x in (20, 23):
@@ -1519,9 +1189,9 @@ def saw_neo(rel, L):
         furnish(b.room(1, back="south"), "canteen", sit=False, wood="mangrove")   # staff canteen
         if so >= 3:
             furnish(b.room(2, back="west"), "library", books=6, seats=2, sit=False, wood="mangrove")
-            neo_roof(d, b, "garden")
+            neo_roof(d, b, [(26, 30, 6, MOSS), (26, 30, 8, 'azalea'), (26, 30, 10, MOSS)])
         else:
-            neo_roof(d, b, "solar")
+            neo_roof(d, b, [(26, 30, 6, SOLAR), (26, 30, 9, SOLAR)])
         bench(d, 28, 2, y0, "north", 2, "mangrove", sit=False)
     # ---- drying kiln (L4+)
     if L >= 4:
@@ -1798,9 +1468,9 @@ def jack_neo(rel, L):
     if sto >= 2:
         furnish(a.room(1, back="south"), "office", racks=JACK_RACKS[L] - racks, seats=2, sit=False)
         racks = JACK_RACKS[L]
-        neo_roof(d, a, "garden")
+        neo_roof(d, a, [(5, 11, 6, MOSS), (5, 11, 7, 'azalea'), (5, 11, 8, MOSS), (5, 11, 9, 'azalea')])
     else:
-        neo_roof(d, a, "garden")
+        neo_roof(d, a, [(5, 11, 6, MOSS), (5, 11, 8, 'azalea')])
     # covered log store (west), nursery planters (east)
     for z in (4, 11):
         d.fill(1, y0, z, 1, 4, z, "light_gray_concrete")
@@ -1856,7 +1526,7 @@ def jack_neo(rel, L):
         furnish(c.room(0, back="south"), "workshop", ["anvil", "grindstone"], racks=max(0, JACK_RACKS[L] - racks))
         racks = JACK_RACKS[L]
         furnish(c.room(1, back="south"), "canteen", sit=False)
-        neo_roof(d, c, "solar")
+        neo_roof(d, c, [(18, 22, 14, SOLAR), (18, 22, 17, SOLAR)])
         wagon(d, 22, 23, y0, "birch", lg("birch_log", "x")) if L == 4 else None
     # ---- ranger watch tower (L5)
     if L >= 5:
@@ -2139,7 +1809,7 @@ def fl_neo(rel, L):
         up = ["fletching_table"] * max(0, FLETCH[L] - 3) + (["barrel"] * 5 if L >= 3 else [])
         furnish(a.room(1, back="south"), "workshop", up, racks=FRACKS[L] - racks)
         racks = FRACKS[L]
-    neo_roof(d, a, "solar")
+    neo_roof(d, a, [(5, 11, 6, SOLAR), (5, 11, 9, SOLAR)])
     if L >= 5:
         spot_trees(d, [(1, 30), (14, 32), (22, 30)], "birch", 3)
     # glazed outdoor lane east of the studio
@@ -2178,7 +1848,7 @@ def fl_neo(rel, L):
         rh.keep |= {(x, z) for x in range(4, 13) for z in range(16, 32)}
         for x in (5, 8, 11):
             d.set(x, 5, 24, "sea_lantern")
-        neo_roof(d, h, "solar")
+        neo_roof(d, h, [(5, 11, 17, SOLAR), (5, 11, 20, SOLAR), (5, 11, 23, SOLAR), (5, 11, 26, SOLAR), (5, 11, 29, SOLAR)])
     # ---- pro shop + gallery (L4+)
     if L >= 4:
         c = build(d, 23, 4, 33, 12, 3, roof="flat", core=(31, 6), street_glass=True)
@@ -2186,7 +1856,7 @@ def fl_neo(rel, L):
         furnish(c.room(0, back="south"), "shop")                       # pro shop counter
         furnish(c.room(1, back="south"), "lounge", seats=4, sit=False)
         furnish(c.room(2, back="south"), "office", seats=3, sit=False)   # spectators' gallery desks
-        neo_roof(d, c, "garden")
+        neo_roof(d, c, [(25, 29, 6, MOSS), (25, 29, 7, 'azalea'), (25, 29, 9, MOSS), (25, 29, 10, 'azalea')])
         d.sign(28, 6, 3, "north", ["PRO SHOP", "BOWS & GEAR"], "birch", glow=True, color="magenta")
     # ---- clubhouse tower (L5)
     if L >= 5:
@@ -2195,7 +1865,7 @@ def fl_neo(rel, L):
         for s_, kind in enumerate(("kiosk", "canteen", "library", "lounge")):    # clubhouse floors
             furnish(t.room(s_, back="south"), kind, books=8 if kind == "library" else 0, sit=False,
                     seats=2 if kind == "lounge" else 0)
-        neo_roof(d, t, "garden")
+        neo_roof(d, t, [(25, 29, 18, MOSS), (25, 29, 19, 'azalea'), (25, 29, 21, MOSS), (25, 29, 22, 'azalea')])
         for z in (14, 26, 30):
             lamp_post(d, 34, z, y0, P)
         for x in range(23, 34, 2):
@@ -2422,7 +2092,7 @@ def wh_neo(rel, L):
         furnish(ups[0], "office", wh_list(L, first=False), seats=2 if L >= 3 else 0)
         for rs in ups[1:]:
             furnish(rs, "loft")
-    neo_roof(d, a, "solar")
+    neo_roof(d, a, [(5, 13, 6, SOLAR), (5, 13, 9, SOLAR)] + ([(5, 13, 12, SOLAR), (5, 13, 15, SOLAR)] if z2 > 12 else []))
     # truck bay with markings and pallets
     for x in range(10, 13):
         for z in range(0, 4):
@@ -2453,7 +2123,7 @@ def wh_neo(rel, L):
             else:
                 racks += wh_racks(d, rr, 22, 9, 28, 13, max(36, WH[L] - racks))
                 furnish(rr, "office", seats=2, sit=False)
-        neo_roof(d, b, "garden")
+        neo_roof(d, b, [(23, 29, 6, MOSS), (23, 29, 8, 'azalea'), (23, 29, 10, MOSS), (23, 29, 12, 'azalea')])
         # loading canopy
         for x in range(21, 34):
             for z in range(16, 22):
@@ -2473,7 +2143,7 @@ def wh_neo(rel, L):
         d.fill(10, y0, 21, 10, 4, 21, "yellow_concrete")
         for x in range(10, 20):
             d.set(x, 5, 21, "yellow_concrete" if x % 2 else "black_concrete")
-        neo_roof(d, k, "solar")
+        neo_roof(d, k, [(5, 7, 23, SOLAR)])
         for x in (21, 27, 33):
             lamp_post(d, x, 24, y0, P)
     return d
@@ -2773,9 +2443,9 @@ def dl_neo(rel, L):
             specs += [(b.room(1, back="south"), "dorm"), (b.room(2, back="south"), "lounge")]
     specs.append((a.room(0, back="north"), "office"))                # waiting seats by the window
     furnish_all(specs, **dl_need(L))
-    neo_roof(d, a, "solar")
+    neo_roof(d, a, [(5, 11, 6, SOLAR), (5, 11, 9, SOLAR), (5, 11, 11, SOLAR)])
     if b:
-        neo_roof(d, b, "hvac")
+        neo_roof(d, b, [(20, 22, 6, "iron_block", tr("iron", "north", "bottom"))] + [(20, 28, 9, SOLAR), (20, 28, 12, SOLAR)])
     # forecourt
     for x in (1, 17):
         d.set(x, y0, 3, "moss_block")
@@ -3037,7 +2707,7 @@ def cp_neo(rel, L):
     d.sign(6, 4, 8, "north", ["RECYCLE", "& COMPOST"], "cherry", glow=True, color="lime")
     d.hut(4, y0, 10)
     furnish(a.room(0, back="south"), "workshop", ["composter"], racks=min(L, 3), wood="cherry")   # potting room
-    neo_roof(d, a, "garden")
+    neo_roof(d, a, [(5, 11, 11, MOSS), (5, 11, 12, 'azalea'), (5, 11, 13, MOSS)])
     for i in range(min(CBAR[L], 2)):
         bin_bay(d, 3 + i * 4, 4, y0, "light_gray_concrete")
     for x in (1, 15):
@@ -3054,7 +2724,7 @@ def cp_neo(rel, L):
             d.set(x, y0, 12, "hopper[enabled=true,facing=down]")
         d.set(21, y0, 12, sl("smooth_quartz", "top"))
         furnish(rs, "store", racks=L - 3 if L > 3 else 0)
-        neo_roof(d, s_, "solar")
+        neo_roof(d, s_, [(19, 23, 11, SOLAR), (19, 23, 13, SOLAR)])
         for i in range(CBAR[L] - 2):
             bin_bay(d, 17 + i * 4, 4, y0, "light_gray_concrete")
     # ---- glasshouse (L3+)
@@ -3080,7 +2750,7 @@ def cp_neo(rel, L):
         furnish(e.room(1, back="west"), "library", books=6, seats=2, sit=False, wood="cherry")  # classroom
         if L >= 5:
             furnish(e.room(2, back="south"), "office", seats=2, sit=False, wood="cherry")
-        neo_roof(d, e, "garden")
+        neo_roof(d, e, [(19, 25, 20, MOSS), (19, 25, 21, 'azalea'), (19, 25, 23, MOSS), (19, 25, 24, 'azalea')])
     # ---- biogas digesters (L5)
     if L >= 5:
         for cx, cz in ((29, 6), (29, 13), (29, 20) if False else (22, 6)) if False else ((29, 6), (29, 13)):
