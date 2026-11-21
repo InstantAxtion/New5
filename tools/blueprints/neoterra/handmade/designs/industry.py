@@ -588,15 +588,15 @@ def sm_cascadia(rel, L):
         d.window(x, 3, z1, x, 4, z1)
     d.window(x1, 3, 10, x1, 4, 10)
     d.sign(14, ridge - 2, z1 - 1, "north", ["", "SMELTER", "assay office"], "spruce")
-    # stack
-    for y in range(2, ridge + 8):
+    # stack (raised when the works grows)
+    for y in range(2, ridge + (8 if L >= 2 else 4)):
         for x in range(x2 + 1, x2 + 4):
             for z in range(8, 11):
                 if x == x2 + 2 and z == 9 and y > 3:
                     d.set(x, y, z, AIR)
                 else:
                     d.set(x, y, z, "mossy_cobblestone" if (y % 4 == 0 and (x + z) % 2) else
-                          "stone_bricks" if y >= ridge + 6 else "cobblestone")
+                          "stone_bricks" if y >= ridge + (6 if L >= 2 else 2) else "cobblestone")
     # furnace bank along the east wall
     fz = [(x2 - 1, 2, z, "west") for z in range(8, 13)]
     nf = need(d, "furnace")
@@ -677,19 +677,20 @@ def sm_neoterra(rel, L):
     neo_sign(d, x1 + 6, 3, z1 - 1, ["SMELTING", "PLANT"])
     # round stack
     cx, cz = 18, 9
-    for y in range(1, 26):
+    sh = 26 if L >= 2 else 20                        # the stack is raised when the plant grows
+    for y in range(1, sh):
         for x in range(cx - 1, cx + 2):
             for z in range(cz - 1, cz + 2):
                 if (x, z) == (cx, cz) and y > 2:
                     continue
                 d.set(x, y, z, "cyan_terracotta" if y % 6 == 0 else "white_concrete")
         for x, z in ((cx - 2, cz), (cx + 2, cz), (cx, cz - 2), (cx, cz + 2)):
-            if y <= 23:
+            if y <= sh - 3:
                 d.set(x, y, z, "cyan_terracotta" if y % 6 == 0 else "white_concrete")
     for x in range(cx - 1, cx + 2):
         for z in range(cz - 1, cz + 2):
             if (x, z) != (cx, cz):
-                d.set(x, 26, z, "polished_blackstone_bricks")
+                d.set(x, sh, z, "polished_blackstone_bricks")
     # flue duct from hall to stack
     for x in range(X2 + 1, cx - 2):
         d.set(x, 7, cz, "iron_block")
@@ -855,16 +856,17 @@ def ss_cascadia(rel, L):
     d.sign(7, ridge - 2, sz1 - 1, "north", ["", "LIME KILN", "~ co. ~"], "spruce")
     # kiln block
     kx1, kx2, kz1, kz2 = 12, 19, 7, 14
-    for y in range(1, 7):
+    kt = 6 if L >= 3 else 5                          # the kiln block is built up a course at L3
+    for y in range(1, kt + 1):
         for x in range(kx1, kx2 + 1):
             for z in range(kz1, kz2 + 1):
                 d.set(x, y, z, "mossy_cobblestone" if (x * 7 + y * 3 + z * 5) % 6 == 0 else
                       "andesite" if (x + y * 2 + z) % 5 == 0 else "cobblestone")
     for x, z in perim(kx1, kz1, kx2, kz2):
-        d.set(x, 7, z, "spruce_fence")
+        d.set(x, kt + 1, z, "spruce_fence")
     for x in range(15, 17):
         for z in range(10, 12):
-            d.set(x, 6, z, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+            d.set(x, kt, z, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
     # draw arches: recess with brick lining, furnace at the back
     arches = [(kx1 + 1, 2, 10, "west"), (kx1 + 1, 2, 12, "west"), (13 + 1, 2, kz1 + 1, "north"),
               (16, 2, kz1 + 1, "north"), (18, 2, kz1 + 1, "north")]
@@ -1694,8 +1696,9 @@ def cr_cascadia(rel, L):
     d.item(lx2 - 1, 2, lz1 + 2, "stonecutter", "west")
     racks(d, [(lx1 + 1, 2, z, "east") for z in range(lz1 + 3, tz1)] + [(lx2 - 1, 2, lz1 + 4, "west")])
     d.lamp(11, 4, 8)
-    bins(d, [(19, 6, 21, 8), (19, 10, 21, 12)], 2, "cobblestone_wall[east=none,north=none,south=none,up=true,"
-         "waterlogged=false,west=none]", ["gravel", "sand"])
+    if L >= 2:
+        bins(d, [(19, 6, 21, 8), (19, 10, 21, 12)], 2, "cobblestone_wall[east=none,north=none,south=none,up=true,"
+             "waterlogged=false,west=none]", ["gravel", "sand"])
     if L >= 3:
         for z in range(0, lz1):
             d.set(11, 2, z, "rail[shape=north_south,waterlogged=false]") if False else None
@@ -2471,6 +2474,52 @@ def stack_logs(d, x1, z1, x2, z2, h, axis="x", log="spruce_log"):
             for y in range(2, 2 + h):
                 d.set(x, y, z, f"{log}[axis={axis}]")
 
+def clear_box(d, x1, z1, x2, z2, top):
+    return all(d.bp.inside(x, top, z) and d.get(x, 1, z) != "minecraft:water" and
+               all(d.air(x, y, z) for y in range(2, top + 1)) for x in range(x1, x2 + 1) for z in range(z1, z2 + 1))
+
+
+def stack2(d, x, z, top, block, band="stone_bricks"):
+    """A 2x2 boiler / kiln chimney standing on the yard at (x..x+1, z..z+1), only where the spot is open."""
+    if not clear_box(d, x, z, x + 1, z + 1, top):
+        return False
+    for y in range(2, top + 1):
+        for a in (x, x + 1):
+            for b in (z, z + 1):
+                d.set(a, y, b, band if y % 5 == 0 else block)
+    return True
+
+
+def pile(d, x1, z1, x2, z2, blocks, h=3):
+    """A stepped stockpile (ore, coal, clay, bricks) filling x1..x2 / z1..z2, only where the spot is open."""
+    if not clear_box(d, x1, z1, x2, z2, 1 + h):
+        return False
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            hh = min(h, 1 + min(x - x1, x2 - x, z - z1, z2 - z))
+            for y in range(2, 2 + hh):
+                d.set(x, y, z, blocks[(x * 3 + z * 5 + y) % len(blocks)])
+    return True
+
+
+def water_tower(d, x, z, wood, tall=False):
+    """Railway water tank on four posts over (x..x+2, z..z+2) with a chain spout."""
+    top = 12 if tall else 10
+    if not clear_box(d, x, z, x + 2, z + 2, top):
+        return False
+    for a, b in ((x, z), (x + 2, z), (x, z + 2), (x + 2, z + 2)):
+        col(d, a, b, 2, 6, f"{wood}_log[axis=y]" if wood != "birch" else "light_gray_concrete")
+    d.fill(x, 7, z, x + 2, 7, z + 2, f"{wood}_planks")
+    for y in range(8, top - 1):
+        for a, b in perim(x, z, x + 2, z + 2):
+            d.set(a, y, b, f"{wood}_planks" if wood != "birch" else "white_concrete")
+        d.set(x + 1, y, z + 1, "water")
+    d.fill(x, top - 1, z, x + 2, top - 1, z + 2, slab(f"{wood}_slab"))
+    for y in (5, 6):
+        d.set(x + 1, y, z, CHAIN)
+    return True
+
+
 
 # ------------------------------------------------------------------------------------------------ blacksmith
 def bs_coalshed(d, sl):
@@ -2831,6 +2880,8 @@ def ss_drying(d, sl):
                 d.set(x, 3, z, f"{w}_fence")
     d.rack(x1 + 1, 2, z1 + 1, "east")
     d.item(x2 - 1, 2, z1 + 1, "crafting_table")
+    if clear_box(d, x2 + 2, z1 + 2, x2 + 3, z1 + 9, 4):
+        stack_logs(d, x2 + 2, z1 + 2, x2 + 3, z1 + 9, 3, "z", "oak_log")
     post_sign(d, x1 + 2, z1 - 1, ["DRYING", "SHED"])
 
 
@@ -2852,6 +2903,7 @@ def ss_kilnyard(d, sl):
         pond(d, (x1 + x2) // 2 - 1, z1, (x1 + x2) // 2 + 1, z1 + 2, M["stone"])
     else:
         pond(d, x1, z1, x1 + 2, z1 + 2, M["stone"])
+    pile(d, x2 - 1, z1 + 1, x2 + 2, z1 + 4, ["bricks", "bricks", "terracotta"], 3)
     for x in ((x1 + x2) // 2 - 1, (x1 + x2) // 2 + 1):
         d.set(x, 2, z2, "clay")
         d.set(x, 2, z2 - 1, "bricks")
@@ -2884,6 +2936,8 @@ def ss_pughouse(d, sl):
     fit(d, u2, [("rack2", -5, -1, "north"), ("keg", -6, -1, "north", "bricks"),
                 ("rack2", -3, 4, "north"), ("rack2", -4, 4, "north"), ("slab", 5, -1, DPOT),
                 ("t", 6, -1, "barrel"), ("lamp", -4, 6), ("lamp", 6, 2)], "stonesmeltery")
+    sx_, sz_ = (x2 - 5, z2 - 1) if wide else (x2 - 1, z2 - 4)
+    stack2(d, sx_, sz_, info["top"] + 4, {"Hearthwood": "bricks", "Cascadia": "cobblestone", "Neoterra": "white_concrete"}[d.pack])
     cx, cz = (x2 - 3, (z1 + z2) // 2) if wide else ((x1 + x2) // 2, z2 - 2)
     for x in range(cx - 3, cx + 4):                  # round track of the horse gin
         for z in range(cz - 2, cz + 3):
@@ -3022,6 +3076,9 @@ def mc_engineshed(d, sl):
     fit(d, u, [("t", -6, -1, "chest", "north"), ("t", -7, -1, "chest", "north"), ("rack", -8, -1, "north"),
                ("desk", -7, 3, "south"), ("t", -1, 3, "barrel"), ("t", 4, -1, "plant"), ("t", 5, -1, "carto"),
                ("b", -1, 4, "bookshelf"), ("lamp", -7, 2), ("lamp", 5, 2)], "mechanic")
+    water_tower(d, x2 + 1, z2 - 3, WOOD[d.pack]) or water_tower(d, x2 + 2, z2 - 3, WOOD[d.pack], tall=True)
+    pile(d, x2 + 1, z1, x2 + 3, z1 + 3, ["coal_block", "coal_block", "black_wool"], 2) or \
+        pile(d, x2 + 2, z1 + 1, x2 + 3, z1 + 5, ["coal_block", "coal_block", "black_wool"], 2)
     for x in range(x1 + 3, x2 - 2, 4):               # smoke vents along the ridge
         col(d, x, (z1 + z2) // 2, info["ridge"] + 1, info["ridge"] + 2, "iron_bars")
     lamp_post(d, info["mx"] - 2, z1 - 2)
@@ -3091,6 +3148,9 @@ def sn_cutshed(d, sl):
     hang(d, x1 + 3, 4, zc - 1)
     hang(d, x2 - 3, 4, zc - 1)
     stone_stack(d, [(x1 + 1, z1 + 1, 2), (x1 + 3, z1 + 1, 1), (x1 + 5, z1 + 1, 2), (x2 - 1, z1 + 1, 2)], 2)
+    for x, z, h in ((x1 + 7, z1 + 1, 2), (x2 - 3, z1 + 1, 1), (x1 + 1, z1 + 3, 2), (x1 + 9, z1 + 1, 2)):   # more blocks waiting
+        if d.air(x, 2, z) and d.air(x, 3, z):
+            stone_stack(d, [(x, z, h)], 2)
     for x in (x1 - 1, x2 + 1):
         col(d, x, zc, 2, 7, MAT[d.pack]["post"])
     for x in range(x1 - 1, x2 + 2):
@@ -3327,6 +3387,23 @@ def cr_tipple(d, sl):
     for y in range(3, 11):
         d.set((tx1 + tx2) // 2, y, (tz1 + tz2) // 2, CHAIN)
     d.set((tx1 + tx2) // 2, 2, (tz1 + tz2) // 2, "iron_block")
+    for x, z in perim(tx1, tz1, tx2, tz2):          # boarded shaft house round the foot of the headframe
+        if (x, z) in ((tx1, tz1), (tx2, tz1), (tx1, tz2), (tx2, tz2)):
+            continue
+        for y in range(2, 6):
+            if x == (tx1 + tx2) // 2 and z == tz2 and y < 4:
+                continue
+            d.set(x, y, z, M["stone"] if y == 2 else "glass_pane" if y == 4 and x == (tx1 + tx2) // 2 else M["board"])
+    d.set((tx1 + tx2) // 2, 4, tz2, M["board"])
+    hang(d, tx1 + 1, 5, tz1 + 1)
+    wx, wz = (tx1 + tx2) // 2, (tz1 + tz2) // 2       # sheave wheel on top of the headframe
+    for a, b in ((-2, 0), (2, 0), (0, 2), (-1, 2), (1, 2), (-2, 1), (2, 1), (-1, -1), (1, -1), (0, -1)):
+        if d.air(wx + a, 19 + b, wz):
+            d.set(wx + a, 19 + b, wz, "iron_block" if d.pack == "Neoterra" else f"{MAT[d.pack]['beam']}[axis=x]")
+    d.set(wx, 19, wz, "iron_bars")
+    d.set(wx, 18, wz, "iron_bars")
+    pile(d, x1 + 1, z1 - 4, x1 + 8, z1 - 2, ["gravel", "coal_block", "cobblestone"], 2) or \
+        pile(d, x1 - 3, z1 + 2, x1 - 1, z1 + 7, ["gravel", "coal_block", "cobblestone"], 2)
     rails(d, [(x, tz2 + 1) for x in range(x1, x2 + 1)], "east_west")
     for y in range(2, 11):                           # ladder up the headframe leg
         d.set(tx1 - 1, y, tz1 + 1, "ladder[facing=west,waterlogged=false]")
@@ -3366,6 +3443,8 @@ def cr_screenhouse(d, sl):
                 ("rack2", -3, 3, "north"), ("rack2", -4, 3, "north"), ("rack2", -5, 3, "north"),
                 ("t", -6, 4, "barrel"), ("t", 4, -1, "barrel"), ("t", 5, -1, "barrel"), ("b", 6, -1, "white_wool", "white_wool"),
                 ("lamp", -3, 2), ("lamp", -6, 6), ("lamp", 5, 2)], "crusher")
+    sb = {"Hearthwood": "bricks", "Cascadia": "cobblestone", "Neoterra": "white_concrete"}[d.pack]
+    stack2(d, x2 + 1, z1 + 1, info["top"] + 9, sb, "cyan_terracotta" if d.pack == "Neoterra" else "stone_bricks")
     gx = x1 + 1
     for i, z in enumerate(range(z2, z1 + 1, -1)):   # conveyor gallery rising toward the street
         y = 2 + i // 2
