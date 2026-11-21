@@ -4006,7 +4006,7 @@ def _g_cook_hw(d, L):
         canopy(d, 25, 40, 37, 44, 6, [(25, 40), (31, 40), (37, 40), (25, 44), (31, 44), (37, 44)],
                "oak_slab", "oak_fence")                                # vine pergola over the terrace
         for x in (26, 28, 30, 32, 34, 36):
-            d.set(x, 5, 40, "vine[east=false,north=true,south=false,up=false,west=false]")
+            d.set(x, 5, 40, "vine[east=false,north=false,south=false,up=true,west=false]")
         well(d, 30, 26, "stone_bricks", "dark_oak", "dark_oak_fence")
         lamp_post(d, 24, 40)
         lamp_post(d, 38, 40)
