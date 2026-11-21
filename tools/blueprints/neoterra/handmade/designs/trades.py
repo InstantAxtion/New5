@@ -1193,6 +1193,20 @@ def builder_cas(rel, L):
     if L >= 5:
         spot_trees(d, [(32, 6), (19, 33)], "spruce", 5)
         lamp_post(d, 33, 28, y0, P)
+    if L >= 4:
+        tree(d, 32, 32, y0, "spruce", 5, 1)
+        for z in (28, 31):
+            lamp_post(d, 18, z, y0, P)
+        bench(d, 12, 32, y0, "south", 3, "spruce", sit=False)
+        lamp_post(d, 1, 18, y0, P)
+    if L >= 5:
+        for x in (8, 29):
+            lamp_post(d, x, 33, y0, P)
+        for z in (19, 22, 29):
+            lamp_post(d, 32, z, y0, P)
+        for x in (19, 23, 27):
+            tree(d, x, 32, y0, "spruce", 5, 1)
+        lamp_post(d, 17, 33, y0, P)
     if seats < BSEATS[L]:
         bench(d, 13, 2, y0, "north", BSEATS[L] - seats, "spruce")
     tree(d, 32, 32, y0, "spruce", 5, 2)
@@ -1361,6 +1375,10 @@ def saw_neo(rel, L):
                 tree(d, x, z, y0 + 1, "birch", 3, 1)
         for x in (21, 27, 33):
             lamp_post(d, x, 27, y0, P)
+    if L >= 5:
+        tree(d, 34, 30, y0, "birch", 3, 1)
+        for x in (28, 31):
+            lamp_post(d, x, 30, y0, P)
     return d
 
 
@@ -1480,6 +1498,10 @@ def saw_hw(rel, L):
         fit(d, 6, [("s", 9, 26, "anvil[facing=east]"), ("s", 10, 26, "grindstone[face=floor,facing=north]"),
                    ("s", 11, 26, "oak_planks"), ("o", 11, 26, sl("oak")), ("s", 9, 23, lg("stripped_oak_log", "x")),
                    ("s", 10, 23, lg("stripped_oak_log", "x")), ("s", 12, 21, pot(2)), ("L", 9, 24)], "oak")
+    if L >= 5:
+        for x in (19, 22, 25, 28):
+            lamp_post(d, x, 27, y0, P)
+        lamp_post(d, 13, 29, y0, P)
     return d
 
 
@@ -1978,6 +2000,9 @@ def jack_cas(rel, L):
                     ("o", 7, 39, "hay_block[axis=y]"), ("L", 10, 36)])
     tree(d, 27, 37 if L >= 3 else 28, y0, "spruce", 6, 2)
     tree(d, 1, 26, y0, "spruce", 5, 2) if L < 4 else None
+    if L >= 5:
+        for x, z in ((23, 31), (23, 36), (28, 31)):
+            tree(d, x, z, y0, "spruce", 5, 1)
     return d
 
 
@@ -2056,6 +2081,12 @@ def fl_neo(rel, L):
     neo_roof(d, a, [(5, 11, 6, SOLAR), (5, 11, 9, SOLAR)])
     if L >= 5:
         spot_trees(d, [(1, 30), (14, 32), (22, 30)], "birch", 3)
+    if L >= 2:
+        for z in (6, 9, 12):
+            lamp_post(d, 22, z, y0, P)
+    if L >= 5:
+        for x in (16, 19, 22):
+            lamp_post(d, x, 27, y0, P)
     # glazed outdoor lane east of the studio
     lx1, lx2 = 16, 20
     d.fill(lx1, 1, 4, lx2, 1, 22, "grass_block[snowy=false]")
@@ -2178,6 +2209,9 @@ def fl_hw(rel, L):
         racks += n1
     if L >= 2:
         lamp_post(d, 2, 2, y0, P)
+    if L >= 2:
+        for z in (6, 10):
+            lamp_post(d, 17, z, y0, P)
     # garden lane with straw butts behind
     gz1, gz2 = 13, 26
     for x, z in ring(2, gz1, 16, gz2):
@@ -2266,6 +2300,9 @@ def fl_cas(rel, L):
         fit(d, 6, [("i", x, 12, "fletching_table") for x in (6, 7, 8)[:max(0, FLETCH[L] - 2)]] +
             [("r", 10, z, 1) for z in (7, 8, 9)[:n1]] + [("bed", 9, 12, "south"), ("L", 8, 7)], "spruce")
         racks += n1
+    if L >= 2:
+        tree(d, 14, 22, y0, "spruce", 5, 1)
+        tree(d, 30, 16, y0, "spruce", 5, 1)
     # side porch = shooting line, range to the east with a hay-bale berm
     for x in range(12, 15):
         for z in range(5, 14):
@@ -2730,6 +2767,9 @@ def wh_cas(rel, L):
         bench(d, 24, 32, 2, "south", 3, "spruce", sit=False)
         for x, z in ((25, 38), (30, 38), (35, 38), (37, 33)):
             tree(d, x, z, 2, "spruce", 5, 1)
+    if L >= 5:
+        for x, z in ((35, 26), (31, 30), (38, 30), (24, 31), (34, 30)):
+            tree(d, x, z, 2, "spruce", 5, 1)
     return d
 
 
@@ -2955,6 +2995,11 @@ def dl_hw(rel, L):
         fit(d, 6, [("bed", 22, 25, "south"), ("bed", 26, 25, "south"), ("s", 23, 25, sl("dark_oak", "top")),
                    ("s", 21, 19, "chest[facing=south,type=single,waterlogged=false]"), ("L", 25, 22)], "dark_oak")
         hedge(d, [(x, 27) for x in range(21, 34)], y0, "oak") if L >= 5 else None
+    if L >= 4:
+        tree(d, 1, 31, y0, "oak", 4, 1)
+        lamp_post(d, 18, 22, y0, P)
+    if L >= 5:
+        lamp_post(d, 18, 25, y0, P)
     return d
 
 

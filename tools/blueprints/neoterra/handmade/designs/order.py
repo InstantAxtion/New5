@@ -2201,7 +2201,7 @@ def ca_hearthwood(rel, L):
         room(d, b, 0, ["R   R", "R   R", "     ", "  D  ", "     ", "G   K", "    k"], lights=[(2, 3)])
         room(d, b, 1, ["x   C", "  t  ", "  s  ", "     ", "C   B", "     "], lights=[(2, 3)])
         room(d, b, 2, ["1l1 C", "2 2  ", "     ", "c   K", "     ", "  r  "], lights=[(2, 3)])
-        room(d, b, 3, ["x t C", "  s  ", "     ", "K   K", "     ", "R   R"])
+        room(d, b, 3, ["x t C", "  s  ", "     ", "K   K", "     ", "R    "])
         for x in range(20, 39, 4):
             d.banner(x, 5, 27, "north", "red" if x % 8 else "white")
     return d
@@ -2673,6 +2673,8 @@ def ca_neoterra(rel, L):
         wlamp(d, 7, 4, 23)
         wlamp(d, 9, 4, 23)
         path(d, 8, 20, 8, 23)
+        lamp_post(d, 18, 24)
+        lamp_post(d, 18, 30)
         for z in range(25, 36, 2):                                # planter strip along the residence
             d.set(16, 1, z, "moss_block")
             d.set(16, 2, z, "azalea" if z % 4 == 1 else "flowering_azalea")
@@ -2826,7 +2828,7 @@ def en_hearthwood(rel, L):
         for z in range(z1 + 2, z1 + 5):
             d.set(x2 - 2, 7, z, "dark_oak_fence")
         # reading room: bookcases on the west and south walls and either side of the oriel
-        shelves(d, 7, 3, [(4, 4, 5, 4), (11, 4, 11, 4), (4, 5, 4, 9, [(4, 7)]), (5, 10, 11, 10)])
+        shelves(d, 7, 3, [(4, 4, 6, 4), (10, 4, 11, 4), (4, 5, 4, 9, [(4, 7)]), (5, 10, 11, 10), (11, 5, 11, 6)])
         d.item(6, 7, 7, "lectern", "east")
         d.item(10, 7, 7, "lectern", "west")
         d.table(8, 7, 7, "dark_oak", "post")
@@ -2855,7 +2857,7 @@ def en_hearthwood(rel, L):
         shelves(d, 2, 4 if L >= 5 else 3, [(14, 5, 20, 5, [(16, 5), (19, 5)]), (20, 6, 20, 10, [(20, 7), (20, 8)]),
                                            (15, 10, 19, 10), (14, 5, 14, 7)])
         if L >= 5:                                                # the study's west wall too
-            shelves(d, 2, 3, [(4, 6, 4, 7)])
+            shelves(d, 2, 3, [(4, 7, 4, 7)])
             shelves(d, 3, 2, [(4, 9, 4, 10)])
         d.dining(16, 2, 7, 3, "x", "dark_oak", ("n", "s"), sit=False)
         for x in (16, 18):
@@ -3019,7 +3021,7 @@ def en_cascadia(rel, L):
         room(d, t, 0, ["B   B", "     ", "x   C", "  t  "], lights=[(2, 2)])    # star lookout: chart room,
         room(d, t, 1, ["B C B", "     ", "  z  "], lights=[(2, 1)])             # almanacs,
         room(d, t, 2, ["1l1  ", "2 2 c", "     "], lights=[(2, 2)])             # watchers' bunks,
-        room(d, t, 3, ["x t x", "  s  ", "K   K"])                              # observing room
+        room(d, t, 3, ["x t x", "  s  ", "K    "])                              # observing room
         for y in range(t.ridge + 1, t.ridge + 3):
             d.set(37, y, 6, "spruce_fence")
         d.set(37, t.ridge + 3, 6, "lantern[hanging=false,waterlogged=false]")
@@ -3331,22 +3333,42 @@ def al_hearthwood(rel, L):
                    (5, 6, SL("dark_oak", "top"), "potted_blue_orchid"), (6, 10, "brown_wool")])
     # ---- growth: an apothecaries' row with a physic garden
     if L >= 2:                                                    # still-house for distilling cordials
-        building(d, 17, 4, 24, 11, nf=1, axis="z", doors=(("north", 20),), chimney=(25, 8))
+        b = building(d, 17, 4, 24, 11, nf=1, axis="z", doors=(("north", 20),), chimney=(25, 8))
+        room(d, b, 0, ["V    W", "V     ", "  WWW ", "      ", "K    K", "KK  uK"], lights=[(2, 2)])   # still-house
+        wlamp(d, 19, 4, 3)
         d.sign(22, 4, 3, "north", ["Still", "House"], "dark_oak")
         lamp_post(d, 15, 1)
     if L >= 3:                                                    # herbalist's cottage (two storeys)
-        building(d, 27, 3, 35, 10, nf=2, axis="x", doors=(("north", 31), ("west", 7)), chimney=(36, 7))
+        b = building(d, 27, 3, 35, 10, nf=2, axis="x", doors=(("north", 31), ("west", 7)), chimney=(36, 7))
+        room(d, b, 0, ["MFW   $", "       ", "   nn  ", "   TT K", "   ss k", "      c"], lights=[(3, 2)])   # kitchen
+        room(d, b, 1, ["l11  Cl", " 22    ", "c     K", "  r r  "], lights=[(3, 2)])                   # bedroom
+        wlamp(d, 30, 4, 2)
+        wlamp(d, 32, 4, 2)
         flowerbed(d, 28, 0, 29, 1)
         flowerbed(d, 33, 0, 34, 1)
         d.set(31, 1, 1, "gravel")
         d.set(31, 1, 0, "gravel")
     if L >= 4:                                                    # drying barn for herbs, store above
-        building(d, 17, 24, 30, 31, nf=2, axis="x", doors=(("north", 23), ("west", 28)))
+        b = building(d, 17, 24, 30, 31, nf=2, axis="x", doors=(("north", 23), ("west", 28)))
+        room(d, b, 0, ["HHmm    KKHH", "            ", "  hh  hh  hh", "            ", "           K",
+                       "      KmmK c"], lights=[(3, 3), (9, 3)])                                # herb drying barn
+        drying_beam(d, 19, 28, 26, 5, "stripped_dark_oak_log")
+        room(d, b, 1, ["HHHHH  HHHHH", "H          H", "m          m", "K          K", "      HHHHHH",
+                       "      HHHHHH"], lights=[(6, 2)])                                         # loft store
+        wlamp(d, 22, 4, 23)
         for x in range(18, 30, 3):
             drying_beam(d, x, x + 1, 23, 5, "stripped_dark_oak_log") if False else None
     if L >= 5:                                                    # guild hall of apothecaries
-        building(d, 27, 13, 40, 21, nf=2, axis="x", doors=(("north", 33), ("west", 17)), chimney=(41, 17))
-        building(d, 32, 24, 41, 32, nf=1, axis="z", doors=(("north", 36),))
+        b = building(d, 27, 13, 40, 21, nf=2, axis="x", doors=(("north", 33), ("west", 17)), chimney=(41, 17))
+        room(d, b, 0, ["BbBB   bBBbB", "            ", "  nnnnnnnn  ", "  TTTTTTTT  ", "  ssssssss  ",
+                       "           z", "      C   CB"], lights=[(3, 3), (8, 3)])                   # guild council room
+        room(d, b, 1, ["xC t  t t Cx", "   s  s s   ", "            ", "     nn     ", "     TT     ",
+                       "     ss     "], lights=[(3, 2), (8, 2)])                                    # wardens' office
+        wlamp(d, 32, 4, 12)
+        wlamp(d, 34, 4, 12)
+        b = building(d, 32, 24, 41, 32, nf=1, axis="z", doors=(("north", 36),))
+        room(d, b, 0, ["VpV   pV", "        ", "  ===  W", "       c", "  ===  C", "        ", "KK   KKu"],
+             lights=[(3, 2), (3, 5)])                                                         # assay laboratory
         for x in (36, 38):
             tree(d, x, 2, 34, "oak_log", "flowering_azalea_leaves", 3, 1)
     return d
