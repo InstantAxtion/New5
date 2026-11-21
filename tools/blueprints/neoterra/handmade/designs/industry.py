@@ -2880,8 +2880,8 @@ def ss_drying(d, sl):
                 d.set(x, 3, z, f"{w}_fence")
     d.rack(x1 + 1, 2, z1 + 1, "east")
     d.item(x2 - 1, 2, z1 + 1, "crafting_table")
-    if clear_box(d, x2 + 2, z1 + 2, x2 + 3, z1 + 9, 4):
-        stack_logs(d, x2 + 2, z1 + 2, x2 + 3, z1 + 9, 3, "z", "oak_log")
+    if clear_box(d, x2 + 2, z1 + 2, x2 + 2, z1 + 9, 4):
+        stack_logs(d, x2 + 2, z1 + 2, x2 + 2, z1 + 9, 3, "z", "oak_log")
     post_sign(d, x1 + 2, z1 - 1, ["DRYING", "SHED"])
 
 
@@ -3076,9 +3076,12 @@ def mc_engineshed(d, sl):
     fit(d, u, [("t", -6, -1, "chest", "north"), ("t", -7, -1, "chest", "north"), ("rack", -8, -1, "north"),
                ("desk", -7, 3, "south"), ("t", -1, 3, "barrel"), ("t", 4, -1, "plant"), ("t", 5, -1, "carto"),
                ("b", -1, 4, "bookshelf"), ("lamp", -7, 2), ("lamp", 5, 2)], "mechanic")
-    water_tower(d, x2 + 1, z2 - 3, WOOD[d.pack]) or water_tower(d, x2 + 2, z2 - 3, WOOD[d.pack], tall=True)
-    pile(d, x2 + 1, z1, x2 + 3, z1 + 3, ["coal_block", "coal_block", "black_wool"], 2) or \
-        pile(d, x2 + 2, z1 + 1, x2 + 3, z1 + 5, ["coal_block", "coal_block", "black_wool"], 2)
+    # water tank and coal stage beside the shed (Neoterra: at the street end, clear of the L5 machine hall)
+    tz = z1 if d.pack == "Neoterra" else z2 - 3
+    water_tower(d, x2 + 1, tz, WOOD[d.pack]) or water_tower(d, x2 + 2, tz, WOOD[d.pack], tall=True)
+    cz = z1 + 4 if d.pack == "Neoterra" else z1
+    pile(d, x2 + 1, cz, x2 + 3, cz + 3, ["coal_block", "coal_block", "black_wool"], 2) or \
+        pile(d, x2 + 2, cz + 1, x2 + 3, cz + 5, ["coal_block", "coal_block", "black_wool"], 2)
     for x in range(x1 + 3, x2 - 2, 4):               # smoke vents along the ridge
         col(d, x, (z1 + z2) // 2, info["ridge"] + 1, info["ridge"] + 2, "iron_bars")
     lamp_post(d, info["mx"] - 2, z1 - 2)
@@ -3403,7 +3406,7 @@ def cr_tipple(d, sl):
     d.set(wx, 19, wz, "iron_bars")
     d.set(wx, 18, wz, "iron_bars")
     pile(d, x1 + 1, z1 - 4, x1 + 8, z1 - 2, ["gravel", "coal_block", "cobblestone"], 2) or \
-        pile(d, x1 - 3, z1 + 2, x1 - 1, z1 + 7, ["gravel", "coal_block", "cobblestone"], 2)
+        d.pack == "Hearthwood" and pile(d, x1 - 3, z1 + 2, x1 - 1, z1 + 7, ["gravel", "coal_block", "cobblestone"], 2)
     rails(d, [(x, tz2 + 1) for x in range(x1, x2 + 1)], "east_west")
     for y in range(2, 11):                           # ladder up the headframe leg
         d.set(tx1 - 1, y, tz1 + 1, "ladder[facing=west,waterlogged=false]")
