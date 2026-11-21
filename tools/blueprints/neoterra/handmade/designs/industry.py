@@ -2311,6 +2311,11 @@ def fit(d, rm, items, base="blacksmith"):
             d.chair(x, y, z, a[0], wood, sit=False)
         elif k == "table":
             d.table(x, y, z, wood)
+        elif k == "desk":                            # table with its chair on the `back` side
+            dx, dz = D4[a[0]]
+            d.table(x, y, z, wood)
+            if free(x + dx, z + dz):
+                d.chair(x + dx, y, z + dz, a[0], wood, sit=False)
         elif k == "bs":
             d.set(x, y, z, "bookshelf")
             d.set(x, y + 1, z, "bookshelf")
@@ -2530,21 +2535,41 @@ def bs_ironworks(d, sl):
         d.set(fx + 2, y, fz2 - 1, "water_cauldron[level=3]")
     fit(d, g, [("rack", -1, 1, "west"), ("rack", -1, 2, "west"), ("b", -1, 3, "coal_block", "coal_block"),
                ("t", -1, 4, "barrel"), ("slab", -3, 0, CANDLE), ("t", -4, 0, "grind", "south"), ("slab", -5, 0),
-               ("hook", -1, 1, "west"), ("hook", -1, 2, "west"), ("lamp", -3, 3), ("lamp", -8, 3), ("lamp", -13, 3)],
-        "blacksmith")
+               ("t", -6, 0, "barrel"), ("rack", -7, 0, "south"), ("rack", -8, 0, "south"),
+               ("rack", 2, 0, "south"), ("rack", 3, 0, "south"), ("slab", 4, 0, CANDLE), ("t", 5, 0, "smith"),
+               ("slab", 6, 0, "flower_pot"), ("hook", 2, 0, "south"), ("hook", 3, 0, "south"),
+               # finishing bench down the middle, a second anvil stand in deep halls
+               ("t", -4, 3, "smith"), ("slab", -5, 3, CHAIN), ("slab", -6, 3), ("t", -7, 3, "grind", "south"),
+               ("slab", -8, 3, DPOT), ("b", -11, -5, "iron_block"), ("b", -12, -5, "iron_block", "iron_block"),
+               ("t", -13, -5, "anvil", "north"), ("hook", -1, 1, "west"), ("hook", -1, 2, "west"),
+               ("lamp", -3, 3), ("lamp", -8, 3), ("lamp", -13, 3), ("lamp", 4, 3), ("lamp", -18, 3)], "blacksmith")
+    # drawing office: drafting desks in two rows, plan chests under the street windows, bookcases at the back
     fit(d, m, [("slab", -3, 3, CANDLE), ("slab", -4, 3, "flower_pot"), ("chair", -3, 4, "south"), ("chair", -4, 2, "north"),
-               ("slab", -8, 3, CANDLE), ("slab", -9, 3), ("chair", -8, 4, "south"),
+               ("slab", -8, 3, CANDLE), ("slab", -9, 3), ("chair", -8, 4, "south"), ("desk", -13, 3, "south"),
                ("bs", -1, -1), ("t", -2, -1, "book"), ("t", -3, -1, "lectern", "north"), ("bs", -4, -1),
-               ("t", -5, -1, "carto"), ("bs", -6, -1), ("t", -1, 0, "plant"), ("rug", -10, 2, 9, 4),
-               ("lamp", -4, 2), ("lamp", -9, 2)], "blacksmith")
+               ("t", -5, -1, "carto"), ("bs", -6, -1), ("bs", -7, -1), ("t", -8, -1, "book"), ("bs", -9, -1),
+               ("t", -2, 0, "chest", "south"), ("slab", -3, 0, "flower_pot"), ("t", -4, 0, "chest", "south"),
+               ("slab", -5, 0, CANDLE), ("t", -6, 0, "chest", "south"), ("t", -1, 2, "lectern", "west"),
+               ("t", -1, 0, "plant"), ("t", 6, -1, "plant"), ("desk", -5, -4, "north"), ("desk", -9, -4, "north"),
+               ("rug", -5, 2, 3, 3), ("rug", -10, 2, 3, 3), ("lamp", -4, 2), ("lamp", -9, 2), ("lamp", -13, 2), ("lamp", -7, -4)], "blacksmith")
+    # bar store: aisles of double-height racks with walkways, stock barrels at the west end
     fit(d, u, [("rack2", x, -1, "north") for x in range(-1, -10, -1)] +
         [("rack2", x, 3, "north") for x in range(-3, -10, -1)] + [("rack2", x, 4, "south") for x in range(-3, -10, -1)] +
+        [("rack2", x, 7, "north") for x in range(-3, -10, -1)] + [("rack2", x, 8, "south") for x in range(-3, -10, -1)] +
         [("keg", -1, 1, "west", "iron_block"), ("keg", -1, 2, "west", CHAIN), ("t", -1, 0, "chest", "west"),
-         ("lamp", -6, 1), ("lamp", -6, -2)], "blacksmith")
+         ("keg", 6, -1, "north", "coal_block"), ("t", 7, -1, "barrel"), ("keg", 8, -1, "north", "raw_iron_block"),
+         ("b", 6, 3, "iron_block", "iron_block"), ("b", 7, 3, "iron_block"), ("t", 8, 3, "chest", "east"),
+         ("lamp", -6, 1), ("lamp", -6, -2), ("lamp", -6, 6), ("lamp", 7, 1)], "blacksmith")
+    # pattern library: shelves along the back, reading tables, a reading nook in deep halls
     fit(d, t, [("bs", -1, -1), ("t", -2, -1, "book"), ("bs", -3, -1), ("t", -4, -1, "book"), ("bs", -5, -1),
-               ("t", -6, -1, "book"), ("bs", -7, -1), ("table", -4, 3), ("table", -5, 3), ("table", -6, 3),
-               ("chair", -4, 2, "north"), ("chair", -6, 4, "south"), ("t", -1, 3, "lectern", "west"),
-               ("rug", -8, 2, 6, 3), ("t", -1, 0, "plant"), ("lamp", -5, 3)], "blacksmith")
+               ("t", -6, -1, "book"), ("bs", -7, -1), ("bs", -8, -1), ("t", -9, -1, "book"), ("bs", -10, -1),
+               ("table", -4, 3), ("table", -5, 3), ("table", -6, 3),
+               ("chair", -4, 2, "north"), ("chair", -6, 4, "south"), ("chair", -5, 4, "south"), ("t", -1, 3, "lectern", "west"),
+               ("desk", -10, 3, "south"), ("desk", -12, 3, "south"), ("t", -8, 0, "lectern", "south"),
+               ("t", -2, 0, "plant"), ("slab", -3, 0, CANDLE), ("slab", -4, 0, "flower_pot"),
+               ("table", -3, -4), ("chair", -3, -5, "north"), ("chair", -4, -4, "west"), ("t", 6, -1, "plant"),
+               ("rug", -8, 2, 5, 3), ("t", -1, 0, "plant"), ("lamp", -5, 3), ("lamp", -11, 2), ("lamp", -3, -3)],
+        "blacksmith")
     lamp_post(d, info["mx"] - 2, z1 - 2)
     lamp_post(d, info["mx"] + 2, z1 - 2)
 
@@ -2652,22 +2677,44 @@ def sm_foundry(d, sl):
     x1, z1, x2, z2, s, ax = sl
     info = hall(d, x1, z1, x2, z2, 4, ax, "FOUNDRY")
     g, m, u, t = info["rooms"]
+    # moulding floor: furnace bank on the back wall, sand moulding boxes in two rows, ladle cauldrons, coke store
     fit(d, g, [("t", -1, -1, "furnace", "north"), ("t", -2, -1, "furnace", "north"), ("t", -3, -1, "furnace", "north"),
                ("b", -4, -1, "coal_block", "coal_block"), ("t", -5, -1, "furnace", "north"), ("t", -6, -1, "furnace", "north"),
+               ("b", -7, -1, "coal_block"), ("t", -8, -1, "blast", "north"), ("t", -9, -1, "blast", "north"),
                ("b", -4, 3, "sand"), ("b", -5, 3, "sand"), ("b", -6, 3, "cauldron"), ("b", -9, 3, "sand"),
-               ("b", -10, 3, "sand"), ("rack", -1, 1, "west"), ("rack", -1, 2, "west"), ("t", -1, 3, "barrel"),
-               ("lamp", -5, 2), ("lamp", -10, 2)], "smeltery")
+               ("b", -10, 3, "sand"), ("b", -11, 3, "cauldron"), ("b", -4, -5, "sand"), ("b", -5, -5, "sand"),
+               ("b", -6, -5, "cauldron"), ("b", -9, -5, "sand"), ("b", -10, -5, "sand"),
+               ("rack", -1, 1, "west"), ("rack", -1, 2, "west"), ("t", -1, 3, "barrel"),
+               ("t", 2, 0, "barrel"), ("t", 3, 0, "barrel"), ("keg", 4, 0, "south", "coal_block"), ("rack", 5, 0, "south"),
+               ("slab", -3, 0, CANDLE), ("t", -4, 0, "craft"), ("slab", -5, 0, "flower_pot"), ("rack", -6, 0, "south"),
+               ("lamp", -5, 2), ("lamp", -10, 2), ("lamp", 4, 2), ("lamp", -8, -4)], "smeltery")
+    # pattern shop: joiners' benches for wooden patterns, a pattern rack wall and the foreman's desk
     fit(d, m, [("t", -1, -1, "craft"), ("slab", -2, -1, CANDLE), ("slab", -3, -1, "flower_pot"), ("t", -4, -1, "craft"),
-               ("slab", -5, -1), ("slab", -6, -1, DPOT), ("slab", -4, 3), ("slab", -5, 3, CANDLE), ("chair", -4, 4, "south"),
-               ("chair", -5, 2, "north"), ("rack", -1, 1, "west"), ("rack", -1, 2, "west"), ("rack", -1, 3, "west"),
-               ("lamp", -4, 2), ("lamp", -9, 2)], "smeltery")
+               ("slab", -5, -1), ("slab", -6, -1, DPOT), ("t", -7, -1, "loom", "north"), ("slab", -8, -1),
+               ("slab", -4, 3), ("slab", -5, 3, CANDLE), ("chair", -4, 4, "south"), ("chair", -5, 2, "north"),
+               ("slab", -9, 3), ("slab", -10, 3, "flower_pot"), ("chair", -9, 4, "south"), ("chair", -10, 2, "north"),
+               ("rack", -1, 1, "west"), ("rack", -1, 2, "west"), ("rack", -1, 3, "west"),
+               ("rack2", -3, 0, "south"), ("rack2", -4, 0, "south"), ("rack2", -5, 0, "south"), ("t", -6, 0, "chest", "south"),
+               ("desk", -12, -4, "north"), ("t", 6, -1, "plant"), ("b", 7, -1, "oak_log[axis=x]"), ("b", 8, -1, "oak_log[axis=x]"),
+               ("lamp", -4, 2), ("lamp", -9, 2), ("lamp", -12, -3)], "smeltery")
+    # ingot store: shelving aisles of ingots, ore kegs and stacks of metal blocks
     fit(d, u, [("rack2", x, -1, "north") for x in range(-1, -10, -1)] +
+        [("rack2", x, 3, "north") for x in range(-4, -10, -1)] + [("rack2", x, 4, "south") for x in range(-4, -10, -1)] +
+        [("rack2", x, 8, "north") for x in range(-4, -10, -1)] +
         [("keg", -1, 1, "west", "raw_iron_block"), ("keg", -1, 2, "west", "raw_copper_block"),
-         ("keg", -1, 3, "west", "raw_gold_block"), ("b", -5, 3, "iron_block"), ("b", -6, 3, "iron_block", "iron_block"),
-         ("b", -7, 3, "gold_block"), ("lamp", -4, 2), ("lamp", -8, 2)], "smeltery")
-    fit(d, t, [("bs", -1, -1), ("t", -2, -1, "lectern", "north"), ("bs", -3, -1), ("t", -4, -1, "book"),
+         ("keg", -1, 3, "west", "raw_gold_block"), ("b", 6, -1, "iron_block"), ("b", 7, -1, "iron_block", "iron_block"),
+         ("b", 8, -1, "gold_block"), ("t", 9, -1, "barrel"), ("t", 6, 3, "chest", "east"), ("t", 6, 4, "chest", "east"),
+         ("lamp", -6, 1), ("lamp", -6, 6), ("lamp", 8, 2)], "smeltery")
+    # founder's office: desk & visitors' chairs, an assay corner with a brewing stand, books and a map table
+    fit(d, t, [("bs", -1, -1), ("t", -2, -1, "lectern", "north"), ("bs", -3, -1), ("t", -4, -1, "book"), ("bs", -5, -1),
                ("slab", -4, 3, CANDLE), ("slab", -5, 3, "flower_pot"), ("chair", -4, 4, "south"), ("chair", -5, 2, "north"),
-               ("t", -1, 3, "carto"), ("t", -1, 0, "plant"), ("rug", -7, 2, 5, 3), ("lamp", -4, 3)], "smeltery")
+               ("chair", -4, 2, "north"), ("t", -1, 3, "carto"), ("t", -1, 0, "plant"), ("rug", -7, 2, 5, 3),
+               ("slab", -9, -1, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]"),
+               ("b", -10, -1, "cauldron"), ("slab", -11, -1, CANDLE), ("chair", -10, -2, "south"),
+               ("t", -2, 0, "chest", "south"), ("t", -3, 0, "chest", "south"), ("t", -10, 0, "plant"),
+               ("table", -10, 4), ("table", -11, 4), ("chair", -10, 3, "north"), ("chair", -11, 5, "south"),
+               ("chair", -12, 4, "west"), ("t", 6, -1, "plant"),
+               ("lamp", -4, 3), ("lamp", -10, -3), ("lamp", -11, 3)], "smeltery")
     tb = {"Hearthwood": "bricks", "Cascadia": "cobblestone", "Neoterra": "white_concrete"}[d.pack]
     for y in range(2, info["ridge"] + 8):
         for x in (x2 + 1, x2 + 2):
@@ -2864,7 +2911,7 @@ def mc_machinehall(d, sl):
          ("lamp", -5, 2)], "mechanic")
     fit(d, t, [("bs", -1, -1), ("t", -2, -1, "carto"), ("t", -3, -1, "lectern", "north"), ("bs", -4, -1),
                ("slab", -4, 3, CANDLE), ("slab", -5, 3, "flower_pot"), ("chair", -4, 4, "south"),
-               ("slab", -8, 3, CANDLE), ("chair", -8, 4, "south"), ("t", -1, 0, "plant"), ("rug", -9, 2, 7, 3),
+               ("slab", -8, 3, CANDLE), ("chair", -8, 4, "south"), ("t", -1, 0, "plant"), ("rug", -9, 2, 5, 3),
                ("lamp", -5, 2)], "mechanic")
     lamp_post(d, info["mx"] + 2, z1 - 2)
 

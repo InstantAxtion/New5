@@ -1250,6 +1250,9 @@ def cottage_nt(rel, L, v=0):
         d.set(9, 1, z, "smooth_stone" if z % 2 == 0 else "grass_block[snowy=false]")
     planter(d, 5, 2, 7, 2, 1)
     planter(d, 11, 2, 13, 2, 1)
+    for x in (x1 - 1, x2 + 1):                       # clipped shrubs at the front corners of the roof overhang
+        d.set(x, 1, z1 - 1, "moss_block")
+        d.set(x, y0, z1 - 1, "azalea")
     # ---- L3+ second pavilion with study and bedrooms, joined by a glass link
     if L >= 3:
         px1, px2, pz1, pz2 = 6, 16, 15, 20
@@ -1278,6 +1281,9 @@ def cottage_nt(rel, L, v=0):
                 d.window(x, 3, pz2, x, 4, pz2)
         d.window(px1, 3, 17, px1, 4, 18)
         d.window(px2, 3, 17, px2, 4, 18)
+        for x in (px1 - 1, px2 + 1):                   # shrubs under the back corners of the green roof
+            d.set(x, 1, pz2 + 1, "moss_block")
+            d.set(x, y0, pz2 + 1, "azalea")
         # study (west): lectern, bookshelf, desk
         d.bookshelf(7, y0, 16)
         d.set(7, y0 + 1, 16, "bookshelf")
@@ -4180,7 +4186,24 @@ def finish_decor(d, base):
     """Material cap only (no placement): levels 1-3 swap premium blocks for common ones."""
     if d.level <= 3:
         common_materials(d)
+    shade_ground(d)
     return d
+
+
+def shade_ground(d):
+    """Material swap: grass never grows under a roof, deck or tree crown, so roofed lawn cells on the ground
+    layer become moss (Cascadia: rooted / coarse dirt)."""
+    bp, gy = d.bp, d.gy
+    for z in range(bp.sz):
+        for x in range(bp.sx):
+            st = bp.grid[gy][z][x]
+            if "snowy" not in st:
+                continue
+            if any(bp.grid[y][z][x] != AIR for y in range(gy + 3, min(bp.sy, gy + 16))):
+                if d.pack == "Cascadia":
+                    bp.grid[gy][z][x] = "minecraft:" + ("coarse_dirt" if (x * 7 + z * 3) % 4 else "rooted_dirt")
+                else:
+                    bp.grid[gy][z][x] = "minecraft:moss_block"
 
 
 

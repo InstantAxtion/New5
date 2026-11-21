@@ -169,6 +169,9 @@ CA = dict(X1=8, X2=20, Z1=4, Z2=26, SLABS=(6, 11), ROOF=16, FX=9, FZS=(5, 16), F
 
 # ---------------------------------------------------------------------------------------------- flats
 def flat_nt(rel, L):
+    """Neoterra flat, 15 x 9: main bedroom (NW), kids' room / study (SW), open-plan living room with kitchen run,
+    island, dining table and a sofa group facing the balcony (east). Corridor door at x7 on the south wall,
+    balcony door at x11 on the north glass."""
     G = NT
     d = Design("Neoterra", rel, (G["FW"], 5, G["FD"]), gy=0, paving="birch_planks")
     y = 1
@@ -181,18 +184,26 @@ def flat_nt(rel, L):
         d.set(x, 0, z, "light_gray_wool")
     for x, z in cells(0, 5, 4, 8):
         d.set(x, 0, z, "light_blue_wool" if L >= 3 else "light_gray_wool")
-    # main bedroom: bed head against the window wall
+    for x, z in cells(6, 3, 14, 8):                      # kitchen / dining zone floored in pale stone
+        d.set(x, 0, z, "smooth_stone")
+    # ---- main bedroom: bed head against the window wall, dresser, wardrobe, reading chair
     d.bed(1, y, 0, "north", "cyan")
     if L >= 2:
         d.bed(2, y, 0, "north", "cyan")
         nightstand(d, 3, y, 0, "birch", endrod("up"))
-    nightstand(d, 0, y, 0, "birch", endrod("up"))
-    if L < 2:
+    else:
         d.set(2, y, 0, "potted_bamboo")
+    nightstand(d, 0, y, 0, "birch", endrod("up"))
     wardrobe(d, 4, y, 0, "south", "white_concrete")
     d.set(4, y, 1, "white_concrete")
     d.set(4, y + 1, 1, "white_concrete")
-    # kids' room: beds with their heads on the side glass
+    d.set(0, y, 3, slab("birch", "top"))                 # dresser with a mirror-glass above
+    d.set(0, y + 1, 3, "potted_white_tulip")
+    d.set(0, y + 2, 3, "light_gray_stained_glass_pane")
+    d.chair(0, y, 2, "west", "birch", sit=False)         # reading chair by the side glass
+    rugc(d, 1, 2, 2, 3, y, "light_gray" if L < 3 else "cyan")
+    d.set(2, 4, 2, endrod("down"))
+    # ---- kids' room (L3+) / study (L1-2)
     nk = max(0, L - 2)
     for i in range(nk):
         d.bed(0, y, 5 + i, "west", ("light_blue", "lime", "yellow")[i])
@@ -204,8 +215,22 @@ def flat_nt(rel, L):
         d.bookshelf(3, y, 8)
         d.set(4, y + 1, 8, "potted_cactus")
     else:
-        d.set(4, y, 8, "potted_bamboo")
-    # living / kitchen
+        d.set(4, y, 8, "barrel[facing=up,open=false]")   # toy / file box
+        d.set(3, y, 8, "potted_bamboo")
+    if nk == 0:                                          # study: second desk, shelving and a lounge chair
+        d.set(0, y, 5, slab("birch", "top"))
+        d.set(0, y + 1, 5, "potted_azure_bluet")
+        d.set(0, y, 6, "chiseled_bookshelf[facing=east,slot_0_occupied=true,slot_1_occupied=false,"
+                       "slot_2_occupied=true,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
+        rugc(d, 2, 6, 3, 7, y, "gray")
+        d.chair(3, y, 6, "north", "birch", sit=False)
+    elif nk < 3:
+        d.set(0, y, 7, "chest[facing=east,type=single,waterlogged=false]")
+    d.set(4, y, 5, "white_concrete" if nk < 3 else "chest[facing=west,type=single,waterlogged=false]")
+    d.set(4, y + 1, 5, "white_concrete" if nk < 3 else "potted_dandelion")
+    rugc(d, 2, 6, 3, 7, y, ("lime", "yellow", "light_blue")[L % 3])
+    d.set(2, 4, 6, endrod("down"))
+    # ---- kitchen run on the back wall, upper cabinets above
     run = [(9, "furnace"), (10, "smoker"), (11, "sink"), (12, "crafting_table"), (13, "barrel"), (14, "fridge")]
     for x, k in run:
         if k == "sink":
@@ -219,29 +244,56 @@ def flat_nt(rel, L):
             d.item(x, y, 8, k, "north" if k != "crafting_table" else None)
         if k != "fridge":
             d.set(x, y + 2, 8, slab("smooth_quartz", "top"))
+    d.set(10, y + 3, 8, "light_gray_concrete")           # extractor hood
     d.hut(*G["HUT"])
     d.set(6, y + 1, 8, endrod("up"))
-    for x in (10, 11, 12):                               # island with stools
+    d.set(8, y, 8, slab("birch", "top"))                 # hall console by the front door
+    d.set(8, y + 1, 8, "potted_white_tulip")
+    for x in (9, 10, 11):                                # island with stools
         d.set(x, y, 6, "smooth_quartz")
-    d.set(12, y + 1, 6, "potted_white_tulip")
+    d.set(11, y + 1, 6, "potted_white_tulip")
+    d.set(9, y + 1, 6, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
+    d.chair(9, y, 5, "north", "smooth_quartz")
     d.chair(10, y, 5, "north", "smooth_quartz")
-    d.chair(11, y, 5, "north", "smooth_quartz")
-    if L >= 2:                                           # sofa facing the balcony view
-        rugc(d, 7, 0, 10, 1, y, "light_gray")
-        for x in (8, 9, 10):
-            d.chair(x, y, 2, "south", "birch")
-        d.set(7, y, 2, trap("birch", "west", "bottom", True))
-        d.set(9, y, 1, slab("smooth_quartz", "top"))
-        d.set(9, y + 1, 1, "potted_azure_bluet")
+    # dining table by the east glass
+    d.set(13, y, 5, slab("birch", "top"))
+    d.set(13, y + 1, 5, "candle[candles=3,lit=false,waterlogged=false]")
+    d.chair(12, y, 5, "west", "birch")
+    d.chair(14, y, 5, "east", "birch")
+    if L >= 2:
+        d.set(13, y, 4, slab("birch", "top"))
+        d.set(13, y + 1, 4, "potted_azure_bluet")
+        d.chair(12, y, 4, "west", "birch")
+        d.chair(14, y, 4, "east", "birch")
+    # ---- lounge: sofa facing the balcony view, coffee table, armchair, media shelf
+    rugc(d, 7, 0, 10, 1, y, ("light_gray", "cyan", "white", "gray", "light_blue")[L - 1])
+    n_sofa = 2 if L < 2 else 3
+    for x in range(8, 8 + n_sofa):
+        d.chair(x, y, 2, "south", "birch", sit=False)
+    d.set(7, y, 2, trap("birch", "west", "bottom", True))
+    d.set(8 + n_sofa, y, 2, trap("birch", "east", "bottom", True))
+    d.set(9, y, 1, slab("smooth_quartz", "top"))
+    d.set(9, y + 1, 1, "potted_azure_bluet")
+    d.chair(7, y, 0, "west", "birch", sit=False)         # armchair by the media wall
     d.set(6, y, 0, "potted_bamboo")
-    d.set(14, y, 2, "potted_bamboo")
+    d.set(6, y, 1, slab("birch", "top"))                 # media shelf on the bedroom wall
+    d.set(6, y + 1, 1, "note_block[instrument=harp,note=0,powered=false]")
+    d.set(6, y, 2, endrod("up"))
+    if L >= 3:
+        d.set(6, y + 2, 1, "black_stained_glass_pane")   # wall screen
     if L >= 4:
         d.item(14, y, 0, "jukebox")
     else:
         d.set(14, y, 0, "smooth_quartz")
+    d.set(14, y + 1, 0, "potted_cactus")
+    d.set(14, y, 1, slab("birch", "top"))
+    d.set(14, y + 1, 1, "lantern[hanging=false,waterlogged=false]")
+    d.set(14, y, 2, "potted_bamboo")
     if L >= 5:
-        d.item(14, y, 4, "ender_chest", "west")
-    for x, z in ((2, 2), (2, 6), (9, 3), (11, 7), (13, 2)):
+        d.item(12, y, 0, "ender_chest", "south")
+    else:
+        d.set(12, y, 0, "potted_white_tulip")
+    for x, z in ((9, 3), (11, 7), (13, 2), (13, 5), (8, 6)):
         d.set(x, 4, z, endrod("down"))
     return d
 

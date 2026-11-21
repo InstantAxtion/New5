@@ -977,6 +977,11 @@ def gt_cascadia(rel, L):
         d.set(tx2 + 1, yc + 1, tz1 + 2, "bell[attachment=floor,facing=east,powered=false]")
     put_all(d, 2, [(3, 7, KEG.replace("FACE", "north"), KEG.replace("FACE", "up")), (8, 7, CHISEL.replace("FACE", "south")), (5, 7, SL("spruce", "top"), "potted_fern"),
                    (3, 11, "chest[facing=east,type=single,waterlogged=false]"), (6, 11, SL("spruce", "top"), POT.replace("FACE", "north"))])
+    # fire cache under the trestle: water trough and buckets, hose barrels, axe grindstone, a lantern post
+    put_all(d, 2, [(15, 10, "water_cauldron[level=3]"), (17, 10, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")),
+                   (15, 8, "barrel[facing=up,open=false]"), (17, 8, "chest[facing=north,type=single,waterlogged=false]"),
+                   (19, 9, "grindstone[face=floor,facing=east]"), (13, 8, "spruce_fence", LANT_S),
+                   (19, 11, SL("spruce", "top"), "potted_fern")])
     # ---- growth: a ranger station complex
     if L >= 2:                                                    # equipment shed with a work porch
         b = building(d, 23, 4, 31, 10, nf=1, axis="z", doors=(("north", 27), ("west", 7)))
@@ -1020,6 +1025,11 @@ def gt_cascadia(rel, L):
                 d.set(x, y, 14, LOG("spruce_log"))
         bench(d, 22, 15, "south", 2)
         bench(d, 31, 15, "south", 2)
+        # behind the bunkhouse: rain barrel, kindling barrels and a chopping block under the eaves; west-end lamps
+        put_all(d, 2, [(22, 24, "water_cauldron[level=3]"), (23, 24, KEG.replace("FACE", "north"), KEG.replace("FACE", "up")),
+                       (27, 24, "spruce_log[axis=y]", "spruce_fence"), (31, 24, "composter[level=4]"),
+                       (32, 24, KEG.replace("FACE", "north")), (20, 17, "spruce_fence", LANT_S),
+                       (20, 22, "spruce_fence", LANT_S), (34, 22, KEG.replace("FACE", "east"))])
     if L >= 4:                                                    # horse barn and corral
         b = building(d, 2, 21, 12, 31, nf=2, axis="z", doors=(("north", 7), ("east", 25)))
         room(d, b, 0, ["Hh W  hHH",           # horse barn: troughs and hay by the door,
@@ -1046,6 +1056,14 @@ def gt_cascadia(rel, L):
             for z in range(25, 32):
                 if x in (14, 19) or z in (25, 31):
                     d.set(x, 2, z, "spruce_fence")
+        for z in (25, 27):                                        # half-height stall dividers
+            d.set(3, 2, z, "spruce_fence")
+        # outside the barn's west wall: trough, hay stack, muck composter, a lamp post by the door
+        put_all(d, 2, [(1, 22, "water_cauldron[level=3]"), (1, 23, "hay_block[axis=y]"), (1, 24, "hay_block[axis=y]", "hay_block[axis=z]"),
+                       (1, 28, "composter[level=6]"), (1, 30, KEG.replace("FACE", "west"), KEG.replace("FACE", "up")),
+                       (3, 20, "spruce_fence", LANT_S)])
+        d.set(4, 4, 23, LANT)
+        d.set(4, 4, 28, LANT)
         d.set(14, 2, 27, "spruce_fence_gate[facing=east,in_wall=false,open=false,powered=false]")
         d.set(17, 2, 29, "water_cauldron[level=3]")
         d.set(16, 2, 30, "hay_block[axis=y]")
@@ -1197,6 +1215,11 @@ def gt_neoterra(rel, L):
     put_all(d, 2, [(9, 4, "potted_bamboo"), (6, 8, ST("birch", "south")), (7, 8, ST("birch", "south")),
                    (6, 7, SL("smooth_quartz", "top"), "potted_azure_bluet"), (12, 5, "potted_bamboo"), (12, 7, CHISEL.replace("FACE", "west"))])
     d.sign(3, 4, 6, "east", ["", "GUARD", "DESK"], "birch", glow=True, color="cyan")
+    # sheltered court under the pod: benches against the shaft, bike rack, planters, bollard lights
+    put_all(d, 2, [(5, 11, ST("birch", "west")), (5, 12, ST("birch", "west")), (4, 14, "flowering_azalea"),
+                   (11, 10, "iron_bars"), (11, 11, "iron_bars"), (12, 14, "azalea"), (7, 15, "potted_bamboo"),
+                   (9, 15, "potted_bamboo"), (4, 10, "polished_andesite", "end_rod[facing=up]"),
+                   (12, 12, "polished_andesite", "end_rod[facing=up]"), (5, 13, SL("smooth_quartz", "top"), "potted_azure_bluet")])
     put_all(d, yp + 1, [(5, 14, "potted_bamboo"), (11, 11, "chest[facing=west,type=single,waterlogged=false]"), (11, 12, SL("smooth_quartz", "top"), "potted_fern"),
                         (5, 11, SL("smooth_quartz", "top"), "potted_azure_bluet")])
     # ---- growth: a security campus
@@ -1375,6 +1398,16 @@ def ar_hearthwood(rel, L):
     d.banner(x1 + 1, 4, 6, "east", "green")
     for x in range(x1 + 3, X2 - 1, 4):
         d.lamp(x, 5, 6)
+    # shop corner by the door: arrow barrel and crock, a stool at the bench, and stores along the back wall
+    shop = [(4, 5, KEG.replace("FACE", "up"), POT.replace("FACE", "east")), (6, 4, "potted_red_tulip"),
+            (11, 8, SL("dark_oak", "top"), LANT_S)]
+    if X2 >= 17:
+        shop += [(13, 8, KEG.replace("FACE", "north"), KEG.replace("FACE", "up")), (15, 8, SL("dark_oak", "top"), "potted_red_tulip"),
+                 (14, 4, POT.replace("FACE", "south"))]
+    if X2 >= 21:
+        shop += [(17, 8, SL("dark_oak", "top"), LANT_S), (18, 8, "chest[facing=north,type=single,waterlogged=false]"),
+                 (17, 4, KEG.replace("FACE", "south"), "potted_oxeye_daisy")]
+    put_all(d, 2, shop)
     # stair up along the back wall
     flight(d, x1 + 1, 2, z2 - 1, "east", 4, "dark_oak", "dark_oak_planks")
     for x in range(x1 + 2, x1 + 5):
@@ -1817,7 +1850,29 @@ def ar_neoterra(rel, L):
     slots = [(x, 8, z1 + 1, "north") for x in range(x1 + 1, x2, 2)] + \
             [(x, 8, z2 - 1, "south") for x in range(x1 + 7, x2, 2)]
     place_beds(d, slots, d.req["beds"], "cyan")
-    d.rug(x1 + 1, 5, x2 - 1, 6, 8, ("light_gray_carpet",), "plain")
+    nn = min(d.req["beds"], 9)
+    for i, x in enumerate(range(x1 + 2, x1 + 1 + 2 * nn - 1, 2)):  # a nightstand between each pair of north bunks
+        d.set(x, 8, z1 + 1, SL("smooth_quartz", "top"))
+        d.set(x, 9, z1 + 1, LANT_S if i % 2 else "candle[candles=2,lit=false,waterlogged=false]")
+    SLT, CH, CN = SL("smooth_quartz", "top"), ST("birch", "south"), ST("birch", "north")
+    dorm = {                                                      # rest of the dorm, laid out per level by hand
+        1: [(12, 3, SLT, LANT_S), (13, 3, SLT), (12, 4, CH), (13, 4, CH), (17, 3, KEG.replace("FACE", "up"), KEG.replace("FACE", "up")),
+            (18, 3, KEG.replace("FACE", "west")), (14, 7, CH), (15, 7, CH), (16, 7, CH), (15, 6, SLT, "potted_azure_bluet"),
+            (19, 7, "potted_bamboo")],
+        2: [(14, 3, SLT, LANT_S), (15, 3, SLT), (14, 4, CH), (15, 4, CH), (18, 3, KEG.replace("FACE", "up"), KEG.replace("FACE", "up")),
+            (19, 3, KEG.replace("FACE", "west")), (11, 7, CH), (12, 7, CH), (13, 7, CH), (12, 6, SLT, "potted_azure_bluet"),
+            (18, 7, "potted_bamboo")],
+        3: [(16, 3, SLT, LANT_S), (18, 3, KEG.replace("FACE", "up"), KEG.replace("FACE", "up")), (19, 3, KEG.replace("FACE", "west")),
+            (11, 7, CH), (12, 7, CH), (13, 7, CH), (12, 6, SLT, "potted_azure_bluet"), (17, 7, SLT, LANT_S), (18, 7, SLT),
+            (17, 6, CN), (18, 6, CN)],
+        4: [(11, 7, CH), (12, 7, CH), (13, 7, CH), (12, 6, SLT, "potted_azure_bluet"), (16, 7, SLT, LANT_S), (17, 7, SLT),
+            (16, 6, CN), (17, 6, CN), (19, 7, KEG.replace("FACE", "up"), KEG.replace("FACE", "up")), (20, 4, "potted_bamboo")],
+        5: [(11, 8, SLT, "candle[candles=2,lit=false,waterlogged=false]"), (13, 7, CH), (14, 7, CH), (15, 7, CH),
+            (14, 6, SLT, "potted_azure_bluet"), (18, 7, SLT, LANT_S), (19, 7, SLT), (18, 6, CN), (19, 6, CN)],
+    }[L]
+    put_all(d, 8, dorm)
+    rx = {1: 13, 2: 10, 3: 10, 4: 10, 5: 12}[L]
+    d.rug(rx, 5, rx + 4, 6, 8, ("light_gray_carpet", "cyan_carpet"))
     for x in range(x1 + 2, x2, 4):
         d.set(x, 11, 5, "sea_lantern")
     # range: open-air with glass screens (L1-2), enclosed hall with skylights from L3
@@ -1872,6 +1927,16 @@ def ar_neoterra(rel, L):
         d.spot(x, 2, z2 + 3, "work")
     for x in (x1 + 1, x2 - 1):
         d.chair(x, 2, z2 + 2, "north", "birch", sit=False)
+    if L >= 3:                                                    # hall fit-out: lights over the lanes, waiting
+        for z in (z2 + 3, z2 + 8, z2 + 13, z2 + 18):              # benches behind the line, a quiver at each booth
+            for x in range(5, 20, 2):
+                d.set(x, 7, z, "end_rod[facing=down]")
+        for x in range(x1 + 3, x1 + 7):
+            d.chair(x, 2, z2 + 1, "north", "birch", sit=False)
+        for x in range(13, 18):
+            d.chair(x, 2, z2 + 1, "north", "birch", sit=False) if x != 13 and x != 14 else None
+        for x in range(5, 20, 2):
+            d.set(x, 2, z2 + 3, POT.replace("FACE", "south"))
     if L >= 4:                                                    # roof terrace
         d.set(x2 - 1, 12, z2 - 1, AIR)
         ladder(d, x2 - 1, z2 - 1, 8, 12, "north")

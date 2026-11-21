@@ -126,6 +126,27 @@ def lamppost(d, x, z, y=2, h=3, post="dark_oak_fence", head=None):
     d.set(x, y + h, z, head or lantern())
 
 
+UNDER = {"Hearthwood": ("gravel", "coarse_dirt"), "Cascadia": ("coarse_dirt", "rooted_dirt"),
+         "Neoterra": ("smooth_stone", "moss_block")}
+
+
+def undercover(d):
+    """Material swap: grass does not grow under eaves, canopies and tree crowns. Every open grass cell of the
+    ground layer with a roof or a tree crown above it becomes a drip strip (eaves) or a mulched tree pit."""
+    eave, pit = UNDER[d.pack]
+    bp = d.bp
+    for z in range(bp.sz):
+        for x in range(bp.sx):
+            if not bp.get(x, 1, z).startswith("minecraft:grass_block") or bp.get(x, 2, z) != AIR:
+                continue
+            for y in range(4, min(bp.sy, 15)):
+                st = bp.get(x, y, z)
+                if st != AIR:
+                    bp.grid[1][z][x] = f"minecraft:{pit if 'leaves' in st else eave}"
+                    break
+    return d
+
+
 def wing_design(pack, rel, size):
     return Design(pack, rel, size, gy=0, paving=None)
 
@@ -939,7 +960,7 @@ def gbw_neoterra(rel, L):
 
 @design("grandbridge")
 def grandbridge(pack, rel, L):
-    return {"Hearthwood": gb_hearthwood, "Cascadia": gb_cascadia, "Neoterra": gb_neoterra}[pack](rel, L)
+    return undercover({"Hearthwood": gb_hearthwood, "Cascadia": gb_cascadia, "Neoterra": gb_neoterra}[pack](rel, L))
 
 
 @design("grandbridgewing")
@@ -1703,7 +1724,7 @@ def rgw_neoterra(rel, L):
 
 @design("royalgranary")
 def royalgranary(pack, rel, L):
-    return {"Hearthwood": rg_hearthwood, "Cascadia": rg_cascadia, "Neoterra": rg_neoterra}[pack](rel, L)
+    return undercover({"Hearthwood": rg_hearthwood, "Cascadia": rg_cascadia, "Neoterra": rg_neoterra}[pack](rel, L))
 
 
 @design("royalgranarywing")
