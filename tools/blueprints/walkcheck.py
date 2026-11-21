@@ -37,13 +37,13 @@ def analyse(bp, return_seen=False):
 
     def passable(x, y, z):
         n = name(x, y, z)
-        if n.endswith("_wall") or n.endswith("trapdoor"):
+        if n.endswith("_wall") or n.endswith("trapdoor") or n == "sea_lantern":
             return False
         return n == "air" or any(k in n for k in PASSABLE_KEYS if k != "air")
 
     def standable(x, y, z):
         n = name(x, y - 1, z)
-        return y - 1 >= 0 and n != "air" and not any(k in n for k in NOT_STANDABLE)
+        return y - 1 >= 0 and n != "air" and (n == "sea_lantern" or not any(k in n for k in NOT_STANDABLE))
 
     def ok(x, y, z):
         if not (bp.inside(x, y, z) and y + 1 < bp.sy):

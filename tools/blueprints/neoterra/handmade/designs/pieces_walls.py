@@ -5,8 +5,8 @@ Town walls – hand-designed wall family for the three style packs.
               stone walkway behind a crenellated parapet (merlons with slab caps), dark-oak rail with lanterns on
               the town side, stone pilasters. Gatehouse with two flanking towers, pointed stone arch, raised
               portcullis, keystones and a welcome sign; corner turret on the outside corner; brick stair with stone
-              balustrade; watchtower that grows from a crenellated bastion (L1) to a two-storey keep (L2) to a
-              belfry tower with a steep slate spire (L3).
+              balustrade; watchtower that grows from a crenellated bastion (L1) to a two-storey tower with a guard room (L2) to a sleeping storey and
+              belfry storey with a bell under a pyramidal slate roof (L3).
   Cascadia    Log palisade: river-rock footing, upright spruce logs with staggered tips and loopholes, a plank
               fighting platform on posts with knee braces behind it, rail fence with lanterns. Gate between two
               log blockhouses with a big timber lintel and hanging signs; covered lookout on the outside corner;
@@ -528,7 +528,7 @@ def _gate_hearthwood(d, D, W):
             d.set(x0 + 3, y, 0, "stone_bricks")
         d.fill(x0, 11, 0, x0 + 3, 11, 3, "stone_bricks")
         for x, z in ((0, 0), (3, 0), (0, 3), (3, 3)):
-            d.set(x0 + x, 12, z0 := z, "bricks")
+            d.set(x0 + x, 12, z, "bricks")
             d.set(x0 + x, 13, z, slab("stone_brick_slab"))
         for x, z in ((1, 0), (2, 0), (0, 1), (0, 2), (3, 1), (3, 2), (1, 3), (2, 3)):
             d.set(x0 + x, 12, z, slab("stone_brick_slab"))
@@ -665,3 +665,450 @@ def _gate_neoterra(d, D, W):
             d.set(x, W + 6, z, end_rod())
         d.set(x0 + 1, W + 6, 2, "light_gray_concrete")           # roof plant housing
         d.set(x0 + 2, W + 6, 2, "light_gray_concrete")
+
+
+# ============================================================================================ watchtower
+def ring(x1, z1, x2, z2):
+    """Cells on the edge of a rectangle (structural loop for tower shells)."""
+    return [(x, z) for z in range(z1, z2 + 1) for x in range(x1, x2 + 1) if x in (x1, x2) or z in (z1, z2)]
+
+
+def flight(d, cells, block, facing, fill=None):
+    """A stair flight: cells = [(x, y, z), ...] from the bottom step up; optional solid fill below each step."""
+    for x, y, z in cells:
+        d.set(x, y, z, stairs(block, facing))
+        if fill:
+            for yy in range(d.gy + 1, y):
+                d.set(x, yy, z, fill)
+
+
+@design("watchtower")
+def watchtower(pack, rel, L):
+    if pack == "Hearthwood":
+        return _tower_hearthwood(pack, rel, L)
+    if pack == "Cascadia":
+        return _tower_cascadia(pack, rel, L)
+    return _tower_neoterra(pack, rel, L)
+
+
+def _tower_hearthwood(pack, rel, L):
+    """Stone/brick wall tower astride the rampart (walkway doors east/west at z4..5, y8..9).
+    L1 bastion with a crenellated deck at walkway level, L2 adds the guard room storey, L3 the sleeping storey,
+    an open belfry with a bell and a steep slate spire."""
+    d = Design(pack, rel, (9, 28, 9))
+    d.fill(0, 1, 0, 8, 1, 8, "stone_bricks")
+    door_cells = {(0, 4), (0, 5), (8, 4), (8, 5)}
+    corners = {(0, 0), (8, 0), (0, 8), (8, 8)}
+
+    def shell(y1, y2):
+        for y in range(y1, y2 + 1):
+            for x, z in ring(0, 0, 8, 8):
+                d.set(x, y, z, "stone_bricks" if (x, z) in corners or y == 2 else "bricks")
+
+    def floor(y):
+        for x, z in ring(0, 0, 8, 8):
+            d.set(x, y, z, "stone_bricks")
+        d.fill(1, y, 1, 7, y, 7, "oak_planks")
+
+    def crenels(y):
+        for x, z in ring(0, 0, 8, 8):
+            if (x, z) in door_cells:
+                continue
+            d.set(x, y, z, "bricks")
+            if (x + z) % 2 == 0:
+                d.set(x, y + 1, z, "bricks")
+                d.set(x, y + 2, z, slab("stone_brick_slab"))
+
+    # ---- ground storey (all levels)
+    shell(2, 6)
+    d.fill(1, 1, 1, 7, 1, 7, "spruce_planks")
+    d.door(4, 2, 8, "south", wood="dark_oak")
+    d.set(4, 4, 8, "stone_bricks")
+    for x, y, z in ((2, 4, 0), (6, 4, 0), (0, 4, 6), (8, 4, 6), (0, 4, 2), (8, 4, 2)):
+        d.set(x, y, z, "glass_pane")
+    floor(7)
+    flight(d, [(7 - i, 2 + i, 1) for i in range(5)], "stone_brick_stairs", "west", "stone_bricks")
+    for x in (3, 4, 5):
+        d.set(x, 7, 1, AIR)
+    for x in (3, 4, 5):
+        d.set(x, 8, 2, "dark_oak_fence")
+    d.set(6, 8, 1, "dark_oak_fence")
+    d.table(5, 2, 5, "dark_oak")                                 # guards' table
+    d.chair(5, 2, 6, "south", "dark_oak", sit=False)
+    d.chair(6, 2, 5, "east", "dark_oak", sit=False)
+    d.chair(4, 2, 5, "west", "dark_oak", sit=False)
+    d.set(7, 2, 7, "barrel[facing=up,open=false]")
+    d.set(7, 2, 6, "barrel[facing=west,open=false]")
+    d.set(1, 2, 7, "chest[facing=east,type=single,waterlogged=false]")
+    d.set(1, 2, 6, "grindstone[face=floor,facing=east]")
+    d.set(4, 6, 4, lantern(True))
+    d.set(2, 2, 0, "mossy_stone_bricks")
+    d.set(8, 2, 3, "mossy_stone_bricks")
+    if L == 1:
+        crenels(8)
+        d.set(4, 8, 6, "red_banner[rotation=8]")
+        d.set(1, 8, 7, "dark_oak_fence")
+        d.set(1, 9, 7, lantern())
+        d.set(7, 8, 7, "dark_oak_fence")
+        d.set(7, 9, 7, lantern())
+        d.hut(4, 1, 0)
+        return d
+    # ---- guard-room storey y8..12 (L2+)
+    shell(8, 12)
+    for x, z in door_cells:                                       # walkway passes through the tower
+        d.set(x, 8, z, AIR)
+        d.set(x, 9, z, AIR)
+        d.set(x, 10, z, "stone_bricks")
+    for x, y, z in ((3, 10, 0), (3, 11, 0), (5, 10, 0), (5, 11, 0), (4, 10, 8), (4, 11, 8),
+                    (0, 10, 2), (0, 11, 2), (8, 11, 7), (0, 11, 7)):
+        d.set(x, y, z, "glass_pane")
+    floor(13)
+    flight(d, [(7, 8 + i, 2 + i) for i in range(5)], "stone_brick_stairs", "south")
+    for z in (4, 5, 6):
+        d.set(7, 13, z, AIR)
+        d.set(6, 14, z, "dark_oak_fence")
+    d.set(7, 14, 3, "dark_oak_fence")
+    d.table(2, 8, 7, "dark_oak")
+    d.chair(3, 8, 7, "east", "dark_oak", sit=False)
+    d.chair(2, 8, 6, "north", "dark_oak", sit=False)
+    d.chair(1, 8, 7, "west", "dark_oak", sit=False)
+    d.set(5, 8, 7, "barrel[facing=up,open=false]")
+    d.set(6, 8, 7, "chest[facing=north,type=single,waterlogged=false]")
+    d.banner(2, 10, 7, "north", "red")
+    d.banner(6, 10, 7, "north", "red")
+    d.set(4, 12, 6, lantern(True))
+    d.set(2, 12, 3, lantern(True))
+    if L == 2:
+        crenels(14)
+        d.set(4, 14, 6, "red_banner[rotation=8]")
+        d.set(1, 14, 7, "dark_oak_fence")
+        d.set(1, 15, 7, lantern())
+        d.hut(4, 1, 0)
+        return d
+    # ---- L3: sleeping storey y14..18, belfry y20..22, spire
+    shell(14, 18)
+    for x, y, z in ((4, 16, 0), (4, 17, 0), (4, 16, 8), (4, 17, 8), (0, 16, 4), (0, 17, 4), (8, 16, 4),
+                    (8, 17, 4)):
+        d.set(x, y, z, "glass_pane")
+    floor(19)
+    flight(d, [(1, 14 + i, 7 - i) for i in range(5)], "stone_brick_stairs", "north")
+    for z in (3, 4, 5):
+        d.set(1, 19, z, AIR)
+        d.set(2, 20, z, "dark_oak_fence")
+    d.set(1, 20, 6, "dark_oak_fence")
+    d.bed(2, 14, 1, "west", "red")                               # watchman's cot along the north wall
+    d.set(1, 14, 1, "barrel[facing=up,open=false]")
+    d.set(4, 14, 1, "crafting_table")
+    d.set(4, 14, 7, "chest[facing=north,type=single,waterlogged=false]")
+    d.set(3, 14, 7, "barrel[facing=up,open=false]")
+    d.set(4, 18, 4, lantern(True))
+    for x in (3, 4, 5):
+        d.set(x, 14, 4, "red_carpet")
+    # belfry: corner piers, two open arches per face with a fence sill, lintel course
+    for x, z in ring(0, 0, 8, 8):
+        pos = x if z in (0, 8) else z
+        for y in (20, 21):
+            if pos in (2, 3, 5, 6):
+                d.set(x, y, z, "dark_oak_fence" if y == 20 else AIR)
+            else:
+                d.set(x, y, z, "stone_bricks" if pos in (0, 8) else "bricks")
+        d.set(x, 22, z, "stone_bricks")
+    d.set(4, 23, 4, log("dark_oak_log", "x"))
+    d.set(3, 23, 4, log("dark_oak_log", "x"))
+    d.set(5, 23, 4, log("dark_oak_log", "x"))
+    d.set(4, 22, 4, "bell[attachment=ceiling,facing=north,powered=false]")
+    d.hip(0, 0, 8, 8, 23, stairs="deepslate_tile_stairs", cap="deepslate_tile_slab", overhang=0)
+    d.hut(4, 1, 0)
+    return d
+
+
+def _tower_cascadia(pack, rel, L):
+    """Fire-lookout tower astride the palisade (platform doors east/west at z4..5, y7..8).
+    L1 log blockhouse with a fenced deck at platform level, L2 a second log storey with a lookout deck,
+    L3 a braced log trestle carrying a glazed lookout cab with a catwalk."""
+    d = Design(pack, rel, (9, 39, 9))
+    d.fill(0, 1, 0, 8, 1, 8, "cobblestone")
+    door_cells = {(0, 4), (0, 5), (8, 4), (8, 5)}
+    corners = {(0, 0), (8, 0), (0, 8), (8, 8)}
+
+    def logs(y1, y2):
+        for y in range(y1, y2 + 1):
+            for x, z in ring(0, 0, 8, 8):
+                if (x, z) in corners:
+                    d.set(x, y, z, log("spruce_log", "y"))
+                else:
+                    d.set(x, y, z, log("stripped_spruce_log", "x" if z in (0, 8) else "z"))
+
+    def deck(y):
+        for x, z in ring(0, 0, 8, 8):
+            d.set(x, y, z, log("spruce_log", "x" if z in (0, 8) else "z"))
+        d.fill(1, y, 1, 7, y, 7, "spruce_planks")
+
+    def rail(y, skip=()):
+        for x, z in ring(0, 0, 8, 8):
+            if (x, z) not in skip:
+                d.set(x, y, z, "spruce_fence")
+
+    # ---- blockhouse (all levels)
+    for x, z in ring(0, 0, 8, 8):
+        d.set(x, 2, z, "cobblestone")
+    for x, z in ((1, 0), (5, 0), (8, 3), (0, 6), (3, 8)):
+        d.set(x, 2, z, "mossy_cobblestone")
+    logs(3, 5)
+    d.fill(1, 1, 1, 7, 1, 7, "spruce_planks")
+    d.door(4, 2, 8, "south", wood="spruce")
+    for x, y, z in ((2, 4, 0), (6, 4, 0), (0, 4, 2), (8, 4, 2), (0, 4, 6)):
+        d.set(x, y, z, "glass_pane")
+    deck(6)
+    for y in range(2, 7):                                        # ladder against the east wall
+        d.set(7, y, 6, ladder("west"))
+    d.set(1, 2, 1, "barrel[facing=up,open=false]")
+    d.set(2, 2, 1, "barrel[facing=up,open=false]")
+    d.set(1, 2, 2, "hay_block[axis=y]")
+    for z in (5, 6, 7):                                          # firewood stack
+        d.set(1, 2, z, log("stripped_spruce_log", "x"))
+    d.set(1, 3, 6, log("stripped_spruce_log", "x"))
+    d.table(5, 2, 4, "spruce")
+    d.chair(5, 2, 5, "south", "spruce", sit=False)
+    d.chair(6, 2, 4, "east", "spruce", sit=False)
+    d.set(4, 5, 4, lantern(True))
+    if L == 1:
+        # bastion: a log breastwork as high as the palisade on the field half (z0..3), rail on the town half
+        for x, z in ring(0, 0, 8, 8):
+            if z <= 3:
+                for y in (7, 8, 9):
+                    d.set(x, y, z, log("spruce_log", "y"))
+            elif (x, z) not in door_cells:
+                d.set(x, 7, z, "spruce_fence")
+        for x, z in ((2, 0), (4, 0), (6, 0), (0, 2), (8, 2)):    # loopholes
+            d.set(x, 8, z, AIR)
+        for x, z in ((0, 0), (1, 0), (3, 0), (5, 0), (7, 0), (8, 0), (0, 1), (8, 1), (0, 3), (8, 3)):
+            d.set(x, 10, z, log("spruce_log", "y"))              # staggered tips like the palisade
+        for x, z in ((0, 8), (8, 8)):
+            d.set(x, 7, z, log("spruce_log", "y"))
+            d.set(x, 8, z, lantern())
+        d.set(4, 7, 4, "green_banner[rotation=0]")
+        d.chair(3, 7, 7, "south", "spruce", sit=False)
+        d.chair(5, 7, 7, "south", "spruce", sit=False)
+        d.hut(4, 1, 0)
+        return d
+    # ---- second log storey y7..10 with a lookout deck (L2+)
+    logs(7, 10)
+    for x, z in door_cells:                                       # platform passes through
+        d.set(x, 7, z, AIR)
+        d.set(x, 8, z, AIR)
+    for x, y, z in ((2, 8, 0), (3, 8, 0), (5, 8, 0), (6, 8, 0), (2, 8, 8), (6, 8, 8), (0, 9, 2), (8, 9, 2)):
+        d.set(x, y, z, "glass_pane")
+    deck(11)
+    for y in range(7, 12):
+        d.set(7, y, 6, ladder("west"))
+    d.bed(1, 7, 7, "south", "brown")
+    d.set(2, 7, 7, "barrel[facing=up,open=false]")
+    d.table(5, 7, 7, "spruce")
+    d.chair(4, 7, 7, "west", "spruce", sit=False)
+    d.set(1, 7, 1, "cartography_table")
+    d.set(2, 7, 1, "chest[facing=south,type=single,waterlogged=false]")
+    d.set(4, 10, 2, lantern(True))
+    d.set(4, 10, 6, lantern(True))
+    rail(12)
+    if L == 2:
+        for x, z in corners:
+            d.set(x, 12, z, log("spruce_log", "y"))
+            d.set(x, 13, z, lantern())
+        d.set(4, 12, 1, "green_banner[rotation=0]")
+        d.hut(4, 1, 0)
+        return d
+    # ---- L3: log trestle with a glazed lookout cab
+    for x, z in ((1, 1), (7, 1), (1, 7), (7, 7)):
+        for y in range(12, 22):
+            d.set(x, y, z, log("spruce_log", "y"))
+    for y in (16, 20):                                           # girts between the legs
+        for a in range(2, 7):
+            d.set(a, y, 1, log("stripped_spruce_log", "x"))
+            d.set(a, y, 7, log("stripped_spruce_log", "x"))
+            d.set(1, y, a, log("stripped_spruce_log", "z"))
+            d.set(7, y, a, log("stripped_spruce_log", "z"))
+    for x, z, f in ((2, 1, "west"), (6, 1, "east"), (2, 7, "west"), (6, 7, "east"),
+                    (1, 2, "north"), (1, 6, "south"), (7, 2, "north"), (7, 6, "south")):
+        d.set(x, 15, z, stairs("spruce_stairs", f, "top"))     # knee braces under the lower girt
+        d.set(x, 19, z, stairs("spruce_stairs", f, "top"))
+    for y in range(12, 22):                                      # ladder mast in the middle
+        d.set(4, y, 4, log("spruce_log", "y"))
+    for y in range(12, 23):
+        d.set(4, y, 5, ladder("south"))
+    deck(22)
+    d.set(4, 22, 5, ladder("south"))
+    rail(23)
+    for x, z in ring(2, 2, 6, 6):                                # cab: plank sill, glass all round
+        corner = x in (2, 6) and z in (2, 6)
+        d.set(x, 23, z, log("spruce_log", "y") if corner else "spruce_planks")
+        for y in (24, 25):
+            d.set(x, y, z, log("spruce_log", "y") if corner else "glass_pane")
+    d.door(4, 23, 2, "north", wood="spruce")
+    d.set(4, 25, 2, "spruce_planks")
+    d.set(3, 23, 3, "cartography_table")                         # fire finder
+    d.chair(3, 23, 4, "south", "spruce", sit=False)
+    d.set(5, 23, 3, "barrel[facing=up,open=false]")
+    d.set(4, 26, 4, log("stripped_spruce_log", "x"))
+    d.set(4, 25, 4, lantern(True))
+    d.hip(2, 2, 6, 6, 26, stairs="spruce_stairs", cap="spruce_slab", overhang=1)
+    d.set(4, 30, 4, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+    d.set(4, 12, 1, "green_banner[rotation=0]")
+    d.hut(4, 1, 0)
+    return d
+
+
+def _tower_neoterra(pack, rel, L):
+    """Concrete-and-glass watchtower astride the barrier (walkway enters at x0 / x10, z4..7, y7..8).
+    L1 glazed podium with a railed roof deck at walkway level, L2 a glass core (two floors, roof terrace) the
+    walkway passes through, L3 a taller core carrying a cantilevered observation cab with a catwalk and a
+    lit antenna mast."""
+    d = Design(pack, rel, (11, 29, 11))
+    d.fill(0, 1, 0, 10, 1, 10, "polished_andesite")
+    walk = {(0, z) for z in range(4, 8)} | {(10, z) for z in range(4, 8)}
+    pcorners = {(0, 0), (10, 0), (0, 10), (10, 10)}
+    ccorners = {(2, 2), (8, 2), (2, 8), (8, 8)}
+
+    def glass_rail(y, x1, z1, x2, z2, skip=()):
+        for x, z in ring(x1, z1, x2, z2):
+            if (x, z) in skip:
+                continue
+            post = (x in (x1, x2) and z in (z1, z2))
+            d.set(x, y, z, "white_concrete" if post else "glass_pane")
+            if post:
+                d.set(x, y + 1, z, end_rod())
+
+    # ---- podium (all levels)
+    for x, z in ring(0, 0, 10, 10):
+        d.set(x, 2, z, "polished_andesite")
+        for y in (3, 4, 5):
+            d.set(x, y, z, "light_gray_concrete" if (x, z) in pcorners else "white_concrete")
+    for x in range(2, 9):                                        # lobby glazing (town side) + ribbon window
+        d.set(x, 3, 10, "light_blue_stained_glass_pane")
+        d.set(x, 4, 10, "light_blue_stained_glass_pane")
+        d.set(x, 4, 0, "light_gray_stained_glass_pane")
+    d.door(5, 2, 10, "south", wood="birch")
+    d.fill(1, 1, 1, 9, 1, 9, "smooth_stone")
+    for x, z in ring(0, 0, 10, 10):                              # roof deck = walkway level
+        d.set(x, 6, z, "white_concrete")
+    d.fill(1, 6, 1, 9, 6, 9, "smooth_stone")
+    for x in range(1, 10):
+        d.set(x, 6, 4, "sea_lantern")                            # continues the wall's light strip
+    flight(d, [(8 - i, 2 + i, 1) for i in range(4)], "polished_andesite_stairs", "west", "light_gray_concrete")
+    for x in (5, 6, 7):
+        d.set(x, 6, 1, AIR)
+    d.set(3, 2, 7, slab("smooth_stone_slab", "top"))             # reception desk
+    d.set(4, 2, 7, slab("smooth_stone_slab", "top"))
+    d.chair(3, 2, 6, "north", "birch", sit=False)
+    d.set(1, 2, 9, "potted_bamboo")
+    d.set(9, 2, 9, "potted_bamboo")
+    d.chair(8, 2, 9, "south", "birch", sit=False)
+    d.chair(7, 2, 9, "south", "birch", sit=False)
+    d.set(2, 5, 5, lantern(True))
+    d.set(7, 5, 6, lantern(True))
+    if L == 1:
+        glass_rail(7, 0, 0, 10, 10, walk)
+        for x in (5, 6, 7):
+            d.set(x, 7, 2, "glass_pane")
+        d.set(8, 7, 1, "glass_pane")
+        for x, z in ((2, 9), (8, 9)):
+            d.set(x, 7, z, "moss_block")
+            d.set(x, 8, z, "flowering_azalea")
+        d.set(5, 7, 9, "birch_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
+        d.hut(5, 1, 0)
+        return d
+    # ---- glass core x2..8 / z2..8 (L2+)
+    top = 15 if L == 2 else 20
+
+    def core(y1, y2):
+        for y in range(y1, y2 + 1):
+            for x, z in ring(2, 2, 8, 8):
+                d.set(x, y, z, "white_concrete" if (x, z) in ccorners else "light_gray_stained_glass_pane")
+
+    core(7, top)
+    for x in range(3, 8):                                        # plain floor inside the core
+        d.set(x, 6, 4, "smooth_stone")
+    for z in range(4, 8):                                        # walkway passes through the core
+        for x in (2, 8):
+            d.set(x, 7, z, AIR)
+            d.set(x, 8, z, AIR)
+            d.set(x, 9, z, "white_concrete")
+    d.set(3, 7, 2, AIR)                                          # door from the stair landing
+    d.set(3, 8, 2, AIR)
+    d.set(3, 9, 2, "white_concrete")
+    d.set(8, 7, 1, "glass_pane")
+    glass_rail(7, 0, 0, 10, 10, walk | {(10, 10), (0, 10)})
+    for x, z in ((1, 9), (9, 9)):
+        d.set(x, 7, z, "moss_block")
+        d.set(x, 8, z, "flowering_azalea")
+    for x, z in ring(2, 2, 8, 8):                                # floor band
+        d.set(x, 11, z, "white_concrete")
+    d.fill(3, 11, 3, 7, 11, 7, "smooth_stone")
+    flight(d, [(7 - i, 7 + i, 3) for i in range(4)], "polished_andesite_stairs", "west")
+    for x in (4, 5, 6):
+        d.set(x, 11, 3, AIR)
+        d.set(x, 12, 4, "glass_pane")
+    d.set(7, 12, 3, "glass_pane")
+    flight(d, [(3 + i, 12 + i, 7) for i in range(4)], "polished_andesite_stairs", "east")
+    for x in (4, 5, 6):
+        d.set(x, 16, 7, AIR)
+        d.set(x, 17, 6, "glass_pane")
+    d.set(3, 17, 7, "glass_pane")
+    for x, z in ring(2, 2, 8, 8):
+        d.set(x, 16, z, "cyan_terracotta")
+    d.fill(3, 16, 3, 7, 16, 7, "smooth_stone")
+    for x in (4, 5, 6):                                          # stairwell to the roof / upper floor
+        d.set(x, 16, 7, AIR)
+    d.table(6, 12, 5, "birch", "slab", "smooth_stone_slab")      # lounge on the first core floor
+    d.chair(7, 12, 5, "east", "birch", sit=False)
+    d.chair(6, 12, 6, "south", "birch", sit=False)
+    d.set(7, 12, 7, "potted_bamboo")
+    d.set(5, 15, 5, lantern(True))
+    d.set(5, 10, 5, lantern(True))
+    if L == 2:
+        glass_rail(17, 2, 2, 8, 8)
+        d.set(3, 17, 3, "moss_block")
+        d.set(3, 18, 3, "flowering_azalea")
+        d.set(6, 17, 3, "birch_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]")
+        d.hut(5, 1, 0)
+        return d
+    # ---- L3: upper core floor y17..20, cab deck y21, cab y22..24, roof y25, mast
+    flight(d, [(7 - i, 17 + i, 3) for i in range(4)], "polished_andesite_stairs", "west")
+    for x in (4, 5, 6):
+        d.set(x, 21, 3, AIR)
+        d.set(x, 22, 4, "glass_pane")
+        d.set(x, 22, 2, "glass_pane")
+    d.set(7, 22, 3, "glass_pane")
+    d.bed(5, 17, 5, "north", "cyan")                             # rest bunk for the night watch
+    d.set(4, 17, 6, "chest[facing=north,type=single,waterlogged=false]")
+    d.set(3, 20, 5, lantern(True))
+    for x, z in ring(0, 0, 10, 10):
+        d.set(x, 21, z, "white_concrete")
+    d.fill(1, 21, 1, 9, 21, 9, "smooth_stone")
+    for x in (4, 5, 6):
+        d.set(x, 21, 3, AIR)
+    glass_rail(22, 0, 0, 10, 10)
+    for y in (22, 23, 24):
+        for x, z in ring(1, 1, 9, 9):
+            post = x in (1, 9) and z in (1, 9) or (x in (1, 9) and z == 5) or (z in (1, 9) and x == 5)
+            d.set(x, y, z, "white_concrete" if post else "light_blue_stained_glass_pane")
+    d.door(2, 22, 1, "north", wood="birch")
+    d.set(2, 24, 1, "white_concrete")
+    d.chair(8, 22, 4, "west", "birch", sit=False)                # seats facing the views
+    d.chair(8, 22, 6, "west", "birch", sit=False)
+    d.chair(4, 22, 8, "north", "birch", sit=False)
+    d.set(6, 22, 8, "lectern[facing=south,has_book=false,powered=false]")
+    d.set(2, 22, 8, "potted_bamboo")
+    d.set(8, 22, 8, "potted_bamboo")
+    for x, z in ring(0, 0, 10, 10):
+        d.set(x, 25, z, "cyan_terracotta")
+    d.fill(1, 25, 1, 9, 25, 9, "white_concrete")
+    d.set(3, 24, 6, lantern(True))
+    d.set(7, 24, 6, lantern(True))
+    d.set(5, 26, 5, "light_gray_concrete")                       # antenna mast
+    d.set(5, 27, 5, "iron_bars")
+    d.set(5, 28, 5, end_rod())
+    for x, z in pcorners:
+        d.set(x, 26, z, end_rod())
+    d.hut(5, 1, 0)
+    return d
