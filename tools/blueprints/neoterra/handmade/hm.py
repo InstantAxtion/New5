@@ -73,6 +73,26 @@ def _skin(pack, state):
     return format_state(_mc(new), props)
 
 
+# premium (expensive / late-game) materials: capped on levels 1-3 by preview.py
+PREMIUM = ("quartz", "copper", "prismarine", "sea_lantern", "blackstone", "nether_brick", "end_rod", "amethyst",
+           "glazed_terracotta", "purpur", "end_stone", "crying_obsidian", "froglight", "gold_block", "iron_block",
+           "diamond_block", "emerald_block", "beacon", "lapis_block", "redstone_lamp",
+           "tinted_glass", "shroomlight", "gilded", "netherite", "lodestone", "respawn_anchor", "conduit")
+PREMIUM_CAP = {1: 0.10, 2: 0.15, 3: 0.20}
+
+
+def premium_share(bp, gy):
+    total = prem = 0
+    for x, y, z, st in bp.blocks():
+        if y == gy or st == AIR or "substitution" in st:
+            continue
+        total += 1
+        n = st.split("[")[0].split(":")[-1]
+        if any(k in n for k in PREMIUM):
+            prem += 1
+    return prem / total if total else 0.0
+
+
 # --------------------------------------------------------------------------------------------- pack palettes
 # Starting vocabularies; a design may use any vanilla block it likes.
 PALETTES = {

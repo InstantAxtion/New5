@@ -130,6 +130,12 @@ def main():
                 else:
                     bp_show = bp
                 probs = [] if req.get("child") else walkcheck.analyse(bp_show)[1]
+                if not req.get("child") and L in hm.PREMIUM_CAP:
+                    share = hm.premium_share(bp_show, d.gy)
+                    if share > hm.PREMIUM_CAP[L]:
+                        print(f"{base} {pack} L{L}: PREMIUM TOO HIGH {share:.0%} > {hm.PREMIUM_CAP[L]:.0%} "
+                              f"(quartz/copper/prismarine/blackstone/sea lantern/... – see hm.PREMIUM)")
+                        ok = False
                 counts.append((L, sum(1 for _x, _y, _z, st in bp_show.blocks()
                                       if _y != d.gy and st != AIR and "substitution" not in st)))
                 bad = check_states(bp)
