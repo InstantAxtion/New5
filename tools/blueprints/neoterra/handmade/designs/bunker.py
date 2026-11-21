@@ -1065,7 +1065,7 @@ def neoterra(rel, L):
         d.fill(47, GY, 2, 52, GY, 12, "smooth_stone")
         for z in range(3, 12, 2):
             d.set(50, SW, z, "yellow_concrete") if False else d.set(50, GY, z, "yellow_concrete")
-    if L >= 4:              # motor depot (dark grey + cyan panels, copper roof) and comms hut (mangrove cladding)
+    if L >= 4:              # motor depot (dark grey + cyan panels, copper roof)
         pal = dict(wall="gray_concrete", wall2="gray_concrete", plinth="polished_blackstone", trim="polished_blackstone",
                    floor="smooth_stone", roof="cut_copper", roofblock="cut_copper", parapet="gray_concrete",
                    accent="cyan_terracotta", fin="cyan_concrete", glass="glass_pane", door="mangrove",
@@ -1077,6 +1077,7 @@ def neoterra(rel, L):
         d.fill(3, GY, 26, 19, GY, 29, "polished_andesite")
         for x in range(4, 19, 3):
             d.set(x, GY, 27, "yellow_concrete")
+    if L >= 5:              # comms hut (mangrove cladding) – with the HQ's radio mast
         pal2 = dict(wall="mangrove_planks", wall2="white_terracotta", plinth="deepslate_tiles", trim="deepslate_tiles",
                     floor="mangrove_planks", roof="deepslate_tile", roofblock="deepslate_tiles",
                     parapet="deepslate_tiles", accent="magenta_terracotta", fin="magenta_concrete",
@@ -1086,6 +1087,7 @@ def neoterra(rel, L):
         furnish(d, "comms", 3, 3, L)
         porch(d, 7, 11, "south", "deepslate_tile_slab[type=bottom,waterlogged=false]")
         place(d, [(5, SW, 12, "potted_bamboo"), (9, SW, 12, "potted_bamboo")])
+    if L >= 4:
         for x in range(0, sx):                               # perimeter fence with gaps for the gates
             if 18 <= x <= 36:
                 continue
@@ -1295,7 +1297,7 @@ def hearthwood(rel, L):
         flowerbed(d, 14, 19, 20, 19, 4)
         for x in (3, 21):
             lamp_post(d, x, 18, "dark_oak_fence", "lantern[hanging=false,waterlogged=false]", 3)
-    if L >= 4:              # smithy: stone and oak frame, spruce shingles, yellow shutters
+    if L >= 5:              # smithy: stone and oak frame, spruce shingles, yellow shutters
         pal = dict(wall="stone_bricks", wall2="stone_bricks", plinth="cobblestone", trim="stripped_oak_log",
                    floor="cobblestone", roof="spruce", gable="oak_planks", accent="oak_planks", glass="glass_pane",
                    door="oak", stairs="oak_stairs", rail="oak_fence", shutter="bamboo", chimney="cobblestone")
@@ -1451,7 +1453,7 @@ def cascadia(rel, L):
     for z in range(0, zf):
         d.set(x0 + 1, SW, z, "rail[shape=north_south,waterlogged=false]")
         d.set(x0 + 1, GY, z, "gravel")
-    for (tx, tz) in ((22, 18), (33, 20), (26, 27), (31, 14)):
+    for (tx, tz) in (((22, 18), (33, 20), (26, 27), (31, 14)) if L >= 2 else ()):
         h = knoll.get((tx, tz))
         if h:
             tree(d, tx, tz, SW + h, "spruce", 5)
@@ -1505,6 +1507,7 @@ def cascadia(rel, L):
         for x in range(4, 11):
             d.set(x, SW + 3, 1, "spruce_slab[type=bottom,waterlogged=false]")
         d.chair(4, SW, 2, "south", "spruce", sit=False)
+    if L >= 4:
         # open woodshed: four posts under a slab roof, cordwood stacked along the back
         for (px, pz) in ((14, 1), (19, 1), (14, 5), (19, 5)):
             for y in range(SW, SW + 3):
@@ -1581,7 +1584,7 @@ def cascadia(rel, L):
             for z in (29, 30, 31):
                 for y in range(SW, SW + 2):
                     d.set(x, y, z, "spruce_log[axis=z]" if (x + y) % 2 else "stripped_spruce_log[axis=z]")
-    if L >= 4:              # hoist house by the headframe: dark oak, slate roof, mustard trim
+    if L >= 5:              # hoist house by the headframe: dark oak, slate roof, mustard trim
         pal = dict(wall="dark_oak_planks", wall2="dark_oak_planks", plinth="andesite", trim="stripped_spruce_log",
                    floor="spruce_planks", roof="deepslate_tile", gable="dark_oak_planks", accent="yellow_terracotta",
                    glass="glass_pane", door="spruce", stairs="spruce_stairs", rail="spruce_fence", shutter="spruce",

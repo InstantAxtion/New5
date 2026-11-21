@@ -1384,6 +1384,19 @@ HW_FLATS = [
         ("chair", 4, 4, "S"), ("chair", 3, 3, "W"), ("chair", 5, 3, "E"),
         ("carpet", 2, 1, "brown"), ("carpet", 3, 1, "brown"), ("carpet", 4, 1, "brown"), ("carpet", 5, 1, "brown"),
         ("set", 0, 5, "potted_fern"), ("lamp", 4, 3)],
+    [  # family flat: twin beds under the window, range down the side wall, a table for four, a play rug
+        ("bed", 0, 0, "N"), ("stand", 1, 0), ("bed", 2, 0, "N"),
+        ("item", 6, 0, "furnace", "W"), ("sink", 6, 1), ("item", 6, 2, "smoker", "W"), ("item", 6, 3, "crafting_table"),
+        ("item", 4, 5, "barrel", "N"), ("shelf", 1, 5, "N"), ("table", 3, 3), ("chair", 3, 2, "N"),
+        ("chair", 3, 4, "S"), ("chair", 2, 3, "W"), ("chair", 4, 3, "E"),
+        ("carpet", 0, 3, "orange"), ("carpet", 0, 4, "orange"), ("carpet", 1, 4, "orange"),
+        ("set", 0, 5, "potted_dandelion"), ("lamp", 3, 3)],
+    [  # writer's flat: desk in the window between book cases, bed on the side wall, kitchen along the party wall
+        ("bed", 0, 3, "W"), ("stand", 0, 2), ("chest", 0, 4, "E"), ("shelf", 2, 0, "S"), ("table", 3, 0),
+        ("shelf", 4, 0, "S"), ("chair", 3, 1, "S"), ("item", 5, 0, "crafting_table"),
+        ("item", 6, 0, "barrel", "W"), ("item", 6, 1, "furnace", "W"), ("sink", 6, 2), ("item", 6, 3, "smoker", "W"),
+        ("table", 3, 3), ("chair", 3, 4, "S"), ("chair", 2, 3, "W"), ("chair", 4, 3, "E"),
+        ("carpet", 1, 1, "green"), ("carpet", 2, 1, "green"), ("set", 0, 5, "potted_blue_orchid"), ("lamp", 3, 2)],
 ]
 NT_FLATS = [
     [  # open plan: galley on the side wall, island with stools, bed in the window corner, lounge chairs
@@ -1615,9 +1628,9 @@ def apartment_hw(rel, L, F=None, garden_on=None, v=0):
             d.fill(xw, Y, z1 + 1, xw, Y + 2, z2 - 1, "bricks")
         d.door(11, Y, 11, "west", "dark_oak")
         d.door(15, Y, 11, "east", "dark_oak")
-        flat(d, 4, 6, Y, "north", False, HW_FLATS[(f + v) % 2], "dark_oak", None,
+        flat(d, 4, 6, Y, "north", False, HW_FLATS[(f + v) % 4], "dark_oak", None,
              ("red", "green", "yellow")[(f + v) % 3], Y + 2)
-        flat(d, 22, 6, Y, "north", True, HW_FLATS[(f + v + 1) % 2], "dark_oak", None,
+        flat(d, 22, 6, Y, "north", True, HW_FLATS[(f + v + 2) % 4], "dark_oak", None,
              ("blue", "brown", "purple")[(f + v) % 3], Y + 2)
         for x in (6, 8, 10, 16, 18, 20):                             # sash windows
             d.window(x, Y + 1, z1, x, Y + 2, z1)
@@ -1878,6 +1891,15 @@ def quadplex_hw(rel, L, U=None, v=0):
         wardrobe(d, a, 6, 13, "east", W)
         d.lamp(a + 2, 8, 10)
         rugc(d, a + 1, 9, a + 2, 11, 6, "light_gray")
+        # back of the bedroom (the landing at a+4 and the walk along z=13 stay free)
+        if alt == 0:    # writing desk under the back window
+            fit(d, [(a + 1, 6, 14, CHEST("north")), (a + 2, 6, 14, slab(W, "top")), (a + 2, 7, 14, "candle[candles=1,lit=false,waterlogged=false]"),
+                    (a + 3, 6, 14, stair(W, "east"))])
+        elif alt == 1:  # wash stand and linen chest
+            fit(d, [(a + 1, 6, 14, CAUL), (a + 2, 6, 14, CHEST("north")), (a + 3, 6, 14, "potted_fern")])
+        else:           # child's corner: toy chest, music box, a cushion
+            fit(d, [(a + 1, 6, 14, CHEST("north")), (a + 2, 6, 14, "note_block[instrument=bell,note=3,powered=false]"),
+                    (a + 3, 6, 14, "yellow_carpet")])
         # front garden
         fl = (("poppy", "oxeye_daisy", "rose_bush[half=lower]"), ("cornflower", "allium", "peony[half=lower]"),
               ("dandelion", "azure_bluet", "lilac[half=lower]"), ("red_tulip", "white_tulip", "rose_bush[half=lower]"))[k]

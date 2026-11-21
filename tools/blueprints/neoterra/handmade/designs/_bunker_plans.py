@@ -222,20 +222,20 @@ m.g.g.g.g.m
 LLoo...ooLL
 """)                                                    # water treatment
 N_["B", 14, 2] = _p("""
-$$$$$$$$$$$
-....*......
-$$$$$$$$$$.
-$$$$$$$$$$.
+$.$$.$$.$$.
+$.$$.$$.$$.
+$.$$*$$.$$.
+$.$$.$$.$$.
+$.$$.$$.$$.
 ...........
-$$$$$$$$$$.
-$$$$$$$$$$.
-....*......
-$$$$$$$$$$.
-$$$$$$$$$$.
+4...*...*..
 ...........
-4..........
-$$$$$$$$$$$
-""", **{"4": (4, "&", "c")})                            # bulk vault
+$.$$.$$.$$.
+$.$$*$$.$$.
+$.$$.$$.$$.
+$.$$.$$.$$.
+CaC.aCa.Ca.
+""", **{"4": (4, "&", "c")})                            # bulk vault: N-S pallet racking (deck A's vault runs E-W)
 N_["B", 30, 2] = _p("""
 bqbqbPbqbqb
 ...........
@@ -364,14 +364,14 @@ ooooooooooo...oooooooooooo
 LLLLaaLLLLaaLLLLaaLLLLaaLL
 """)                                                    # server vault
 N_["C", 34, 46] = _p("""
-xxxxxxxx...xxxxxxxx
-...................
-C.ccc.cc...cc.ccc.C
-...................
-X.....>t<..>t<....X
-...*.........*.....
-LLLLLaaaLLLaaaLLLLL
-""")                                                    # deep armoury
+xxxxxxxx...LLLLLLLL
+..*.......*.......*
+<T................X
+...||||||||||||||..
+<T................X
+..*.......*.......*
+CCaaLLL.ooo.LLLaaCC
+""")                                                    # firing range (deck B has the armoury)
 
 N_["C", 2, 2] = _p("""
 LpNpLpNpLpNpL.LpNpLpNpL
@@ -440,7 +440,7 @@ o.....................o
 .......................
 ..*.......*.......*....
 bbbLLLLbbbPyPbbbLLLLbbb
-""", lights=[(9, 6), (11, 6), (13, 6), (8, 5), (14, 7)])  # deep command centre (L5)
+""", lights=[(9, 6), (11, 6), (13, 6), (8, 5), (14, 7), (11, 4), (11, 8)])  # deep command centre (L5)
 
 # ============================================================== HEARTHWOOD – the undercroft (deck A)
 H_["A", 13, 1] = _p("""
@@ -793,13 +793,13 @@ bbbbbbbbbbbbbbbbbbbbbbbbbb
 """)                                                    # record vault
 H_["C", 34, 46] = _p("""
 xxxxxxxx...xxxxxxxx
-...................
-..>t<.......>t<....
-...................
-X.......X.......X..
-...*.....*.....*...
+..*.......*.......*
+X................T>
+..|||||||||||||||..
+X................T>
+..*.......*.......*
 CCLLLaaCCCCaaLLLCCC
-""")                                                    # deep armoury
+""")                                                    # longbow butts (deck B has the guardroom)
 
 H_["C", 2, 2] = _p("""
 mmm.mmm.mmm.CC.CCC.CCCC
@@ -1078,20 +1078,20 @@ o.o.....o.o
 LLcC...CcLL
 """)                                                    # sump & pump room
 C_["B", 14, 2] = _p("""
-$$$$$$$$$$$
-..*........
-$$$$$.$$$$.
-$$$$$.$$$$.
-...........
-$$$$$.$$$$.
-$$$$$.$$$$.
-......*....
-$$$$$.$$$$.
-$$$$$.$$$$.
-...........
+$.$$.$$.$$.
+$.$$.$$.$$.
+$.$$.$$.$$.
+a.aa*aa.aa.
+$.$$.$$.$$.
+$.$$.$$.$$.
 4..........
-$$$$$$$$$$$
-""", **{"4": (4, "&", "c")})                            # powder magazine
+$.$$.$$.$$.
+$.$$.$$.$$.
+a.aa*aa.aa.
+$.$$.$$.$$.
+$.$$.$$.$$.
+C.CC.Ca.Ca.
+""", **{"4": (4, "&", "c")})                            # powder magazine: N-S bays split by sandbag blast walls
 C_["B", 30, 2] = _p("""
 bqbqbqbqbqb
 ...........

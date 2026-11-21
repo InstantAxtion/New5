@@ -38,7 +38,10 @@ def is_furn(st):
 
 
 def blocks_walk(st):
-    return st != AIR and not any(k in st for k in ("carpet", "pressure_plate", "torch", "rail", "button", "_sign",
+    n = st.split("[")[0].split(":")[-1]
+    if n in ("flowering_azalea", "azalea"):
+        return True
+    return st != AIR and not any(k in n for k in ("carpet", "pressure_plate", "torch", "rail", "button", "_sign",
                                                     "flower", "sapling", "fern", "short_grass", "snow"))
 
 

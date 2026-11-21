@@ -1605,6 +1605,13 @@ def twin_nt(rel, L):
             d.set(x, 8, 3, "cyan_terracotta")
         d.set(16, 7, 8, endrod("down"))
         d.set(16, 7, 12, endrod("down"))
+        d.set(16, 7, 5, endrod("down"))
+        d.set(16, 7, 14, endrod("down"))
+        # loading bays along the east edge of the lane, between the canopy columns
+        for z, b in ((5, "bricks"), (6, "white_concrete"), (11, "glass"), (12, "smooth_stone"), (13, "bricks")):
+            pallet_stack(d, 18, z, 2, b, 2 if z % 2 else 3)
+        d.set(18, 2, 7, "iron_trapdoor[facing=west,half=bottom,open=true,powered=false,waterlogged=false]")
+        d.set(18, 2, 8, "barrel[facing=up,open=false]")
     # ---- L3+: tower crane
     if L >= 3:
         top = 19 if L < 5 else 21
@@ -5246,6 +5253,9 @@ NT_OFFICE_PLANS = {
         S 1 8 pot
         P 10 8 potted_bamboo
         P 0 0 potted_bamboo
+        X 4 4 candle 1
+        X 5 4 potted_white_tulip 1
+        X 6 4 candle 1
         L 3 4
         L 7 4
     """ % (_row("T", [(x, 4) for x in range(3, 8)]), _row("C", [(x, 3) for x in range(3, 8)], "n"),
@@ -5291,9 +5301,19 @@ NT_HALL_PLANS = {
         C 15 3 n
         C 16 5 s
         P 26 13 potted_bamboo
+        X 0 7 chest:e
+        X 0 8 chest:e
+        X 0 10 barrel:e
+        X 0 11 barrel:e
+        T 20 9 lamp
+        C 19 9 w
+        C 21 9 e
+        G 0 6 e
         L 5 4
         L 15 4
         L 12 11
+        L 20 9
+        L 2 9
     """ % (_row("X", [(x, 5) for x in range(3, 11)], "counter"), _row("X", [(x, 13) for x in range(2, 18)], "barrel:n")),
 }
 
@@ -5313,9 +5333,16 @@ NT_CANTEEN_PLANS = {
         X 0 1 pot 1
         P 13 16 potted_bamboo
         P 0 16 potted_bamboo
+        X 3 6 candle 1
+        X 3 9 pot 1
+        X 3 11 potted_white_tulip 1
+        X 9 9 candle 1
+        X 9 11 potted_azure_bluet 1
+        X 9 13 candle 1
         L 3 6
         L 3 12
         L 9 12
+        L 9 9
     """ % (_row("T", [(3, z) for z in range(5, 13)]), _row("C", [(2, z) for z in range(5, 13)], "w"),
            _row("C", [(4, z) for z in range(5, 13)], "e"), _row("T", [(9, z) for z in range(8, 15)]),
            _row("C", [(8, z) for z in range(8, 15)], "w"), _row("C", [(10, z) for z in range(8, 15)], "e"),
@@ -5367,7 +5394,7 @@ NT_CANTEEN_PLANS = {
         X 0 2 andesite
         X 0 2 plate 1
         X 0 3 sslab
-        R 3 3 6 6 lime
+        R 3 4 6 6 lime
         X 3 10 target 1
         X 3 10 chain 2
         X 3 10 chain 3
@@ -5383,6 +5410,8 @@ NT_CANTEEN_PLANS = {
         L 4 4
         L 5 10
         L 10 13
+        L 10 4
+        L 2 13
     """,
     "training": """
         X 5 1 lectern:s
@@ -5462,7 +5491,7 @@ HW_CLERK_PLANS = {
         P 7 0 potted_fern
         L 3 4
         L 7 7
-    """ % (_row("Q", [(0, z) for z in range(0, 9)], "e 2"), _row("K", [(x, 8) for x in range(1, 8)])),
+    """ % (_row("Q", [(0, z) for z in range(0, 9)], "e 3"), _row("K", [(x, 8) for x in range(1, 8)], "3")),
 }
 
 # Hearthwood twin builder – joinery (19 x 13; stair lx 16-18; doors lx 9 lz 0 and lx 0 lz 6)
@@ -5572,6 +5601,92 @@ HW_CART_PLAN = """
         L 2 3
         L 7 3
 """
+
+# round 5: hand-placed extras for the twin-builder yard buildings that were still thin
+HW_BARN_PLANS["timber"] += """
+        X 3 4 fence
+        X 4 4 fence
+        X 3 4 slab 1
+        X 4 4 slab 1
+        X 3 9 fence
+        X 4 9 fence
+        X 3 9 slab 1
+        X 4 9 slab 1
+        X 8 10 barrel:w
+        X 8 11 barrel:w
+        L 4 4
+        L 4 9
+"""
+HW_JOIN_PLANS["bench"] += """
+        X 12 3 counter
+        X 13 3 counter
+        X 12 3 lamp 1
+        C 12 4 s
+        X 17 9 chest:w
+        X 17 10 chest:w
+        X 18 11 barrel:w
+        G 18 10 w
+        T 3 9
+        X 3 9 pot 1
+        X 5 9 fence
+        X 6 9 fence
+        X 5 9 slab 1
+        X 6 9 slab 1
+        L 12 3
+        L 5 9
+"""
+HW_JOIN_PLANS["store"] += """
+%s
+%s
+        L 7 3
+        L 7 9
+""" % (_row("X", [(x, z) for x in (0, 7, 13) for z in (2, 5, 8, 11)], "fence"),
+       _row("X", [(x, z) for x in (0, 7, 13) for z in (2, 5, 8, 11)], "fence 1"))
+HW_MASON_PLANS["banker"] += """
+        X 0 4 chest:e
+        X 0 5 chest:e
+        X 0 6 barrel:e
+        X 4 10 lamp 1
+        X 7 10 pot 1
+        X 10 10 candle 1
+        X 13 10 pot 1
+        X 16 10 lamp 1
+        X 22 10 barrel:n
+        X 23 10 barrel:n
+        X 4 4 grind:n
+        X 7 4 cutter:n
+        X 10 4 grind:n
+        X 17 4 cutter:n
+        X 20 4 grind:n
+        X 3 7 oak_slab[type=bottom,waterlogged=false]
+        X 4 7 oak_slab[type=bottom,waterlogged=false]
+        X 6 7 oak_slab[type=bottom,waterlogged=false]
+        X 7 7 oak_slab[type=bottom,waterlogged=false]
+        X 9 7 oak_slab[type=bottom,waterlogged=false]
+        X 10 7 oak_slab[type=bottom,waterlogged=false]
+        G 0 7 e
+        P 26 10 potted_fern
+        L 9 4
+        L 16 4
+        L 19 4
+        L 3 4
+        L 12 7
+"""
+HW_MASON_PLANS["tracing"] += """
+        X 12 6 carto
+        X 14 6 carto
+        X 16 6 carto
+        C 12 7 s
+        C 14 7 s
+        C 16 7 s
+%s
+        X 18 10 lectern:n
+        G 0 7 e
+        L 4 8
+        L 14 8
+        L 12 3
+""" % _row("K", [(x, 10) for x in range(2, 10)], "3")
+
 
 # Cascadia twin builder – lumber drying shed (15 x 9; doors lx 7 lz 0 and lz 8)
 CA_SHED_PLAN = """
@@ -5719,6 +5834,82 @@ CA_COOK_PLANS = {
         L 13 10
     """,
 }
+
+
+# round 5: hand-placed extras for the Cascadia framing yard buildings
+CA_SHED_PLAN += """
+%s
+%s
+        L 7 2
+        L 7 6
+""" % (_row("X", [(x, z) for x in (0, 6, 8, 14) for z in (2, 6)], "fence"),
+       _row("X", [(x, z) for x in (0, 6, 8, 14) for z in (2, 6)], "fence 1"))
+CA_MILL_PLANS["saw"] += """
+        L 2 2
+        L 8 2
+        L 14 2
+        L 2 10
+        L 8 10
+        L 14 10
+        X 0 4 barrel:e
+        X 0 5 barrel:e
+        X 0 8 chest:e
+        X 0 9 chest:e
+        X 0 10 grind:e
+        X 3 9 fence
+        X 4 9 fence
+        X 3 9 slab 1
+        X 4 9 slab 1
+        X 7 9 fence
+        X 8 9 fence
+        X 7 9 slab 1
+        X 8 9 slab 1
+        X 14 9 barrel
+        X 15 9 barrel
+        X 16 12 barrel:n
+        X 15 12 barrel:n
+        G 0 6 e
+"""
+CA_MILL_PLANS["filing"] = CA_MILL_PLANS["filing"].replace("X 9 9 planks", "X 9 9 planks\n        X 9 9 planks 1\n        X 9 9 planks 2")
+for _x in (9, 10, 11):
+    for _z in (9, 10, 11):
+        if (_x, _z) != (9, 9):
+            CA_MILL_PLANS["filing"] += f"        X {_x} {_z} planks 1\n        X {_x} {_z} planks 2\n"
+CA_MILL_PLANS["filing"] += """
+        X 10 12 lamp 1
+        X 13 12 pot 1
+        X 16 12 candle 1
+        L 2 3
+        L 8 3
+        L 16 12
+        X 0 5 chest:e
+        X 0 6 chest:e
+        X 0 8 barrel:e
+        T 5 5 lamp
+        C 5 4 n
+        C 5 6 s
+        X 15 5 smith
+        X 14 9 counter
+        X 15 9 counter
+        X 16 9 counter
+        X 15 9 lamp 1
+        G 0 3 e
+        K 20 8 2
+"""
+CA_COOK_PLANS["lounge"] += """
+        K 0 10 2
+        K 0 11 2
+        T 12 9 candle
+        C 11 9 w
+        C 13 9 e
+        X 18 10 chest:w
+        T 4 11 lamp
+        C 3 11 w
+        C 5 11 e
+        G 0 3 e
+        L 12 9
+        L 4 11
+"""
 
 
 def raise_building(d, pack, rect, y0, n, plans, floors, wd, tt, H=5, extra=(), **kw):
@@ -5922,7 +6113,8 @@ def grow_sky_ca(d, L):
     P = "Cascadia"
     regrid(d, 64, 64, 16, 0, 80)
     lv = [7, 12]
-    grass = [(x, z) for x, z in cells(0, 0, 63, 63) if d.get(x, 1, z) == "minecraft:coarse_dirt"]
+    grass = [(x, z) for x, z in cells(0, 0, 63, 63)
+             if d.get(x, 1, z).split("[")[0] in ("minecraft:coarse_dirt", "minecraft:grass_block", "minecraft:moss_block")]
     path_line(d, [(x, 0) for x in range(0, 64)], 1, "gravel")
     for x in (4, 12, 48, 56):
         lamp_post(d, x, 2, 2, P, 3)
@@ -5960,6 +6152,26 @@ def grow_sky_ca(d, L):
                 d.set(25, y, z, log("spruce_log", "x"))
             d.set(25, 5, z, slab("spruce"))
         lamp_post(d, 23, 35, 2, P, 3)
+        # log tool shed by the fire circle (axe, saw bench, wood) and a spruce grove around it
+        for x, z in cells(27, 29, 31, 33):
+            d.set(x, 1, z, "spruce_planks")
+            for y in (2, 3, 4):
+                if x in (27, 31) or z in (29, 33):
+                    d.set(x, y, z, log("spruce_log", "y") if x in (27, 31) and z in (29, 33) else
+                          log("stripped_spruce_log", "x" if z in (29, 33) else "z"))
+            d.set(x, 5, z, slab("dark_oak"))
+        for x, z in cells(26, 28, 32, 34):
+            if x in (26, 32) or z in (28, 34):
+                d.set(x, 5, z, slab("dark_oak"))
+        d.door(29, 2, 29, "north", "spruce")
+        d.set(28, 2, 32, "crafting_table")
+        d.set(29, 2, 32, "grindstone[face=floor,facing=north]")
+        d.set(30, 2, 32, "chest[facing=north,type=single,waterlogged=false]")
+        d.set(30, 2, 30, "barrel[facing=up,open=false]")
+        d.set(29, 4, 31, lantern())
+        d.set(31, 3, 31, "glass_pane")
+        for x, z in ((20, 37), (34, 32), (37, 29)):
+            tree(d, x, z, 2, "spruce_log", "spruce_leaves", 6)
     if L >= 3:                                        # east wing: game room, library, guest lounge
         lv += raise_building(d, P, (46, 4, 58, 28), 2, {3: 4, 4: 4, 5: 4}[L], CA_E_PLANS, CA_E_FLOORS, "birch", "birch",
                              roof="gable", axis="z", doors=[(52, 4, "north"), (46, 16, "west")], st=CA_EAST)
@@ -6016,7 +6228,8 @@ def grow_sky_ca(d, L):
         for x, z in ((34, 56), (20, 56), (44, 58), (58, 58)):
             tree(d, x, z, 2, "spruce_log", "spruce_leaves", 7)
     for x, z in grass:                               # meadow; trodden ground under eaves, decks and porches
-        if d.get(x, 1, z) != "minecraft:coarse_dirt":
+        if d.get(x, 1, z).split("[")[0] not in ("minecraft:coarse_dirt", "minecraft:grass_block",
+                                                "minecraft:moss_block"):
             continue
         if any(not d.air(x, yy, z) and "leaves" not in d.get(x, yy, z) for yy in range(2, 16)):
             d.set(x, 1, z, "packed_mud" if (x + z) % 3 else "coarse_dirt")
@@ -6146,6 +6359,9 @@ def grow_twin_nt(d, L):
         for x in range(7, 27):
             d.set(x, 9, 27, "yellow_concrete")
         d.sign(16, 8, 28, "north", ["PRECAST", "WORKS"], "birch", glow=True, color="yellow")
+        for x, b in ((4, "bricks"), (5, "white_concrete"), (11, "smooth_stone"), (12, "glass"), (20, "bricks"),
+                     (21, "smooth_stone"), (27, "white_concrete")):   # finished precast waiting under the eaves
+            pallet_stack(d, x, 45, 2, b, 2)
     if L >= 5:                                        # workers' canteen, lockers and gym; second crane
         lv += raise_building(d, P, (34, 35, 49, 53), 2, 5, NT_CANTEEN_PLANS, NT_CANTEEN_FLOORS, "cherry", "birch",
                              doors=[(41, 35, "north")], st=NT_DEPOT_CANTEEN)
@@ -6177,6 +6393,24 @@ def grow_twin_hw(d, L):
     path_line(d, [(x, 0) for x in range(0, 56)], 1, "gravel")
     for x in (1, 10, 19, 28, 37, 46, 55):
         lamp_post(d, x, 0, 2, P, 3)
+    # behind the workshop, under its eaves: water butt, rain cauldron, bench (and round the barn from L2)
+    d.set(3, 2, 19, "barrel[facing=up,open=false]")
+    d.set(4, 2, 19, "water_cauldron[level=3]")
+    for x in (5, 6):
+        d.set(x, 2, 19, log("oak_log", "x"))
+        d.set(x, 3, 19, log("oak_log", "x"))
+    d.chair(10, 2, 19, "north", "oak", sit=False)
+    d.chair(11, 2, 19, "north", "oak", sit=False)
+    if L >= 2:
+        for z in (24, 25):
+            d.set(13, 2, z, log("oak_log", "z"))
+            d.set(13, 3, z, log("oak_log", "z"))
+        for x, z, b in ((13, 30, "barrel[facing=up,open=false]"), (1, 28, "barrel[facing=up,open=false]"),
+                        (1, 26, "water_cauldron[level=3]"), (13, 32, "hay_block[axis=y]"),
+                        (1, 33, "hay_block[axis=y]"), (13, 27, "composter[level=0]"),
+                        (1, 24, "barrel[facing=up,open=false]"), (12, 20, "barrel[facing=up,open=false]"),
+                        (13, 22, "grindstone[face=floor,facing=east]")):
+            d.set(x, 2, z, b)
     if L >= 2:                                        # timber seasoning barn behind the workshop
         lv += raise_building(d, P, (2, 21, 12, 35), 2, 2, HW_BARN_PLANS, ["timber", "loft"], "spruce", "oak",
                              roof="gable", axis="z", chimneys=False, doors=[(7, 21, "north")], st=HW_YARD_BARN)
@@ -6253,6 +6487,14 @@ def grow_twin_ca(d, L):
                 d.set(x, y, 16, log("spruce_log", "y"))
         d.chair(38, 2, 17, "west", "spruce", sit=False)
         d.chair(46, 2, 17, "east", "spruce", sit=False)
+        # behind the bunkhouse under the eaves: water butt, firewood, a bench
+        d.set(37, 2, 30, "barrel[facing=up,open=false]")
+        for x in (38, 39):
+            d.set(x, 2, 30, log("spruce_log", "x"))
+            d.set(x, 3, 30, log("spruce_log", "x"))
+        d.chair(44, 2, 30, "north", "spruce", sit=False)
+        d.chair(45, 2, 30, "north", "spruce", sit=False)
+        d.set(47, 2, 30, "water_cauldron[level=3]")
     if L >= 4:                                        # sawmill hall with log deck and chute
         lv += raise_building(d, P, (2, 33, 24, 47), 2, 2, CA_MILL_PLANS, ["saw", "filing"], "dark_oak", "spruce",
                              roof="gable", axis="x", doors=[(13, 33, "north"), (24, 44, "east")], st=CA_YARD_MILL)
@@ -6261,6 +6503,15 @@ def grow_twin_ca(d, L):
                 d.set(x, y, 50, log("spruce_log", "x"))
             d.set(x, 4, 50, log("spruce_log", "x")) if x % 2 else None
         d.sign(13, 6, 32, "north", ["SAWMILL"], "spruce")
+        for x, z, b in ((3, 32, "barrel[facing=up,open=false]"), (4, 32, "water_cauldron[level=3]"),
+                        (21, 32, "barrel[facing=up,open=false]"), (23, 32, "hay_block[axis=y]"),
+                        (4, 48, "barrel[facing=up,open=false]"), (6, 48, "hay_block[axis=y]"),
+                        (7, 48, "hay_block[axis=y]"), (20, 48, "barrel[facing=up,open=false]")):
+            d.set(x, 2, z, b)                           # under the mill eaves
+        d.chair(17, 2, 32, "south", "spruce", sit=False)
+        d.chair(18, 2, 32, "south", "spruce", sit=False)
+        d.chair(15, 2, 48, "north", "spruce", sit=False)
+        d.chair(16, 2, 48, "north", "spruce", sit=False)
     if L >= 5:                                        # cookhouse with dining hall and a log water tower
         lv += raise_building(d, P, (30, 34, 50, 48), 2, 3, CA_COOK_PLANS, ["dining", "kitchen", "lounge"], "spruce", "spruce",
                              roof="gable", axis="x", doors=[(40, 34, "north")], st=CA_YARD_COOK)
@@ -6275,6 +6526,12 @@ def grow_twin_ca(d, L):
                       log("stripped_spruce_log", "y"))
         for x, z in cells(51, 35, 55, 39):
             d.set(x, 14, z, slab("dark_oak"))
+            d.set(x, 1, z, "gravel")
+        d.set(53, 2, 37, "water_cauldron[level=3]")       # standpipe under the tank
+        d.set(53, 9, 37, lantern())
+        d.set(51, 2, 35, "barrel[facing=up,open=false]")
+        d.set(55, 2, 39, "barrel[facing=up,open=false]")
+        d.set(55, 2, 35, "hay_block[axis=y]")
     return d
 
 
