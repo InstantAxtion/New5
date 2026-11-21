@@ -423,7 +423,7 @@
    ],
    "presses": [],
    "spawns": [],
-   "ticks": 8000
+   "ticks": 12000
   },
   "decorations/resourcefarms/mudclay.blueprint": {
    "blocks": [
