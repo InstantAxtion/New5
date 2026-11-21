@@ -2935,7 +2935,7 @@ def apartment_towers_nt(rel, L):
     A = {1: 2, 2: 4, 3: 5, 4: 8, 5: 11}[L]
     stamp(d, apartment_nt(rel, L, A), 0, 0, primary=True)
     if L >= 3:
-        t = apartment_nt(rel, 3, {3: 3, 4: 5, 5: 8}[L], v=1)
+        t = apartment_nt(rel, 3, {3: 3, 4: 6, 5: 8}[L], v=1)
         recolor(t, [("white_concrete", "light_gray_concrete"), ("cyan_terracotta", "yellow_terracotta"),
                     ("light_gray_stained_glass_pane", "gray_stained_glass_pane")])
         stamp(d, t, 22, 0)
@@ -2997,8 +2997,13 @@ def apartment_square_hw(rel, L):
             lamp_post(d, x, z, 1)
         for x, z in ((25, 28), (36, 28)):
             bench(d, x, z, 2, "south", "east" if x < 30 else "west", "dark_oak")
-        for x, z in ((23, 27), (39, 31)):
+        for x, z in ((23, 27), (39, 31)) + (((27, 33), (35, 25)) if L >= 5 else ()):
             tree(d, x, z, 2, "oak", 4, 2)
+        if L >= 5:                                   # clipped box hedges along the north and south lawn edges
+            for z in (22, 36):
+                for x in list(range(22, 30)) + list(range(33, 41)):
+                    if d.air(x, 2, z):
+                        d.set(x, 2, z, "oak_leaves[distance=1,persistent=true,waterlogged=false]")
     return d
 
 
@@ -3011,11 +3016,11 @@ def apartment_rows_ca(rel, L):
     recolor(m, [("dark_oak", "dark_prismarine")])
     stamp(d, m, 0, 0, primary=True)
     if L >= 3:
-        m = apartment_ca(rel, 3, 2, 1 if L == 3 else 2, v=1)
+        m = apartment_ca(rel, 3, 3 if L >= 5 else 2, 1 if L == 3 else 2, v=1)
         recolor(m, [("dark_oak", "mangrove"), ("stripped_spruce_log", "stripped_mangrove_log")])
         stamp(d, m, 32, 0)
     if L >= 4:
-        m = apartment_ca(rel, 3, 2 if L == 4 else 3, 2 if L == 5 else 1, v=2)
+        m = apartment_ca(rel, 3, 2 if L == 4 else 3, 2, v=2)
         recolor(m, [("dark_oak", "deepslate_tile"), ("stripped_spruce_log", "stripped_birch_log")])
         stamp(d, m, 0, 22)
     if L >= 5:
@@ -3362,6 +3367,18 @@ def player_estate(rel, L):
             for z in (gz1 + 1, gz2 - 1):
                 d.set(x, 2, z, ("rose_bush[half=lower]", "peony[half=lower]", "lilac[half=lower]")[x % 3])
                 d.set(x, 3, z, ("rose_bush[half=upper]", "peony[half=upper]", "lilac[half=upper]")[x % 3])
+    if pack == "Neoterra" and L >= 3:
+        nt_court(d, L)
+    if pack == "Cascadia" and L >= 3:                    # spruce stands: north meadow (L3), east of the garden
+        trees = [(37, 19), (47, 18), (57, 18), (30, 40)]  # (L4), round the watch tower and chapel (L5)
+        trees += [(52, 45), (58, 45)] if L >= 4 else []
+        trees += [(45, 55), (45, 60), (60, 52), (60, 58), (38, 60), (5, 60), (53, 60), (24, 30), (27, 60)] if L >= 5 else []
+        for tx, tz in trees:
+            tree(d, tx, tz, 2, "spruce", 7, 2)
+    if pack == "Hearthwood" and L >= 3:                  # walnut by the library tower; apple orchard round the
+        trees = [(49, 5)] + ([(54, 52), (59, 49), (59, 56), (54, 59), (36, 52), (36, 59), (5, 60)] if L >= 5 else [])
+        for tx, tz in trees:                             # watch tower at L5
+            tree(d, tx, tz, 2, "oak", 5 if (tx + tz) % 2 else 4, 2)
     if L >= 4:
         ph_hall(d, *HALL, h=7)
         hall_furniture(d, pack, W)
@@ -3424,6 +3441,74 @@ def player_estate(rel, L):
                     d.set(x, 2, z, f"{wall}[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
                     d.set(x, 3, z, lantern(False))
     return d
+
+
+def nt_court(d, L):
+    """Neoterra estate court (x29..62, z13..33, open paving at L2): an avenue of birches on the south edge (L3),
+    a second avenue under the hall (L4), then a lap pool with loungers and a glass orangery between them (L5)."""
+    rows = [31] + ([15] if L >= 4 else [])
+    for z in rows:
+        for x in (34, 41, 48, 55):
+            d.set(x, 1, z, "moss_block")
+            for ax, az in ((x - 1, z), (x + 1, z), (x, z - 1), (x, z + 1)):
+                d.set(ax, 1, az, "moss_block")
+            tree(d, x, z, 2, "birch", 5, 2)
+    if L < 5:
+        return
+    # lap pool x30..41 z20..26: raised quartz rim, loungers on the north deck, a shade umbrella of slabs on a rod
+    for x, z in cells(30, 20, 41, 26):
+        if x in (30, 41) or z in (20, 26):
+            d.set(x, 2, z, slab("smooth_quartz"))
+        else:
+            d.set(x, 1, z, "water")
+            d.set(x, 0, z, "light_blue_concrete")
+    fit(d, [(x, 2, 18, stair("birch", "north")) for x in (31, 33, 35, 38, 40)]
+        + [(32, 2, 18, slab("birch", "top")), (32, 3, 18, "potted_bamboo"), (39, 2, 18, slab("birch", "top")),
+           (39, 3, 18, "potted_azure_bluet"), (36, 2, 17, "end_rod[facing=up]"), (36, 3, 17, "end_rod[facing=up]"),
+           (35, 4, 17, slab("smooth_quartz")), (36, 4, 17, slab("smooth_quartz")),
+           (37, 4, 17, slab("smooth_quartz")), (36, 4, 16, slab("smooth_quartz")), (36, 4, 18, slab("smooth_quartz"))])
+    # orangery x44..60 z19..27: glass walls on white piers, flat roof with roof lights, citrus beds and a fountain
+    ox1, oz1, ox2, oz2 = 44, 19, 60, 27
+    nt_box(d, ox1, oz1, ox2, oz2, 2, 6, "glass", "white_concrete")
+    for x in range(ox1, ox2 + 1, 4):
+        for z in (oz1, oz2):
+            for y in range(2, 7):
+                d.set(x, y, z, "white_concrete")
+    d.fill(ox1 + 1, 1, oz1 + 1, ox2 - 1, 1, oz2 - 1, "polished_diorite")
+    d.clear(ox1 + 1, 2, oz1 + 1, ox2 - 1, 6, oz2 - 1)
+    d.flat(ox1, oz1, ox2, oz2, 7, "smooth_quartz", "white_concrete", "smooth_quartz_slab")
+    for x, z in cells(ox1 + 1, oz1 + 1, ox2 - 1, oz2 - 1):     # green roof round a strip of roof lights
+        if z == 23:
+            d.set(x, 7, z, "glass" if (x - ox1) % 3 == 2 else "smooth_quartz")
+        else:
+            d.set(x, 8, z, "moss_block")
+            if (x + 2 * z) % 5 == 0:
+                d.set(x, 9, z, "azalea")
+            elif (x * 3 + z) % 7 == 0:
+                d.set(x, 9, z, "flowering_azalea")
+    for x, z in ((29, 23), (62, 23)):                                # birches closing the court's short ends
+        tree(d, x, z, 2, "birch", 6, 2)
+    for x in range(30, 42):                                         # clipped hedge on the pool's south side
+        d.set(x, 2, 28, "birch_leaves[distance=1,persistent=true,waterlogged=false]")
+    d.double_door(51, 2, oz1, "x", "north", "birch")
+    d.set(51, 4, oz1, "white_concrete")
+    d.set(52, 4, oz1, "white_concrete")
+    beds = [(x, z) for z in (20, 26) for x in range(45, 60) if not (z == 20 and 50 <= x <= 53)]
+    for i, (x, z) in enumerate(beds):                 # citrus and azalea beds against the long walls
+        d.set(x, 1, z, "moss_block")
+        if i % 4 == 2:                                  # every fourth bed a raised moss box with a pot
+            d.set(x, 2, z, "moss_block")
+            d.set(x, 3, z, "potted_orange_tulip")
+        else:
+            d.set(x, 2, z, "flowering_azalea" if i % 4 == 1 else "azalea")
+    fit(d, [(52, 2, 23, CAUL), (52, 1, 23, "smooth_quartz"), (51, 2, 22, slab("smooth_quartz")),   # fountain
+            (53, 2, 22, slab("smooth_quartz")), (51, 2, 24, slab("smooth_quartz")), (53, 2, 24, slab("smooth_quartz")),
+            (48, 2, 22, stair("birch", "west")), (48, 2, 23, stair("birch", "west")),
+            (48, 2, 24, stair("birch", "west")), (56, 2, 22, stair("birch", "east")),
+            (56, 2, 23, stair("birch", "east")), (56, 2, 24, stair("birch", "east")),
+            (45, 2, 23, slab("birch", "top")), (45, 3, 23, "potted_cornflower"),
+            (59, 2, 23, slab("birch", "top")), (59, 3, 23, "potted_red_tulip"),
+            (47, 6, 23, LANT), (52, 6, 21, LANT), (52, 6, 25, LANT), (57, 6, 23, LANT)])
 
 
 def hall_furniture(d, pack, W):
@@ -3692,7 +3777,7 @@ def house_estate_hw(rel, L):
             + [(7, 2, 34, CAUL), (3, 2, 29, "potted_red_tulip"), (11, 2, 29, "potted_fern")])
         lane(d, 7, 25, 8, 27, "gravel")
         lamp_post(d, 24, 26, 1)
-        for tx, tz in ((15, 30), (20, 33), (16, 37)):              # three old apple trees
+        for tx, tz in ((15, 30), (20, 33), (16, 37), (32, 22)):    # old apple trees, a walnut by the drive
             tree(d, tx, tz, 2, "oak", 4, 2)
     if L >= 5:
         outbuilding(d, 2, 40, 14, 48, "workshop", h=4)
@@ -3739,6 +3824,9 @@ def house_estate_hw(rel, L):
         recolor(d, [("deepslate_tile", "dark_oak")], (25, 50, 53, 61))
         lane(d, 24, 49, 53, 50, "gravel")
         lane(d, 24, 17, 25, 50, "gravel")
+        for tx, tz in ((5, 53), (11, 57), (17, 53), (21, 58), (4, 59)):  # home orchard behind the house
+            tree(d, tx, tz, 2, "oak", 4, 2)
+        bench(d, 13, 53, 2, "east", "north", "dark_oak")
         for x in (30, 48):
             lamp_post(d, x, 49, 1)
     return d
@@ -3850,6 +3938,9 @@ def house_estate_ca(rel, L):
         fit(d, [(56, 2, 56, GRIND("west")), (55, 2, 56, slab("spruce", "top")), (54, 2, 56, slab("spruce", "top")),
                 (54, 3, 56, LANTF), (45, 2, 56, CHEST("north")), (56, 2, 52, "anvil[facing=north]"),
                 (56, 2, 50, BRL("west")), (45, 2, 50, HAYY), (48, 5, 52, LANT), (53, 5, 52, LANT)])
+        for tx, tz in ((2, 18), (2, 23), (8, 25), (42, 3)):           # spruce windbreak on the west and north
+            tree(d, tx, tz, 2, "spruce", 7, 2)
+        fit(d, [(x, y, z, log("spruce_log", "x")) for x in range(39, 46) for z in (10, 12) for y in (2, 3)])  # cordwood
     return d
 
 
@@ -3891,7 +3982,7 @@ def house_estate_nt(rel, L):
         rugc(d, 29, 19, 31, 20, 2, "orange")
         recolor(d, [("white_concrete", "orange_terracotta")], (26, 17, 38, 24, 2))
     if L >= 4:
-        g = house_nt(rel, 1, v=1)
+        g = house_nt(rel, 2, v=1)
         recolor(g, [("white_concrete", "light_gray_concrete"), ("cyan_terracotta", "yellow_terracotta"),
                     ("stripped_birch_log", "stripped_mangrove_log")])
         stamp(d, g, 0, 25)
@@ -3901,6 +3992,7 @@ def house_estate_nt(rel, L):
                 (45, 3, 24, LANTF), (51, 2, 24, BRL("north")), (52, 2, 24, "anvil[facing=east]"),
                 (42, 2, 19, GRIND("east")), (44, 6, 21, "sea_lantern"), (50, 6, 21, "sea_lantern")])
         lane(d, 41, 26, 53, 27, "smooth_stone")
+        tree(d, 20, 27, 2, "birch", 5, 2)                               # birch shading the guest villa's terrace
     if L >= 5:
         outbuilding(d, 26, 30, 38, 38, "greenhouse", h=4)
         for z, crop in ((32, "carrots[age=7]"), (33, "beetroots[age=3]"), (35, "potatoes[age=7]"),
@@ -3954,6 +4046,8 @@ def cottage_hamlet_hw(rel, L):
         lane(d, 20, 0, 21, 16, "gravel")
         lamp_post(d, 19, 1, 1)
         bench(d, 26, 2, 2, "east", "north", "dark_oak")
+        fit(d, [(30, y, z, log("oak_log", "z")) for z in range(9, 15) for y in (2, 3)]        # cordwood stack
+            + [(30, 4, z, log("oak_log", "z")) for z in (10, 11, 12, 13)])
         # bee garden: hives on posts among lavender-ish flowers
         garden(d, 46, 2, 57, 11, 2, "spruce", ((51, 11, "south"),),
                plants=((47, 3, "allium"), (49, 3, "cornflower"), (50, 4, "lilac[half=lower]"), (52, 3, "oxeye_daisy"),
@@ -3995,9 +4089,10 @@ def cottage_hamlet_hw(rel, L):
                 d.set(x, 2, z, crop)
         bench(d, 33, 13, 2, "east", "north", "dark_oak")
         tree(d, 52, 13, 2, "oak", 4, 2)
+        tree(d, 6, 20, 2, "oak", 5, 2)                                   # shade tree beside the sty
     if L >= 4:
         dovecote(d, 34, 19, "Hearthwood")
-        for tx, tz in ((48, 21), (52, 21), (55, 25), (48, 26), (52, 28)):  # apple orchard
+        for tx, tz in ((48, 21), (52, 21), (55, 21), (55, 25), (48, 26), (52, 28), (56, 29)):  # apple orchard
             tree(d, tx, tz, 2, "oak", 4, 2)
         hedge(d, 45, 18, 57, 30, "oak", gaps=((45, 24),))
         addon(d, 22, 19, 30, 26, "potting")
@@ -4006,6 +4101,7 @@ def cottage_hamlet_hw(rel, L):
                 (29, 2, 25, BRL("north")), (29, 2, 21, CHEST("west")), (23, 2, 21, BRL("east")),
                 (28, 2, 22, slab("dark_oak", "top")), (28, 3, 22, POT), (26, 4, 23, LANT)])
         recolor(d, [("deepslate_tile", "granite")], (21, 18, 31, 27))
+        tree(d, 26, 29, 2, "oak", 5, 2)                                  # old pear tree behind the cider house
     if L >= 5:
         nb = cottage_hw(rel, 3, v=1)
         recolor(nb, [("smooth_sandstone", "calcite"), ("cut_sandstone", "stone_bricks")])
@@ -4058,8 +4154,10 @@ def cottage_retreat_ca(rel, L):
         lamp_post(d, 34, 18, 1, "ca")
         bench(d, 38, 18, 2, "east", "north", "spruce")
         for x in range(44, 48):                              # firewood stack between the huts
-            d.set(x, 2, 1, log("spruce_log", "x"))
-            d.set(x, 3, 1, log("spruce_log", "x"))
+            for z in (0, 1):
+                for y in (2, 3, 4):
+                    d.set(x, y, z, log("spruce_log", "x"))
+        tree(d, 3, 24, 2, "spruce", 6, 2)
         lamp_post(d, 58, 18, 1, "ca")
         bench(d, 50, 18, 2, "east", "north", "spruce")
         # picnic tables and a fire bowl between the huts
@@ -4069,7 +4167,7 @@ def cottage_retreat_ca(rel, L):
         d.set(46, 2, 15, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
         tree(d, 57, 31, 2, "spruce", 6, 2)
     if L >= 4:
-        for tx, tz in ((3, 31), (8, 34), (13, 30), (18, 35), (5, 37)):
+        for tx, tz in ((3, 31), (8, 34), (13, 30), (18, 35), (5, 37), (16, 24), (9, 25), (20, 22)):
             tree(d, tx, tz, 2, "spruce", 6, 2)
         pond(d, 26, 24, 40, 34)
         for z in range(25, 30):                            # plank dock into the pond
@@ -4087,7 +4185,8 @@ def cottage_retreat_ca(rel, L):
             + [(x, 3, 28, slab("spruce")) for x in (44, 45, 46, 47, 48)]
             + [(43, 2, 30, "crafting_table"), (44, 2, 30, slab("spruce", "top")), (45, 2, 30, slab("spruce", "top")),
                (45, 3, 30, POT), (50, 2, 30, BRL("north")), (51, 2, 30, CHEST("west")),
-               (51, 2, 26, fence("spruce")), (51, 3, 26, fence("spruce")), (47, 4, 27, LANT)])
+               (51, 2, 26, fence("spruce")), (51, 3, 26, fence("spruce")), (47, 4, 27, LANT)]
+            + [(58, y, z, log("spruce_log", "z")) for z in range(27, 32) for y in (2, 3, 4)])     # log store
         for y in range(2, 11):
             for x, z in ((54, 22), (57, 22), (54, 25), (57, 25)):
                 d.set(x, y, z, log("spruce_log", "y"))
@@ -4124,6 +4223,8 @@ def cottage_retreat_ca(rel, L):
             d.set(x, 2, 55, fence("spruce"))
             d.set(x, 3, 55, "beehive[facing=north,honey_level=2]")
         lane(d, 28, 49, 58, 50, "coarse_dirt")
+        for tx, tz in ((24, 43), (21, 47), (55, 42), (57, 46)):          # spruce stands framing the new huts
+            tree(d, tx, tz, 2, "spruce", 7, 2)
     return d
 
 
@@ -4194,6 +4295,9 @@ def cottage_pavilions_nt(rel, L):
         lane(d, 22, 49, 51, 50, "smooth_stone")
         for x in (52, 58):
             tree(d, x, 32, 2, "birch", 5, 2)
+        for x, z in ((50, 40), (57, 39), (54, 45)):                  # birch grove with a bench in its clearing
+            tree(d, x, z, 2, "birch", 5, 2)
+        bench(d, 52, 42, 2, "east", "north", "birch")
         for x in (24, 38, 50):
             lamp_post(d, x, 48, 1, "nt")
     return d

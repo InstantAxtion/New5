@@ -1064,8 +1064,8 @@ def skytower_hw(rel, L):
             d.set(x, 2, 0, "stone_bricks")
             d.set(x, 3, 0, "dark_oak_fence")
             d.set(x, 4, 0, lantern(False))
-    # ---- rear garden (L4+), roof lantern (L5)
-    if L >= 4:
+    # ---- rear garden (L3+), roof lantern (L5)
+    if L >= 3:
         for x, z in cells(0, 18, 30, 24):
             if (x in (0, 30) or z == 24) and not (z == 24 and 14 <= x <= 16):
                 d.set(x, 2, z, "oak_leaves[distance=1,persistent=true,waterlogged=false]")
@@ -1214,6 +1214,28 @@ def skytower_ca(rel, L):
     for z in (7, 11, 19, 23):
         win_ca(d, X1, 3, z, "west")
         win_ca(d, X2, 3, z, "east")
+    # covered ground under the west gallery: log store, boot bench, kegs and lanterns under the deck
+    for z in ((5, 6, 22, 23) if L >= 2 else (5, 6)):
+        d.set(7, 2, z, log("spruce_log", "z"))
+        d.set(7, 3, z, log("spruce_log", "z"))
+    d.chair(7, 2, 17, "east", "spruce", sit=False)
+    d.chair(7, 2, 18, "east", "spruce", sit=False)
+    d.keg(7, 2, 19, "west")
+    d.set(7, 3, 19, lantern(False))
+    if L >= 2:
+        d.set(7, 2, 16, "barrel[facing=up,open=false]")
+        d.set(6, 2, 25, "stripped_spruce_log[axis=y]")  # chopping block
+        d.set(6, 2, 24, "potted_fern")
+    for z in (7, 17, 24):
+        d.set(6, 5, z, lantern())
+    # under the east balconies: firewood, a bench and a lantern each
+    for fz in G["FZS"]:
+        for z in (fz + 2, fz + 3):
+            d.set(21, 2, z, log("spruce_log", "z"))
+            d.set(21, 3, z, log("spruce_log", "z"))
+        d.chair(21, 2, fz + 5, "west", "spruce", sit=False)
+        d.keg(21, 2, fz + 6, "north")
+        d.set(22, 5, fz + 4, lantern())
     # ---- east balconies on log brackets
     for fz in G["FZS"]:
         for s in S:
@@ -4224,7 +4246,7 @@ HW_S_PLANS["first"] += """
         C 50 4 e
         K 56 9 2
         K 56 10 2
-        X 39 5 barrel:e
+        X 39 2 barrel:e
         T 50 9 lamp
         C 49 9 w
         C 51 9 e
@@ -4272,6 +4294,14 @@ HW_S_PLANS["third"] += """
         X 23 8 pot 1
         X 33 8 white_wool
         X 33 8 lamp 1
+        X 25 9 white_wool
+        X 25 9 pot 1
+        X 31 9 white_wool
+        X 31 9 pot 1
+        X 25 1 white_wool
+        X 25 1 lamp 1
+        X 31 1 white_wool
+        X 31 1 skull:n 1
         C 27 5 n
         C 28 5 n
         C 29 5 n
@@ -4286,8 +4316,8 @@ HW_S_PLANS["third"] += """
         C 52 9 e
         K 56 7 2
         K 56 8 2
-        X 39 5 chest:e
-        X 39 6 chest:e
+        X 39 3 chest:e
+        X 39 7 chest:e
         G 39 8 e
         L 51 9
         L 40 6
@@ -4364,8 +4394,8 @@ HW_S_PLANS["attic"] += """
         T 49 3 candle
         C 48 3 w
         C 50 3 e
-        X 39 5 chest:e
-        X 39 6 chest:e
+        X 39 3 chest:e
+        X 39 7 chest:e
         L 49 3
         L 40 8
 """
@@ -4408,7 +4438,8 @@ HW_LW_PLANS["lumber"] += """
         X 10 1 log
         X 8 1 log 1
         X 9 1 log 1
-        X 10 1 craft
+        X 10 2 craft
+        L 5 4
 """
 HW_LE_PLANS["ironing"] += """
         X 10 1 chest:w
@@ -4660,9 +4691,110 @@ CA_T_PLANS = {
 }
 
 
+CA_T_PLANS.update({
+    "radio": """
+        X 0 1 note
+        X 0 2 lectern:e
+        C 1 2 e
+        X 0 3 jukebox
+        T 2 7 lamp
+        C 1 7 w
+        X 0 8 chest:e
+        P 6 8 potted_fern
+        L 2 4
+        L 5 8
+    """,
+    "aid": """
+        X 0 1 brew
+        X 0 2 cauldron
+        X 0 3 chest:e
+        X 0 4 chest:e
+        X 2 8 white_wool
+        X 3 8 white_wool
+        C 1 6 w
+        P 6 8 potted_spruce_sapling
+        L 2 4
+        L 5 8
+    """,
+    "workshop": """
+        X 0 1 craft
+        X 0 2 grind:e
+        X 0 3 smith
+        X 0 7 barrel:e
+        X 0 8 chest:e
+        T 2 4 lamp
+        C 2 5 s
+        P 6 8 potted_fern
+        L 2 3
+        L 5 8
+    """,
+    "pantry": """
+        X 0 1 smoker:e
+        X 0 2 barrel:e
+        X 0 3 barrel:e
+        X 0 6 barrel:e
+        X 0 7 barrel:e
+        X 1 8 hay
+        X 2 8 hay
+        X 3 8 melon
+        L 2 4
+        L 5 8
+    """,
+    "reading": """
+        K 0 1 3
+        K 0 2 3
+        K 0 3 3
+        K 0 4 3
+        T 2 7 candle
+        C 1 7 w
+        C 3 7 e
+        P 6 8 potted_fern
+        L 2 4
+        L 5 8
+    """,
+    "drying": """
+        X 0 1 fence
+        X 0 2 fence
+        X 0 3 fence
+        X 0 1 brown_carpet 1
+        X 0 2 white_carpet 1
+        X 0 3 green_carpet 1
+        X 0 7 barrel:e
+        X 0 8 chest:e
+        C 3 8 s
+        L 2 4
+        L 5 8
+    """,
+    "chapel": """
+        X 0 4 lectern:e
+        C 2 3 s
+        C 3 3 s
+        C 2 5 s
+        C 3 5 s
+        X 0 8 candle
+        P 6 8 potted_fern
+        G 0 6 e
+        L 2 4
+        L 5 8
+    """,
+    "gear": """
+        X 0 1 chest:e
+        X 0 2 chest:e
+        X 0 3 barrel:e
+        X 0 6 fence
+        X 0 7 fence
+        X 0 8 fence
+        T 3 8 candle
+        C 2 8 s
+        L 2 4
+        L 5 8
+    """,
+})
+
+
 def ca_t_floors(n):
-    return (["ski"] + ["map", "tea", "store", "map", "tea", "store", "map", "tea", "store"][:max(0, n - 2)]
-            + ["lookout"])[:n]
+    mid = ["map", "tea", "store", "radio", "aid", "workshop", "pantry", "reading", "drying", "gear", "chapel"]
+    return (["ski"] + mid[:max(0, n - 2)] + ["lookout"])[:n]
 
 
 # Cascadia sky tower – bathhouse (13 x 13; stair lx 10-12; door lx 6 lz 0)
@@ -4680,6 +4812,15 @@ CA_B_PLANS = {
         P 9 12 potted_fern
         L 6 5
         L 6 9
+        L 4 4
+        L 8 4
+        L 4 9
+        L 8 9
+        L 6 7
+        X 3 3 potted_fern 1
+        X 9 3 potted_fern 1
+        X 3 10 potted_fern 1
+        X 9 10 potted_fern 1
     """ % (_row("X", [(x, z) for x in range(3, 10) for z in range(3, 11) if x in (3, 9) or z in (3, 10)],
                 "cobblestone_slab[type=top,waterlogged=false]"),
            _row("X", [(x, z) for x in range(4, 9) for z in range(4, 10)], "water")),
@@ -4860,6 +5001,177 @@ CA_S_PLANS = {
     """,
 }
 CA_S_FLOORS = ["dining", "lounge", "library", "bar", "hall"]
+
+# round 5: hand-placed extras where the east wing and the south chalet were still thin
+CA_E_PLANS["games"] += """
+        K 10 9 2
+        K 10 10 2
+        K 10 11 2
+        X 0 5 barrel:e
+        S 0 6 lamp
+        T 3 9 lamp
+        C 3 10 s
+        G 0 4 e
+        L 3 10
+"""
+CA_E_PLANS["lounge"] += """
+        K 10 16 2
+        K 10 17 2
+        T 5 16 candle
+        C 6 16 e
+        P 9 22 potted_fern
+        L 6 16
+"""
+CA_E_PLANS["attic"] += """
+        X 0 4 chest:e
+        X 0 5 chest:e
+        X 0 10 barrel:e
+        X 0 11 barrel:e
+        X 4 7 hay 1
+        X 5 7 hay
+        T 5 3 lamp
+        C 4 3 w
+        C 6 3 e
+        X 10 10 chest:w
+        X 10 11 chest:w
+        K 10 12 2
+        L 5 3
+        L 9 11
+        X 0 19 chest:e
+        X 0 20 barrel:e
+        X 10 16 hay
+        X 10 17 hay
+        L 8 20
+"""
+CA_S_PLANS["lounge"] += """
+        K 0 3 2
+        K 0 4 2
+        K 6 12 2
+        K 6 13 2
+        T 2 12 candle
+        C 1 12 w
+        C 3 12 e
+        L 3 12
+"""
+CA_S_PLANS["bar"] += """
+        T 14 9 candle
+        C 13 9 w
+        C 15 9 e
+        T 10 6 candle
+        C 9 6 w
+        C 11 6 e
+        G 18 10 w
+        L 14 9
+        L 10 6
+"""
+CA_S_PLANS["hall"] += """
+        T 3 3 lamp
+        C 2 3 w
+        C 4 3 e
+        X 6 1 chest:w
+        X 6 2 chest:w
+        X 0 13 barrel:e
+        X 0 14 barrel:e
+        L 3 3
+        L 3 12
+        C 14 9 s
+        C 15 9 s
+        C 14 11 s
+        C 15 11 s
+        G 8 3 e
+        G 8 12 e
+        G 18 10 w
+        X 10 6 candle
+        P 18 14 potted_fern
+        P 8 14 potted_fern
+        L 14 10
+        L 11 4
+        L 16 12
+"""
+CA_S_PLANS["music"] = """
+        W 7 0 7 14
+        D 7 8 e
+        X 0 1 note
+        X 0 2 note
+        X 0 3 jukebox
+        C 1 2 w
+        C 4 5 n
+        C 5 5 n
+        C 4 7 n
+        C 5 7 n
+        K 0 10 2
+        K 0 11 2
+        P 0 14 potted_fern
+        T 3 12 candle
+        C 2 12 w
+        C 4 12 e
+        L 3 5
+        L 3 12
+        T 10 3 candle
+        C 9 3 w
+        C 11 3 e
+        T 10 10 lamp
+        C 9 10 w
+        C 11 10 e
+        C 10 9 n
+        C 10 11 s
+        X 18 8 barrel:w
+        X 18 9 barrel:w
+        K 18 12 2
+        K 18 13 2
+        P 8 14 potted_fern
+        P 18 14 potted_fern
+        G 8 3 e
+        L 10 3
+        L 10 10
+        L 14 12
+"""
+CA_S_PLANS["study"] = """
+        W 7 0 7 14
+        D 7 8 e
+        Q 0 2 e 2
+        Q 0 3 e 2
+        T 3 3 lamp
+        T 3 4
+        C 4 3 e
+        C 4 4 e
+        X 0 8 carto
+        X 0 9 lectern:e
+        T 3 11 candle
+        C 2 11 w
+        C 4 11 e
+        X 6 13 chest:w
+        X 6 14 chest:w
+        P 0 0 potted_fern
+        L 3 4
+        L 3 11
+        T 9 3
+        T 10 3 lamp
+        C 9 4 s
+        C 10 4 s
+        T 13 3
+        T 14 3 lamp
+        C 13 4 s
+        C 14 4 s
+        T 9 9
+        T 10 9 candle
+        C 9 10 s
+        C 10 10 s
+        T 13 9 lamp
+        T 14 9
+        C 13 10 s
+        C 14 10 s
+        K 8 14 2
+        K 9 14 2
+        K 10 14 2
+        P 18 14 potted_fern
+        L 10 4
+        L 14 4
+        L 10 10
+        L 14 10
+"""
+CA_S_FLOORS = CA_S_FLOORS + ["music", "study"]
+
 
 
 # Neoterra twin builder – materials store (13 x 11, 6 high, no stair; door lx 6, roller doors lx 2-3 and 10-11)
@@ -5526,7 +5838,7 @@ def grow_sky_hw(d, L):
         flowerbed(d, 3, 1, 6, 3, 2, P)
         flowerbed(d, 10, 1, 13, 3, 2, P)
     if L >= 3:                                        # east wing: billiard room, smoking room, reading room
-        lv += raise_building(d, P, (48, 5, 60, 29), 2, {3: 3, 4: 4, 5: 5}[L], HW_E_PLANS, HW_E_FLOORS, "dark_oak",
+        lv += raise_building(d, P, (48, 5, 60, 29), 2, {3: 4, 4: 4, 5: 5}[L], HW_E_PLANS, HW_E_FLOORS, "dark_oak",
                              "dark_oak", extra=[(x, z) for x in (4, 5, 6) for z in (21, 22)], roof="gable", axis="z", doors=[(54, 5, "north")],
                    st=HW_EAST if L >= 4 else dict(HW_EAST, roof="deepslate_tile"))
         flowerbed(d, 49, 1, 52, 3, 2, P)
@@ -5608,11 +5920,9 @@ def grow_sky_hw(d, L):
 
 def grow_sky_ca(d, L):
     P = "Cascadia"
-    regrid(d, 64, 64, 16, 0, 72)
+    regrid(d, 64, 64, 16, 0, 80)
     lv = [7, 12]
-    for x, z in cells(0, 0, 63, 63):
-        if d.get(x, 1, z) == "minecraft:coarse_dirt":
-            d.set(x, 1, z, "grass_block[snowy=false]" if (x * 7 + z * 3) % 6 else "moss_block")
+    grass = [(x, z) for x, z in cells(0, 0, 63, 63) if d.get(x, 1, z) == "minecraft:coarse_dirt"]
     path_line(d, [(x, 0) for x in range(0, 64)], 1, "gravel")
     for x in (4, 12, 48, 56):
         lamp_post(d, x, 2, 2, P, 3)
@@ -5634,8 +5944,24 @@ def grow_sky_ca(d, L):
             d.set(x, 3, 2, log("spruce_log", "z"))
         for x in (4, 14):
             tree(d, x, 28, 2, "spruce_log", "spruce_leaves", 6)
+        # fire circle between the hall and the lodge: stone ring, log benches, wood stack
+        for x, z in cells(19, 29, 23, 33):
+            if x in (19, 23) or z in (29, 33):
+                d.set(x, 1, z, "cobblestone")
+        d.set(21, 1, 31, "cobblestone")
+        d.set(21, 2, 31, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+        for x in (20, 21, 22):
+            d.set(x, 2, 29, log("stripped_spruce_log", "x"))
+            d.set(x, 2, 33, log("stripped_spruce_log", "x"))
+        for z in (30, 31, 32):
+            d.set(19, 2, z, log("stripped_spruce_log", "z"))
+        for z in (30, 31, 32):
+            for y in (2, 3, 4):
+                d.set(25, y, z, log("spruce_log", "x"))
+            d.set(25, 5, z, slab("spruce"))
+        lamp_post(d, 23, 35, 2, P, 3)
     if L >= 3:                                        # east wing: game room, library, guest lounge
-        lv += raise_building(d, P, (46, 4, 58, 28), 2, {3: 3, 4: 3, 5: 4}[L], CA_E_PLANS, CA_E_FLOORS, "birch", "birch",
+        lv += raise_building(d, P, (46, 4, 58, 28), 2, {3: 4, 4: 4, 5: 4}[L], CA_E_PLANS, CA_E_FLOORS, "birch", "birch",
                              roof="gable", axis="z", doors=[(52, 4, "north"), (46, 16, "west")], st=CA_EAST)
         for x in range(41, 46):                        # covered walkway to the lodge
             for z in (15, 16, 17):
@@ -5658,7 +5984,7 @@ def grow_sky_ca(d, L):
             d.set(59, 5, z, slab("spruce"))
             d.set(59, 5, z + 1, slab("spruce"))
     if L >= 4:                                        # lookout tower and the bathhouse
-        nT = {4: 7, 5: 11}[L]
+        nT = {4: 9, 5: 13}[L]
         lv += raise_building(d, P, (22, 40, 30, 50), 2, nT, CA_T_PLANS, ca_t_floors(nT), "dark_oak", "dark_oak",
                              roof="hip", doors=[(26, 40, "north")], st=CA_TOWER)
         lv += raise_building(d, P, (2, 32, 16, 46), 2, 2, CA_B_PLANS, ["pool", "sauna"], "spruce", "spruce",
@@ -5666,13 +5992,36 @@ def grow_sky_ca(d, L):
         lv += raise_building(d, P, (2, 50, 16, 62), 2, 2, CA_N_PLANS, ["stable", "hayloft"], "spruce", "spruce",
                              roof="gable", axis="x", doors=[(9, 50, "north")], st=CA_BARN)
         path_line(d, [(9, z) for z in range(47, 50)], 1, "gravel")
+        # under the eaves of the bathhouse and the barn: rain barrels, benches, log piles, hay
+        for x, z, b in ((3, 31, "barrel[facing=up,open=false]"), (12, 31, log("spruce_log", "x")),
+                        (13, 31, log("spruce_log", "x")), (15, 31, "potted_fern"), (7, 31, "potted_fern"),
+                        (3, 47, "barrel[facing=up,open=false]"), (4, 47, log("spruce_log", "x")),
+                        (5, 47, log("spruce_log", "x")), (6, 47, log("spruce_log", "x")), (15, 47, "potted_fern"),
+                        (3, 49, "water_cauldron[level=3]"), (4, 49, "hay_block[axis=y]"), (5, 49, "hay_block[axis=y]"),
+                        (13, 49, "barrel[facing=up,open=false]"), (15, 49, "hay_block[axis=y]"),
+                        (3, 63, log("spruce_log", "x")), (4, 63, log("spruce_log", "x")), (5, 63, log("spruce_log", "x")),
+                        (10, 63, "hay_block[axis=y]"), (11, 63, "hay_block[axis=y]"), (13, 63, "barrel[facing=up,open=false]")):
+            d.set(x, 2, z, b)
+            if "log" in b or (x == 15 and "hay" in b):
+                d.set(x, 3, z, b)
+        d.chair(4, 2, 31, "south", "spruce", sit=False)
+        d.chair(5, 2, 31, "south", "spruce", sit=False)
+        d.chair(12, 2, 47, "north", "spruce", sit=False)
+        d.chair(13, 2, 47, "north", "spruce", sit=False)
         path_line(d, [(26, z) for z in range(31, 40)], 1, "gravel")
         path_line(d, [(9, z) for z in range(25, 32)], 1, "gravel")
     if L >= 5:                                        # south chalet wing: dining room, suites lounge, library
-        lv += raise_building(d, P, (38, 36, 58, 52), 2, 5, CA_S_PLANS, CA_S_FLOORS, "spruce", "dark_oak",
+        lv += raise_building(d, P, (38, 36, 58, 52), 2, 7, CA_S_PLANS, CA_S_FLOORS, "spruce", "dark_oak",
                              roof="gable", axis="x", doors=[(48, 36, "north")], st=CA_SOUTH)
         for x, z in ((34, 56), (20, 56), (44, 58), (58, 58)):
             tree(d, x, z, 2, "spruce_log", "spruce_leaves", 7)
+    for x, z in grass:                               # meadow; trodden ground under eaves, decks and porches
+        if d.get(x, 1, z) != "minecraft:coarse_dirt":
+            continue
+        if any(not d.air(x, yy, z) and "leaves" not in d.get(x, yy, z) for yy in range(2, 16)):
+            d.set(x, 1, z, "packed_mud" if (x + z) % 3 else "coarse_dirt")
+        else:
+            d.set(x, 1, z, "grass_block[snowy=false]" if (x * 7 + z * 3) % 6 else "moss_block")
     return d
 
 

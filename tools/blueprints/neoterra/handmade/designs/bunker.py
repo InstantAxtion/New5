@@ -51,7 +51,7 @@ def H(x, y, z, salt=0):
 BASE = dict(
     ramp=(26, 3, 5),
     hut=(22, 19, 14),
-    wells=[(30, 28, "A", "B", 2, +1), (30, 46, "B", "C", 5, +1)],          # lane-1 x, z0, upper deck, lower deck, minL, lane-2 side
+    wells=[(30, 28, "A", "B", 2, +1), (30, 46, "B", "C", 4, +1)],          # lane-1 x, z0, upper deck, lower deck, minL, lane-2 side
     spaces=[
         # ---- deck A
         ("hall", "A", 22, 11, 32, 14, 1),
@@ -80,6 +80,9 @@ BASE = dict(
         ("bunks", "A", 14, 46, 24, 52, 5),
         ("store", "A", 30, 46, 40, 52, 4),
         ("canteen", "A", 42, 46, 52, 52, 4),
+        ("corr", "A", 13, 11, 21, 13, 3),
+        ("suitroom", "A", 2, 1, 11, 13, 3),
+        ("gallery", "A", 34, 11, 52, 14, 4),
         # ---- deck B
         ("corr", "B", 2, 24, 52, 26, 2),
         ("corr", "B", 26, 2, 28, 23, 2),
@@ -100,11 +103,16 @@ BASE = dict(
         ("workshop", "B", 2, 46, 24, 52, 5),
         ("mess", "B", 33, 46, 52, 52, 5),
         # ---- deck C (plant deck)
-        ("corr", "C", 2, 42, 52, 44, 5),
-        ("reactor", "C", 2, 34, 24, 40, 5),
+        ("corr", "C", 2, 42, 52, 44, 4),
+        ("reactor", "C", 2, 34, 24, 40, 4),
         ("power", "C", 26, 34, 52, 40, 5),
         ("server", "C", 2, 46, 27, 52, 5),
         ("armory", "C", 34, 46, 52, 52, 5),
+        ("corr", "C", 26, 2, 28, 32, 5),             # L5: the deep north wing off a spine through the switch hall
+        ("dwellC", "C", 2, 2, 24, 14, 5),
+        ("wardC", "C", 2, 16, 24, 32, 5),
+        ("vaultC", "C", 30, 2, 52, 14, 5),
+        ("commandC", "C", 30, 16, 52, 32, 5),
     ],
     doors=[  # every door / opening, by hand: (x, z, deck, from level, kind)
         (22, 10, "A", 1, "vault"), (31, 10, "A", 1, "door"), (7, 23, "A", 1, "door"), (23, 15, "A", 1, "door"),
@@ -115,10 +123,11 @@ BASE = dict(
         (35, 23, "B", 2, "door"), (47, 23, "B", 2, "door"), (25, 8, "B", 2, "vault"), (31, 27, "B", 2, "open"),
         (7, 23, "B", 3, "door"), (19, 23, "B", 3, "door"), (29, 8, "B", 3, "door"), (13, 27, "B", 4, "door"),
         (25, 40, "B", 4, "door"), (29, 40, "B", 4, "door"), (41, 40, "B", 4, "door"), (7, 15, "B", 4, "door"),
-        (47, 15, "B", 4, "door"), (43, 27, "B", 5, "door"), (25, 49, "B", 5, "door"), (36, 45, "B", 5, "door"),
-        (29, 46, "B", 5, "open"),
-        (13, 41, "C", 5, "door"), (39, 41, "C", 5, "door"), (14, 45, "C", 5, "door"), (43, 45, "C", 5, "door"),
-        (31, 45, "C", 5, "open")],
+        (47, 15, "B", 4, "door"), (12, 12, "A", 3, "door"), (33, 12, "A", 4, "door"), (43, 27, "B", 5, "door"), (25, 49, "B", 5, "door"), (36, 45, "B", 5, "door"),
+        (29, 46, "B", 4, "open"),
+        (13, 41, "C", 4, "door"), (39, 41, "C", 5, "door"), (27, 33, "C", 5, "open"), (25, 8, "C", 5, "door"),
+        (29, 8, "C", 5, "door"), (25, 24, "C", 5, "door"), (29, 24, "C", 5, "door"), (14, 45, "C", 5, "door"), (43, 45, "C", 5, "door"),
+        (31, 45, "C", 4, "open")],
     child_huts={"kitchen": (24, 16), "clinic": (12, 16), "school": (2, 34), "farm": (30, 16)},
 )
 
@@ -827,6 +836,10 @@ def stamp(d, plan, cells, rect, y, top, ceil_y, L, sit=False, keep=(), mirror=Fa
                 raise RuntimeError(f"plan puts {ch!r} on a door cell {(x, z)}")
             piece(d, ch, x, y, z, edge_facing(x, z, x1, z1, x2, z2), M, pack, L, top, ceil_y, sit, k)
             k += 1
+    # hand-placed pendant / ceiling lights over tables and rugs (plan cells, drawn in the plan's orientation)
+    for (i, j) in (plan.get("lights", ()) if isinstance(plan, dict) else ()):
+        x, z = cells(i, j)
+        piece(d, "*", x, y, z, "north", M, pack, L, top, ceil_y, sit, 0)
 
 
 def stamp_room(d, pack, sp_base, sp_world, plan, L, sit=False):
@@ -880,6 +893,13 @@ def bunker_common(d, pack, L):
             x, z = ((54 - bx) if P["mirror"] else bx), bz + P["dz"]
             fy, top = LV[dk]
             piece(d, "*", x, fy + 1, z, "north", M, pack, L, top, top + 1, False, 0)
+    if L >= 4:      # deck C plant corridor: a cable tray (chain run) under the ceiling along its north side
+        fy, top = LV["C"]
+        for bx in range(2, 53):
+            x, z = ((54 - bx) if P["mirror"] else bx), 42 + P["dz"]
+            d.set(x, top, z, "chain[axis=x,waterlogged=false]")
+            if pack == "Cascadia":     # and the mine tramway along its middle
+                d.set(x, fy + 1, z + 1, "rail[shape=east_west,waterlogged=false]")
     # rooms: each from its own hand-drawn plan
     for sp_w, sp_b in zip(P["spaces"], P["spaces_base"]):
         if sp_w[0] in CHILD_KINDS or sp_w[0] in CORR_KINDS or sp_w[6] > L:
@@ -946,7 +966,7 @@ def lamp_post(d, x, z, post, top="lantern[hanging=false,waterlogged=false]", h=3
 def neoterra(rel, L):
     P = PLANS["Neoterra"]
     sx, sy, sz = P["size"]
-    d = Design("Neoterra", rel, (sx, sy, sz), gy=GY, paving="grass_block[snowy=false]")
+    d = Design("Neoterra", rel, (sx, sy, sz), gy=GY, paving="grass_block")
     # forecourt: patterned paving
     for x in range(18, 37):
         for z in range(0, 2):
@@ -1006,7 +1026,7 @@ def neoterra(rel, L):
                 continue
             h = 3 - max(0, (x1 - x) if x < x1 else (x - x2) if x > x2 else 0) - max(0, z - z2)
             for y in range(SW, SW + max(0, h)):
-                d.set(x, y, z, "dirt" if y < SW + h - 1 else "grass_block[snowy=false]")
+                d.set(x, y, z, "dirt" if y < SW + h - 1 else "grass_block")
     d.fill(x1, top, z1 + 3, x2, top, z2, "moss_block")
     for x in (20, 34):
         lamp_post(d, x, 0, "andesite_wall", "sea_lantern", 2)
@@ -1130,7 +1150,7 @@ def flowerbed(d, x1, z1, x2, z2, salt=0):
     fl = ["poppy", "dandelion", "azure_bluet", "oxeye_daisy", "cornflower", "allium", "pink_tulip", "lily_of_the_valley"]
     for x in range(x1, x2 + 1):
         for z in range(z1, z2 + 1):
-            d.set(x, GY, z, "grass_block[snowy=false]")
+            d.set(x, GY, z, "grass_block")
             if d.air(x, SW, z):
                 d.set(x, SW, z, fl[(x * 3 + z + salt) % len(fl)])
 
@@ -1138,7 +1158,7 @@ def flowerbed(d, x1, z1, x2, z2, salt=0):
 def hearthwood(rel, L):
     P = PLANS["Hearthwood"]
     sx, sy, sz = P["size"]
-    d = Design("Hearthwood", rel, (sx, sy, sz), gy=GY, paving="grass_block[snowy=false]")
+    d = Design("Hearthwood", rel, (sx, sy, sz), gy=GY, paving="grass_block")
     bunker_common(d, "Hearthwood", L)
     x0, w, zf = P["ramp"]
     # ---- ruined chapel round the cellar steps
@@ -1242,6 +1262,8 @@ def hearthwood(rel, L):
         building(d, pal, 40, 3, 50, 11, 2, (45, 11, "south"), L, "tudor", "gable",
                  chimney=(51, 7))
         furnish(d, "cottage", 40, 3, L)
+        place(d, [(39, SW, 6, "water_cauldron[level=3]"), (39, SW, 9, "barrel[facing=up,open=false]"),
+                  (39, SW, 4, "potted_red_tulip")])
         porch(d, 45, 11, "south", "deepslate_tile_slab[type=bottom,waterlogged=false]")
         window_box(d, 43, GY + 6, 3, "north", "warped", "potted_red_tulip")
         window_box(d, 47, GY + 6, 3, "north", "warped", "potted_allium")
@@ -1259,6 +1281,11 @@ def hearthwood(rel, L):
         building(d, pal, 3, 21, 21, 29, 3, (12, 21, "north"), L, "tudor", "gable",
                  chimney=(2, 25))
         furnish(d, "almshouse", 3, 21, L)
+        d.chair(9, SW, 30, "north", "oak", sit=False)
+        d.chair(10, SW, 30, "north", "oak", sit=False)
+        d.chair(15, SW, 30, "north", "oak", sit=False)
+        place(d, [(5, SW, 30, "barrel[facing=up,open=false]"), (12, SW, 30, "potted_azure_bluet"),
+                  (19, SW, 30, "water_cauldron[level=3]"), (20, SW, 30, "composter[level=4]")])
         porch(d, 12, 21, "north", "brick_slab[type=bottom,waterlogged=false]")
         window_box(d, 7, GY + 6, 21, "north", "bamboo", "potted_oxeye_daisy")
         window_box(d, 17, GY + 6, 21, "north", "bamboo", "potted_azure_bluet")
@@ -1274,6 +1301,9 @@ def hearthwood(rel, L):
                    door="oak", stairs="oak_stairs", rail="oak_fence", shutter="bamboo", chimney="cobblestone")
         building(d, pal, 44, 46, 56, 53, 2, (50, 46, "north"), L, "tudor", "gable", chimney=(57, 49))
         furnish(d, "smithy", 44, 46, L)
+        place(d, [(43, SW, 50, "grindstone[face=floor,facing=east]"), (43, SW, 52, "barrel[facing=up,open=false]"),
+                  (47, SW, 54, "spruce_log[axis=x]"), (48, SW, 54, "spruce_log[axis=x]"),
+                  (52, SW, 54, "barrel[facing=up,open=false]"), (54, SW, 54, "hay_block[axis=y]")])
         porch(d, 50, 46, "north", "spruce_slab[type=bottom,waterlogged=false]")
         d.set(42, SW, 47, "anvil[facing=north]")
         d.set(42, SW, 49, "water_cauldron[level=3]")
@@ -1358,7 +1388,7 @@ def hearthwood(rel, L):
 def cascadia(rel, L):
     P = PLANS["Cascadia"]
     sx, sy, sz = P["size"]
-    d = Design("Cascadia", rel, (sx, sy, sz), gy=GY, paving="grass_block[snowy=false]")
+    d = Design("Cascadia", rel, (sx, sy, sz), gy=GY, paving="grass_block")
     bunker_common(d, "Cascadia", L)
     x0, w, zf = P["ramp"]
     # ---- rock knoll: a skin of rock, moss and turf over an earth core (substitution)
@@ -1382,7 +1412,7 @@ def cascadia(rel, L):
             top_ = y == SW + h - 1
             hh = H(x, y, z, 5)
             if top_ and z > 11:
-                b = "grass_block[snowy=false]" if hh < 60 else "moss_block" if hh < 80 else "coarse_dirt"
+                b = "grass_block" if hh < 60 else "moss_block" if hh < 80 else "coarse_dirt"
             else:
                 b = wall_block("Cascadia", x, y, z, -1)
             d.set(x, y, z, b)
@@ -1433,6 +1463,8 @@ def cascadia(rel, L):
     for x in range(0, 14):
         d.set(x, SW, 0, "spruce_fence") if x % 6 else None
     d.set(24, SW, 1, "water_cauldron[level=3]")
+    for (lx, lz) in ((x0, 5), (x0 + 2, 9)):                  # lamps hung from the adit sets
+        d.set(lx, SW + 2, lz, "lantern[hanging=true,waterlogged=false]")
     if L >= 2:              # tool shed: weathered stripped spruce, spruce roof
         pal = dict(wall="stripped_spruce_log", wall2="stripped_spruce_log", plinth="cobblestone", trim="spruce_log",
                    floor="spruce_planks", roof="spruce", gable="spruce_planks", accent="spruce_planks",
@@ -1457,6 +1489,10 @@ def cascadia(rel, L):
         building(d, pal, 2, 3, 12, 13, 3, (7, 3, "north"), L, "timber", "gable",
                  chimney=(1, 8))
         furnish(d, "bunkhouse", 2, 3, L)
+        place(d, [(3, SW, 14, "barrel[facing=up,open=false]"), (10, SW, 14, "water_cauldron[level=3]"),
+                  (11, SW, 14, "potted_fern")])
+        d.chair(6, SW, 14, "north", "spruce", sit=False)
+        d.chair(7, SW, 14, "north", "spruce", sit=False)
         shutters(d, 5, GY + 6, 3, "north", "mangrove")
         shutters(d, 9, GY + 6, 3, "north", "mangrove")
         for x in range(3, 12):
@@ -1490,6 +1526,10 @@ def cascadia(rel, L):
         building(d, pal, 42, 2, 53, 12, 3, (47, 2, "north"), L, "timber", "gable",
                  chimney=(54, 7))
         furnish(d, "cookhouse", 42, 2, L)
+        place(d, [(43, SW, 13, "spruce_log[axis=x]"), (44, SW, 13, "spruce_log[axis=x]"),
+                  (46, SW, 13, "barrel[facing=up,open=false]"), (52, SW, 13, "water_cauldron[level=3]")])
+        d.chair(49, SW, 13, "north", "spruce", sit=False)
+        d.chair(50, SW, 13, "north", "spruce", sit=False)
         porch(d, 47, 2, "north", "dark_prismarine_slab[type=bottom,waterlogged=false]" if L >= 4 else "spruce_slab[type=bottom,waterlogged=false]")
         place(d, [(44, SW, 1, "barrel[facing=up,open=false]"), (50, SW, 1, "water_cauldron[level=3]")])
         # headframe over the old shaft: timber A-frame with sheave
