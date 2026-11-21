@@ -421,7 +421,8 @@ class Rm:
             return False
         x, z = self.xz(u, v)
         y = self.y + dy
-        return self.d.air(x, y, z) and (x, y, z) not in door_cells(self.d) and \
+        cur = self.d.get(x, y, z)
+        return (cur == AIR or (cur.endswith("_carpet") and dy == 0)) and (x, y, z) not in door_cells(self.d) and \
             (x, self.y, z) not in door_cells(self.d)
 
     def put(self, u, v, block, dy=0):
@@ -1039,7 +1040,14 @@ def miner_hearthwood(rel, L):
                                roof=("deepslate_tile", "brick", "mud_brick")[i], shutter=("mangrove", "warped", "dark_oak")[i],
                                plinth="cobblestone"))
             d.hearth(x0 + 4, 2, 31, "west", 5, "bricks", "campfire")
-            d.dining(x0 + 2, 2, 31, 2, "z", "spruce", chairs=("w",), sit=False)
+            stairs_up(d, x0 + 1, 29, "south", 2, rail=False)
+            d.dining(x0 + 2, 2, 31, 2, "z", "spruce", chairs=("e",), sit=False)
+            up = Rm(d, cot, 6, "e", "spruce")
+            up.bed(2, 0)
+            up.put(1, 0, SLAB)
+            up.put(1, 0, "candle[candles=2,lit=false,waterlogged=false]", 1)
+            up.put(3, 0, CHEST)
+            up.put(0, 0, BARREL)
             flowerbed(d, x0, 26, x0 + 5, 26)
         for x in range(36, 45):                                       # spoil heap
             for z in range(12, 23):
@@ -1047,6 +1055,12 @@ def miner_hearthwood(rel, L):
                 for y in range(2, 2 + max(0, h)):
                     d.set(x, y, z, "gravel" if (x + y + z) % 3 else "cobblestone")
         track(d, [(x, 11) for x in range(24, 36)], 2)
+
+    # ---- room fit-out ----
+    if L >= 4:
+        rm = Rm(d, pm, 2, "s", "spruce")                              # powder magazine: kegs on a stillage
+        rm.put(1, 0, "barrel[facing={ul},open=false]")
+        rm.put(1, 1, "barrel[facing={ul},open=false]")
     paste_cluster(d, cx, cz)
     return d
 
@@ -1176,6 +1190,11 @@ def miner_cascadia(rel, L):
         counter(d, ck, "s", 6, 5, [P.b("chest[facing={f},type=single,waterlogged=false]")] * 3)
         floor_rug(d, ck, 6, inset=2)
         porch(d, 12, 22, 26, 2, "n", gaps=(17,))
+
+    # ---- room fit-out ----
+    if L >= 4:
+        lay_store(Rm(d, mm, 8, "s", "spruce"), 0, kinds=(BARREL, "coal_block", "raw_iron_block"))
+        lay_office(Rm(d, mm, 8, "w", "spruce"))
     paste_cluster(d, cx, cz)
     return d
 
@@ -1302,6 +1321,15 @@ def miner_neoterra(rel, L):
         cart(d, 31, 27, "x", "coal_block")
         for x in (20, 26, 32, 38):
             tree(d, x, 35, 3, "azalea_leaves", "birch_log", 1)
+
+    # ---- room fit-out ----
+    if L >= 3:
+        lay_lab(Rm(d, ph, 7, "e", "birch"))
+        lay_office(Rm(d, ph, 7, "s", "birch"))
+    if L >= 5:
+        lay_lounge(Rm(d, ad, 6, "n", "birch"))
+        lay_office(Rm(d, ad, 10, "n", "birch"))
+        lay_kitchen(Rm(d, ad, 10, "e", "birch"), dining=False)
     paste_cluster(d, cx, cz)
     return d
 
@@ -1675,6 +1703,23 @@ def fisherman_neoterra(rel, L):
             bench(d, x, 30, "north", 2)
         for x in (22, 27, 31):
             tree(d, x, 26, 4, "azalea_leaves", "birch_log", 1)
+
+    # ---- room fit-out ----
+    if L >= 4:
+        lay_office(Rm(d, cs, 6, "n", "birch"))
+        lay_kitchen(Rm(d, cs, 6, "e", "birch"))
+    if L >= 5:
+        lay_lounge(Rm(d, bh, 7, "e", "mangrove"))
+        lay_office(Rm(d, bh, 7, "n", "mangrove"))
+        keeper = [(CHEST, BARREL), ("bed", None), (LECTERN, None), ("cartography_table", None), (SLAB, LANT)]
+        for (a, b), y in zip(keeper, lh.ys):
+            rm = Rm(d, lh, y, "n", "birch")
+            if a == "bed":
+                rm.bed(0, 0)
+            else:
+                rm.put(0, 0, a)
+                rm.put(1, 0, b or SLAB)
+            rm.chair(0, 2, "in")
     paste_cluster(d, cx, cz)
     return d
 
@@ -1819,6 +1864,33 @@ def fisherman_hearthwood(rel, L):
             lamp_post(d, x, 25) if x != 6 else None
         bench(d, 8, 24, "north", 3)
         cart(d, 15, 25, "x", "hay_block[axis=y]")
+
+    # ---- room fit-out ----
+    if L >= 3:
+        rm = Rm(d, mk, 6, "s", "dark_oak")                            # fish auction office: table for the dealers
+        for u in (3, 4):
+            rm.put(u, 3, "dark_oak_fence")
+            rm.put(u, 3, "dark_oak_pressure_plate[powered=false]", 1)
+            rm.chair(u, 2, "back")
+            rm.chair(u, 4, "in")
+        lay_office(Rm(d, mk, 6, "e", "dark_oak"))
+    if L >= 4:
+        lay_store(Rm(d, bt, 6, "n", "spruce"), 0)                     # sail loft: stores and sail-makers' looms
+        rm = Rm(d, bt, 6, "s", "spruce")
+        rm.put(2, 0, "loom[facing={in}]")
+        rm.put(3, 0, "white_wool")
+        rm.put(4, 0, "white_wool")
+        rm.put(4, 0, "white_carpet", 1)
+        rm.put(6, 0, "loom[facing={in}]")
+        lay_office(Rm(d, nm, 6, "s", "oak"))
+    if L >= 5:
+        lay_office(Rm(d, hm_, 6, "e", "dark_oak"))
+        for y in lt.ys:                                               # harbour light keeper's rooms
+            rm = Rm(d, lt, y, "n", "dark_oak")
+            rm.put(0, 0, CHEST)
+            rm.put(1, 0, SLAB)
+            rm.put(1, 0, LANT, 1)
+            rm.chair(0, 1, "back")
     paste_cluster(d, cx, cz)
     return d
 
@@ -1955,6 +2027,24 @@ def fisherman_cascadia(rel, L):
         for x, z in ((20, 32), (26, 34), (38, 34), (44, 33), (16, 36), (46, 38), (21, 38), (33, 37), (14, 30)):
             tree(d, x, z, 6, "spruce_leaves", "spruce_log", 2)
         porch(d, 2, 12, 26, 2, "n", gaps=(7,))
+
+    # ---- room fit-out ----
+    if L >= 2:
+        rm = Rm(d, sk, 2, "s", "spruce")                              # smoke shack: brine barrels and salt
+        rm.put(0, 0, BARREL)
+        rm.put(2, 0, "barrel[facing={ul},open=false]")
+        rm.put(0, 1, "water_cauldron[level=3]")
+    if fl == 2:
+        lay_workshop(Rm(d, bh, 6, "s", "spruce"), ["loom[facing={in}]", "white_wool", SLAB, BARREL, "cobweb"])
+    if L >= 4:
+        lay_kitchen(Rm(d, cn, 6, "n", "spruce"))
+    if L >= 5:
+        for y in lk.ys:                                               # lookout: watch post, maps, bunk
+            rm = Rm(d, lk, y, "n", "spruce")
+            rm.put(0, 0, CHEST)
+            rm.put(1, 0, SLAB)
+            rm.put(1, 0, LANT, 1)
+            rm.chair(0, 1, "back")
     paste_cluster(d, cx, cz)
     return d
 
@@ -2125,6 +2215,11 @@ def plantation_neoterra(rel, L):
             tree(d, x, 32, 3, "azalea_leaves", "birch_log", 1)
         lamp_post(d, 37, 32)
         bench(d, 38, 33, "south", 2)
+
+    # ---- room fit-out ----
+    if L >= 5:
+        lay_lab(Rm(d, ph, 6, "e", "mangrove"))
+        lay_office(Rm(d, ph, 6, "n", "mangrove"))
     paste_cluster(d, 0, 4)                                                   # beds 0..26 x 4..30
     return d
 
@@ -2260,6 +2355,12 @@ def plantation_hearthwood(rel, L):
         floor_rug(d, ap, 6, inset=2)
         for x, z in ((48, 16), (48, 22), (48, 28), (48, 34), (48, 40)):
             tree(d, x, z, 4)
+
+    # ---- room fit-out ----
+    if L >= 3:
+        lay_office(Rm(d, hc, 6, "s", "oak"))
+    if L >= 5:
+        lay_store(Rm(d, ap, 6, "e", "spruce"), 0, rows=(0, 2), kinds=(BARREL, "red_wool", "lime_wool"))
     paste_cluster(d, 2, 6)                                                   # beds 2..28 x 6..32
     return d
 
@@ -2363,6 +2464,11 @@ def plantation_cascadia(rel, L):
         counter(d, mh, "n", 6, 1, [P.b("barrel[facing=up,open=false]")] * 3 + [P.b("chest[facing={f},type=single,waterlogged=false]")])
         d.bed(51, 6, 20, "south")
         porch(d, 46, 52, 13, 2, "n", gaps=(49,))
+
+    # ---- room fit-out ----
+    if L >= 4:
+        lay_store(Rm(d, sm, 7, "w", "spruce"), 0, rows=(0,), kinds=(BARREL, "brown_wool", "white_wool"))
+        lay_office(Rm(d, sm, 7, "s", "spruce"))
     paste_cluster(d, 0, 6)                                                   # beds 0..26 x 6..32
     return d
 
@@ -2553,6 +2659,23 @@ def farmer_hearthwood(rel, L):
             tree(d, x, z, 4, "oak_leaves")
         for x in range(12, 39):
             d.set(x, 2, 35, "dark_oak_fence")
+
+    # ---- room fit-out (after the required blocks) ----
+    if L >= 5:
+        ladder(d, 29, 5, 2, 9, "south")                               # dovecote: ladder through the floors
+        for y in dc.ys:
+            rm = Rm(d, dc, y, "n", "oak")
+            rm.put(2, 0, "hay_block[axis=y]")
+            rm.put(2, 1, BARREL)
+            rm.put(0, 2, "composter[level=8]")
+            rm.put(2, 2, "dark_oak_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
+        rm = Rm(d, g2, 2, "n", "oak")                                 # granary: sacks and grain bins
+        rm.put(0, 0, BARREL)
+        rm.put(0, 0, "white_wool", 1)
+        rm.put(2, 0, BARREL)
+        rm.put(2, 0, BARREL, 1)
+        rm.put(0, 1, "hay_block[axis=y]")
+        rm.put(2, 1, "white_wool")
     return d
 
 
@@ -2731,6 +2854,19 @@ def farmer_cascadia(rel, L):
         porch(d, 36, 44, 22, 2, "n", gaps=(40,))
         for x, z in ((14, 30), (14, 36), (6, 37), (19, 36), (24, 36), (24, 30)):
             tree(d, x, z, 6, "spruce_leaves", "spruce_log", 2)
+
+    # ---- room fit-out ----
+    if L >= 5:
+        rm = Rm(d, cr, 6, "s", "spruce")                              # creamery loft: butter churns and cheese shelves
+        for u in range(3, 8):
+            if u % 2:
+                rm.put(u, 0, "barrel[facing={ur},open=false]")
+            else:
+                rm.put(u, 0, SLAB)
+                rm.put(u, 0, POT, 1)
+        rm.put(5, 2, SLAB)
+        rm.put(5, 2, "cake[bites=0]", 1)
+        rm.chair(5, 3, "in")
     return d
 
 
@@ -2858,6 +2994,11 @@ def farmer_neoterra(rel, L):
         for x in (27, 33, 39):
             lamp_post(d, x, 32, 3)
             bench(d, x + 1, 33, "south", 2)
+
+    # ---- room fit-out ----
+    if L >= 5:
+        lay_office(Rm(d, sb, 6, "s", "birch"))
+        lay_lab(Rm(d, sb, 6, "e", "birch"))
     return d
 
 

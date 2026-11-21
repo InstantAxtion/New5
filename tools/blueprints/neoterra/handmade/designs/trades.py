@@ -162,6 +162,13 @@ def lamp_post(d, x, z, y, pack, h=3):
         d.set(x, y + h, z, LANT_S)
 
 
+def spot_trees(d, cells, kind="oak", h=4, r=1):
+    """Trees on free ground cells (left out where something already stands)."""
+    for x, z in cells:
+        if all(d.air(x + dx, d.gy + 1 + k, z + dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) for k in range(h + 2)):
+            tree(d, x, z, d.gy + 1, kind, h, r)
+
+
 def bench(d, x, z, y, back, n=2, wood="oak", sit=True):
     """Outdoor bench of n seats along the side perpendicular to `back`, with trapdoor arms."""
     ax = (1, 0) if back in ("north", "south") else (0, 1)
@@ -1405,6 +1412,10 @@ def builder_cas(rel, L):
         wagon(d, 27, 31, y0, "spruce", "hay_block[axis=x]")
         for y in range(y0, 10):
             d.set(32, y, 30, "ladder[facing=south,waterlogged=false]") if False else None
+    if L >= 4:
+        spot_trees(d, [(32, 18), (32, 12)], "spruce", 5)
+    if L >= 5:
+        spot_trees(d, [(32, 6), (1, 34) if False else (19, 33)], "spruce", 5)
     if seats < BSEATS[L]:
         bench(d, 13, 2, y0, "north", BSEATS[L] - seats, "spruce")
     tree(d, 32, 32, y0, "spruce", 5, 2)
@@ -1475,6 +1486,11 @@ def saw_neo(rel, L):
         d.set(x, y0, 3, "moss_block")
         tree(d, x, 3, y0 + 1, "birch", 3, 1)
     lamp_post(d, 13, 2, y0, P)
+    if L >= 2:
+        for x in (1, 22):
+            lamp_post(d, x, 6, y0, P)
+    if L >= 4:
+        spot_trees(d, [(34, 14), (34, 20), (34, 26)], "birch", 3)
     # log yard behind the hall
     log_pile(d, 3, 16, 9, 18, y0, 2, "birch_log", "x")
     if L >= 2:
@@ -1591,6 +1607,8 @@ def saw_hw(rel, L):
         racks = L
     if sto >= 3:
         furnish(a.room(2, back="west"), "loft")
+    if L >= 4:
+        spot_trees(d, [(1, 18), (1, 24), (14, 27)], "oak", 4)
     log_pile(d, 4, z2 + 3, 12, z2 + 4, y0, 2, "oak_log", "x")
     flower_bed(d, 5, 1, 8, 2, y0, seed=3)
     lamp_post(d, 12, 1, y0, P)
@@ -1874,6 +1892,8 @@ def jack_hw(rel, L):
         n1 = JACK_RACKS[L] - racks if L < 3 else 1
         furnish(a.room(1, back="north"), "dorm", racks=n1, beds=1, wood="spruce")
         racks += n1
+    if L >= 5:
+        spot_trees(d, [(31, 2), (31, 8), (17, 2)], "oak", 4)
     # log store lean-to on the west wall
     for z in range(4, 11):
         for x in range(3, 6):
@@ -2112,6 +2132,8 @@ def fl_neo(rel, L):
         furnish(a.room(1, back="south"), "workshop", up, racks=FRACKS[L] - racks)
         racks = FRACKS[L]
     neo_roof(d, a, "solar")
+    if L >= 5:
+        spot_trees(d, [(1, 30), (14, 32), (22, 30)], "birch", 3)
     # glazed outdoor lane east of the studio
     lx1, lx2 = 16, 20
     d.fill(lx1, 1, 4, lx2, 1, 22, "grass_block[snowy=false]")
@@ -2204,6 +2226,8 @@ def fl_hw(rel, L):
         furnish(a.room(1, back="north"), "workshop", ["fletching_table"] * max(0, FLETCH[L] - 3), racks=n1,
                 wood="oak")
         racks += n1
+    if L >= 2:
+        lamp_post(d, 2, 2, y0, P)
     # garden lane with straw butts behind
     gz1, gz2 = 13, 26
     for x, z in ring(2, gz1, 16, gz2):
@@ -2510,9 +2534,8 @@ def wh_hw(rel, L):
         d.sty_over = {}
         b.door(25, 4, "north")
         if L >= 3:                                                   # steward's office and his chamber over it
-            office = [i for i in wh_list(L, first=False) if i != "ender_chest"]
-            furnish(b.room(0, back="south"), "office", office, seats=1)
-            furnish(b.room(1, back="south"), "dorm", ["ender_chest"] if L >= 5 else [], beds=1, books=4, seats=1)
+            furnish_all([(b.room(0, back="south"), "office"), (b.room(1, back="south"), "office"),
+                         (b.room(1, back="north"), "dorm")], items=wh_list(L, first=False), seats=2, beds=1)
         else:
             furnish(b.room(0, back="west"), "lounge")               # cottage parlour by the hearth
         for x in range(21, 32):
@@ -2797,6 +2820,8 @@ def dl_hw(rel, L):
         specs.append((a.room(1, back="south"), "sorting"))
     flower_bed(d, 10, 2, 14, 2, y0, seed=3)
     lamp_post(d, 2, 2, y0, P)
+    if L >= 5:
+        spot_trees(d, [(1, 26), (1, 14), (17, 38)], "oak", 4)
     # ---- coaching stables (L2+), loft from L3
     if L >= 2:
         s_ = 2 if L >= 3 else 1
@@ -2949,6 +2974,8 @@ def dl_cas(rel, L):
         bench(d, 3, 5, y0, "north", 3, "spruce")
         need["seats"] -= 3
     furnish_all(specs, **need)
+    if L >= 4:
+        spot_trees(d, [(1, 20), (1, 34), (14, 34)], "spruce", 5)
     # ---- freight barn (L5)
     if L >= 5:
         f = build(d, 16, 19, 33, 33, 2, roof="gable", axis="z", core=(31, 21))
@@ -3160,6 +3187,8 @@ def cp_hw(rel, L):
         for z in (16, 17, 18):
             d.set(3, y0, z, "bricks")
             d.set(9, y0, z, "bricks")
+    if L >= 5:
+        lamp_post(d, 1, 33, y0, P) if False else lamp_post(d, 30, 30, y0, P)
     # ---- head gardener's cottage (L3, upper floor from L4)
     if L >= 3:
         c = build(d, 3, 22, 13, 29, 2 if L >= 4 else 1, roof="gable", axis="x", core=(11, 23) if L >= 4 else None,
