@@ -2659,13 +2659,14 @@ def wh_cas(rel, L):
         a.opening(ax, 6, ax, 6, 3, "yellow_terracotta")
     d.sign(7, 6, 5, "north", ["FREIGHT", "DEPOT"], "spruce")
     d.hut(4, y0, 7)
-    r0 = a.room(0, back="west")
-    racks = wh_racks(d, r0, 8, 8, x2 - 1, zb - 1, WH[L])
-    furnish(r0, "shop", ["crafting_table"])                       # tally desk by the office door
+    racks = wh_racks(d, y0, 8, 8, x2 - 1, zb - 1, WH[L])
+    # tally desk and crafting bench in the clerk's corner west of the shelving
+    fit(d, y0, [("i", 4, 9, "crafting_table", "east"), ("s", 6, 9, sl("spruce", "top")), ("c", 6, 10, "south", False),
+                ("o", 6, 9, "candle[candles=2,lit=false,waterlogged=false]"),
+                ("s", 7, zb - 1, "chest[facing=north,type=single,waterlogged=false]"), ("L", 5, 8)], "spruce")
     if sto > 1:
-        r1 = a.room(1, back="west")
-        racks += wh_racks(d, r1, 8, 8, x2 - 1, zb - 1, max(66, WH[L] - racks))
-        furnish(r1, "loft")
+        racks += wh_racks(d, 7, 8, 8, x2 - 1, zb - 1, max(66, WH[L] - racks))
+        fit(d, 7, [("s", 6, 8, "white_wool"), ("s", 7, 8, "brown_wool"), ("o", 6, 8, "white_wool"), ("L", 6, 9)])
     crate_stack(d, x2 - 1, 3, y0, 2)
     d.set(x2 - 2, y0, 3, "hay_block[axis=x]")
     lamp_post(d, 1, 7, 2, P)
@@ -2682,20 +2683,27 @@ def wh_cas(rel, L):
         d.set(28, 2, 1, AIR)
         d.set(28, 3, 1, AIR)
         d.sign(30, b.ridge, 0, "north", ["FREIGHT", "AGENT"], "spruce")
-        if L >= 3:
-            office = [i for i in wh_list(L, first=False) if i != "ender_chest"]
-            furnish(b.room(0, back="south"), "office", office, seats=1)
-            furnish(b.room(1, back="south"), "dorm", ["ender_chest"] if L >= 5 else [], beds=1, seats=1)
+        if L >= 3:                                                   # freight agent's counting room; bunk room above
+            fit(d, 2, [("i", 27, 5, "crafting_table", "east"), ("i", 27, 6, "cartography_table"),
+                       ("i", 27, 7, "lectern", "east")] + [("i", x, 9, "barrel", "north") for x in (28, 29, 30, 31)] + [
+                ("s", 29, 5, sl("spruce", "top")), ("s", 30, 5, sl("spruce", "top")), ("c", 29, 6, "south"),
+                ("c", 30, 6, "south"), ("L", 29, 7)], "spruce")
+            fit(d, 6, [("bed", 28, 9, "south"), ("s", 29, 9, sl("spruce", "top"))] +
+                ([("i", 30, 9, "ender_chest", "north")] if L >= 5 else []) +
+                [("s", 27, 3, "chest[facing=south,type=single,waterlogged=false]"), ("L", 29, 8)], "spruce")
         else:
-            furnish(b.room(0, back="south"), "office", seats=1, sit=False)
+            fit(d, 2, [("s", 30, 8, sl("spruce", "top")), ("c", 30, 7, "north", False),
+                       ("s", 27, 8, "chest[facing=east,type=single,waterlogged=false]"), ("s", 33, 3, pot(0)),
+                       ("L", 30, 5)], "spruce")
     # ---- team stable (L3+) and second depot shed (L4, two storeys at L5)
     if L >= 4:
         e = build(d, 3, 22, 21, 30, 2 if L >= 5 else 1, roof="gable", axis="x", core=(19, 24) if L >= 5 else None)
         e.opening(7, 22, 9, 22, 3, "yellow_terracotta")
         for s_ in range(e.storeys):
-            re = e.room(s_, back="north")
-            racks += wh_racks(d, re, 4, 25, 16, 29, max(45 if s_ == 0 else 36, WH[L] - racks), "x")
-            furnish(re, "loft")
+            yy = e.stand(s_)
+            racks += wh_racks(d, yy, 4, 25, 16, 29, max(45 if s_ == 0 else 36, WH[L] - racks), "x")
+            fit(d, yy, [("s", 10, 23, "barrel[facing=up,open=false]"), ("s", 11, 23, "barrel[facing=up,open=false]"),
+                        ("o", 10, 23, "white_wool"), ("s", 16, 23, "hay_block[axis=y]"), ("L", 12, 24)])
     if L >= 3:
         st_ = build(d, 27, 13, 39, 21, 1, roof="gable", axis="x")
         st_.opening(27, 16, 27, 18, 3, lg("spruce_log", "z"))
@@ -2704,13 +2712,22 @@ def wh_cas(rel, L):
                 d.set(x, 2, zz, "spruce_fence")
             d.set(38, 2, zz + 1, "hay_block[axis=x]")
         d.set(38, 2, 20, "water_cauldron[level=3]")
-        furnish(st_.room(0, back="north"), "loft")                     # harness & feed room
+        fit(d, 2, [("s", 28, 14, "chest[facing=east,type=single,waterlogged=false]"), ("s", 29, 20, "hay_block[axis=y]"),
+                   ("s", 30, 20, "hay_block[axis=y]"), ("o", 29, 20, "hay_block[axis=y]"),
+                   ("s", 31, 14, "spruce_fence"), ("o", 31, 14, "leather_horse_armor" if False else "spruce_trapdoor[facing=south,half=top,open=false,powered=false,waterlogged=false]"),
+                   ("L", 33, 17)])
         wagon(d, 29, 25, 2, "spruce", "barrel[facing=up,open=false]")
     if L >= 5:                                                       # teamsters' boarding house + dock crane
         h = build(d, 3, 33, 21, 41, 2, roof="gable", axis="x", core=(19, 35), chimney=(4, 37, "east"))
         h.door(10, 33, "north", double=True)
-        furnish(h.room(0, back="south"), "canteen", sit=False)
-        furnish(h.room(1, back="south"), "dorm", beds=4)
+        fit(d, 2, [("s", 8, 40, "smoker[facing=north,lit=false]"), ("s", 9, 40, sl("spruce", "top")),
+                   ("s", 10, 40, "water_cauldron[level=3]"), ("s", 11, 40, "furnace[facing=north,lit=false]")] +
+            [("s", x, 37, sl("spruce", "top")) for x in range(8, 15)] +
+            [("c", x, 36, "north", False) for x in range(8, 15)] + [("c", x, 38, "south", False) for x in range(8, 15)] +
+            [("L", 11, 35), ("L", 15, 39)], "spruce")
+        fit(d, 6, [("bed", x, 40, "south", "yellow") for x in (6, 9, 12, 15)] +
+            [("s", 7, 40, sl("spruce", "top")), ("s", 13, 40, sl("spruce", "top")),
+             ("s", 17, 34, "chest[facing=south,type=single,waterlogged=false]"), ("L", 9, 37)], "spruce")
         for y in range(3, 10):
             d.set(6, y, 3, lg("spruce_log", "y"))
         for z in range(0, 4):

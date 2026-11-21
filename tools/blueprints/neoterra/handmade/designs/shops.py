@@ -3549,6 +3549,8 @@ def _g_baker_cas(d, L):
                         "..hWh.kYk",
                         ".........",
                         "WWkhh.WWk"], ["Flour", "Shed"])
+        spruce_tree(d, 24, 25)
+        lamp_post(d, 24, 11)
     if L >= 3:
         plans = [["       oUmu",
                   ".......l...",
