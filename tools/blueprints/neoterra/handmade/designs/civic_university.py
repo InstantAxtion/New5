@@ -646,154 +646,307 @@ def uni_hearthwood(rel, L):
     return d
 
 
-# OLD (to convert)
-globals().update({k: v for k, v in vars(__import__('designs._civic_common', fromlist=['x'])).items() if not k.startswith('__') and k not in globals()})
+# ============================================================================================ Neoterra
+def _ceiling(d, y, pts):
+    """Recessed ceiling panels at the listed (x, z) points of the ceiling layer y."""
+    for x, z in pts:
+        d.set(x, y, z, "sea_lantern")
+
 
 def uni_neoterra(rel, L):
-    """Research campus: pavilion -> lab block & bridge -> lecture theatre & quad -> extra storeys -> dorm tower,
-    student union, sports court."""
+    """Research campus: institute pavilion (L1) -> glass bridge & lab block (L2) -> lecture theatre and the
+    green quad (L3) -> extra storeys, student union (L4) -> residence tower and sports court (L5)."""
     d = new("Neoterra", rel, (53, 40, 55), paving="smooth_stone")
     Q = "smooth_quartz"
-    pv_nf = 3 if L >= 4 else 1
-    p = bldg(d, 6, 6, 18, 14, pv_nf, "flat", glassy=True, win="nsw")
-    ext_door(d, 11, Y0, 6, "south", double=True)
+    lg = legend(d, M="black_stained_glass_pane", g="light_gray_stained_glass", q="cake[bites=0]",
+                v="brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]", u="cauldron",
+                d="decorated_pot[cracked=false,facing=north,waterlogged=false]", U="water_cauldron[level=3]",
+                Z="smoker[facing=south,lit=true]", O="furnace[facing=south,lit=false]",
+                C=chest("east"), A="flowering_azalea", m="moss_block")
+    lg[">"] = _bed("east")
+
+    def roof_plants(y, pts, kind="A"):
+        for x, z in pts:
+            d.set(x, y, z, lg[kind])
+
+    # ---------------------------------------------------------------- institute pavilion (3 storeys at L4)
+    tall = L >= 4
+    p = shell(d, 6, 6, 18, 14, 3 if tall else 1, "flat", glassy=True, win="nsw")
+    entrance(d, 11, Y0, 6, "south", double=True)
     d.sign(12, 6, 5, "north", ["INSTITUTE OF", "SCIENCE"], "birch", glow=True, color="cyan")
-    for x in range(9, 16):
-        for z in (3, 4, 5):
-            put(d, x, 6, z, slab("smooth_quartz_slab", "top"))
-    d.hut(7, Y0, 7)
+    d.fill(9, 6, 3, 15, 6, 5, slab("smooth_quartz_slab", "top"))   # entrance canopy
+    for x in (9, 15):
+        for y in range(Y0, 6):
+            d.set(x, y, 3, "quartz_pillar[axis=y]" if L >= 4 else "white_concrete")
     keep(d, 8, Y0, 7)
-    d.item(17, Y0, 7, "lectern", "west")
     keep(d, 16, Y0, 7)
-    d.rack(7, Y0, 13, "north")
     keep(d, 7, Y0, 12)
-    d.item(17, Y0, 13, "furnace", "west")
     keep(d, 16, Y0, 13)
-    if pv_nf > 1:
-        stair_up(d, 8, 9, Y0, 7, "south")
-        stair_up(d, 16, 12, 7, 12, "north")
-    for x in range(10, 15):
-        d.table(x, Y0, 10, "birch", "block", Q)
-    for x in range(10, 15):
-        d.chair(x, Y0, 9, "north", "mangrove")
-        d.chair(x, Y0, 11, "south", "mangrove")
-    shelf_wall(d, (7, 7, 17, 13), "s", Y0, 3)
-    rug_in(d, (9, 8, 15, 12), Y0, ("cyan_carpet",), inset=0, pattern="plain")
-    corners(d, (7, 7, 17, 13), Y0, ["potted_bamboo"])
-    if pv_nf > 1:
-        r2 = (7, 7, 17, 13)
-        table_set(d, r2, 7, "dining")
-        lights(d, r2, 7)
-        office(d, (7, 7, 11, 13), 12)
-        office(d, (13, 7, 17, 13), 12, desk_side="s")
-        d.fill(12, 12, 7, 12, 15, 13, "light_gray_stained_glass")
-        link(d, 12, 12, 10, "east") if False else arch(d, 12, 12, 10, "east")
-        roof_garden(d, p, "garden")
-    path(d, 10, 0, 13, 5, "smooth_stone")
-    for x in (4, 20):
-        post_lamp(d, x, 4)
+    lg.update(Y=_hut(), Q=_it("lectern", "west"), R=_rack("north"), F=_it("furnace", "west"))
+    if tall:
+        stairs(d, 9, 13, Y0, 7, "east", rails=[(9, 7, 13), (10, 7, 12), (11, 7, 12), (12, 7, 12)])
+        stairs(d, 16, 7, 7, 12, "west", rails=[(16, 12, 7), (13, 12, 8), (14, 12, 8), (15, 12, 8)])
+        south = "R.     .B.F"
+    else:
+        south = "R.BBBBBBB.F"
+    # reception & seminar room: seminar table for ten, hut / lectern / rack / kiln in the four corners
+    plan(d, 7, 7, Y0, [
+        ["Y.p.....p.Q",
+         "...........",
+         "...nnnnn...",
+         "...TTTTT...",
+         "...sssss...",
+         "...........",
+         south],
+        ["", "", "", "    o c    ", "", "", "  o  o     " if not tall else ""]], lg)
+    _ceiling(d, 6, [(9, 10), (15, 10)])
+    if tall:
+        # first floor: café & faculty lounge
+        plan(d, 7, 7, 7, [
+            ["p....     .",
+             "...........",
+             "w.e........",
+             "wte.wTe.wTe",
+             "w.e........",
+             "...   .....",
+             "X.      ttX"],
+            ["", "", "", " o    k   k", "", "", "        oo "]], lg)
+        _ceiling(d, 11, [(9, 10), (15, 10)])
+        # second floor: open-plan research office
+        plan(d, 7, 7, 12, [
+            ["....      .",
+             "......   ..",
+             "...........",
+             ".tt....tt..",
+             ".ss....ss..",
+             "...........",
+             "BBp.....pBB"],
+            ["", "", "", " MM    MM  ", "", "", "BB       BB"]], lg)
+        _ceiling(d, 16, [(9, 10), (15, 10)])
+        ry = p["top"] + 2                                             # roof garden
+        for x in range(7, 18):
+            d.set(x, ry, 7, "moss_block")
+            d.set(x, ry, 13, "moss_block")
+        roof_plants(ry + 1, [(7, 7), (12, 7), (17, 7), (7, 13), (12, 13), (17, 13)])
+        roof_plants(ry, [(10, 10), (14, 10)], "p")
+        d.set(16, ry, 9, "smooth_stone")
+        d.set(16, ry + 1, 9, "iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
+    pave(d, 10, 0, 13, 5, "smooth_stone")
+    post_lamp(d, 4, 4)
+    post_lamp(d, 20, 4)
+
+    # ---------------------------------------------------------------- L2: glass bridge + lab block
     if L >= 2:
-        lb_nf = {2: 1, 3: 1, 4: 2, 5: 3}[L]
-        b2 = bldg(d, 26, 6, 40, 14, lb_nf, "flat", glassy=True, win="nse")
+        nf = {2: 1, 3: 1, 4: 2, 5: 3}[L]
+        b2 = shell(d, 26, 6, 40, 14, nf, "flat", glassy=True, win="nse")
         d.box(18, Y0, 8, 26, 5, 12, "glass", floor="polished_diorite")
         d.fill(18, 6, 8, 26, 6, 12, Q)
         d.clear(19, Y0, 9, 25, 5, 11)
         for x in (18, 26):
             arch(d, x, Y0, 10, "east")
-        for x in range(19, 26, 2):
-            put(d, x, Y0, 9, "potted_bamboo")
-            put(d, x, 5, 10, "sea_lantern") if False else d.set(x, 6, 10, "sea_lantern")
-        ext_door(d, 33, Y0, 6, "south", double=True)
+        for x in (19, 21, 23, 25):
+            d.set(x, Y0, 9, "potted_bamboo")
+            d.set(x, Y0, 11, "potted_bamboo") if x in (21, 23) else None
+            d.set(x, 6, 10, "sea_lantern")
+        entrance(d, 33, Y0, 6, "south", double=True)
         d.sign(33, 6, 5, "north", ["LABS"], "birch", glow=True, color="cyan")
-        fur = max(0, need(d, "furnace") - 1)
-        reqs = [("brewing_stand", 39, 8, None), ("water_cauldron", 39, 9, None), ("crafting_table", 39, 10, None)]
-        reqs += [("furnace", 39, 11 + i, "west") for i in range(fur)]
-        for it, x, z, f in reqs:
-            keep(d, x - 1, Y0, z)
-        lab(d, (27, 7, 39, 13), Y0, req=reqs)
-        if lb_nf > 1:
-            stair_up(d, 28, 13, Y0, 7, "east")
-            classroom(d, (27, 7, 39, 12), 7, board="e")
-            roof_garden(d, b2, "solar")
-        if lb_nf > 2:
-            stair_up(d, 38, 13, 7, 12, "west")
-            office(d, (27, 7, 32, 13), 12)
-            office(d, (34, 7, 39, 13), 12, desk_side="s")
-            d.fill(33, 12, 7, 33, 15, 13, "light_gray_stained_glass")
-            arch(d, 33, 12, 10, "east")
-        for x in (22, 44):
-            plant_tree(d, x, 3)
+        for z in range(8, 13):
+            keep(d, 38, Y0, z)
+        hot = need(d, "furnace") > 1
+        ll = dict(lg, V=_it("brewing_stand"), K=_it("crafting_table"), F=_it("furnace", "west"))
+        ll["U"] = _it("water_cauldron")
+        if nf >= 2:
+            stairs(d, 28, 13, Y0, 7, "east", rails=[(28, 7, 13), (29, 7, 12), (30, 7, 12), (31, 7, 12)])
+            south = ".     BBB...p"
+        else:
+            south = "BBBBBBBBB...p"
+        # wet lab: fume bench on the north wall, island with stools, required stations on the east wall
+        plan(d, 27, 7, Y0, [
+            ["ttttt...BBB.p",
+             "............V",
+             "............U",
+             "...tttttt...K",
+             "...s.s.s...." + ("F" if hot else "."),
+             "............" + ("F" if hot else "p"),
+             south],
+            ["vdoco   BBB  ",
+             "", "",
+             "    o v c    "]], ll)
+        _ceiling(d, 6, [(30, 10), (36, 10)])
+        if nf >= 2:                                                   # seminar room with a board
+            for z in range(8, 13):
+                d.set(39, 8, z, "gray_concrete")
+                d.set(39, 9, z, "gray_concrete")
+                d.set(39, 7, z, trap("birch", "west"))
+            plan(d, 27, 7, 7, [
+                ["p...........p",
+                 "..wt..wt.... ",
+                 "..wt..wt.... ",
+                 "..wt..wt..te ",
+                 "..wt..wt.... ",
+                 "..   ....... ",
+                 "p      " + ("     ." if nf >= 3 else ".....X")],
+                ["", "   k   k     ", "   o   o     ", "   k   k  k  ", "   o   o     "]], lg)
+            _ceiling(d, 11, [(30, 10), (35, 10)])
+        if nf >= 3:                                                   # two glass-walled offices
+            stairs(d, 38, 13, 7, 12, "west", rails=[(35, 12, 12), (36, 12, 12), (37, 12, 12), (38, 12, 13)])
+            plan(d, 27, 7, 12, [
+                ["BBtt.pgp.tt.B",
+                 "..s...g..s..B",
+                 "......g.....B",
+                 "wte...g.wte..",
+                 "......g......",
+                 "........   ..",
+                 "pX....      p"],
+                ["BBMM..g..MM.B", "      g     B", "      g     B", " o    g   o  ", "      g      "],
+                ["      g", "      g", "      g", "      g", "      g"],
+                ["      g", "      g", "      g", "      g", "      g"]], lg)
+            _ceiling(d, 16, [(30, 10), (36, 10)])
+        if nf >= 2:                                                   # solar array on the lab roof
+            ry = b2["top"] + 2
+            for z in (8, 9, 11, 12):
+                for x in range(28, 39):
+                    d.set(x, ry, z, "daylight_detector[inverted=false,power=0]")
+            d.set(39, ry, 7, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        plant_tree(d, 22, 3)
+        if L < 5:
+            plant_tree(d, 44, 3)
+
+    # ---------------------------------------------------------------- L3: green quad + lecture theatre
     if L >= 3:
+        lawn(d, 6, 16, 46, 36)
+        pave(d, 25, 15, 27, 37, "smooth_stone")
+        pave(d, 6, 26, 46, 26, "smooth_stone")
+        for x in (24, 28):                                            # andesite kerbs along the main walk
+            pave(d, x, 16, x, 25, "polished_andesite")
+            pave(d, x, 27, x, 36, "polished_andesite")
+        for x, z in ((17, 26), (21, 26), (31, 26), (35, 26), (26, 19), (26, 22), (26, 30), (26, 34)):
+            d.spot(x, Y0, z, "leisure")
+            keep(d, x, Y0, z)
+        trees = [(18, 20), (34, 32), (21, 32), (31, 20)]
+        if L < 4:
+            trees += [(10, 20), (10, 32)]
+        if L < 5:
+            trees += [(42, 20), (42, 32)]
+        for x, z in trees:
+            plant_tree(d, x, z)
+        park_bench(d, 19, 24, "x", "north")
+        park_bench(d, 32, 24, "x", "north")
+        park_bench(d, 19, 28, "x", "south")
+        park_bench(d, 32, 28, "x", "south")
+        if L >= 4:
+            fountain(d, 26, 26, 2)
         X1, X2, Z1, Z2 = 14, 38, 38, 47
-        bldg(d, X1, Z1, X2, Z2, 1, "flat", wh=8, win="s", ws=4)
-        shelf_wall(d, (X1 + 1, Z1 + 1, X2 - 1, Z2 - 1), "w", Y0, 3)
-        shelf_wall(d, (X1 + 1, Z1 + 1, X2 - 1, Z2 - 1), "e", Y0, 3)
+        shell(d, X1, Z1, X2, Z2, 1, "flat", wh=8, win="s", ws=4)
         for x in range(X1, X2 + 1):
             d.set(x, 9, Z1, "cyan_terracotta")
-        ext_door(d, 26, Y0, Z1, "north", double=True)
-        for x in range(18, 35):
-            d.set(x, 6, Z1 + 1, "black_concrete")
-            d.set(x, 7, Z1 + 1, "black_concrete")
-        d.set(26, 7, Z1 + 1, "sea_lantern")
-        put(d, 20, Y0, Z1 + 2, Q)
-        for k in range(3):                                          # raked tiers rising south
+        entrance(d, 26, Y0, Z1, "north", double=True)
+        for k in range(3):                                            # raked tiers rising south
             zs = Z1 + 4 + 2 * k
             for z in (zs, zs + 1):
                 for x in range(X1 + 1, X2):
                     for y in range(Y0, Y0 + k):
                         d.set(x, y, z, Q)
-            for x in range(X1 + 3, X2 - 2):
-                if x in (20, 26, 32):
-                    continue
-                d.chair(x, Y0 + k, zs, "south", "birch")
-        lights(d, (X1 + 1, Z1 + 1, X2 - 1, Z2 - 1), Y0, 8)
-        lawn(d, 6, 16, 46, 36)
-        path(d, 25, 15, 27, 37)
-        path(d, 6, 26, 46, 26)
-        for x, z in ((12, 26), (18, 26), (34, 26), (40, 26), (26, 19), (26, 23), (26, 30), (26, 34)):
-            d.spot(x, Y0, z, "leisure")
-            keep(d, x, Y0, z)
-        for x, z in ((10, 20), (42, 20), (10, 32), (42, 32), (18, 20), (34, 32)):
-            plant_tree(d, x, z)
-        for x, z in ((20, 24), (30, 24)):
-            park_bench(d, x, z, "x", "north")
-        for x, z in ((20, 28), (30, 28)):
-            park_bench(d, x, z, "x", "south")
-        fountain(d, 26, 26, 2) if L >= 4 else None
+            for x in range(17, 36):                                   # one row of 16 seats, aisles at 20/26/32
+                if x not in (20, 26, 32):
+                    d.chair(x, Y0 + k, zs, "south", "birch")
+        for x in range(18, 35):                                       # projection screen
+            d.set(x, 6, Z1 + 1, "black_concrete")
+            d.set(x, 7, Z1 + 1, "black_concrete")
+        d.set(26, 8, Z1 + 1, "sea_lantern")
+        d.set(22, Y0, 40, Q)                                          # speaker's desk with a lamp
+        d.set(23, Y0, 40, Q)
+        d.set(22, Y0 + 1, 40, "lantern[hanging=false,waterlogged=false]")
+        for x in (15, 37):                                            # book walls flanking the stage
+            for z in range(39, 44):
+                for y in range(Y0, Y0 + 3):
+                    d.bookshelf(x, y, z)
+        _ceiling(d, 10, [(20, 43), (26, 43), (32, 43)])
+
+    # ---------------------------------------------------------------- L4: student union
     if L >= 4:
-        un = bldg(d, 6, 17, 14, 34, 2, "flat", glassy=True, win="nsew")
-        ext_door(d, 14, Y0, 25, "west", double=True, along="z")
-        kitchen(d, (7, 18, 13, 21), Y0)
-        table_set(d, (7, 23, 13, 33), Y0, "dining")
-        stair_up(d, 7, 33, Y0, 7, "north")
-        lounge(d, (7, 18, 13, 26), 7)
-        table_set(d, (7, 27, 13, 33), 7, "dining")
-        roof_garden(d, un, "garden")
+        un = shell(d, 6, 17, 14, 34, 2, "flat", glassy=True, win="nsew")
+        entrance(d, 14, Y0, 25, "west", double=True, along="z")
         d.sign(14, 6, 21, "east", ["STUDENT", "UNION"], "birch", glow=True, color="cyan")
+        stairs(d, 8, 33, Y0, 7, "east", rails=[(8, 7, 33), (9, 7, 32), (10, 7, 32), (11, 7, 32)])
+        table = "..wTe.."
+        plan(d, 7, 18, Y0, [
+            ["ZtUtOtX", ".......", "..TTT..", ".......", "tttt...", "......."] + [table] * 8 +
+            ["p.....p", ".     ."],
+            [" o k  o", "", "  qoc  ", "", "o  k", "", "  c", "", "  o", "", "  c", "", "  o", ""]], lg)
+        _ceiling(d, 6, [(10, 20), (10, 25), (10, 30)])
+        plan(d, 7, 18, 7, [
+            ["BBp.pBB", "..ttt..", ".sssss.", ".......", ".......", ".......", ".wTTe..", ".wTTe..",
+             ".......", ".......", ".wTTe..", ".wTTe..", ".......", "p.....p", "..   ..", "X      "],
+            ["BB   BB", "  o k  ", "", "", "", "", "  ck", "  oc", "", "", "  ck", "  oc"]], lg)
+        _ceiling(d, 11, [(10, 20), (10, 26), (10, 31)])
+        ry = un["top"] + 2
+        for z in range(18, 34):
+            d.set(7, ry, z, "moss_block")
+            d.set(13, ry, z, "moss_block")
+        roof_plants(ry + 1, [(7, 18), (13, 18), (7, 25), (13, 25), (7, 33), (13, 33)])
+        roof_plants(ry, [(10, 21), (10, 25), (10, 29)], "p")
+
+    # ---------------------------------------------------------------- L5: residence tower + sports court
     if L >= 5:
-        dt = bldg(d, 38, 17, 46, 34, 6, "flat", glassy=True, win="nsew")
-        ext_door(d, 38, Y0, 25, "east")
+        dt = shell(d, 38, 17, 46, 34, 6, "flat", glassy=True, win="nsew")
+        entrance(d, 38, Y0, 25, "east")
+        d.sign(38, 6, 24, "west", ["RESIDENCE"], "birch", glow=True, color="cyan")
         for k in range(5):
-            stair_up(d, 39 + (k % 2) * 6, 18 if k % 2 == 0 else 33, Y0 + 5 * k, Y0 + 5 * k + 5,
-                     "south" if k % 2 == 0 else "north")
-        for k in range(6):
-            y = Y0 + 5 * k
-            if k == 0:
-                lounge(d, (39, 19, 45, 32), y)
+            y0 = Y0 + 5 * k
+            if k % 2 == 0:
+                stairs(d, 39, 19, y0, y0 + 5, "south",
+                       rails=[(39, y0 + 5, 19), (40, y0 + 5, 20), (40, y0 + 5, 21), (40, y0 + 5, 22)])
             else:
-                dorm(d, (39, 20, 45, 31), y, 6, head="e")
-        roof_garden(d, dt, "solar")
-        # sports court beside the street
-        for x in range(42, 52):
+                stairs(d, 45, 32, y0, y0 + 5, "north",
+                       rails=[(45, y0 + 5, 32), (44, y0 + 5, 29), (44, y0 + 5, 30), (44, y0 + 5, 31)])
+        plan(d, 39, 18, Y0, [                                         # lobby with sofas and a porter's desk
+            [".......", " ......", " .nnn.p", " ..t...", " .sss..", " ......", ".......", ".......",
+             ".......", ".ttt...", "..s....", "XXX..BB", "......B", ".....pB", ".......", "p.....p"],
+            ["", "", "", "   o", "", "", "", "", "", " Mko", "", "     BB", "      B"]], lg)
+        odd = [" .....t", " .... >", "  ....t", "  ... >", "  ....t", " .... >", " .....t", "..... >",
+               "C.....t", "C......"]
+        even = ["......t", " .... >", " .....t", " .... >", " .....t", " .... >", "......t", "..... >",
+                "C.....t", "C..... "]
+        for k in range(1, 6):
+            y = Y0 + 5 * k
+            if k % 2:
+                rows = ["p.....t"] + odd[1:]
+                tail = ["te.... ", "...... ", "te.... ", "...... ", "te.... ", "p......"] if k < 5 else \
+                    ["te....B", "......B", "te....p", "......B", "te....B", "p......"]
+            else:
+                rows = list(even)
+                tail = ["te.... ", ".....  ", "te...  ", ".....  ", "te.... ", "p......"]
+            plan(d, 39, 18, y, [rows + tail,
+                                ["      k", "", "      k", "", "      k", "", "      k", "", "      k", "",
+                                 "k", "", "o", "", "k"]], lg)
+            _ceiling(d, y + 4, [(42, 22), (42, 29)])
+        _ceiling(d, 6, [(42, 22), (42, 29)])
+        ry = dt["top"] + 2
+        for z in (19, 20, 22, 23, 25, 26, 28, 29, 31, 32):
+            for x in range(40, 45):
+                d.set(x, ry, z, "daylight_detector[inverted=false,power=0]")
+        d.set(39, ry, 18, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        for x in range(42, 52):                                       # sports court beside the street
             for z in range(1, 15):
                 edge = x in (42, 51) or z in (1, 14) or z == 8
                 d.set(x, 1, z, "white_concrete" if edge else "light_blue_terracotta")
         for z in (2, 13):
-            put(d, 46, 2, z, "iron_bars")
-            put(d, 46, 3, z, "iron_bars")
-            put(d, 46, 4, z, "white_stained_glass")
+            d.set(46, 2, z, "iron_bars")
+            d.set(46, 3, z, "iron_bars")
+            d.set(46, 4, z, "white_stained_glass")
+            d.set(47, 2, z, "iron_bars")
+            d.set(47, 3, z, "iron_bars")
+            d.set(47, 4, z, "white_stained_glass")
+        for x in (43, 50):
+            d.set(x, 2, 8, "birch_fence")
+            d.set(x, 3, 8, "white_banner[rotation=0]")
     return d
 
+
+
+# OLD (to convert)
+globals().update({k: v for k, v in vars(__import__('designs._civic_common', fromlist=['x'])).items() if not k.startswith('__') and k not in globals()})
 
 def uni_cascadia(rel, L):
     """Timber college: lodges round a quad joined by covered boardwalks."""

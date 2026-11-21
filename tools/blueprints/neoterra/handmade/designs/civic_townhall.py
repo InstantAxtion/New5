@@ -209,11 +209,11 @@ def pts(d, y, cells, block):
 
 
 # legend pieces ------------------------------------------------------------------------------------------------
-def CH(back, wood=None, sit=True):
+def CH(back, wood=None, sit=True, arms=False):
     def f(d, x, y, z):
         if d.get(x, y, z) != AIR:
             raise PlanError(f"chair at ({x},{y},{z}) blocked by {d.get(x, y, z)}")
-        d.chair(x, y, z, back, wood or d.S["wood"], sit=sit)
+        d.chair(x, y, z, back, wood or d.S["wood"], sit=sit, arms=arms)
     return f
 
 
@@ -398,11 +398,11 @@ def hw_rooms(d, L):
     leg = base_leg(d, W, plant="potted_red_tulip")
     # ---------------------------------------------------------------- vestibule in the clock tower
     plan(d, Y0, 25, 10, [
-        ">r<",
+        ">r<",  # benches either side of the runner
         ".r.",
         ".r.",
         "prp",
-    ], leg | {">": CH("east", W, sit=False), "<": CH("west", W, sit=False)})
+    ], leg | {">": CH("west", W, sit=False), "<": CH("east", W, sit=False)})
     d.sign(25, 4, 11, "east", ["Notices", "", "Market day:", "Saturday"], W)
     d.sign(27, 4, 11, "west", ["Mind the", "step"], W)
     hang(d, Y0, [(26, 12)])
@@ -549,7 +549,7 @@ def hw_upper(d, L, leg):
         "...........",
         "...rrrrr...",
         "...........",
-        "....." + "^" + "....." if L < 4 else "....." + "^" + "....E",
+        ".....^.....",
         "c.u.._...uc",
     ], leg | {"H": BED("north"), "c": "chest[facing=north,type=single,waterlogged=false]",
               "u": "cauldron", "E": IT("ender_chest", "west")})
@@ -613,11 +613,11 @@ def hw_rear(d, L, leg):
         "..........",
         "c........ ",
         "c...rrrr..",
-        "..>T.rr...",
-        "....r..r..",
+        "..<T.rr...",
+        "...r..r...",
         "u.._HH_..p",
     ], leg | {"c": "chest[facing=east,type=single,waterlogged=false]", "u": "cauldron",
-              "H": BED("south"), ">": CH("east", W, sit=False)})
+              "H": BED("south"), "<": CH("west", W, sit=False)})
     pts(d, y + 1, [(24, 34), (27, 34)], CAN(1))
     pts(d, y + 1, [(24, 32)], "potted_azure_bluet")
     hang(d, y, [(25, 25), (23, 29), (28, 29)])
@@ -650,8 +650,8 @@ def hw_rear(d, L, leg):
         lamppost_hw(d, x, z)
     plan(d, Y0, 18, 43, ["vv"], {"v": OUTSEAT("south", W)})
     plan(d, Y0, 33, 43, ["vv"], {"v": OUTSEAT("south", W)})
-    plan(d, Y0, 18, 44, ["^^"], {"^": OUTSEAT("north", W)}) if False else None
-    wtorch(d, 25, 4, 36, "south")
+    wtorch(d, 24, 4, 36, "south")
+    wtorch(d, 27, 4, 36, "south")
 
 
 def oak(d, x, z, logb="oak_log", leaves="oak_leaves", h=5):
@@ -703,13 +703,13 @@ def hw_square(d, L, leg):
         " .^^.^^.>",          # public benches, jury box on the east wall
         " ........",
         " .^^.^^.>",
-        "........>",
+        " .......>",
         "...___..>",          # judge's bench
         "....v....",
         "..r...r..",
     ], leg)
-    pts(d, Y0 + 1, [(11, 31)], CAN(2))
-    pts(d, Y0 + 1, [(13, 31)], "flower_pot")
+    pts(d, Y0 + 1, [(12, 31)], CAN(2))
+    pts(d, Y0 + 1, [(14, 31)], "flower_pot")
     wbanner(d, 11, 4, 33, "north", "red")
     wbanner(d, 15, 4, 33, "north", "red")
     hang(d, Y0, [(13, 27), (13, 30)])
@@ -720,8 +720,8 @@ def hw_square(d, L, leg):
         " ..<T>..b",
         " ...T...b",
         "........b",
-        "c.......",
-        "...v....",
+        ".c......",
+        "...^....",
         "...__..p",
     ], leg | {"c": "chest[facing=east,type=single,waterlogged=false]"})
     pts(d, 8, [(12, 33)], CAN(2))
@@ -732,15 +732,15 @@ def hw_square(d, L, leg):
     wtorch(d, 14, 4, 23, "north")
     # ---------------------------------------------------------------- watch house: guard room and two cells
     plan(d, Y0, 35, 25, [
-        "c...p....",
+        "c.p......",
         "..^^.....",
         ".<TT>....",
         "..vv.....",
         "........ ",
         "bbIbbbIb ",          # cell front: iron bars and iron doors
-        "h..u.h..u",
-        "..   ...",
-        "..b...b..",
+        "h..u.h.u ",
+        "........ ",
+        ".........",
     ], leg | {"b": "iron_bars", "I": "iron_door[facing=south,half=lower,hinge=left,open=false,powered=false]",
               "h": "hay_block[axis=y]", "u": "cauldron", "c": "chest[facing=south,type=single,waterlogged=false]"})
     for x in (37, 41):
@@ -755,16 +755,16 @@ def hw_square(d, L, leg):
     pts(d, Y0 + 1, [(37, 27)], CAN(2))
     hang(d, Y0, [(37, 27), (39, 31)])
     plan(d, 7, 35, 25, [
-        "H.cH.cH..",          # barrack room
-        "...     .",
-        "....... .",
-        "...^..   ",
-        "..<T>....",
-        "...v.....",
+        "HcHcHcH..",          # barrack room: bunks along the north wall
         ".........",
-        "H.cH.....",
-        "......p..",
-    ], leg | {"H": BED("west"), "c": "chest[facing=north,type=single,waterlogged=false]"})
+        "........ ",
+        "...^.... ",
+        "..<T>... ",
+        "...v.... ",
+        "........ ",
+        ".........",
+        ".c.c..p..",
+    ], leg | {"H": BED("north"), "c": "chest[facing=north,type=single,waterlogged=false]"})
     hang(d, 7, [(38, 29)])
     d.sign(39, 5, 23, "north", ["WATCH", "HOUSE"], W)
     wtorch(d, 38, 4, 23, "north")
@@ -790,11 +790,81 @@ def hw_square(d, L, leg):
         "u..... ",
     ], leg | {"h": "hay_block[axis=y]", "e": "barrel[facing=east,open=false]", "u": "cauldron",
               "c": "chest[facing=east,type=single,waterlogged=false]"})
-    pts(d, 8, [(49, 28)], "wheat_seeds" if False else CAN(3))
+    pts(d, 8, [(49, 28)], CAN(3))
     hang(d, 7, [(50, 28), (50, 32)])
     d.sign(50, 6, 23, "north", ["MARKET", "HOUSE"], W)
 
 
+# ============================================================================================ NEOTERRA
+# Civic centre: glass-fronted council pavilion with a canopy on a paved plaza (L1), maker space and stores
+# wings with a clock fin (L2), council chamber / archive / guest rooms upstairs and roof gardens (L3),
+# a three-storey rear block with canteen, offices and study + fountain plaza (L4), and a six-storey city
+# office tower with its own floors of hand-furnished rooms (L5).
+def th_neoterra(rel, L):
+    d = new("Neoterra", rel, (53, 45, 49), paving="smooth_stone")
+    Q = "smooth_quartz"
+    two = L >= 3
+    nf = 2 if two else 1
+    c = shell(d, 18, 12, 32, 22, nf, "flat", glassy=True, win="nesw")
+    edoor(d, 24, Y0, 12, "south", double=True)
+    d.hut(19, Y0, 13)
+    keep(d, 20, Y0, 13)
+    for x in range(21, 30):                                         # entrance canopy
+        for z in range(8, 12):
+            d.set(x, 6, z, slab("smooth_quartz_slab", "top"))
+    for x in (21, 29):
+        for yy in range(Y0, 6):
+            d.set(x, yy, 8, "quartz_pillar[axis=y]" if L >= 4 else "white_concrete")
+    d.sign(25, 7, 11, "north", ["CIVIC", "CENTRE"], "birch", glow=True, color="cyan") if two else \
+        d.sign(25, 6, 7, "north", ["CIVIC", "CENTRE"], "birch", glow=True, color="cyan")
+    ws = es = None
+    if L >= 2:
+        ws = shell(d, 6, 12, 18, 22, nf, "flat", glassy=True, win="nsw")
+        link(d, 18, Y0, 17, "west")
+        edoor(d, 6, Y0, 17, "east")
+        d.sign(12, 6, 11, "north", ["MAKER", "SPACE"], "birch", glow=True, color="orange")
+        es = shell(d, 32, 12, 44, 22, nf, "flat", glassy=False, win="ns")
+        link(d, 32, Y0, 17, "east")
+        edoor(d, 44, Y0, 17, "west", double=True, along="z")
+        ft = 17 if L == 2 else 28                                   # clock fin with bell frame
+        d.fill(46, Y0, 7, 48, ft, 9, "white_concrete")
+        for y in range(Y0 + 1, ft - 3):
+            d.set(47, y, 7, "cyan_stained_glass")
+        clockface(d, 47, ft - 1, 7, "north", "black_concrete", hand="sea_lantern")
+        for x, z in ((46, 7), (48, 7), (46, 9), (48, 9)):
+            for y in range(ft + 1, ft + 4):
+                d.set(x, y, z, "quartz_pillar[axis=y]")
+        d.fill(46, ft + 4, 7, 48, ft + 4, 9, Q)
+        bell(d, 47, ft + 3, 8)
+        d.set(47, ft + 5, 8, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+    if two:
+        stairs(d, 20, 21, Y0, 7, "east", rails=[(20, 21), (21, 20), (22, 20), (23, 20)])
+        link(d, 18, 7, 17, "east")
+        link(d, 32, 7, 17, "east")
+    r = tw = None
+    if L >= 4:
+        r = shell(d, 18, 22, 32, 34, 3, "flat", glassy=True, win="esw")
+        link(d, 25, Y0, 22, "south")
+        stairs(d, 31, 24, Y0, 7, "south", rails=[(31, 24), (30, 25), (30, 26), (30, 27)])
+        stairs(d, 19, 32, 7, 12, "north", rails=[(19, 32), (20, 31), (20, 30), (20, 29)])
+    if L >= 5:
+        tw = shell(d, 34, 24, 46, 40, 6, "flat", glassy=True, win="nsew")
+        edoor(d, 40, Y0, 40, "north", double=True)
+        for k in range(5):
+            y0 = Y0 + 5 * k
+            if k % 2 == 0:
+                stairs(d, 35, 25, y0, y0 + 5, "south", rails=[(35, 25), (36, 26), (36, 27), (36, 28)])
+            else:
+                stairs(d, 45, 39, y0, y0 + 5, "north", rails=[(45, 39), (44, 38), (44, 37), (44, 36)])
+        d.sign(40, 6, 41, "south", ["CITY", "OFFICES"], "birch", glow=True, color="cyan")
+    nt_rooms(d, L, dict(c=c, ws=ws, es=es, r=r, tw=tw))
+    return d
+
+
+def nt_rooms(d, L, B):
+    pass
+
+
 @design("townhall")
 def townhall_v2(pack, rel, L):
-    return common_materials({"Hearthwood": th_hearthwood}[pack](rel, L))
+    return common_materials({"Hearthwood": th_hearthwood, "Neoterra": th_neoterra}[pack](rel, L))

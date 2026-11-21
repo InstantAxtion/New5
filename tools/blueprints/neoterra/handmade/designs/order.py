@@ -3334,7 +3334,7 @@ def al_hearthwood(rel, L):
     # ---- growth: an apothecaries' row with a physic garden
     if L >= 2:                                                    # still-house for distilling cordials
         b = building(d, 17, 4, 24, 11, nf=1, axis="z", doors=(("north", 20),), chimney=(25, 8))
-        room(d, b, 0, ["V    W", "V     ", "  WWW ", "      ", "K    K", "KK  uK"], lights=[(2, 2)])   # still-house
+        room(d, b, 0, ["V    W", "V     ", "  WWW ", "      ", "K    K", "  K  u"], lights=[(2, 2)])   # still-house
         wlamp(d, 19, 4, 3)
         d.sign(22, 4, 3, "north", ["Still", "House"], "dark_oak")
         lamp_post(d, 15, 1)
@@ -3478,7 +3478,7 @@ def al_cascadia(rel, L):
     if L >= 3:                                                    # tincture workshop with a loft
         b = building(d, 18, 15, 26, 21, nf=2, axis="z", doors=(("north", 22),), chimney=(27, 18))
         room(d, b, 0, ["VpV   W", "       ", "   == C", "    s K", "     mc"], lights=[(3, 2)])   # tincture bench
-        room(d, b, 1, ["KK m KK", "H     H", "      c", "       ", "      K"], lights=[(3, 1)])   # bottle store
+        room(d, b, 1, ["K  m  K", "H     H", "      c", "       ", "      K"], lights=[(3, 1)])   # bottle store
         wlamp(d, 21, 4, 14)
         cart(d, 13, 18, "z")
     if L >= 4:                                                    # bunk cabin for the pickers
@@ -3804,7 +3804,10 @@ def gy_hearthwood(rel, L):
                    (15, 23, "lectern[facing=west,has_book=false,powered=false]")])
     # ---- growth: the parish beside the churchyard
     if L >= 2:                                                    # sexton's cottage (L3: second storey)
-        building(d, 27, 3, 35, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 31),), chimney=(36, 6))
+        b = building(d, 27, 3, 35, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 31),), chimney=(36, 6))
+        room(d, b, 0, ["XG    K", "       ", "  ===  ", "      k", "      c"], lights=[(3, 2)])   # sexton's workshop
+        room(d, b, 1, ["1l   C ", "2     K", "c      "], lights=[(3, 1)])                     # sexton's bedroom
+        wlamp(d, 30, 4, 2)
         flowerbed(d, 28, 1, 29, 2)
         flowerbed(d, 33, 1, 34, 2)
         for x in range(26, 37):
@@ -3813,17 +3816,31 @@ def gy_hearthwood(rel, L):
         lamp_post(d, 25, 2)
     if L >= 3:                                                    # family mausoleums
         for mx in (27, 34):
-            building(d, mx, 30, mx + 5, 35, nf=1, roof="hip", ground="stone_bricks", doors=(("north", mx + 2),), lamps=False)
+            b = building(d, mx, 30, mx + 5, 35, nf=1, roof="hip", ground="stone_bricks",
+                         doors=(("north", mx + 2),), lamps=False)
+            room(d, b, 0, ["Q  Q", "    ", "  qq", "    "])       # family tomb: a stone chest, candles
         path(d, 26, 28, 40, 29)
     if L >= 4:                                                    # church tower beside the chapel
         t = building(d, 17, 18, 21, 22, nf=4, roof="hip", ground="stone_bricks", doors=(("north", None),), stairs=False)
+        room(d, t, 0, ["K x", "   ", "c  "])                   # church tower: ringing chamber,
+        room(d, t, 1, ["K  ", "   ", "m  "])                   # store of candles and cloth,
+        room(d, t, 2, ["H H", "   ", "   "])                   # clock stage
         ladder(d, 20, 21, 2, 17, "west")
         d.set(19, 17, 20, "bell[attachment=ceiling,facing=north,powered=false]") if d.air(19, 17, 20) else None
         for y in range(t.ridge + 1, t.ridge + 3):
             d.set(19, y, 20, "iron_bars")
-        building(d, 38, 3, 44, 9, nf=1, axis="z", doors=(("north", 41),))     # bier house
+        b = building(d, 38, 3, 44, 9, nf=1, axis="z", doors=(("north", 41),))     # bier house
+        room(d, b, 0, ["K   K", "     ", " === ", "     ", "c   H"], lights=[(2, 1)])
     if L >= 5:                                                    # parish hall with the vestry office
-        building(d, 27, 14, 43, 24, nf=2, axis="x", doors=(("north", 35), ("west", 19)), chimney=(44, 19))
+        b = building(d, 27, 14, 43, 24, nf=2, axis="x", doors=(("north", 35), ("west", 19)), chimney=(44, 19))
+        room(d, b, 0, ["MFW=p     KKu=c", "               ", "  nnnn   nnnn  ", "  TTTT   TTTT  ", "  ssss   ssss  ",
+                       "               ", "      nnnn nnnn", "      TTTT TTTT", "      ssss ssss"],
+             lights=[(4, 3), (10, 3), (8, 7)])                                         # parish hall
+        room(d, b, 1, ["xC t   t   t Cx", "   s   s   s   ", "               ", "     nnnnn     ", "C    TTTTT    C",
+                       "     sssss     ", "               ", "      g   g   g", "      PP   PP  "],
+             lights=[(4, 3), (10, 3)])                                                 # vestry office
+        wlamp(d, 34, 4, 13)
+        wlamp(d, 36, 4, 13)
         for x in (40, 42):
             tree(d, x, 2, 33, "dark_oak_log", "spruce_leaves", 4, 2)
     return d
@@ -3915,16 +3932,22 @@ def gy_cascadia(rel, L):
                    (9, 11, "lectern[facing=west,has_book=false,powered=false]")])
     # ---- growth: a mountain parish
     if L >= 2:                                                    # caretaker's cabin (L3: loft)
-        building(d, 30, 3, 38, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 34),), chimney=(39, 6))
+        b = building(d, 30, 3, 38, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 34),), chimney=(39, 6))
+        room(d, b, 0, ["MW F  $", "  nn   ", "  TT  K", "  ss   ", "      c"], lights=[(3, 2)])   # caretaker's kitchen
+        room(d, b, 1, ["1l1  Cl", "2 2    ", "c     K"], lights=[(3, 1)])
         bench(d, 31, 2, "south", 2)
         lamp_post(d, 29, 1)
     if L >= 3:                                                    # coffin maker's workshop
-        building(d, 30, 13, 39, 19, nf=1, axis="z", doors=(("north", 34),))
+        b = building(d, 30, 13, 39, 19, nf=1, axis="z", doors=(("north", 34),))
+        room(d, b, 0, ["XO   GYK", "        ", " ===  = ", "        ", "KK  mm c"], lights=[(3, 2)])   # coffin maker
         for z in range(13, 20):
             d.set(41, 2, z, LOG("stripped_spruce_log", "z"))
             d.set(41, 3, z, LOG("spruce_log", "z")) if z % 2 else None
     if L >= 4:                                                    # log bell tower and a memorial pavilion
         t = building(d, 41, 3, 45, 7, nf=4, roof="hip", doors=(("west", None),), stairs=False)
+        room(d, t, 0, ["x K", "   ", "c  "])
+        room(d, t, 1, ["K  ", "   ", "m  "])
+        room(d, t, 2, ["H  ", "   ", "   "])
         ladder(d, 44, 6, 2, 17, "west")
         d.set(43, 17, 5, "bell[attachment=ceiling,facing=north,powered=false]") if d.air(43, 17, 5) else None
         for x, z in ((29, 23), (37, 23), (29, 31), (37, 31), (33, 23), (33, 31)):
@@ -3946,7 +3969,15 @@ def gy_cascadia(rel, L):
             for y in (2, 3):
                 d.set(43, y, z, LOG("spruce_log" if (y + z) % 2 else "birch_log", "z"))
     if L >= 5:                                                    # meeting hall for wakes and gatherings
-        building(d, 2, 25, 22, 34, nf=2, axis="x", doors=(("north", 12), ("east", 30)), chimney=(1, 30))
+        b = building(d, 2, 25, 22, 34, nf=2, axis="x", doors=(("north", 12), ("east", 30)), chimney=(1, 30))
+        room(d, b, 0, ["MFW=p       KKu=$=c", "                   ", "  nnnnn    nnnnn   ", "  TTTTT    TTTTT   ",
+                       "  sssss    sssss   ", "                  k", "                  K", "      PP   HH    K "],
+             lights=[(4, 3), (13, 3)])                                                 # meeting hall for wakes
+        room(d, b, 1, ["BC f    x     f  CB", "    t         t    ", "   sss       sss   ", "                   ",
+                       "       nnnnn       ", "       TTTTT      c", "       sssss      K", "      PP      PP   "],
+             lights=[(4, 2), (14, 2), (9, 5)])                                         # mourners' parlour
+        wlamp(d, 11, 4, 24)
+        wlamp(d, 13, 4, 24)
         for x in range(39, 46, 3):
             tree(d, x, 2, 33, "spruce_log", "spruce_leaves", 7, 2, cone=True)
     return d
@@ -4030,7 +4061,9 @@ def gy_neoterra(rel, L):
                    (16, 21, "potted_lily_of_the_valley")])
     # ---- growth: a memorial campus
     if L >= 2:                                                    # visitor centre and florist
-        building(d, 26, 3, 35, 10, nf=1, roof="flat", doors=(("north", 30), ("west", 7)))
+        b = building(d, 26, 3, 35, 10, nf=1, roof="flat", doors=(("north", 30), ("west", 7)))
+        room(d, b, 0, ["fff   ff", "        ", "  ===  v", "   n   v", "v      v", "vv  yyvv"], lights=[(3, 2)])   # florist
+        wlamp(d, 29, 4, 2)
         d.sign(33, 5, 2, "north", ["", "FLOWERS"], "birch", glow=True, color="white")
         for x in range(27, 35, 2):
             d.set(x, 1, 1, "moss_block")
@@ -4039,14 +4072,35 @@ def gy_neoterra(rel, L):
         lamp_post(d, 24, 1)
         lamp_post(d, 37, 1)
     if L >= 3:                                                    # columbarium hall
-        building(d, 26, 13, 41, 21, nf=1, roof="flat", doors=(("north", 33), ("west", 17)))
+        b = building(d, 26, 13, 41, 21, nf=1, roof="flat", doors=(("north", 33), ("west", 17)))
+        room(d, b, 0, ["qqqqqq  qqqqqq", "              ", "  ss      ss  ", "              ", "  qqqq  qqqq  ",
+                       "              ", "P   l    l   P"], lights=[(4, 3), (10, 3)],
+             q=("white_concrete", "white_candle[candles=2,lit=false,waterlogged=false]"))          # columbarium
+        wlamp(d, 32, 4, 12)
         for x in range(27, 41, 3):
             d.set(x, 1, 23, "moss_block")
             d.set(x, 2, 23, "azalea")
     if L >= 4:                                                    # chapel of rest
-        building(d, 26, 26, 40, 34, nf=2, roof="flat", doors=(("north", 33),))
+        b = building(d, 26, 26, 40, 34, nf=2, roof="flat", doors=(("north", 33),))
+        room(d, b, 0, ["P           P", " nnnnn nnnnn ", "             ", " nnnnn nnnnn ", "             ",
+                       "    QQQ      ", "      g   g P"], lights=[(3, 2), (9, 2)])                  # chapel of rest
+        room(d, b, 1, ["xC t   t   Cx", "   s   s     ", "             ", "    nnnn     ", "C   TTTT    C",
+                       "    ssss     ", "      g   g  "], lights=[(3, 2), (9, 4)])                  # family room
+        wlamp(d, 32, 4, 25)
     if L >= 5:                                                    # remembrance hall with offices and a roof garden
-        building(d, 2, 28, 22, 40, nf=3, roof="flat", doors=(("north", 12), ("east", 34)))
+        b = building(d, 2, 28, 22, 40, nf=3, roof="flat", doors=(("north", 12), ("east", 34)))
+        room(d, b, 0, ["qqqqqqqq   qqqqqqqq", "                   ", "  ssssss   ssssss  ", "                   ",
+                       "  ssssss   ssssss  ", "                   ", "  ssssss   ssssss  ", "                   ",
+                       "P                 P", "                   ", "      g  ggg  g   "],
+             lights=[(4, 3), (14, 3), (9, 7)], q=("calcite", "white_candle[candles=3,lit=false,waterlogged=false]"))
+        room(d, b, 1, ["xC t  t     t  t Cx", "   s  s     s  s   ", "                   ", "     nnnn  nnnn    ",
+                       "C    TTTT  TTTT   C", "     ssss  ssss    ", "                   ", "g                 g",
+                       "      PP   PP   PP "], lights=[(4, 3), (14, 3), (9, 6)])   # remembrance offices
+        room(d, b, 2, ["BC P    N    P CB  ", "        t          ", "       sss         ", "                   ",
+                       "  nnn        nnn   ", "  TTT        TTT   ", "  sss        sss   ", "                   ",
+                       "                   ", "      g    g    g  "], lights=[(4, 3), (14, 3)])   # family lounge
+        wlamp(d, 11, 4, 27)
+        wlamp(d, 13, 4, 27)
         for x in range(26, 41, 4):
             tree(d, x, 2, 38, "birch_log", "birch_leaves", 4, 1)
     return d

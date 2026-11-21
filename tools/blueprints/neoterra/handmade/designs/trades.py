@@ -5,8 +5,10 @@ Every type grows into a small complex: L1 is one modest, complete building; each
 further buildings with furnished rooms that fit the trade (offices, stores, workshops, staff rooms, yards).
 The per-type docstrings describe each pack's design.
 
-The module-level toolkit below (build / Room / decor helpers) draws pack-styled buildings with storeys, stair
-cores, windows, roofs and lights, and furnishes rooms along their walls while keeping a walking lane free.
+The toolkit below draws pack-styled shells (walls, floors, stair cores, window openings, roofs) with build();
+every room is then furnished by hand with fit() lists of explicit coordinates per building and level, and all
+exterior dressing (window boxes, shutters, lamps, benches, trees) is placed at chosen coordinates. Levels 1-3 are
+demoted to common materials (demote) so premium finishes appear from L4.
 """
 from hm import Design, design, AIR, D4, OPP, CW
 
@@ -1202,7 +1204,7 @@ def builder_cas(rel, L):
     if L >= 5:
         for x in (8, 29):
             lamp_post(d, x, 33, y0, P)
-        for z in (19, 22, 29):
+        for z in (16, 19, 22, 29):
             lamp_post(d, 32, z, y0, P)
         for x in (19, 23, 27):
             tree(d, x, 32, y0, "spruce", 5, 1)
@@ -1896,6 +1898,8 @@ def jack_cas(rel, L):
         fit(d, 6, [("bed", 7, fz, "south"), ("s", 8, fz, sl("spruce", "top")),
                    ("o", 8, fz, "candle[candles=1,lit=false,waterlogged=false]")] +
             [("r", 6, z, 1) for z in (9, 10)[:n1]] + [("s", 11, 8, "chest[facing=south,type=single,waterlogged=false]"),
+                                                      ("rug", 8, 10, 10, 11, "green_carpet"), ("c", 12, 11, "east", False),
+                                                      ("s", 12, 12, sl("spruce", "top")), ("o", 12, 12, pot(0)),
                                                       ("L", 9, 9)], "spruce")
         racks += n1
     # front deck with railing
