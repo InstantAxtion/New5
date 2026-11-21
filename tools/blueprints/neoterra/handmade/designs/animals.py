@@ -3637,6 +3637,7 @@ def hall_nt(d, kind, x1, z1, x2, z2, loft):
         P(E, 3, B, "hay_block[axis=y]")
         P(E, 2, B - 1, BARREL)
         P(E - 1, 2, B, BARREL)
+        P(E - 1, 3, B, "potted_dandelion")
     elif kind == "bees":                                               # honey lab: central island
         isl = ((QT, BREW), (QT, "honey_block"), (WCAULD, None), ("cauldron", None), (QT, "honeycomb_block"),
                (QT, CANDLE4), (QT, BREW), (QT, "honey_block"), (WCAULD, None), (QT, CANDLE2))
@@ -4473,17 +4474,21 @@ def paddock(d, pack, x1, z1, x2, z2, gate_at, high=True):
         d.set(x, 4 if high else 3, z, "lantern[hanging=false,waterlogged=false]")
 
 
-def jump(d, pack, x, z):
-    """Show jump across z..z+3: wing standards with coloured caps, a ground rail and a top pole."""
+def jump(d, pack, x, z, along="z"):
+    """Show jump across z..z+3 (or x..x+3 with along="x"): wing standards with coloured caps, a ground rail
+    and a top pole."""
     w = MAT[pack]["wood"]
     caps = ("cyan_concrete", "white_concrete") if pack == "Neoterra" else ("white_wool", "red_wool")
-    for zz, cap in ((z, caps[0]), (z + 3, caps[1])):
-        d.set(x, 2, zz, f"{w}_fence")
-        d.set(x, 3, zz, f"{w}_fence")
-        d.set(x, 4, zz, cap)
-    for zz in (z + 1, z + 2):
-        d.set(x, 2, zz, trap(w, "north", "top"))
-        d.set(x, 3, zz, f"stripped_{w}_log[axis=z]")
+    cell = (lambda k: (x, z + k)) if along == "z" else (lambda k: (x + k, z))
+    for k, cap in ((0, caps[0]), (3, caps[1])):
+        cx, cz = cell(k)
+        d.set(cx, 2, cz, f"{w}_fence")
+        d.set(cx, 3, cz, f"{w}_fence")
+        d.set(cx, 4, cz, cap)
+    for k in (1, 2):
+        cx, cz = cell(k)
+        d.set(cx, 2, cz, trap(w, "north", "top"))
+        d.set(cx, 3, cz, f"stripped_{w}_log[axis={along}]")
 
 
 def field_shelter(d, pack, x1, z1):
@@ -4505,6 +4510,11 @@ def stackyard(d, pack, cx, cz, ring=False):
     """L5 stackyard: a big hay rick (wrapped bales in Neoterra) centred on (cx, cz), with a fenced ring and a
     gate where the farm has room for it."""
     rick(d, pack, cx - 1, cz - 1, True)
+    if pack == "Neoterra":                                             # wrapped bales stacked as a pyramid
+        for y, r in ((5, 2), (6, 1)):
+            for x in range(cx - r, cx + r + 1):
+                for z in range(cz - r, cz + r + 1):
+                    d.set(x, y, z, "white_wool")
     if ring:
         for x in range(cx - 4, cx + 5):
             for z in range(cz - 4, cz + 5):
@@ -4538,6 +4548,12 @@ def yard_extras(d, pack, core, L):
         paddock(d, pack, 33, 19, 46, 25, (33, 22))
         for x in (37, 42):
             jump(d, pack, x, 20)
+        if L >= 5:                                                     # L5: a third jump, trough, gate lamps
+            jump(d, pack, 39, 24, along="x")
+            d.set(45, 2, 20, "water_cauldron[level=3]")
+            d.set(45, 2, 21, "hay_block[axis=y]")
+            lamp_post(d, 32, 20, pack)
+            lamp_post(d, 32, 24, pack)
     if L >= 5:
         spot = {"cow_cs": (52, 22, True), "cow_hw": (47, 21, False), "cow_nt": (46, 20, False),
                 "pig_nt": (43, 19, False), "stable_nt": (52, 20, False), "stable_hw": (50, 22, True)}.get(n)

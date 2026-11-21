@@ -2867,6 +2867,18 @@ def rg_hearthwood(rel, L):
                        ".........",
                        "sWs.Bs..."])
         put(d, b["S"], [(53, 4, 27, "sign", ("north", ["Malt", "House"])), (52, 4, 27, "torch", "north")])
+        r = b["ridge"]                                     # louvred kiln cowl on the ridge
+        for x in (52, 54):
+            for z in (31, 33):
+                for y in range(r, r + 3):
+                    d.set(x, y, z, "stripped_dark_oak_log[axis=y]")
+        for x, z, f in ((53, 31, "north"), (53, 33, "south"), (52, 32, "west"), (54, 32, "east")):
+            for y in (r + 1, r + 2):
+                d.set(x, y, z, f"spruce_trapdoor[facing={f},half=bottom,open=true,powered=false,waterlogged=false]")
+        for x in range(51, 56):
+            for z in range(30, 35):
+                d.set(x, r + 3, z, stair("mud_brick_stairs", "south" if z > 32 else "north") if z != 32 else slab("mud_brick_slab", "bottom"))
+        d.set(53, r + 4, 32, "lightning_rod[facing=up,powered=false,waterlogged=false]")
         for z in range(23, 28):
             d.set(7, 1, z, "gravel")
             d.set(53, 1, z, "gravel")
@@ -2908,6 +2920,8 @@ def rg_hearthwood(rel, L):
                 for z in (43, 44, 45):
                     d.set(x, 1, z, "farmland[moisture=7]")
                     d.set(x, 2, z, crop)
+        for x in (16, 44):
+            tree(d, x, 39, h=4, leaves="oak_leaves", r=1)
         for x, z in ((14, 41), (46, 41), (14, 47), (46, 47)):  # gate piers with lamps
             d.set(x, 3, z, "cobblestone_wall")
             d.set(x, 4, z, lantern())
@@ -2974,7 +2988,7 @@ def rg_hearthwood(rel, L):
         put(d, b["S"], [(48, 4, 43, "sign", ("west", ["Alms", "House"])), (48, 4, 42, "torch", "west")])
         # ---- Brew House: mash tuns and the brewing bench on the ground floor, kegs along the north wall;
         #      hop and malt loft with the brewer's bed upstairs
-        b = building(d, 47, 16, 59, 22, 2, door="south", doorpos=53, ladder=(48, 17, "south"),
+        b = building(d, 47, 16, 59, 22, 3, door="south", doorpos=53, ladder=(48, 17, "south"),
                      hearth=(58, 19, "west"), pal=2)
         plan(d, b, 0, [".CrC..xxxxb",
                        "....l......",
@@ -2986,10 +3000,14 @@ def rg_hearthwood(rel, L):
                        "h...l......",
                        "s..R@R...vj",
                        "Ws.4t2....."])
+        plan(d, b, 2, [".7..vj.jv.9",               # the brewer's family flat in the roof storey
+                       "...........",
+                       "6..R@R....8",
+                       "...........",
+                       "pKFC.4T2..b"], face={"K": "north", "F": "north"})
         put(d, b["S"], [(55, 4, 23, "sign", ("south", ["Brew", "House"])), (54, 4, 23, "torch", "south"),
                         (51, 2, 23, "barrel", None), (50, 2, 23, "keg", "east"), (56, 2, 23, "box", ("south", "poppy"))])
-        for x in (16, 44):
-            tree(d, x, 39, h=4, leaves="oak_leaves", r=1)
+
     connect_walls(d)
     return d
 
@@ -3017,6 +3035,32 @@ def rg_cascadia(rel, L):
         put(d, b["S"], [(6, 4, 5, "sign", ("north", ["Scale", "House"])), (5, 4, 5, "torch", "north")])
         for x in range(3, 10):                             # the wagon scale plate in front
             d.set(x, 1, 4, "smooth_stone")
+        # hay yard behind the scale house: split-rail pen, three ricks, a farm wagon and the woodpile
+        for x in range(1, 12):
+            d.set(x, 2, 17, "spruce_fence")
+        for z in (14, 15, 16):
+            d.set(1, 2, z, "spruce_fence")
+            d.set(11, 2, z, "spruce_fence")
+        for x0 in (2, 5):
+            for x in (x0, x0 + 1):
+                for z in (15, 16):
+                    d.set(x, 2, z, "hay_block[axis=y]")
+                    d.set(x, 3, z, "hay_block[axis=x]")
+        d.set(8, 2, 16, "hay_block[axis=y]")
+        for x in (7, 10):
+            d.set(x, 2, 14, "spruce_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
+        for x in (8, 9):
+            d.set(x, 2, 14, "spruce_slab[type=top,waterlogged=false]")
+            d.set(x, 3, 14, "hay_block[axis=x]")
+        for z in (15, 16):
+            for y in (2, 3):
+                d.set(10, y, z, "spruce_log[axis=x]")
+        d.set(9, 2, 16, "barrel[facing=up,open=false]")
+        for x, z in ((3, 14), (4, 14), (5, 14)):            # a rick being built: hay on a log bed
+            d.set(x, 2, z, "spruce_log[axis=x]")
+            d.set(x, 3, z, "hay_block[axis=x]")
+        d.set(4, 4, 14, "hay_block[axis=x]")
+        lamppost(d, 12, 13, post="spruce_fence")
     if L >= 3:
         # ---- Feed & Seed: rack bays of barrels and sacks on two floors, loading dock on the siding
         b = building(d, 45, 6, 55, 14, 2, door="north", ladder=(54, 13, "north"), pal=4)
@@ -3040,6 +3084,34 @@ def rg_cascadia(rel, L):
         put(d, b["S"], [(50, 4, 5, "sign", ("north", ["Feed &", "Seed"])), (46, 2, 4, "barrel", None),
                         (48, 2, 4, "barrel", None), (53, 2, 4, "barrel", None), (54, 2, 4, "sacks", "white_wool")])
         eaves(d, [(44, 5, "butt"), (56, 5, "logs"), (44, 15, "logs"), (56, 15, "butt")])
+        # ---- water tower: a stave tank on a log trestle, the spout swung toward the yard
+        for x in (48, 52):
+            for z in (44, 48):
+                for y in range(2, 6):
+                    d.set(x, y, z, "spruce_log[axis=y]")
+        for x in range(48, 53):
+            d.set(x, 4, 46, "stripped_spruce_log[axis=x]")
+        for x in range(47, 54):
+            for z in range(43, 50):
+                d.set(x, 6, z, "spruce_planks" if 48 <= x <= 52 and 44 <= z <= 48 else slab("spruce_slab", "top"))
+        for x in range(48, 53):
+            for z in range(44, 49):
+                ring_ = x in (48, 52) or z in (44, 48)
+                corner = x in (48, 52) and z in (44, 48)
+                for y in range(7, 11):
+                    if corner:
+                        d.set(x, y, z, "spruce_log[axis=y]")
+                    elif ring_:
+                        d.set(x, y, z, "stripped_spruce_log[axis=y]" if y != 9 else "dark_oak_planks")
+                    else:
+                        d.set(x, y, z, WATER)
+                d.set(x, 11, z, slab("dark_oak_slab", "bottom") if ring_ else "dark_oak_planks")
+        d.set(50, 12, 46, "dark_oak_slab[type=bottom,waterlogged=false]")
+        for y in range(7, 10):
+            d.set(53, y, 46, "chain[axis=y,waterlogged=false]")
+        d.set(53, 10, 46, "spruce_fence")
+        for y in range(2, 7):
+            d.set(48, y, 49, "ladder[facing=south,waterlogged=false]")
     if L >= 4:
         # ---- Feed Mill: millstones and mixing tub on the ground floor, repair shop above
         b = building(d, 2, 33, 12, 42, 2, door="north", ladder=(11, 41, "north"), pal=5)
@@ -3137,6 +3209,29 @@ def rg_cascadia(rel, L):
                        "h..l...",
                        "hsXXX.b"], face={"G": "south", "A": "south"})
         put(d, b["S"], [(13, 4, 47, "sign", ("east", ["Tool", "Shed"]))])
+        # ---- Post & Telegraph: post counter and sorting shelves below, the operator's desk and family above
+        b = building(d, 1, 19, 11, 28, 2, door="east", doorpos=23, ladder=(2, 20, "south"),
+                     hearth=(2, 25, "east"), pal=2)
+        plan(d, b, 0, [".9779.Q.b",
+                       "...l.....",
+                       "..cdcec..",
+                       "...3.3...",
+                       ".........",
+                       "...4T2...",
+                       "..l......",
+                       "pb.B..4.b"], face={"Q": "south"})
+        plan(d, b, 1, [".m.d..vjv",
+                       "...3.....",
+                       "6.......8",
+                       "..R@R....",
+                       "..RoR...8",
+                       "......l..",
+                       "4t2......",
+                       "KFC....Bp"], face={"K": "north", "F": "north"})
+        put(d, b["S"], [(12, 4, 24, "sign", ("east", ["Post &", "Telegraph"])), (12, 4, 22, "torch", "east"),
+                        (12, 2, 21, "barrel", None), (12, 2, 26, "chair", "east"), (12, 2, 27, "chair", "east")])
+        for y in range(2, 13):                             # telegraph pole by the door
+            d.set(13, y, 19, "spruce_fence" if y < 12 else "spruce_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
         for x in (16, 32):
             lamppost(d, x, 34, post="spruce_fence")
         for x, z in ((14, 48), (43, 48), (55, 48)):

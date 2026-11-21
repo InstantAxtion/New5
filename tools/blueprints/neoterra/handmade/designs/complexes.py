@@ -6229,6 +6229,20 @@ def grow_sky_nt(d, L):
         for x, z in cells(17, 26, 49, 27):
             d.set(x, 1, z, "smooth_stone")
         flowerbed(d, 34, 24, 37, 25, 2, P)
+        # pool cabana: quartz posts, slatted roof, a juice bar and two loungers
+        for x, z in cells(16, 29, 19, 33):
+            d.set(x, 1, z, "smooth_quartz")
+            d.set(x, 5, z, slab("birch") if (x + z) % 2 else slab("smooth_quartz"))
+        for x, z in ((16, 29), (19, 29), (16, 33), (19, 33)):
+            for y in (2, 3, 4):
+                d.set(x, y, z, "quartz_pillar[axis=y]")
+        for z in (30, 31, 32):
+            d.set(19, 2, z, "barrel[facing=west,open=false]" if z != 31 else "smooth_quartz")
+            d.set(19, 3, z, slab("smooth_quartz"))
+        d.chair(18, 2, 30, "east", "birch", sit=False)
+        d.chair(18, 2, 32, "east", "birch", sit=False)
+        d.chair(16, 2, 31, "west", "birch", sit=False)
+        d.set(17, 4, 31, lantern())
     if L >= 4:                                        # sky bridge A<->B, south tower C
         for x in range(34, 39):
             for z in (18, 19, 20):
@@ -6308,6 +6322,16 @@ def grow_sky_hw(d, L):
         for x, z in ((24, 28), (38, 28), (24, 34), (38, 34)):
             flowerbed(d, x, z, x + 1, z + 1, 2, P)
         bench(d, 26, 31, 2, P, "west")
+        # pentice along the court side of the south range: oak posts, tiled lean-to, benches and lamps
+        for x in range(16, 47):
+            d.set(x, 6, 37, stair("granite", "north"))
+        for x in (16, 20, 24, 28, 34, 38, 42, 46):
+            for y in range(2, 6):
+                d.set(x, y, 37, log("oak_log", "y"))
+        for x in (18, 22, 26, 36, 40, 44):
+            d.chair(x, 2, 37, "south", "oak", sit=False)
+        for x in (20, 38):
+            d.set(x + 1, 5, 37, lantern())
         bench(d, 36, 31, 2, P, "east")
     if L >= 5:                                        # link ranges (coach houses) closing the court corners
         lv += raise_building(d, P, (2, 30, 14, 37), 2, 5, HW_LW_PLANS, HW_LW_FLOORS, "jungle", "jungle", extra=[(x, z) for x in (4, 5, 6) for z in (0, 1)],
@@ -6771,6 +6795,14 @@ def grow_twin_hw(d, L):
         flowerbed(d, 34, 14, 37, 15, 2, P)
         flowerbed(d, 41, 14, 44, 15, 2, P)
         d.sign(39, 5, 13, "south", ["Clerk of", "Works"], "dark_oak")
+        for x in range(33, 46):                         # picket fence and gate round the clerk's front garden
+            if x != 39:
+                d.set(x, 2, 16, fence("oak"))
+        d.set(39, 2, 16, gate("oak", "south"))
+        d.chair(38, 2, 14, "west", "oak", sit=False)
+        d.chair(40, 2, 14, "east", "oak", sit=False)
+        lamp_post(d, 33, 15, 2, P, 3)
+        lamp_post(d, 45, 15, 2, P, 3)
     if L >= 4:                                        # joinery shop with timber store above
         lv += raise_building(d, P, (33, 17, 53, 31), 2, 2, HW_JOIN_PLANS, ["bench", "store"], "dark_oak", "oak",
                              roof="gable", axis="x", doors=[(43, 17, "north"), (33, 24, "west")], st=HW_YARD_JOINERY)
@@ -6879,6 +6911,19 @@ def grow_twin_ca(d, L):
         d.set(51, 2, 35, "barrel[facing=up,open=false]")
         d.set(55, 2, 39, "barrel[facing=up,open=false]")
         d.set(55, 2, 35, "hay_block[axis=y]")
+        # cookhouse porch: log posts, plank floor, wash bench and the dinner bell
+        for x, z in cells(32, 32, 48, 33):
+            d.set(x, 1, z, "spruce_planks")
+            d.set(x, 6, z, slab("spruce"))
+        for x in (32, 36, 44, 48):
+            for y in range(2, 6):
+                d.set(x, y, 32, log("spruce_log", "y"))
+        d.chair(34, 2, 33, "south", "spruce", sit=False)
+        d.chair(35, 2, 33, "south", "spruce", sit=False)
+        d.set(46, 2, 33, "water_cauldron[level=3]")
+        d.set(47, 2, 33, slab("spruce", "top"))
+        d.set(42, 2, 32, "bell[attachment=floor,facing=north,powered=false]")
+        d.set(38, 5, 33, lantern())
     return d
 
 
