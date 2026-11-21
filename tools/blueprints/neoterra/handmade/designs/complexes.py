@@ -377,6 +377,28 @@ def flat_hw(rel, L):
     d.set(1, y, 10 if nk == 0 else 8, "potted_oxeye_daisy") if nk == 0 else None
     for x, z in ((2, 1), (8, 2), (3, 8), (8, 8), (5, 4)):
         d.set(x, 4, z, lantern())
+    # round 5: parlour settee + bookcases, kitchen dresser, bedroom dressing table, children's desk
+    d.set(4, y, 1, "bookshelf")
+    d.set(4, y + 1, 1, "bookshelf")
+    d.set(4, y, 2, "bookshelf")
+    d.set(4, y + 1, 2, "potted_fern")
+    d.set(2, y, 2, slab("dark_oak", "top"))              # tea table on the rug
+    d.set(2, y + 1, 2, "flower_pot")
+    d.chair(2, y, 3, "south", "dark_oak", sit=False)
+    d.chair(3, y, 3, "south", "dark_oak", sit=False)
+    if L < 2:
+        d.chair(0, y, 1, "west", "dark_oak", sit=False)
+    d.set(6, y, 3, "potted_fern")
+    d.set(6, y, 6, slab("dark_oak", "top"))              # dressing table
+    d.set(6, y + 1, 6, "potted_allium")
+    d.set(6, y + 2, 6, "glass_pane")
+    d.chair(6, y, 7, "west", "dark_oak", sit=False)
+    d.set(10, y, 10, "potted_red_tulip")
+    d.set(3, y, 6, "chest[facing=south,type=single,waterlogged=false]")   # toy chest
+    rugc(d, 2, 7, 3, 8, y, ("light_blue", "lime", "yellow", "pink", "purple")[L - 1])
+    if nk < 2:
+        d.set(1, y, 9, slab("oak", "top"))
+        d.set(1, y + 1, 9, "potted_dandelion")
     return d
 
 
@@ -448,6 +470,20 @@ def flat_ca(rel, L):
     d.set(6, y, 9 - 1, "potted_fern")
     for x, z in ((2, 2), (2, 8), (8, 2), (8, 7), (2, 5)):
         d.set(x, 4, z, lantern())
+    # round 5: bedroom chair and chest, bunk-room desk, great-room fireside bench and wood store
+    d.chair(4, y, 2, "east", "spruce", sit=False)
+    d.set(0, y, 3, "chest[facing=east,type=single,waterlogged=false]")
+    d.set(4, y, 7, "chest[facing=west,type=single,waterlogged=false]")
+    d.set(3, y, 9, slab("spruce", "top"))
+    d.set(3, y + 1, 9, lantern(False))
+    rugc(d, 2, 7, 3, 8, y, ("green", "orange", "light_gray", "brown", "red")[L - 1])
+    d.chair(10, y, 2, "east", "spruce", sit=False)
+    d.chair(10, y, 3, "east", "spruce", sit=False)
+    d.set(10, y, 4, slab("spruce", "top"))
+    d.set(10, y + 1, 4, "potted_fern")
+    d.set(6, y, 4, log("spruce_log", "x"))               # firewood box
+    d.set(6, y + 1, 4, log("spruce_log", "x"))
+    d.set(10, y, 6, "potted_spruce_sapling")
     return d
 
 
@@ -500,6 +536,40 @@ def skytower_nt(rel, L):
         d.set(8, s + 4, 15, endrod("down"))
         d.set(16, s + 4, 15, endrod("down"))
         d.sign(12, s + 2, 15, "south", ["", f"FLAT {S.index(s) + 1}"], "birch", glow=True, color="cyan")
+    # each landing has its own corner (east end of the stair hall, x13-18): bench / parcel lockers / book swap /
+    # planter seat; and its own doormat colour
+    for f, s in enumerate(S):
+        Y = s + 1
+        rugc(d, 11, 15, 12, 15, Y, ("light_blue", "gray", "lime", "orange")[f])
+        if f == 0:
+            d.chair(15, Y, 17, "south", "birch", sit=False)
+            d.chair(16, Y, 17, "south", "birch", sit=False)
+            d.set(17, Y, 17, "potted_bamboo")
+            d.set(18, Y, 17, slab("birch", "top"))
+            d.set(18, Y + 1, 17, "potted_white_tulip")
+            d.set(18, Y, 15, "potted_bamboo")
+        elif f == 1:
+            for z in (15, 16, 17):
+                d.set(18, Y, z, "barrel[facing=west,open=false]")
+                d.set(18, Y + 1, z, "barrel[facing=west,open=false]")
+            d.set(14, Y, 17, "potted_cactus")
+            d.set(17, Y + 2, 16, endrod("west"))
+        elif f == 2:
+            d.set(18, Y, 16, "bookshelf")
+            d.set(18, Y + 1, 16, "bookshelf")
+            d.set(18, Y, 17, "bookshelf")
+            d.set(18, Y + 1, 17, "potted_fern")
+            d.chair(17, Y, 15, "east", "birch", sit=False)
+            d.chair(16, Y, 17, "south", "birch", sit=False)
+            d.set(17, Y, 17, slab("birch", "top"))
+            d.set(17, Y + 1, 17, lantern(False))
+        else:
+            for x in (16, 17, 18):
+                d.set(x, Y, 17, "moss_block")
+                d.set(x, Y + 1, 17, ("azalea", "fern", "flowering_azalea")[x - 16])
+            d.chair(14, Y, 17, "south", "birch", sit=False)
+            d.chair(15, Y, 17, "south", "birch", sit=False)
+            d.set(18, Y, 16, "potted_bamboo")
     flight(d, 6, 16, 2, 6, "east", "smooth_quartz")
     flight_rails(d, 6, 16, 2, 6, "east", "glass_pane")
     for f, s in enumerate(S):
@@ -569,12 +639,16 @@ def skytower_nt(rel, L):
     d.set(14, 2, 12, "potted_bamboo")
     seats += 1
     rugc(d, 9, 8, 12, 11, 2, "cyan")
-    if L >= 2:
-        for x in (9, 10, 11):
-            d.chair(x, 2, 11, "south", "birch")
-        seats += 3
-        for x in (9, 10, 11):
-            d.set(x, 2, 10, slab("smooth_quartz", "top"))
+    for x in (9, 10, 11):                                # residents' lounge: sofa and coffee table (all levels)
+        d.chair(x, 2, 11, "south", "birch")
+    seats += 3
+    for x in (9, 10, 11):
+        d.set(x, 2, 10, slab("smooth_quartz", "top"))
+    d.set(9, 3, 10, "potted_azure_bluet")
+    d.set(11, 3, 10, "candle[candles=3,lit=false,waterlogged=false]")
+    d.set(12, 2, 11, slab("smooth_quartz", "top"))       # side table with a lamp
+    d.set(12, 3, 11, lantern(False))
+    d.set(12, 2, 8, "potted_bamboo")
     if L >= 3:
         for x in (9, 10, 11):
             d.chair(x, 2, 9, "north", "birch")
@@ -609,12 +683,26 @@ def skytower_nt(rel, L):
     for x in range(7, 12):                               # railing round the stair well
         d.set(x, Y, 15, "glass_pane")
     d.set(7, Y, 16, "glass_pane")
-    rugc(d, px1 + 1, PZ + 1, px2 - 1, 14, Y, "light_gray")
+    for x in range(px1 + 1, 13):                         # bedside carpet run in front of the beds
+        if PZ + 3 <= 14:
+            d.set(x, Y, PZ + 3, "light_gray_carpet")
+    d.set(14, Y, 15, slab("birch", "top"))               # dining table by the kitchenette
+    d.set(15, Y, 15, slab("birch", "top"))
+    d.set(14, Y + 1, 15, "potted_white_tulip")
+    d.set(15, Y + 1, 15, "candle[candles=3,lit=false,waterlogged=false]")
+    d.chair(14, Y, 14, "north", "birch", sit=False)
+    d.chair(15, Y, 14, "north", "birch", sit=False)
+    d.set(5, Y, 17, slab("birch", "top"))                # study desk in the back corner
+    d.set(5, Y + 1, 17, endrod("up"))
+    d.chair(6, Y, 17, "east", "birch", sit=False)
+    d.set(5, Y, 16, "bookshelf")
+    d.set(5, Y + 1, 16, "potted_bamboo")
     bx = [6, 5, 9, 11, 13]
     nb = L
     for i in range(nb):
         x = bx[i]
-        d.bed(x, Y, PZ + 1, "north", "cyan")
+        d.bed(x, Y, PZ + 1, "north", ("cyan", "light_blue", "white", "lime", "light_gray")[i])
+        d.set(x, Y + 3, PZ + 2, endrod("down"))          # reading light over each bed
     if L == 1:
         nightstand(d, 5, Y, PZ + 1, "birch", endrod("up"))
     else:
@@ -2489,7 +2577,6 @@ NT_CLUB_PLANS = {
         X 0 6 white_wool 2
         %s
         %s
-        R 1 3 2 8 red
         X 0 12 jukebox
         S 1 12 pot
         X 2 12 smoker:n
@@ -2650,11 +2737,6 @@ NT_B_PLANS = {
 }
 
 
-def nt_b_floors(n):
-    mid = (["office", "cowork"] * 9)[:max(0, n - 4)]
-    return (["restaurant", "kitchen"] + mid + ["sky", "bar"])[:n] if n >= 4 else ["restaurant", "kitchen", "sky"][:n]
-
-
 # Neoterra sky tower – south garden-pavilion tower C (11 x 13, stair lx 8-10 / lz 0-6, door lx 5 lz 0)
 NT_C_PLANS = {
     "cafe": """
@@ -2809,9 +2891,538 @@ NT_C_PLANS = {
 }
 
 
+# ---- round 5: the tall towers' middle storeys are composed from hand-made half-floor rooms. Every storey pairs a
+# north room (beside the stair) with a south room behind a glass partition; the pairings and rug colours are listed
+# by hand below so no two storeys are alike.
+# Tower B (9 x 13; stair lx 6-8 / lz 0-6): north rooms use lx 0-5 / lz 0-6 (lx 5 lz 6 kept free), partition lz 7
+# lx 0-4, south rooms lx 0-8 / lz 8-12 (lx 5 lz 8 kept free).
+NT_B_NORTH = {
+    "reception": """
+        X 1 2 counter
+        X 2 2 counter
+        X 3 2 counter
+        X 3 2 lamp 1
+        C 2 1 n
+        P 0 0 potted_bamboo
+        P 5 0 potted_white_tulip
+        C 0 4 w
+        C 0 5 w
+        T 1 5 potted_azure_bluet
+        R 1 4 3 5 {rug}
+        L 2 2
+        L 2 5
+    """,
+    "meeting": """
+        T 1 3
+        T 2 3 lamp
+        T 3 3
+        C 1 2 n
+        C 2 2 n
+        C 3 2 n
+        C 1 4 s
+        C 2 4 s
+        C 3 4 s
+        X 0 3 black_concrete 1
+        K 0 0 3
+        P 5 0 potted_bamboo
+        X 0 6 barrel:e
+        L 2 3
+    """,
+    "print": """
+        X 0 1 carto
+        X 0 2 barrel:e
+        X 0 3 barrel:e
+        X 0 4 chest:e
+        X 0 5 chest:e
+        S 2 0 pot
+        S 3 0 candle
+        X 4 0 loom:s
+        C 2 3 w
+        T 3 3 lamp
+        R 2 4 3 5 {rug}
+        P 0 6 potted_bamboo
+        L 2 3
+    """,
+    "kitchenette": """
+        X 0 0 sink
+        X 1 0 smoker:s
+        X 2 0 counter
+        X 2 0 pot 1
+        X 3 0 iron_block
+        X 3 0 iron_block 1
+        T 2 3 potted_white_tulip
+        T 2 4
+        C 1 3 w
+        C 3 3 e
+        C 1 4 w
+        C 3 4 e
+        X 0 6 barrel:e
+        L 2 3
+    """,
+    "manager": """
+        T 1 2 lamp
+        T 2 2
+        C 1 1 n
+        C 1 3 s
+        C 2 3 s
+        K 0 6 3
+        K 1 6 3
+        Q 2 6 n 2
+        X 4 0 barrel:s
+        P 5 0 potted_bamboo
+        R 1 4 3 5 {rug}
+        L 2 2
+        L 2 5
+    """,
+    "lounge": """
+        C 0 2 w
+        T 0 3 potted_azure_bluet
+        C 0 4 w
+        C 1 6 s
+        C 2 6 s
+        C 3 6 s
+        T 2 5 candle
+        K 3 0 3
+        K 4 0 3
+        P 5 0 potted_bamboo
+        R 1 2 3 4 {rug}
+        L 2 3
+        L 2 5
+    """,
+    "quiet": """
+        K 0 0 3
+        K 0 1 3
+        K 0 2 3
+        K 1 0 3
+        K 2 0 3
+        T 2 4 lamp
+        C 1 4 w
+        C 3 4 e
+        X 4 0 lectern:s
+        P 0 6 potted_white_tulip
+        R 1 5 3 5 {rug}
+        L 2 3
+    """,
+}
+NT_B_SOUTH = {
+    "openplan": """
+        T 0 9
+        T 1 9 lamp
+        C 0 10 s
+        C 1 10 s
+        T 3 9
+        T 4 9 lamp
+        C 3 10 s
+        C 4 10 s
+        T 7 9
+        T 7 10 lamp
+        C 8 9 e
+        C 8 10 e
+        X 0 12 barrel:n
+        X 1 12 chest:n
+        P 4 12 potted_bamboo
+        P 8 12 potted_bamboo
+        L 1 10
+        L 4 10
+        L 7 11
+    """,
+    "board": """
+        T 2 10
+        T 3 10 lamp
+        T 4 10
+        T 5 10 potted_white_tulip
+        T 6 10
+        C 2 9 n
+        C 3 9 n
+        C 4 9 n
+        C 6 9 n
+        C 2 11 s
+        C 3 11 s
+        C 4 11 s
+        C 5 11 s
+        C 6 11 s
+        C 1 10 w
+        C 7 10 e
+        X 4 12 note
+        P 0 12 potted_bamboo
+        P 8 12 potted_bamboo
+        L 3 10
+        L 6 10
+    """,
+    "studio": """
+        X 0 9 loom:e
+        X 0 10 carto
+        X 0 11 lectern:e
+        X 0 12 chest:e
+        T 3 10
+        T 4 10 lamp
+        C 3 11 s
+        C 4 11 s
+        X 7 12 barrel:n
+        S 8 12 pot
+        X 8 9 white_wool
+        X 8 9 pot 1
+        R 2 9 4 9 {rug}
+        L 2 10
+        L 6 10
+    """,
+    "games": """
+        T 1 10 candle
+        C 0 10 w
+        C 2 10 e
+        C 1 9 n
+        C 1 11 s
+        T 5 10
+        C 4 10 w
+        C 6 10 e
+        X 8 12 jukebox
+        X 7 12 note
+        X 0 12 barrel:n
+        P 8 8 potted_bamboo
+        R 4 11 6 12 {rug}
+        L 1 10
+        L 5 10
+    """,
+    "gym": """
+        X 0 9 andesite
+        X 0 9 plate 1
+        X 0 10 andesite
+        X 0 10 plate 1
+        X 1 12 target
+        X 2 12 chest:n
+        X 3 12 chest:n
+        S 4 12 wool
+        X 7 12 sink
+        P 8 12 potted_bamboo
+        X 8 9 target
+        X 8 9 chain 1
+        R 3 9 6 11 {rug}
+        L 2 10
+        L 6 10
+    """,
+    "library": """
+        K 0 12 3
+        K 1 12 3
+        K 2 12 3
+        K 3 12 3
+        K 0 11 3
+        K 0 10 3
+        T 4 10 lamp
+        T 5 10
+        C 4 9 n
+        C 5 9 n
+        C 4 11 s
+        C 5 11 s
+        C 8 11 e
+        T 8 12 candle
+        P 8 9 potted_bamboo
+        L 4 10
+        L 7 11
+    """,
+    "fireside": """
+        F 8 10 w
+        C 6 9 w
+        C 6 10 w
+        C 6 11 w
+        T 3 10 potted_azure_bluet
+        C 2 10 w
+        C 3 9 n
+        K 0 12 3
+        K 1 12 3
+        P 0 8 potted_bamboo
+        X 4 12 jukebox
+        R 4 9 5 11 {rug}
+        L 5 10
+        L 2 10
+    """,
+}
+NT_B_MID = [("reception", "openplan", "cyan"), ("meeting", "board", "gray"), ("print", "studio", "yellow"),
+            ("kitchenette", "games", "orange"), ("manager", "gym", "lime"), ("lounge", "library", "brown"),
+            ("quiet", "fireside", "red"), ("reception", "games", "light_blue"), ("meeting", "gym", "purple"),
+            ("print", "library", "green"), ("kitchenette", "fireside", "pink"), ("manager", "openplan", "blue"),
+            ("lounge", "board", "magenta"), ("quiet", "studio", "white")]
+
+# Tower C (11 x 13; stair lx 8-10 / lz 0-6): north rooms lx 0-7 / lz 0-6 (lx 7 lz 6 kept free), partition lz 7
+# lx 0-6, south rooms lx 0-10 / lz 8-12 (lx 7 lz 8 kept free).
+NT_C_NORTH = {
+    "pottery": """
+        X 0 1 furnace:e
+        X 0 2 blast:e
+        X 0 3 cauldron
+        T 2 3 pot
+        T 3 3 pot
+        C 2 2 n
+        C 3 4 s
+        X 6 0 barrel:s
+        S 5 0 pot
+        P 0 6 potted_bamboo
+        R 2 5 4 5 {rug}
+        L 2 3
+    """,
+    "florist": """
+        X 0 0 composter
+        X 0 1 barrel:e
+        X 2 2 moss_block
+        X 3 2 moss_block
+        X 4 2 moss_block
+        X 2 2 flowering_azalea 1
+        X 3 2 fern 1
+        X 4 2 azalea 1
+        T 2 5
+        T 3 5 potted_red_tulip
+        C 4 5 e
+        X 6 0 sink
+        P 7 0 potted_white_tulip
+        L 3 3
+    """,
+    "music": """
+        X 1 1 note
+        X 2 1 note
+        X 3 1 jukebox
+        C 1 2 s
+        C 2 2 s
+        C 1 5 n
+        C 2 5 n
+        C 3 5 n
+        K 0 6 2
+        X 6 0 note
+        R 1 3 3 4 {rug}
+        L 2 3
+    """,
+    "nook": """
+        K 0 0 3
+        K 0 1 3
+        K 0 2 3
+        K 1 0 3
+        T 3 3 lamp
+        C 2 3 w
+        C 4 3 e
+        C 3 5 s
+        P 6 0 potted_bamboo
+        X 6 6 lectern:n
+        R 2 4 4 4 {rug}
+        L 3 3
+    """,
+    "playroom": """
+        R 1 1 4 4 {rug}
+        X 1 1 red_wool
+        X 4 1 yellow_wool
+        X 4 1 blue_wool 1
+        X 0 6 chest:e
+        X 1 6 chest:n
+        T 2 4 cake
+        C 2 5 s
+        P 6 0 potted_white_tulip
+        L 2 3
+    """,
+    "tearoom": """
+        T 2 2 candle
+        C 1 2 w
+        C 3 2 e
+        T 2 5 potted_azure_bluet
+        C 1 5 w
+        C 3 5 e
+        X 6 0 counter
+        X 6 0 brew 1
+        X 5 0 smoker:s
+        P 0 0 potted_bamboo
+        L 2 3
+        L 2 5
+    """,
+    "artstudio": """
+        X 2 2 lectern:s
+        C 2 3 s
+        X 5 2 lectern:s
+        C 5 3 s
+        X 0 0 loom:e
+        X 0 1 carto
+        X 0 6 chest:e
+        R 1 4 5 5 {rug}
+        P 7 0 potted_bamboo
+        L 3 3
+    """,
+    "tailor": """
+        X 0 1 loom:e
+        X 0 2 loom:e
+        X 0 3 chest:e
+        T 3 2
+        T 4 2
+        X 3 2 white_carpet 1
+        C 3 3 s
+        C 4 3 s
+        X 6 0 barrel:s
+        P 7 0 potted_white_tulip
+        R 2 5 4 5 {rug}
+        L 3 3
+    """,
+}
+NT_C_SOUTH = {
+    "yoga": """
+        R 1 9 1 11 {rug}
+        R 3 9 3 11 {rug}
+        R 5 9 5 11 {rug}
+        X 0 12 chest:e
+        S 1 12 wool
+        S 2 12 wool
+        X 3 12 sink
+        P 10 12 potted_bamboo
+        P 0 8 potted_bamboo
+        X 10 8 bell
+        P 9 12 potted_white_tulip
+        L 3 10
+        L 8 10
+    """,
+    "cafe": """
+        T 2 10 candle
+        C 1 10 w
+        C 3 10 e
+        T 6 10
+        C 5 10 w
+        C 7 10 e
+        X 0 12 counter
+        X 1 12 counter
+        X 0 12 brew 1
+        X 2 12 smoker:n
+        X 3 12 barrel:n
+        T 9 11 potted_white_tulip
+        C 9 10 n
+        C 10 11 e
+        L 2 10
+        L 6 10
+        L 9 11
+    """,
+    "library": """
+        K 0 12 3
+        K 1 12 3
+        K 2 12 3
+        K 3 12 3
+        K 4 12 3
+        K 0 10 3
+        K 0 11 3
+        T 3 10 lamp
+        T 4 10
+        C 3 9 n
+        C 4 9 n
+        C 3 11 s
+        C 4 11 s
+        Q 10 12 w 2
+        T 8 10 candle
+        C 9 10 e
+        L 3 10
+        L 9 10
+    """,
+    "cards": """
+        T 2 10 candle
+        C 1 10 w
+        C 3 10 e
+        C 2 9 n
+        C 2 11 s
+        T 6 11
+        C 5 11 w
+        C 7 11 e
+        C 6 12 s
+        X 10 12 jukebox
+        X 9 12 note
+        P 10 8 potted_bamboo
+        L 2 10
+        L 6 11
+    """,
+    "gallery": """
+        G 0 10 e
+        G 0 12 e
+        G 10 10 w
+        X 3 10 sslab
+        X 3 10 pot 1
+        X 6 10 sslab
+        X 6 10 potted_flowering_azalea_bush 1
+        C 4 12 s
+        C 5 12 s
+        X 9 12 lectern:n
+        P 10 8 potted_bamboo
+        R 3 9 6 9 {rug}
+        L 3 10
+        L 6 10
+        L 9 11
+    """,
+    "lounge": """
+        F 0 10 e
+        C 2 9 e
+        C 2 10 e
+        C 2 11 e
+        T 4 10 potted_azure_bluet
+        K 0 12 2
+        X 10 12 jukebox
+        T 9 10
+        C 9 11 s
+        C 10 10 e
+        R 3 9 5 11 {rug}
+        L 2 10
+        L 9 10
+    """,
+    "workshop": """
+        X 0 10 craft
+        X 0 11 smith
+        X 0 12 fletch
+        X 1 12 grind:n
+        X 2 12 chest:n
+        T 4 10
+        T 5 10 lamp
+        C 4 11 s
+        C 5 11 s
+        X 10 12 barrel:n
+        X 10 11 barrel:w
+        P 10 8 potted_bamboo
+        L 3 10
+        L 8 10
+    """,
+    "cinema": """
+        X 0 9 white_wool 1
+        X 0 10 white_wool 1
+        X 0 11 white_wool 1
+        X 0 9 white_wool 2
+        X 0 10 white_wool 2
+        X 0 11 white_wool 2
+        C 3 9 e
+        C 3 10 e
+        C 3 11 e
+        C 5 9 e
+        C 5 10 e
+        C 5 11 e
+        X 10 12 jukebox
+        S 9 12 pot
+        L 4 10
+        L 8 11
+    """,
+}
+NT_C_MID = [("pottery", "yoga", "lime"), ("florist", "cafe", "white"), ("music", "library", "red"),
+            ("nook", "cards", "green"), ("playroom", "gallery", "yellow"), ("tearoom", "lounge", "pink"),
+            ("artstudio", "workshop", "orange"), ("tailor", "cinema", "purple"), ("pottery", "cards", "light_blue"),
+            ("florist", "gallery", "cyan"), ("music", "lounge", "brown"), ("nook", "workshop", "gray"),
+            ("playroom", "cinema", "magenta"), ("tearoom", "yoga", "blue"), ("artstudio", "cafe", "light_gray"),
+            ("tailor", "library", "black")]
+
+
+def _compose(plans, north, south, mid, wall):
+    names = []
+    for i, (a, b, rug) in enumerate(mid):
+        key = f"{a}+{b}#{i}"
+        plans[key] = wall + north[a].replace("{rug}", rug) + south[b].replace("{rug}", rug)
+        names.append(key)
+    return names
+
+
+NT_B_MIDNAMES = _compose(NT_B_PLANS, NT_B_NORTH, NT_B_SOUTH, NT_B_MID, "W 0 7 4 7 light_gray_stained_glass\n")
+NT_C_MIDNAMES = _compose(NT_C_PLANS, NT_C_NORTH, NT_C_SOUTH, NT_C_MID, "W 0 7 6 7 white_stained_glass\n")
+
+
+def nt_b_floors(n):
+    return (["restaurant", "kitchen"] + NT_B_MIDNAMES[:max(0, n - 4)] + ["sky", "bar"])[:n] if n >= 4 else \
+        ["restaurant", "kitchen", "sky"][:n]
+
+
 def nt_c_floors(n):
-    mid = (["studio", "library", "yoga", "lounge"] * 5)[:max(0, n - 2)]
-    return (["cafe"] + mid + ["bar"])[:n]
+    return (["cafe"] + NT_C_MIDNAMES[:max(0, n - 2)] + ["bar"])[:n]
+
 
 
 # Hearthwood sky tower – west wing "Albion Club" (11 x 23, stair lx 8-10 / lz 0-6, door lx 5 lz 0, a partition at
@@ -3281,7 +3892,8 @@ HW_S_PLANS = {
         C 28 1 s
         G 19 5 e
         G 37 5 w
-        R 23 3 33 7 orange
+        R 24 4 26 6 orange
+        R 30 4 32 6 orange
         L 23 5
         L 28 5
         L 33 5
@@ -3351,7 +3963,7 @@ HW_S_PLANS = {
            _row("C", [(x, z) for z in (4, 6, 8) for x in (31, 32, 33, 34)], "s"),
            _row("X", [(39, z) for z in (1, 2, 3, 7, 8, 9)], "chest:e")),
     "third": _HW_S_PART + """
-        R 2 2 8 7 light_blue
+        R 3 3 5 6 light_blue
         X 1 1 chest:e
         X 0 3 hay
         X 0 4 note
@@ -3604,6 +4216,206 @@ HW_LE_PLANS = {
 }
 HW_LW_FLOORS = ["tack", "laundry", "linen", "box", "lumber"]
 HW_LE_FLOORS = ["boots", "ironing", "servants", "sewing", "storage"]
+
+# round 5: more furniture where the south range, the wings and the link ranges were still thin (hand-placed)
+HW_S_PLANS["first"] += """
+        T 49 4 candle
+        C 48 4 w
+        C 50 4 e
+        K 56 9 2
+        K 56 10 2
+        X 39 5 barrel:e
+        T 50 9 lamp
+        C 49 9 w
+        C 51 9 e
+        G 39 7 e
+        L 40 8
+        L 49 4
+"""
+HW_S_PLANS["second"] += """
+        K 17 2 3
+        K 17 3 3
+        T 9 2 candle
+        C 8 2 w
+        C 10 2 e
+        X 9 10 barrel:n
+        P 0 10 potted_red_tulip
+        R 4 8 7 9 blue
+        L 9 2
+        L 3 8
+        T 44 8
+        T 45 8 lamp
+        C 44 9 s
+        C 45 9 s
+        X 50 10 loom:n
+        X 51 10 chest:n
+        S 52 10 candle
+        K 56 8 2
+        K 56 9 2
+        X 47 1 hay
+        X 48 1 hay
+        L 45 8
+        L 51 9
+"""
+HW_S_PLANS["third"] += """
+        K 17 2 3
+        T 9 8 candle
+        C 8 8 w
+        C 10 8 e
+        X 3 10 chest:n
+        L 9 8
+        X 23 2 white_wool
+        X 23 2 pot 1
+        X 33 2 white_wool
+        X 33 2 skull:n 1
+        X 23 8 white_wool
+        X 23 8 pot 1
+        X 33 8 white_wool
+        X 33 8 lamp 1
+        C 27 5 n
+        C 28 5 n
+        C 29 5 n
+        P 20 1 potted_fern
+        P 36 1 potted_fern
+        P 20 9 potted_allium
+        P 36 9 potted_allium
+        L 28 3
+        L 28 7
+        T 51 9 lamp
+        C 50 9 w
+        C 52 9 e
+        K 56 7 2
+        K 56 8 2
+        X 39 5 chest:e
+        X 39 6 chest:e
+        G 39 8 e
+        L 51 9
+        L 40 6
+"""
+HW_S_PLANS["fourth"] += """
+        X 5 3 barrel
+        X 5 4 barrel
+        X 5 6 barrel
+        X 5 7 barrel
+        X 9 3 hay
+        X 9 3 hay 1
+        X 9 7 hay
+        T 15 9 candle
+        C 14 9 w
+        X 17 1 chest:w
+        X 17 2 chest:w
+        X 17 8 barrel:w
+        X 17 9 barrel:w
+        L 3 5
+        L 9 5
+        C 24 8 s
+        C 25 8 s
+        C 26 8 s
+        C 30 8 s
+        C 31 8 s
+        C 32 8 s
+        K 19 1 2
+        K 19 2 2
+        K 37 1 2
+        K 37 2 2
+        G 19 6 e
+        G 37 6 w
+        L 25 8
+        L 31 8
+        X 44 10 chest:n
+        X 45 10 chest:n
+        X 56 8 barrel:w
+        X 56 9 barrel:w
+        C 46 5 n
+        C 47 5 n
+        X 39 8 lectern:e
+        L 40 8
+        L 47 6
+"""
+HW_S_PLANS["attic"] += """
+        T 9 3 candle
+        C 8 3 w
+        C 10 3 e
+        X 17 8 chest:w
+        X 17 9 chest:w
+        K 0 7 2
+        K 0 8 2
+        R 7 7 10 8 red
+        L 9 3
+        L 4 9
+        K 19 6 2
+        K 19 7 2
+        K 19 8 2
+        T 27 3 candle
+        C 27 2 n
+        C 27 4 s
+        T 34 4
+        C 33 4 w
+        C 35 4 e
+        X 37 9 chest:w
+        X 37 10 chest:w
+        R 22 7 25 9 gray
+        L 27 3
+        L 34 4
+        K 56 8 2
+        K 56 9 2
+        X 44 10 barrel:n
+        X 45 10 barrel:n
+        T 49 3 candle
+        C 48 3 w
+        C 50 3 e
+        X 39 5 chest:e
+        X 39 6 chest:e
+        L 49 3
+        L 40 8
+"""
+HW_E_PLANS["billiard"] += """
+        T 6 9 candle
+        C 5 9 w
+        C 7 9 e
+        G 0 6 e
+        K 10 9 2
+        K 10 10 2
+        X 1 0 jukebox
+        L 6 9
+"""
+HW_E_PLANS["trophy"] += """
+        X 2 21 white_wool
+        X 2 21 skull:n 1
+        X 8 21 white_wool
+        X 8 21 pot 1
+        G 0 22 e
+        K 10 19 2
+        K 10 20 2
+"""
+HW_E_PLANS["tea"] += """
+        X 0 3 counter
+        X 0 3 pot 1
+        X 0 7 counter
+        X 0 7 brew 1
+        T 7 9 potted_red_tulip
+        L 7 9
+"""
+HW_W_PLANS["guest"] += """
+        T 4 1 candle
+        C 3 1 w
+        C 5 1 e
+        X 0 5 chest:e
+"""
+HW_LW_PLANS["lumber"] += """
+        X 8 1 log
+        X 9 1 log
+        X 10 1 log
+        X 8 1 log 1
+        X 9 1 log 1
+        X 10 1 craft
+"""
+HW_LE_PLANS["ironing"] += """
+        X 10 1 chest:w
+        X 10 2 chest:w
+        P 0 0 potted_fern
+"""
+
 
 
 # Cascadia sky tower – great hall chalet (13 x 17, stair lx 10-12 / lz 0-6, door lx 6 lz 0)
