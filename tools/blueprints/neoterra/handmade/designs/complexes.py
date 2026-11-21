@@ -2845,7 +2845,7 @@ def grow_sky_ca(d, L):
                 if x % 2:
                     for y in range(2, 6):
                         d.set(x, y, z, fence("spruce"))
-        for x, z in ((50, 34), (56, 34), (42, 2)):
+        for x, z in ((50, 34), (56, 34), (42, 2), (61, 32), (61, 8)):
             tree(d, x, z, 2, "spruce_log", "spruce_leaves", 6)
         for x in (47, 57):
             lamp_post(d, x, 2, 2, P, 3)

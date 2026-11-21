@@ -338,7 +338,7 @@ def building(d, x1, z1, x2, z2, nf=1, axis="x", roof="gable", doors=(("north", N
             else:
                 flight(d, sx + 4, y, z2 - 2, "west", 4, wood if P != "Neoterra" else "smooth_quartz")
         for x in range(sx, sx + 6):
-            for z in (z2 - 1, z2 - 2, z2 - 3):
+            for z in (z2 - 1, z2 - 2):
                 b.stair.add((x, z))
         # rail round the top hole
         i = nf - 2
