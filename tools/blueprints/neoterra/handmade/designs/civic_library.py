@@ -414,10 +414,10 @@ def lib_hearthwood(rel, L):
             d.set(2, 2, z, "sandstone_wall")
         d.fill(10, 1, 22, 10, 1, 43, "gravel")
         bed_of(d, [(4, 26, "red_tulip"), (5, 26, "oxeye_daisy"), (6, 26, "red_tulip"), (4, 27, "allium"),
-                   (5, 27, "rose_bush"), (6, 27, "allium"),
+                   (5, 27, "pink_tulip"), (6, 27, "allium"),
                    (12, 26, "cornflower"), (13, 26, "oxeye_daisy"), (12, 27, "lily_of_the_valley"),
                    (13, 27, "cornflower"),
-                   (4, 36, "peony"), (5, 36, "oxeye_daisy"), (6, 36, "peony"), (4, 37, "cornflower"),
+                   (4, 36, "pink_tulip"), (5, 36, "oxeye_daisy"), (6, 36, "pink_tulip"), (4, 37, "cornflower"),
                    (5, 37, "red_tulip"), (6, 37, "cornflower"),
                    (12, 36, "allium"), (13, 36, "red_tulip"), (12, 37, "oxeye_daisy"), (13, 37, "allium")])
         d.set(7, 2, 32, "stone_brick_wall")                             # bird bath beside the path
@@ -462,9 +462,9 @@ def lib_hearthwood(rel, L):
             d.set(x, 2, 30, "dark_oak_fence_gate[facing=north,in_wall=false,open=false,powered=false]" if x == 39
                   else "dark_oak_fence")
         d.fill(39, 1, 31, 39, 1, 33, "gravel")
-        bed_of(d, [(35, 31, "red_tulip"), (36, 31, "oxeye_daisy"), (37, 31, "red_tulip"), (38, 31, "peony"),
+        bed_of(d, [(35, 31, "red_tulip"), (36, 31, "oxeye_daisy"), (37, 31, "red_tulip"), (38, 31, "pink_tulip"),
                    (35, 32, "cornflower"), (36, 32, None), (37, 32, "allium"), (38, 32, "cornflower"),
-                   (40, 31, "peony"), (41, 31, "red_tulip"), (42, 31, "oxeye_daisy"), (43, 31, "red_tulip"),
+                   (40, 31, "pink_tulip"), (41, 31, "red_tulip"), (42, 31, "oxeye_daisy"), (43, 31, "red_tulip"),
                    (40, 32, "cornflower"), (41, 32, "allium"), (42, 32, None), (43, 32, "cornflower")])
     return d
 

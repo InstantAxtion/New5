@@ -176,7 +176,7 @@ def building(d, x1, z1, x2, z2, nf=1, axis="x", roof="gable", doors=(("north", N
              stairs=True, chimney=None, win=3, kinds=None, overhang=1, wood=None, lamps=True, beams=True,
              flat_deco=True, wall=None, ridge_hip=False):
     """Pack-style building on the rectangle x1..x2/z1..z2 (walls included), nf storeys of 5 (walk y, y+5, ...).
-    doors: (side, position-along-wall or None for the middle). kinds: room kind per storey for furnish()."""
+    doors: (side, position-along-wall or None for the middle). Shell only: rooms are furnished by hand (room())."""
     P = d.pack
     b = Bld()
     b.x1, b.z1, b.x2, b.z2, b.nf = x1, z1, x2, z2, nf
@@ -545,7 +545,7 @@ CHISEL = ("chiseled_bookshelf[facing=FACE,slot_0_occupied=true,slot_1_occupied=t
 KEG = "barrel[facing=FACE,open=false]"
 
 
-# ---------------------------------------------------------------------------------------------- furnish
+# ---------------------------------------------------------------------------------------------- hand-placed pieces
 def _rack_weapons(d, x, y, z, face, tall):
     d.set(x, y, z, SL(_w(d), "top"))
     d.set(x, y + 1, z, ROD())

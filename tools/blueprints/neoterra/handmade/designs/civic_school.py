@@ -1130,6 +1130,339 @@ def sch_neoterra(rel, L):
     return d
 
 
+# ================================================================================================ CASCADIA
+# Mountain district school: one-room log schoolhouse with belfry and covered porch (L1), teacherage (L2), art
+# lean-to and upper-grades schoolhouse (L3), timber gymnasium and log playground (L4), two-storey lunch hall with
+# reading loft, school garden, woodshop and wagon shed (L5).
+def sch_cascadia(rel, L):
+    d = new("Cascadia", rel, (53, 28, 51), paving="coarse_dirt")
+    S = "spruce"
+    X1, X2, Z1, Z2, mid = 18, 28, 8, 20, 23
+    FIRE_N = "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]"
+    # ------------------------------------------------------------------ shells
+    b = shell(d, X1, Z1, X2, Z2, 1, "gable", "z", wh=5, beams=(11, 15))
+    if L >= 2:
+        shell(d, 4, 8, 14, 16, 1, "gable", "z", win="nse", mat="stripped_spruce_log", up="stripped_spruce_log",
+              beams=(12,))
+    if L >= 3:
+        shell(d, X2, 11, 33, 18, 1, "gable", "z", mat="mangrove_planks", up="mangrove_planks", win="e")
+        c2 = shell(d, 36, 8, 46, 20, 1, "gable", "z", wh=5, beams=(11, 15))
+    if L >= 4:
+        shell(d, 10, 26, 40, 36, 1, "gable", "x", wh=7, mat="mangrove_planks", up="mangrove_planks",
+              beams=(14, 20, 26, 32))
+    if L >= 5:
+        shell(d, 40, 26, 52, 38, 2, "gable", "z", mat="stripped_spruce_log", up="stripped_spruce_log", beams=(29, 34))
+        shell(d, 44, 42, 52, 48, 1, "gable", "x", mat="stripped_spruce_log", win="", beams=(48,))
+        shell(d, 2, 42, 10, 50, 1, "gable", "z", mat="mangrove_planks", up="mangrove_planks", wh=5, win="", beams=(46,))
+
+    # ------------------------------------------------------------------ A: one-room schoolhouse (L1+)
+    ridge = b["ridge"]
+    for x in range(mid - 1, mid + 2):                                   # belfry on the front gable
+        for z in range(Z1, Z1 + 3):
+            d.set(x, ridge, z, "birch_planks")
+    for x, z in ((mid - 1, Z1), (mid + 1, Z1), (mid - 1, Z1 + 2), (mid + 1, Z1 + 2)):
+        for y in range(ridge + 1, ridge + 3):
+            d.set(x, y, z, "birch_fence")
+    d.hip(mid - 1, Z1, mid + 1, Z1 + 2, ridge + 3, "spruce_stairs", "spruce_slab", overhang=1)
+    d.set(mid, ridge + 3, Z1 + 1, "spruce_planks")
+    bell(d, mid, ridge + 2, Z1 + 1)
+    entry(d, mid, Y0, Z1, "south")
+    d.fill(X1, 1, Z1 - 3, X2, 1, Z1 - 1, "spruce_planks")              # covered porch
+    for x in (X1, X2):
+        for y in range(Y0, 6):
+            d.set(x, y, Z1 - 3, log("stripped_birch_log"))
+    for x in range(X1 - 1, X2 + 2):
+        d.set(x, 7, Z1 - 4, st("spruce_stairs", "south"))
+        for z in range(Z1 - 3, Z1):
+            d.set(x, 7, z, slab("spruce_slab"))
+    for x in range(X1 + 1, X2):
+        if x != mid:
+            d.set(x, 2, Z1 - 3, "spruce_fence")
+    d.sign(mid, 6, Z1 - 1, "north", ["SCHOOL", "DIST. No. 7"], S)
+    d.set(mid, 6, Z1 - 2, LANT) if False else None
+    d.set(mid - 2, 6, Z1 - 2, LANT)
+    d.set(mid + 2, 6, Z1 - 2, LANT)
+    for x in (19, 20):                                                  # porch bench
+        sit_out(d, x, Y0, Z1 - 1, "north", S) if False else d.chair(x, Y0, Z1 - 1, "south", S, sit=False)
+    d.set(27, Y0, Z1 - 1, "barrel[facing=up,open=false]")
+    d.set(26, Y0, Z1 - 1, "spruce_log[axis=x]") if False else None
+    d.hut(X1 + 1, Y0, Z1 + 1)
+    keep(d, X1 + 2, Y0, Z1 + 1)
+    board(d, [(19, 13), (19, 14), (19, 15)], Y0 + 1, "east", ledge=S)
+    plan(d, Y0, 19, 9, [
+        # 19..27
+        ".........",   # z9  (hut x19, door x23)
+        "ct......B",   # z10 teacher's desk
+        ".t......B",   # z11
+        "...De.De.",   # z12
+        "...De.De.",   # z13
+        ".w.De.De.",   # z14 (link to the art lean-to at x28 z14)
+        "...De.De.",   # z15
+        "...De.De.",   # z16
+        "........K",   # z17
+        "p.......K",   # z18
+        "...XFX...",   # z19 fireplace
+    ], {"c": seat("west", S), "t": tslab("spruce_slab"), "B": shelf, "D": tslab("birch_slab"),
+        "e": seat("east", S), "w": work, "K": "spruce_log[axis=x]", "p": "potted_fern", "X": "cobblestone",
+        "F": FIRE_N})
+    plan(d, Y0 + 1, 19, 10, [".i......B", ".p......B"], {"i": candle(1), "p": "flower_pot", "B": shelf})
+    d.fill(22, 3, 19, 24, 3, 19, "cobblestone")
+    d.set(22, 4, 19, LANT_S)
+    d.set(24, 4, 19, "potted_fern")
+    for x in (21, 22, 24, 25):
+        d.set(x, Y0 + 1, 9, "tripwire_hook[attached=false,facing=south,powered=false]")
+    for z in (11, 15):
+        d.set(mid, 6, z, LANT)
+    chimney(d, mid, Z2, Y0, ridge)
+    for x in (20, 26):                                                  # shutters on the street windows
+        shutters(d, x, 3, Z1, "north", "birch")
+    for z in (10, 16):
+        shutters(d, X1, 3, z, "west", "birch")
+    lamp_post(d, X1 - 2, Z1 - 2)
+    lamp_post(d, X2 + 2, Z1 - 2)
+    ground(d, mid, 0, mid, Z1 - 4, "spruce_planks")
+
+    # ------------------------------------------------------------------ L2: teacherage
+    if L >= 2:
+        entry(d, 9, Y0, 8, "south")
+        plan(d, Y0, 5, 9, [
+            # 5..13
+            "L.....wTe",   # z9  log pile, small table
+            "X.e......",   # z10 hmm
+            "X.e......",   # z11
+            "F~e......",   # z12 fireplace, settle facing it
+            "X~.......",   # z13
+            "........n",   # z14
+            "KC.....nb",   # z15 kitchenette, bed
+        ], {"L": "spruce_log[axis=z]", "X": "cobblestone", "F": "campfire[facing=east,lit=true,signal_fire=false,waterlogged=false]",
+            "~": "green_carpet", "e": seat("east", S), "w": seat("west", S), "T": "spruce_fence",
+            "K": "barrel[facing=up,open=false]", "C": "water_cauldron[level=3]", "n": tslab("spruce_slab"),
+            "b": "air"})
+        d.set(12, 3, 9, "spruce_pressure_plate[powered=false]")
+        d.set(5, 2, 10, "cobblestone")
+        d.set(5, 2, 11, "cobblestone")
+        d.set(5, 3, 11, "cobblestone")
+        d.set(5, 3, 12, "cobblestone")
+        d.set(5, 3, 13, "cobblestone")
+        d.set(5, 4, 12, LANT_S)
+        d.bed(13, Y0, 15, "south", "brown")
+        d.set(12, 3, 15, candle(1))
+        d.set(13, 3, 14, "potted_fern") if False else None
+        d.set(9, 5, 12, LANT)
+        chimney(d, 4, 12, Y0, 13)
+        for x in range(3, 16):
+            if x != 9:
+                d.set(x, 2, 5, "spruce_fence")
+        ground(d, 9, 0, 9, 7, "spruce_planks")
+        flowers(d, [(4, 6), (5, 6), (6, 6), (7, 6), (11, 6), (12, 6), (13, 6)],
+                ["fern", "blue_orchid", "allium", "dandelion", "lily_of_the_valley", "fern", "blue_orchid"])
+        d.sign(9, 5, 7, "north", ["TEACHER"], S)
+        d.set(10, 4, 7, "wall_torch[facing=north]")
+
+    # ------------------------------------------------------------------ L3: art lean-to, upper-grades house
+    if L >= 3:
+        link(d, X2, Y0, 14, "east")
+        plan(d, Y0, 29, 12, [
+            # 29..32
+            "L..M",        # z12 loom, map table
+            "....",        # z13
+            "....",        # z14 (link)
+            ".tt.",        # z15 work table
+            ".ss.",        # z16
+            "E..W",        # z17 easel, wash bucket
+        ], {"L": itm("loom", "south"), "M": itm("cartography_table", "south"), "t": tslab("spruce_slab"),
+            "s": seat("south", S), "E": "spruce_fence", "W": "water_cauldron[level=3]"})
+        d.set(29, 3, 17, trap("birch", "north", "bottom", True))
+        d.set(30, 3, 15, candle(2, "orange"))
+        d.set(31, 3, 15, "flower_pot")
+        d.set(30, 5, 14, LANT)
+        # upper grades schoolhouse
+        entry(d, 41, Y0, 8, "south")
+        board(d, [(39, 19), (40, 19), (41, 19), (42, 19), (43, 19)], Y0 + 1, "north", ledge=S)
+        plan(d, Y0, 37, 9, [
+            # 37..45
+            "B........",   # z9
+            "B........",   # z10
+            ".nnn.nnn.",   # z11
+            ".TTT.TTT.",   # z12
+            ".........",   # z13
+            ".nnn.nnn.",   # z14
+            ".TTT.TTT.",   # z15
+            ".........",   # z16
+            "...MM.c.X",   # z17
+            "........F",   # z18 wood fire on the east wall
+            "........X",   # z19
+        ], {"B": shelf, "n": seat("north", S), "T": tslab("birch_slab"), "M": tslab("spruce_slab"),
+            "c": seat("south", S), "X": "cobblestone",
+            "F": "campfire[facing=west,lit=true,signal_fire=false,waterlogged=false]"})
+        plan(d, Y0 + 1, 37, 9, ["B", "B"], {"B": shelf})
+        d.fill(45, 3, 17, 45, 3, 19, "cobblestone")
+        d.set(40, 3, 17, candle(1))
+        d.set(41, 3, 17, "flower_pot")
+        d.set(45, 3, 9, "potted_fern") if False else None
+        for z in (11, 15):
+            d.set(41, 6, z, LANT)
+        chimney(d, 46, 18, Y0, c2["ridge"])
+        d.sign(41, 6, 7, "north", ["UPPER", "GRADES"], S)
+        d.set(42, 5, 7, "wall_torch[facing=north]")
+        for x in (38, 44):
+            shutters(d, x, 3, 8, "north", "birch")
+        ground(d, 41, 0, 41, 7, "spruce_planks")
+
+    # ------------------------------------------------------------------ L4: gymnasium + log playground
+    if L >= 4:
+        entry(d, 25, Y0, 26, "south", double=True)
+        ground(d, 25, 21, 26, 25, "spruce_planks")
+        for x in range(11, 40):
+            for z in range(27, 36):
+                d.set(x, 1, z, "birch_planks" if (x + z) % 2 else "spruce_planks")
+        for x in (12, 38):                                              # hoops
+            for y in (4, 5):
+                d.set(x, y, 31, "white_stained_glass")
+            d.set(x + (1 if x == 12 else -1), 5, 31, "iron_bars")
+        for x in (15, 16, 17, 18, 32, 33, 34, 35):                      # benches along the north wall
+            d.chair(x, Y0, 27, "north", S)
+        for x in (15, 16, 17, 18):
+            d.chair(x, Y0, 35, "south", S)
+        for z in (28, 30, 32, 34):                                      # climbing ropes / wall ladders
+            for y in range(2, 8):
+                d.set(39, y, z, "ladder[facing=west,waterlogged=false]") if z in (28, 34) else None
+        for y in range(3, 9):
+            d.set(25, y, 33, "chain[axis=y,waterlogged=false]") if False else None
+        d.set(11, 2, 35, "barrel[facing=up,open=false]")
+        d.set(11, 2, 34, "hay_block[axis=y]")
+        d.set(11, 3, 35, "target[power=0]")
+        for x in (14, 20, 26, 32):
+            d.set(x, 8, 31, LANT)
+        d.sign(25, 7, 25, "north", ["GYMNASIUM"], S)
+        # log playground: rail fence, swing frame, balance logs, sand box, stump seats, fir tree
+        for z in range(22, 41):
+            d.set(2, 2, z, "spruce_fence")
+            d.set(8, 2, z, "spruce_fence") if z not in (24,) else None
+        for x in range(3, 8):
+            d.set(x, 2, 22, "spruce_fence")
+            d.set(x, 2, 40, "spruce_fence")
+        ground(d, 3, 23, 7, 39, "grass_block[snowy=false]")
+        for z in (25, 29):
+            for y in range(2, 6):
+                d.set(5, y, z, log("spruce_log"))
+        d.fill(5, 6, 25, 5, 6, 29, log("spruce_log", "z"))
+        for z in (26, 28):
+            d.set(5, 5, z, "chain[axis=y,waterlogged=false]")
+            d.set(5, 4, z, "chain[axis=y,waterlogged=false]")
+            d.set(5, 3, z, tslab("spruce_slab"))
+        d.fill(4, 2, 31, 4, 2, 35, log("stripped_spruce_log", "z"))
+        ground(d, 5, 36, 7, 38, "sand")
+        for z in (31, 33):
+            d.set(7, 2, z, log("spruce_log"))
+        plant_tree(d, 6, 32, "spruce") if False else None
+
+    # ------------------------------------------------------------------ L5: lunch hall, garden, woodshop, shed
+    if L >= 5:
+        entry(d, 46, Y0, 26, "south")
+        stairs(d, 51, 31, Y0, 7, "south")
+        plan(d, Y0, 41, 27, [
+            # 41..51
+            "......SoCoF",   # z27 kitchen run on the north wall
+            "...........",   # z28
+            "......ooooo",   # z29 serving counter (gap at x46)
+            "..n........",   # z30
+            ".wTe.......",   # z31
+            ".wTe.......",   # z32
+            ".wTe.......",   # z33
+            ".wTe.......",   # z34
+            ".wTe.......",   # z35
+            "..s........",   # z36
+            "K.........K",   # z37
+        ], {"S": "smoker[facing=south,lit=true]", "o": tslab("spruce_slab"), "C": "water_cauldron[level=3]",
+            "F": "furnace[facing=south,lit=false]", "n": seat("north", S), "s": seat("south", S),
+            "w": seat("west", S), "e": seat("east", S), "T": "spruce_planks", "K": "barrel[facing=up,open=false]"})
+        d.set(47, 2, 29, "air")
+        for z, it in ((31, candle(3)), (33, "flower_pot"), (35, candle(3))):
+            d.set(43, 3, z, it)
+        d.set(48, 3, 29, "cake[bites=0]")
+        d.set(50, 3, 29, "flower_pot")
+        for x in range(45, 50):                                         # second dining table
+            d.set(x, 2, 33, "spruce_planks")
+            d.chair(x, 2, 32, "north", S)
+            d.chair(x, 2, 34, "south", S)
+        for z in (29, 34):
+            d.set(46, 6, z, LANT)
+        chimney(d, 52, 28, Y0, 17)
+        d.sign(46, 5, 25, "north", ["LUNCH", "ROOM"], S)
+        # reading loft upstairs
+        rails(d, 7, [(50, 32), (50, 33), (50, 34), (51, 31)], "spruce_fence")
+        plan(d, 7, 41, 27, [
+            # 41..51
+            "BBBB.BBBB..",   # z27
+            "...........",   # z28
+            "..nnn......",   # z29
+            "..TTT......",   # z30
+            "..sss......",   # z31
+            "...........",   # z32
+            "B..........",   # z33
+            "B.e.e......",   # z34
+            "B.~~~......",   # z35
+            "B..........",   # z36
+            "..p.....L..",   # z37
+        ], {"B": shelf, "n": seat("north", S), "s": seat("south", S), "T": tslab("spruce_slab"),
+            "e": seat("east", "dark_oak"), "~": "brown_carpet", "p": "potted_fern",
+            "L": "lectern[facing=north,has_book=false,powered=false]"})
+        plan(d, 8, 41, 27, ["BBBB.BBBB"], {"B": shelf})
+        d.set(44, 8, 30, LANT_S)
+        for z in (29, 34):
+            d.set(46, 10, z, LANT)
+        # school garden: rail fence, crop rows on alternate lines, a scarecrow
+        for x in range(12, 40):
+            for z in range(40, 49):
+                if x in (12, 39) or z in (40, 48):
+                    if not (z == 40 and x == 25):
+                        d.set(x, 2, z, "spruce_fence")
+                elif z % 2:
+                    d.set(x, 1, z, "farmland[moisture=7]")
+                    d.set(x, 2, z, ("carrots[age=7]", "potatoes[age=7]", "wheat[age=7]")[x % 3])
+                else:
+                    d.set(x, 1, z, "coarse_dirt")
+        d.set(25, 2, 44, "spruce_fence")
+        d.set(25, 3, 44, "hay_block[axis=y]")
+        d.set(25, 4, 44, "carved_pumpkin[facing=north]")
+        d.set(13, 2, 41, "composter[level=6]")
+        # woodshop
+        entry(d, 48, Y0, 42, "south", double=True)
+        plan(d, Y0, 45, 43, [
+            # 45..51
+            ".......",     # z43
+            "GW...WS",     # z44 grindstone, workbenches, stonecutter
+            ".......",     # z45
+            "LLL.ttt",     # z46 lumber stack, bench
+            "LLL.CCB",     # z47 crafting tables, barrel
+        ], {"G": "grindstone[face=floor,facing=south]", "W": tslab("spruce_slab"),
+            "S": "stonecutter[facing=south]", "L": "stripped_spruce_log[axis=x]", "t": tslab("spruce_slab"),
+            "C": "crafting_table", "B": "barrel[facing=up,open=false]"})
+        d.set(45, 3, 47, "stripped_spruce_log[axis=x]")
+        d.set(46, 3, 47, "stripped_spruce_log[axis=x]")
+        d.set(50, 3, 46, "flower_pot") if False else None
+        d.set(48, 5, 45, LANT)
+        d.sign(48, 5, 41, "north", ["WOOD", "SHOP"], S)
+        # wagon shed: hay along the walls, a farm cart
+        entry(d, 6, Y0, 42, "south", double=True)
+        for z in (44, 46, 48):
+            d.set(3, 2, z, "hay_block[axis=y]")
+            d.set(9, 2, z, "hay_block[axis=y]")
+        d.set(3, 3, 46, "hay_block[axis=y]")
+        d.fill(6, 2, 45, 6, 2, 47, tslab("spruce_slab"))
+        d.set(5, 2, 46, "spruce_trapdoor[facing=west,half=bottom,open=true,powered=false,waterlogged=false]")
+        d.set(6, 2, 44, "spruce_fence")
+        d.set(6, 3, 47, "barrel[facing=up,open=false]")
+        d.set(6, 5, 46, LANT)
+        d.sign(6, 5, 41, "north", ["WAGON", "SHED"], S)
+        for y in range(Y0, 14):                                         # flagpole by the porch
+            d.set(16, y, 4, "spruce_fence")
+        d.set(16, 14, 4, "red_wool")
+        d.set(16, 13, 4, "white_wool")
+    return d
+
+
 @design("school")
 def school_v2(pack, rel, L):
-    return common_materials({"Hearthwood": sch_hearthwood, "Neoterra": sch_neoterra}[pack](rel, L))
+    return common_materials({"Hearthwood": sch_hearthwood, "Cascadia": sch_cascadia, "Neoterra": sch_neoterra}[pack](rel, L))
