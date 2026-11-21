@@ -1942,7 +1942,7 @@ LEGEND = {
     "5": ("shelf", "north"), "6": ("shelf", "east"), "7": ("shelf", "south"), "8": ("shelf", "west"),
     "9": ("books", None), "x": ("keg", "east"), "y": ("keg", "north"),
     "X": ("=", "spruce_log[axis=x]"), "Z": ("=", "stripped_spruce_log[axis=x]"),
-    "W": ("=", "white_wool"), "Y": ("=", "yellow_wool"), "O": ("=", "orange_wool"), "J": ("=", "jukebox[has_record=false]"),
+    "E": ("=", "oak_fence"), "W": ("=", "white_wool"), "Y": ("=", "yellow_wool"), "O": ("=", "orange_wool"), "J": ("=", "jukebox[has_record=false]"),
 }
 FACED = {"U": "blast_furnace", "K": "smoker", "F": "furnace", "G": "grindstone", "V": "stonecutter", "Q": "lectern", "A": "anvil",
          "M": "loom"}
@@ -2655,37 +2655,175 @@ def rg_hearthwood(rel, L):
     small = core_rg_hearthwood(rel, L)
     paste(big, small, OX, 0)
     d = big
-    fl = ("poppy", "oxeye_daisy", "cornflower", "allium")
     for x in range(0, d.sx):                              # farm lane along the street
         for z in (0, 1):
             if d.get(x, 1, z).endswith("grass_block[snowy=false]"):
                 d.set(x, 1, z, "dirt_path")
-    if L >= 2:                                             # cart shed
-        building(d, 2, 4, 11, 11, ["store"], door="south", name=["Cart", "Shed"], chimney=False, pal=3)
-        for x in (4, 9):                                   # a hay wain in front
+    if L >= 2:
+        # ---- Cart Shed: the estate cart under cover, tool bench and grindstone, hay and sacks
+        b = building(d, 2, 4, 11, 11, 1, door="south", pal=3)
+        plan(d, b, 0, ["bkG...Bb",
+                       "........",
+                       "........",
+                       "h......s",
+                       "hh....Ws",
+                       "hp...lWs"], face={"G": "south"})
+        put(d, b["S"], [(5, 2, 6, "=", "oak_slab[type=top,waterlogged=false]"),
+                        (6, 2, 6, "=", "oak_slab[type=top,waterlogged=false]"),
+                        (7, 2, 6, "=", "oak_slab[type=top,waterlogged=false]"),
+                        (5, 2, 7, "=", "oak_slab[type=top,waterlogged=false]"),
+                        (6, 2, 7, "=", "oak_slab[type=top,waterlogged=false]"),
+                        (7, 2, 7, "=", "oak_slab[type=top,waterlogged=false]"),
+                        (8, 2, 6, "=", "oak_fence"), (8, 2, 7, "=", "oak_fence"),
+                        (6, 3, 6, "hay", None), (5, 3, 7, "sacks", None),
+                        (6, 4, 12, "sign", ("south", ["Cart", "Shed"])), (5, 4, 12, "torch", "south")])
+        for x in (4, 9):                                   # the hay wain waiting outside
             d.set(x, 2, 14, "oak_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
-        d.fill(5, 2, 14, 8, 2, 14, "hay_block[axis=x]")
+        for x in (5, 6, 7, 8):
+            d.set(x, 2, 14, "hay_block[axis=x]")
         d.set(6, 3, 14, "hay_block[axis=x]")
         d.set(10, 2, 14, "oak_fence")
-    if L >= 3:                                             # stables with a hayloft
-        building(d, 49, 4, 59, 12, ["store", "granary"], door="south", name=["Royal", "Stables"], chimney=False, pal=4)
-        for x in range(48, 61):
-            d.set(x, 2, 15, "oak_fence") if x % 5 else d.set(x, 2, 15, "oak_fence_gate[facing=south,in_wall=false,open=false,powered=false]")
-        d.set(52, 2, 14, "water_cauldron[level=3]")
-        d.set(56, 2, 14, "hay_block[axis=y]")
-        building(d, 2, 17, 10, 24, ["granary"], door="east", name=["Seed", "Granary"], chimney=False, pal=5)
-    if L >= 4:                                             # steward's farmhouse and the malt house behind the barn
-        building(d, 2, 28, 12, 37, ["kitchen", "home"], door="north", name=["Steward's", "House"], pal=6)
-        flowerbed(d, 2, 25, 12, 26, fl)
-        building(d, 48, 28, 58, 37, ["mill", "granary"], door="north", name=["Malt", "House"], pal=7)
+    if L >= 3:
+        # ---- Royal Stables: three stalls with mangers and water, tack corner; hay loft above
+        b = building(d, 49, 4, 59, 12, 2, door="south", ladder=(58, 11, "north"), pal=4)
+        plan(d, b, 0, ["HCEHCEHCh",
+                       "..E..E...",
+                       "..E..E...",
+                       ".........",
+                       "s...l...b",
+                       "M........",
+                       "bB......."], face={"M": "east"})
+        plan(d, b, 1, ["hhhhhhhhh",
+                       "HH.HH.HHs",
+                       ".........",
+                       "s...l...s",
+                       "hh.....hh",
+                       "H.......H",
+                       "sW......."])
+        put(d, b["S"], [(54, 4, 13, "sign", ("south", ["Royal", "Stables"])), (53, 4, 13, "torch", "south"),
+                        (55, 4, 13, "torch", "south"), (52, 2, 14, "cauldron", None), (56, 2, 14, "hay", None)])
+        for x in range(48, 61):                            # paddock rail with two gates
+            gate = x in (50, 58)
+            d.set(x, 2, 15, "oak_fence_gate[facing=south,in_wall=false,open=false,powered=false]" if gate else "oak_fence")
+        # ---- Seed Granary: sacks and seed bins, the weighing counter by the door
+        b = building(d, 2, 17, 10, 24, 1, door="east", pal=5)
+        plan(d, b, 0, ["sWsWsBb",
+                       ".......",
+                       "h.cdc..",
+                       "h......",
+                       "H.....l",
+                       "hhsWsB."])
+        put(d, b["S"], [(11, 4, 20, "sign", ("east", ["Seed", "Granary"])), (11, 4, 19, "torch", "east")])
+    if L >= 4:
+        # ---- Steward's House: estate office with map table and ledger lectern, fireside chairs, dining table and
+        #      range; bedroom and study upstairs
+        b = building(d, 2, 28, 12, 37, 2, door="north", ladder=(11, 36, "north"), hearth=(3, 32, "east"), pal=6)
+        plan(d, b, 0, ["9m9...Q.7",
+                       "..l......",
+                       "..2......",
+                       "..t......",
+                       "..2......",
+                       "....1111.",
+                       "b...TtTT.",
+                       "pKF.3333."], face={"Q": "south", "K": "north", "F": "north"})
+        plan(d, b, 1, ["jv.....vj",
+                       ".........",
+                       "6.R@R...8",
+                       "6.RoR....",
+                       "..RRR....",
+                       "b......2t",
+                       ".........",
+                       "9.Q...B.."], face={"Q": "north"})
+        put(d, b["S"], [(7, 4, 27, "sign", ("north", ["Steward's", "House"])), (6, 4, 27, "torch", "north"),
+                        (8, 4, 27, "torch", "north"), (4, 2, 27, "box", ("north", "poppy")),
+                        (10, 2, 27, "box", ("north", "cornflower")), (4, 7, 27, "box", ("north", "allium")),
+                        (7, 7, 27, "box", ("north", "poppy")), (10, 7, 27, "box", ("north", "oxeye_daisy"))])
+        flowerrow(d, [(2, 25, "poppy"), (3, 25, "rose_bush"), (4, 25, "cornflower"), (5, 25, "oxeye_daisy"),
+                      (9, 25, "allium"), (10, 25, "peony"), (11, 25, "poppy"), (12, 25, "cornflower")])
+        # ---- Malt House: barley spread on the malting floor, kiln furnaces; grain loft above
+        b = building(d, 48, 28, 58, 37, 2, door="north", ladder=(57, 36, "north"), pal=7)
+        plan(d, b, 0, ["Bs.....sB",
+                       ".........",
+                       ".HHH.HHH.",
+                       ".HHH.HHH.",
+                       "....l....",
+                       "U........",
+                       "F...C...b",
+                       "bss.B...."], face={"U": "east", "F": "east"})
+        plan(d, b, 1, ["shshshshs",
+                       ".........",
+                       "s.B...B.s",
+                       "h.......h",
+                       "s...l...s",
+                       "h.......h",
+                       ".........",
+                       "sWs.Bs..."])
+        put(d, b["S"], [(53, 4, 27, "sign", ("north", ["Malt", "House"])), (52, 4, 27, "torch", "north")])
         for z in range(23, 28):
             d.set(7, 1, z, "gravel")
             d.set(53, 1, z, "gravel")
         lamppost(d, 13, 27)
         lamppost(d, 47, 27)
-    if L >= 5:                                             # bakehouse, tithe clerk's office, walled kitchen garden
-        building(d, 17, 30, 27, 38, ["kitchen", "store"], door="north", name=["Bake", "House"], pal=8)
-        building(d, 33, 30, 43, 38, ["office", "home"], door="north", name=["Tithe", "Office"], pal=9)
+    if L >= 5:
+        # ---- Bake House: ovens on the back wall, kneading table, bread counters by the door; flour loft and
+        #      the baker's bed above
+        b = building(d, 17, 30, 27, 38, 2, door="north", ladder=(18, 37, "north"), hearth=(26, 34, "west"), pal=8)
+        plan(d, b, 0, ["gce...ecg",
+                       "....l....",
+                       "s..ccc...",
+                       "s........",
+                       "W..ccc...",
+                       "........ ",
+                       ".KFFKCbb."], face={"K": "north", "F": "north"})
+        plan(d, b, 1, ["jv.9..sWs",
+                       "........s",
+                       "..R@R...s",
+                       "..RoR...W",
+                       "6........",
+                       "b4t2....s",
+                       "..B...sWs"])
+        put(d, b["S"], [(22, 4, 29, "sign", ("north", ["Bake", "House"])), (21, 4, 29, "torch", "north")])
+        # ---- Tithe Office: tithe counter with the clerks behind it, ledgers and strongbox barrels; clerk's
+        #      home upstairs
+        b = building(d, 33, 30, 43, 38, 2, door="north", ladder=(42, 37, "north"), hearth=(34, 34, "east"), pal=9)
+        plan(d, b, 0, ["z.......z",
+                       "..l...l..",
+                       ".cdc.cec.",
+                       "..2.3..3.",
+                       ".........",
+                       "6.......8",
+                       "9B9QBb9.."], face={"Q": "north"})
+        plan(d, b, 1, ["9jv.vj..7",
+                       ".........",
+                       "..R@R....",
+                       "..RoR...8",
+                       "6........",
+                       "6.4t2....",
+                       "pb....B.."])
+        put(d, b["S"], [(38, 4, 29, "sign", ("north", ["Tithe", "Office"])), (37, 4, 29, "torch", "north"),
+                        (39, 4, 29, "torch", "north")])
+        # ---- Alms House: shared kitchen and table, two dormitory rooms, a prayer room at the top
+        b = building(d, 49, 40, 58, 47, 3, door="west", ladder=(57, 46, "north"), hearth=(57, 43, "west"), pal=10)
+        plan(d, b, 0, ["KFCcc.bp",
+                       "...l....",
+                       "..1111..",
+                       "..TtTT..",
+                       "..3333..",
+                       "pb....B."], face={"K": "south", "F": "south"})
+        plan(d, b, 1, ["jv.vj.vj",
+                       "........",
+                       ".R@R....",
+                       "........",
+                       "........",
+                       "^j^..b.."])
+        plan(d, b, 2, ["p......9",
+                       ".4.4....",
+                       ".4.4..Q.",
+                       ".4.4.l..",
+                       ".4.4....",
+                       "p......."], face={"Q": "west"})
+        put(d, b["S"], [(48, 4, 43, "sign", ("west", ["Alms", "House"])), (48, 4, 42, "torch", "west")])
+        # ---- walled kitchen garden behind the barn
         for x in range(14, 47):
             for z in (41, 47):
                 d.set(x, 2, z, "cobblestone_wall")
@@ -2693,16 +2831,19 @@ def rg_hearthwood(rel, L):
             d.set(14, 2, z, "cobblestone_wall")
             d.set(46, 2, z, "cobblestone_wall")
         d.set(30, 2, 41, AIR)
-        for x in range(16, 45):
-            for z in range(43, 46):
-                if x % 4 == 0:
-                    d.set(x, 1, z, "gravel")
-                else:
+        crops = (("wheat[age=7]", 17, 19), ("carrots[age=7]", 21, 23), ("potatoes[age=7]", 25, 27),
+                 ("beetroots[age=3]", 29, 31), ("wheat[age=7]", 33, 35), ("carrots[age=7]", 37, 39),
+                 ("potatoes[age=7]", 41, 43))
+        for x in range(16, 45):                            # gravel walk between the beds
+            d.set(x, 1, 42, "gravel")
+            d.set(x, 1, 46, "gravel")
+        for crop, xa, xb in crops:
+            for x in range(xa, xb + 1):
+                for z in (43, 44, 45):
                     d.set(x, 1, z, "farmland[moisture=7]")
-                    d.set(x, 2, z, ("wheat[age=7]", "carrots[age=7]", "potatoes[age=7]", "beetroots[age=3]")[(x // 4) % 4])
+                    d.set(x, 2, z, crop)
         for x in (16, 44):
             tree(d, x, 39, h=4, leaves="oak_leaves", r=1)
-        building(d, 49, 40, 58, 47, ["kitchen", "home", "home"], door="west", name=["Alms", "House"], pal=10)
     connect_walls(d)
     return d
 

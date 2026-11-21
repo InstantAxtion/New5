@@ -471,6 +471,26 @@ def hc_cathedral(rel, L):
             d.set(x0 + 3 * step, 15, 22, CHAIN)
             d.set(x0 + 3 * step, 16, 22, S)
         chandelier(d, 15, 22, ct - 2, 10)
+        # west transept: the organ against the south wall with the organist's bench
+        for x, h in ((4, 3), (5, 4), (6, 5), (7, 4), (8, 3)):
+            d.set(x, 2, 25, "note_block[instrument=flute,note=0,powered=false]")
+            for y in range(3, 3 + h):
+                d.set(x, y, 25, "iron_bars")
+            d.set(x, 3 + h, 25, slab("dark_oak_slab"))
+        d.chair(6, 2, 24, "south", "dark_oak", sit=False)
+        d.set(5, 2, 24, "lectern[facing=north,has_book=true,powered=false]")
+        d.set(4, 5, 19, "red_wall_banner[facing=south]")
+        d.set(8, 5, 19, "red_wall_banner[facing=south]")
+        # east transept: a bishop's tomb chest with effigy between two candle stands, memorial banners
+        d.set(24, 2, 22, slab("smooth_stone_slab", "top"))
+        d.set(25, 2, 22, slab("smooth_stone_slab", "top"))
+        d.set(24, 3, 22, "white_carpet")
+        d.set(25, 3, 22, "white_carpet")
+        for z in (20, 24):
+            d.set(23, 2, z, "chiseled_stone_bricks")
+            d.candle(23, 3, z, 3)
+        d.set(24, 5, 25, "blue_wall_banner[facing=north]")
+        d.set(24, 5, 19, "blue_wall_banner[facing=south]")
     else:
         # L1/L2 sanctuary at the east end of the nave
         d.fill(12, 2, ne - 2, 18, 2, ne - 1, slab("polished_andesite_slab"))

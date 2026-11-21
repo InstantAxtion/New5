@@ -1481,7 +1481,7 @@ def ar_hearthwood(rel, L):
                        "K   c", "     ", "    P"], lights=[(2, 3), (2, 9)])  # reading room
         room(d, b, 2, ["l11 C", " 22  ", "     ", "c   c", "     ", "  r  ", "K   B"],
              lights=[(2, 3), (2, 8)])                                         # master bedroom
-        room(d, b, 3, ["KKmKK", "H   H", "     ", "K   K", "     ", "m   m", "     ", "c   H", "     ",
+        room(d, b, 3, ["K m K", "H   H", "     ", "K   K", "     ", "m   m", "     ", "c   H", "     ",
                        "H   K"], lights=[(2, 5)])                          # attic store
         wlamp(d, 36, 4, 13)
         wlamp(d, 36, 4, 15)
@@ -1641,6 +1641,8 @@ def ar_cascadia(rel, L):
                        "     n R",
                        "       E",
                        "      Xc"], lights=[(3, 2), (6, 3)])
+        lamp_post(d, 32, 1)
+        lamp_post(d, 44, 2)
         room(d, b, 1, ["1l1l1C1l",            # guides' bunk loft
                        "2 2 2 2 ",
                        "c      K",
@@ -1725,6 +1727,11 @@ def ar_cascadia(rel, L):
              lights=[(2, 2), (6, 2)])
         wlamp(d, 37, 4, 23)
         wlamp(d, 39, 4, 23)
+        for z in range(24, 29):                                   # firewood stacked against the lodge
+            for y in (2, 3):
+                d.set(31, y, z, LOG("spruce_log" if (y + z) % 2 else "birch_log", "z"))
+        lamp_post(d, 31, 22)
+        lamp_post(d, 31, 31)
         for x in range(18, 45):
             d.set(x, 1, 38, "coarse_dirt")
         tree(d, 31, 2, 36, "spruce_log", "spruce_leaves", 7, 2, cone=True)

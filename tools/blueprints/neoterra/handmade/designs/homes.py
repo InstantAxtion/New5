@@ -76,6 +76,32 @@ def run(x, z, direction, n):
     return [(x + dx * i, z + dz * i) for i in range(n)]
 
 
+def fit(d, items):
+    """Place hand-picked pieces: items = [(x, y, z, block)] at absolute coordinates."""
+    for x, y, z, b in items:
+        d.set(x, y, z, b)
+
+
+def BRL(f="up"):
+    return f"barrel[facing={f},open=false]"
+
+
+def CHEST(f):
+    return f"chest[facing={f},type=single,waterlogged=false]"
+
+
+def GRIND(f):
+    return f"grindstone[face=floor,facing={f}]"
+
+
+HAYX, HAYZ, HAYY = "hay_block[axis=x]", "hay_block[axis=z]", "hay_block[axis=y]"
+CAUL = "water_cauldron[level=3]"
+POT = "decorated_pot[cracked=false,facing=north,waterlogged=false]"
+LANT = "lantern[hanging=true,waterlogged=false]"
+LANTF = "lantern[hanging=false,waterlogged=false]"
+CHAIN = "chain[axis=y,waterlogged=false]"
+
+
 # ============================================================================================ circulation
 def flight(d, x, z, y, n, direction, block, support=None):
     """Straight flight of n stairs starting at (x,z) on walking level y, climbing toward `direction`.
@@ -1238,15 +1264,19 @@ def flat(d, ox, oz, y, out, mirror=False, layout=None, wood=None, top=None, bedc
 
     def W(lx, lz):
         return ox + ex * lx + sx * lz, oz + ez * lx + sz * lz
+    taken = set()
     for it in layout:
         k, lx, lz = it[0], it[1], it[2]
         x, z = W(lx, lz)
+        if (x, z) in taken:
+            continue
         if k == "bed":
             d.bed(x, y, z, dirs[it[3]], bedc)
-            if double:
-                dx2, dz2 = D4[dirs[it[4]]] if len(it) > 4 else (0, 0)
-                if len(it) > 4:
-                    d.bed(x + dx2, y, z + dz2, dirs[it[3]], bedc)
+            if double and len(it) > 4:                     # a second bed beside the first (couple's room)
+                dx2, dz2 = D4[dirs[it[4]]]
+                d.bed(x + dx2, y, z + dz2, dirs[it[3]], bedc)
+                fx, fz = D4[OPP[dirs[it[3]]]]
+                taken |= {(x + dx2, z + dz2), (x + dx2 + fx, z + dz2 + fz)}
         elif k == "stand":
             nightstand(d, x, y, z, wood, it[3] if len(it) > 3 else "candle")
         elif k == "chest":
@@ -1362,7 +1392,7 @@ BUNKS = [
 ]
 
 # ============================================================================================ APARTMENT
-def apartment_nt(rel, L, F=None):
+def apartment_nt(rel, L, F=None, v=0):
     F = F or L
     d = Design("Neoterra", rel, (17, 12 + 5 * F, 21), paving="smooth_stone")
     x1, x2, z1, z2 = 3, 11, 5, 16
@@ -1378,7 +1408,8 @@ def apartment_nt(rel, L, F=None):
             for x in range(x1, x2 + 1):
                 d.set(x, Y - 1, z1, "cyan_terracotta")
         # flat (north), corridor wall z=12, corridor z=13, stair core z=14..15
-        W = flat(d, x1 + 1, z1 + 1, Y, "north", wood="birch", top="smooth_quartz", bedc="cyan", ceil=Y + 3)
+        W = flat(d, x1 + 1, z1 + 1, Y, "north", layout=NT_FLATS[(f + v) % 2], wood="birch", top="smooth_quartz",
+                 bedc=("cyan", "light_blue", "lime", "white")[(f + v) % 4], ceil=Y + 3)
         partition(d, x1 + 1, 12, x2 - 1, 12, Y, Y + 3, "white_concrete", ((9, 12, "north"),), "birch")
         for bx, col in ((5, "cyan"), (7, "light_gray")):                 # corridor art and a shelf
             d.set(bx, Y + 2, 13, f"{col}_wall_banner[facing=south]")
@@ -1467,7 +1498,7 @@ def apartment_nt(rel, L, F=None):
     return d
 
 
-def apartment_hw(rel, L, F=None, garden_on=None):
+def apartment_hw(rel, L, F=None, garden_on=None, v=0):
     F = F or {1: 1, 2: 2, 3: 2, 4: 3, 5: 3}[L]
     garden_on = (L >= 2) if garden_on is None else garden_on
     d = Design("Hearthwood", rel, (27, 14 + 4 * F, 19), paving="grass_block[snowy=false]")
@@ -1486,8 +1517,10 @@ def apartment_hw(rel, L, F=None, garden_on=None):
             d.fill(xw, Y, z1 + 1, xw, Y + 2, z2 - 1, "bricks")
         d.door(11, Y, 11, "west", "dark_oak")
         d.door(15, Y, 11, "east", "dark_oak")
-        flat(d, 4, 6, Y, "north", False, "dark_oak", None, "red", Y + 2)
-        flat(d, 22, 6, Y, "north", True, "dark_oak", None, "blue", Y + 2)
+        flat(d, 4, 6, Y, "north", False, HW_FLATS[(f + v) % 2], "dark_oak", None,
+             ("red", "green", "yellow")[(f + v) % 3], Y + 2)
+        flat(d, 22, 6, Y, "north", True, HW_FLATS[(f + v + 1) % 2], "dark_oak", None,
+             ("blue", "brown", "purple")[(f + v) % 3], Y + 2)
         for x in (6, 8, 10, 16, 18, 20):                             # sash windows
             d.window(x, Y + 1, z1, x, Y + 2, z1)
         for x in (6, 8, 18, 20):
@@ -1561,7 +1594,7 @@ def apartment_hw(rel, L, F=None, garden_on=None):
     return d
 
 
-def apartment_ca(rel, L, B=None, F=None):
+def apartment_ca(rel, L, B=None, F=None, v=0):
     d = Design("Cascadia", rel, (31, 22, 19), paving="grass_block[snowy=false]")
     B = B or {1: 2, 2: 2, 3: 3, 4: 3, 5: 3}[L]
     F = F or (1 if L == 1 else 2)
@@ -1587,7 +1620,8 @@ def apartment_ca(rel, L, B=None, F=None):
                 d.fill(xw, Y, z, xw, Y + 3, z, log("spruce_log", "y"))
         for k in range(B):
             ox = x1 + 1 + 8 * k
-            flat(d, ox, z2 - 1, Y, "south", True, "spruce", None, ("brown", "green", "orange")[k], Y + 3)
+            flat(d, ox, z2 - 1, Y, "south", True, CA_FLATS[(k + f + v) % 2], "spruce", None,
+                 ("brown", "green", "orange", "red")[(k + f + v) % 4], Y + 3)
             d.door(ox + 4, Y, z1, "south", "spruce")
             ca_window(d, ox + 1, Y + 1, z1, "north", 2, w=2)
             for x in (ox + 3, ox + 5):
@@ -1736,7 +1770,7 @@ def quadplex_hw(rel, L, U=None):
     return d
 
 
-def cabin(d, x1, z1, out, mirror, Y, bedc, extra_barrel=True, double=False, porch=True):
+def cabin(d, x1, z1, out, mirror, Y, bedc, extra_barrel=True, double=False, porch=True, layout=None):
     """Small log cabin around a 7x6 studio: outer x1..x1+8, z1..z1+7. `out` = window side (north/south);
     the door faces the other way onto a little porch."""
     x2, z2 = x1 + 8, z1 + 7
@@ -1753,7 +1787,7 @@ def cabin(d, x1, z1, out, mirror, Y, bedc, extra_barrel=True, double=False, porc
     else:
         ox, oz = (x1 + 1, z2 - 1) if mirror else (x2 - 1, z2 - 1)
         dz_door, porch_z = z1, (z1 - 2, z1 - 1)
-    Wf = flat(d, ox, oz, Y, out, mirror, "spruce", None, bedc, Y + 3, extra_barrel=extra_barrel, double=double)
+    Wf = flat(d, ox, oz, Y, out, mirror, layout or CABINS[0], "spruce", None, bedc, Y + 3, double=double)
     dx, dz = Wf(4, 6)
     d.door(dx, Y, dz, OPP[out], "spruce")
     for lx in (1, 2):
@@ -2760,12 +2794,12 @@ def apartment_towers_nt(rel, L):
     A = {1: 2, 2: 4, 3: 5, 4: 8, 5: 11}[L]
     stamp(d, apartment_nt(rel, L, A), 0, 0, primary=True)
     if L >= 3:
-        t = apartment_nt(rel, 3, {3: 3, 4: 5, 5: 8}[L])
+        t = apartment_nt(rel, 3, {3: 3, 4: 5, 5: 8}[L], v=1)
         recolor(t, [("white_concrete", "light_gray_concrete"), ("cyan_terracotta", "yellow_terracotta"),
                     ("light_gray_stained_glass_pane", "gray_stained_glass_pane")])
         stamp(d, t, 22, 0)
     if L >= 5:
-        t = apartment_nt(rel, 3, 5)
+        t = apartment_nt(rel, 3, 5, v=2)
         recolor(t, [("white_concrete", "white_terracotta"), ("cyan_terracotta", "orange_terracotta"),
                     ("light_gray_concrete", "polished_blackstone")])
         stamp(d, t, 44, 0)
@@ -2800,15 +2834,15 @@ def apartment_square_hw(rel, L):
     A = {1: 1, 2: 2, 3: 3, 4: 3, 5: 4}[L]
     stamp(d, apartment_hw(rel, L, A), 18, 0, primary=True)
     if L >= 3:
-        w = apartment_hw(rel, 3, {3: 2, 4: 3, 5: 4}[L], False)
+        w = apartment_hw(rel, 3, {3: 2, 4: 3, 5: 4}[L], False, v=1)
         recolor(w, [("bricks", "mud_bricks"), ("deepslate_tile", "granite")], parts=("stairs", "slab"))
         stamp(d, w, 45, 12, rot=3)
     if L >= 4:
-        w = apartment_hw(rel, 3, 3 if L == 4 else 4, False)
+        w = apartment_hw(rel, 3, 3 if L == 4 else 4, False, v=2)
         recolor(w, [("bricks", "white_terracotta"), ("deepslate_tile", "dark_prismarine")], parts=("stairs", "slab"))
         stamp(d, w, 0, 12, rot=1)
     if L >= 5:
-        w = apartment_hw(rel, 3, 3, False)
+        w = apartment_hw(rel, 3, 3, False, v=3)
         recolor(w, [("deepslate_tile", "mud_brick"), ("stone_bricks", "smooth_sandstone")], parts=("stairs", "slab"))
         stamp(d, w, 18, 39)
     if L >= 3:
@@ -2836,15 +2870,15 @@ def apartment_rows_ca(rel, L):
     recolor(m, [("dark_oak", "dark_prismarine")])
     stamp(d, m, 0, 0, primary=True)
     if L >= 3:
-        m = apartment_ca(rel, 3, 2, 1 if L == 3 else 2)
+        m = apartment_ca(rel, 3, 2, 1 if L == 3 else 2, v=1)
         recolor(m, [("dark_oak", "mangrove"), ("stripped_spruce_log", "stripped_mangrove_log")])
         stamp(d, m, 32, 0)
     if L >= 4:
-        m = apartment_ca(rel, 3, 2 if L == 4 else 3, 2 if L == 5 else 1)
+        m = apartment_ca(rel, 3, 2 if L == 4 else 3, 2 if L == 5 else 1, v=2)
         recolor(m, [("dark_oak", "deepslate_tile"), ("stripped_spruce_log", "stripped_birch_log")])
         stamp(d, m, 0, 22)
     if L >= 5:
-        m = apartment_ca(rel, 3, 3, 2)
+        m = apartment_ca(rel, 3, 3, 2, v=3)
         recolor(m, [("dark_oak", "cobbled_deepslate"), ("stripped_spruce_log", "stripped_dark_oak_log")])
         stamp(d, m, 32, 22)
     if L >= 3:
@@ -3312,30 +3346,6 @@ def addon(d, x1, z1, x2, z2, kind, h=3):
         d.sign((x1 + x2) // 2 + 1, y0 + 2, z1 - 1, "north", ["", "GENERAL", "STORE"], SHELL[pack]["wood"])
 
 
-def fit(d, items):
-    """Place hand-picked pieces: items = [(x, y, z, block)] at absolute coordinates."""
-    for x, y, z, b in items:
-        d.set(x, y, z, b)
-
-
-def BRL(f="up"):
-    return f"barrel[facing={f},open=false]"
-
-
-def CHEST(f):
-    return f"chest[facing={f},type=single,waterlogged=false]"
-
-
-def GRIND(f):
-    return f"grindstone[face=floor,facing={f}]"
-
-
-HAYX, HAYZ, HAYY = "hay_block[axis=x]", "hay_block[axis=z]", "hay_block[axis=y]"
-CAUL = "water_cauldron[level=3]"
-POT = "decorated_pot[cracked=false,facing=north,waterlogged=false]"
-LANT = "lantern[hanging=true,waterlogged=false]"
-LANTF = "lantern[hanging=false,waterlogged=false]"
-CHAIN = "chain[axis=y,waterlogged=false]"
 
 
 def dovecote(d, x, z, pack):
@@ -3472,19 +3482,19 @@ def house_estate_hw(rel, L):
     if L >= 5:
         outbuilding(d, 2, 40, 14, 48, "workshop", h=4)
         fit(d, [  # carpenter: bench on the back wall, timber stock, sawhorse table, chest and barrel by the door
-            (4, 2, 47, "crafting_table"), (5, 2, 47, slab(DO, "top")), (5, 3, 47, POT), (6, 2, 47, slab(DO, "top")),
+            (4, 2, 47, "crafting_table"), (5, 2, 47, slab("dark_oak", "top")), (5, 3, 47, POT), (6, 2, 47, slab("dark_oak", "top")),
             (6, 3, 47, "candle[candles=2,lit=false,waterlogged=false]"), (11, 2, 47, "smithing_table"),
             (12, 2, 47, BRL("north")), (13, 2, 47, GRIND("west")),
             (13, 2, 42, log("stripped_oak_log", "z")), (13, 2, 43, log("stripped_oak_log", "z")),
             (13, 3, 42, log("stripped_oak_log", "z")), (3, 2, 41, CHEST("east")), (3, 2, 42, BRL("east")),
-            (8, 2, 45, slab(DO, "top")), (9, 2, 45, slab(DO, "top")), (8, 2, 44, stair(DO, "north")),
+            (8, 2, 45, slab("dark_oak", "top")), (9, 2, 45, slab("dark_oak", "top")), (8, 2, 44, stair("dark_oak", "north")),
             (5, 5, 44, LANT), (11, 5, 44, LANT)])
         recolor(d, [("deepslate_tile", "granite"), ("calcite", "yellow_terracotta")], (1, 39, 15, 49))
         outbuilding(d, 16, 42, 23, 48, "bakehouse", h=4)
         fit(d, [(18, 2, 47, "bricks"), (19, 2, 47, "smoker[facing=north,lit=true]"), (20, 2, 47, "bricks"),
                 (18, 3, 47, "bricks"), (19, 3, 47, "bricks"), (20, 3, 47, "bricks"),           # bread oven
-                (21, 2, 44, slab(DO, "top")), (17, 2, 43, BRL("east")), (17, 3, 43, "white_wool"),
-                (22, 2, 43, "white_wool"), (22, 2, 46, slab(DO, "top")), (22, 3, 46, POT), (19, 5, 45, LANT)]
+                (21, 2, 44, slab("dark_oak", "top")), (17, 2, 43, BRL("east")), (17, 3, 43, "white_wool"),
+                (22, 2, 43, "white_wool"), (22, 2, 46, slab("dark_oak", "top")), (22, 3, 46, POT), (19, 5, 45, LANT)]
             + [(19, y, 48, "bricks") for y in range(4, 11)])                                  # oven flue
         pond(d, 48, 29, 54, 35)
         for tx, tz in ((50, 41), (53, 45), (49, 47)):              # birches by the pond
@@ -3550,8 +3560,8 @@ def house_estate_ca(rel, L):
         d.set(57, 2, 12, "water_cauldron[level=3]")
     if L >= 4:
         lane(d, 0, 26, 26, 27, "coarse_dirt")
-        cabin(d, 1, 31, "south", True, 2, "lime", extra_barrel=False)
-        cabin(d, 13, 31, "south", False, 2, "orange", extra_barrel=False)
+        cabin(d, 1, 31, "south", True, 2, "lime", extra_barrel=False, layout=BUNKS[0])
+        cabin(d, 13, 31, "south", False, 2, "orange", extra_barrel=False, layout=BUNKS[1])
         recolor(d, [("stripped_spruce_log", "stripped_birch_log"), ("dark_oak", "mangrove")], (0, 28, 24, 42))
         outbuilding(d, 30, 31, 37, 37, "bakehouse", h=3)
         fit(d, [(32, 2, 36, "smoker[facing=north,lit=true]"), (35, 2, 36, "smoker[facing=north,lit=true]"),
@@ -3959,7 +3969,7 @@ def quadplex_ca(rel, L):
             (1, 19, "south", True, "purple"), (49, 19, "south", False, "lime")]
     for k in range(N):
         x1, z1, out, mir, c = spec[k]
-        Wf = cabin(d, x1, z1, out, mir, 2, c, True, double=(k == 0 and L >= 5))
+        Wf = cabin(d, x1, z1, out, mir, 2, c, True, double=(k == 0 and L >= 5), layout=CABINS[k % 4])
         if k == 0:
             hx, hz = Wf(4, 0)
             d.hut(hx, 2, hz)

@@ -2976,3 +2976,54 @@ def plain(d):
                 bp.set(x, y, z, format_state("minecraft:" + b, {} if b in FULLB else props),
                        bp.tile_entities.get((x, y, z)))
                 break
+
+
+# ---------------------------------------------------------------------------- the three add-on shapes
+# SHED 11x7 (one room 9x5, door west), HOUSE 13x9 (rooms 11x7, door west, 2-3 storeys, chimney on the east gable),
+# HALL 19x11 with 8-high walls (one hall 17x9, door north). Their exterior dressing is fixed relative to the
+# shape: a lamp beside the door, the name sign, window boxes under the street-side windows.
+def _box(dx, dz, y, facing, pot, wood):
+    return [(dx, y, dz, td(wood, facing, "top")), (dx, y + 1, dz, pot)]
+
+
+def SHED(d, x1, z1, plan, sign, extra=(), ext=(), **kw):
+    P, w = d.pack, STY[d.pack]["wood"]
+    e = list(ext)
+    if P != "Neoterra":
+        e += [(-1, 4, 2, "wall_torch[facing=west]")]
+        e += _box(2, -1, 2, "north", "potted_" + flower(d, 1), w) + _box(8, -1, 2, "north", "potted_" + flower(d, 2), w)
+    else:
+        e += [(-1, 2, 1, "smooth_quartz"), (-1, 3, 1, "azalea"), (-1, 2, 5, "smooth_quartz"), (-1, 3, 5, "azalea")]
+    return bld(d, x1, z1, x1 + 10, z1 + 6, 1, ("west", 3), [plan], "x", extra=extra, ext=e,
+               sign=(-1, 3, 4, "west", sign), chimney=False, **kw)
+
+
+def HOUSE(d, x1, z1, plans, sign, extra=(), ext=(), **kw):
+    P, w = d.pack, STY[d.pack]["wood"]
+    e = list(ext)
+    if P != "Neoterra":
+        e += [(-1, 4, 3, "wall_torch[facing=west]")]
+        e += _box(2, -1, 2, "north", "potted_" + flower(d, 3), w) + _box(5, -1, 2, "north", "potted_" + flower(d, 4), w)
+        e += _box(8, -1, 7, "north", "potted_" + flower(d, 5), w)
+    else:
+        e += [(-1, 2, 2, "smooth_quartz"), (-1, 3, 2, "flowering_azalea"), (-1, 2, 6, "smooth_quartz"),
+              (-1, 3, 6, "flowering_azalea")]
+    return bld(d, x1, z1, x1 + 12, z1 + 8, len(plans), ("west", 4), plans, "x", extra=extra, ext=e,
+               sign=(-1, 3, 5, "west", sign), **kw)
+
+
+def HALL(d, x1, z1, plan, sign, extra=(), ext=(), **kw):
+    P, w = d.pack, STY[d.pack]["wood"]
+    e = list(ext)
+    if P != "Neoterra":
+        e += [(8, 4, -1, "wall_torch[facing=north]"), (10, 4, -1, "wall_torch[facing=north]")]
+        e += _box(2, -1, 2, "north", "potted_" + flower(d, 6), w) + _box(14, -1, 2, "north", "potted_" + flower(d, 7), w)
+    else:
+        e += [(7, 2, -1, "smooth_quartz"), (7, 3, -1, "flowering_azalea"), (11, 2, -1, "smooth_quartz"),
+              (11, 3, -1, "flowering_azalea")]
+    kw.setdefault("chimney", False)
+    return bld(d, x1, z1, x1 + 18, z1 + 10, 1, ("north", 9), [plan], "x", tall=True, extra=extra, ext=e,
+               sign=(12, 3, -1, "north", sign), **kw)
+
+
+GLASSHOUSE = dict(wall="glass", roofkind="glass")

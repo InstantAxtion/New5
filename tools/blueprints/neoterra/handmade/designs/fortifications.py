@@ -2999,6 +2999,7 @@ def wt_complex(d, L, cx, tz, yw, mirror=False):
             sentry_box(d, cx - 12, 9, "east")
         if pk == "Cascadia" and L >= 3:                      # firepit with log benches and a porch roof
             put(d, 2, 2, 21, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+            lamp_post(d, 0, 19)
             for x, z, a in ((1, 21, "z"), (3, 21, "z"), (2, 20, "x"), (2, 22, "x")):
                 put(d, x, 2, z, LOG("stripped_spruce_log", a))
             for z in range(12, 17):
@@ -3023,9 +3024,10 @@ def wt_complex(d, L, cx, tz, yw, mirror=False):
             put(d, cx + 6, 2, tz + 10, "hay_block[axis=x]")
             put(d, cx + 6, 3, tz + 10, "hay_block[axis=y]")
         hedge(d, [(cx - 2, z) for z in range(tz + 6, tz + 8)] + [(cx + 2, z) for z in range(tz + 6, tz + 8)])
-        put(d, cx - 4, 2, tz + 3, "barrel[facing=up,open=false]")
-        put(d, cx - 4, 3, tz + 3, "barrel[facing=north,open=false]")
-        put(d, cx - 4, 2, tz + 4, "barrel[facing=up,open=false]")
+        if L < 3:                                            # crates by the tower door (porch takes the spot later)
+            put(d, cx - 4, 2, tz + 3, "barrel[facing=up,open=false]")
+            put(d, cx - 4, 3, tz + 3, "barrel[facing=north,open=false]")
+            put(d, cx - 4, 2, tz + 4, "barrel[facing=up,open=false]")
     # ---- L3: guardhouse (mess below, bunk / office room above)
     if L >= 3:
         ax1, ax2 = sorted((cx - s_ * 15, cx - s_ * 5))
@@ -3073,6 +3075,11 @@ def wt_complex(d, L, cx, tz, yw, mirror=False):
                 put(d, px, y, z, LOG(LOGW[pk]) if pk != "Neoterra" else "light_gray_concrete")
         for z in (13, 15):
             put(d, px, 2, z, WOOD[pk] + "_fence")
+        qx = inner + 3 * s_                                   # crates and a water butt at the porch corner
+        put(d, qx, 2, 11, BAR)
+        put(d, qx, 3, 11, KEG("north"))
+        put(d, qx, 2, 17, "water_cauldron[level=3]")
+        put(d, qx, 2, 18, "hay_block[axis=y]")
     # ---- L4: smithy / armoury on the other side, well and cart
     if L >= 4:
         bx1, bx2 = sorted((cx + s_ * 5, cx + s_ * 15))
@@ -3082,6 +3089,12 @@ def wt_complex(d, L, cx, tz, yw, mirror=False):
         ys, top, ridge = bld(d, bx1, 11, bx2, 18, 2, "x", doors=[(inner, 14)], pal=PAL[("wt", pk, "b")], lad=(louter, 12, "west" if s_ == 1 else "east"),
                              chimney=(bx2 - 3 if s_ == 1 else bx1 + 3, 18) if pk != "Neoterra" else None)
         wt_smithy_in(d, ys, lambda u: inner + s_ * (u + 1), mirror)
+        sx = cx + 4 * s_                                      # bench and crates outside the smithy door
+        put(d, sx, 2, 16, ST(WOOD[pk], "south"))
+        put(d, sx, 2, 17, ST(WOOD[pk], "south"))
+        put(d, sx, 2, 18, BAR)
+        put(d, sx, 3, 18, BAR)
+        put(d, sx, 2, 12, "water_cauldron[level=3]") if False else None
         # open-fronted forge lean-to on the yard side
         cart(d, cx + s_ * 7, 20, "x")
         hedge(d, [(x, 20) for x in range(min(bx1, bx2) + 6, max(bx1, bx2) + 1)])
@@ -3210,6 +3223,8 @@ def wt_complex(d, L, cx, tz, yw, mirror=False):
                   if pk != "Neoterra" else "sea_lantern")
             d.banner(ex + 2, yw + 1, 1, "north", {"Hearthwood": "red", "Cascadia": "green", "Neoterra": "cyan"}[pk]) \
                 if d.air(ex + 2, yw + 1, 1) and pk != "Neoterra" else None
+            if pk == "Hearthwood":                             # tiled caps on the flanking turrets
+                d.hip(ex, 2, ex + 4, 7, yw + 3, "deepslate_tile_stairs", "deepslate_tile_slab", 0)
     # ---- L5: long hall across the back (stable / store / dorm), garden and trees
     if L >= 5:
         kind = {"Hearthwood": "store", "Cascadia": "stable", "Neoterra": "dorm"}[pk]

@@ -2047,13 +2047,21 @@ def fl_neo(rel, L):
     a.door(6, 4, "north", double=True)
     d.hut(4, y0, 5)
     d.sign(9, 5, 3, "north", ["ARROW", "STUDIO"], "birch", glow=True, color="magenta")
-    # studio: fletching benches on the back wall, arrow racks, bow lab upstairs with the arrow stock barrels
+    # studio: fletching benches on the back wall, arrow racks beside them, a practice target on the west wall;
+    # bow lab upstairs with the arrow-stock barrels
     racks = min(FRACKS[L], 3)
-    furnish(a.room(0, back="south"), "workshop", ["crafting_table"] + ["fletching_table"] * min(FLETCH[L], 3),
-            racks=racks)
+    fit(d, y0, [("i", 4, 7, "crafting_table", "east")] + [("i", x, 11, "fletching_table") for x in (5, 6, 7)[:min(FLETCH[L], 3)]] +
+        [("r", x, 11, 1) for x in (8, 9, 10)[:racks]] + [
+        ("s", 4, 10, "target[power=0]"), ("s", 4, 11, "hay_block[axis=y]"), ("rug", 6, 7, 8, 8, "magenta_carpet"),
+        ("s", 9, 7, sl("birch", "top")), ("o", 9, 7, "potted_bamboo"),
+        ("G", 7, 8, "pearlescent_froglight[axis=y]"), ("G", 6, 6, "pearlescent_froglight[axis=y]")], "birch")
     if sto >= 2:
-        up = ["fletching_table"] * max(0, FLETCH[L] - 3) + (["barrel"] * 5 if L >= 3 else [])
-        furnish(a.room(1, back="south"), "workshop", up, racks=FRACKS[L] - racks)
+        n1 = FRACKS[L] - racks
+        fit(d, 6, [("i", x, 11, "fletching_table") for x in (5, 6)[:max(0, FLETCH[L] - 3)]] +
+            ([("i", 4, z, "barrel", "east") for z in (7, 8, 9, 10)] + [("i", 8, 11, "barrel", "north")] if L >= 3 else []) +
+            [("r", x, 11, 1) for x in (9, 10, 7)[:n1]] + [
+            ("s", 7, 7, sl("birch", "top")), ("c", 7, 8, "south", False), ("s", 9, 5, pot(3)),
+            ("G", 7, 9, "sea_lantern")], "birch")
         racks = FRACKS[L]
     neo_roof(d, a, [(5, 11, 6, SOLAR), (5, 11, 9, SOLAR)])
     if L >= 5:
@@ -2099,18 +2107,42 @@ def fl_neo(rel, L):
     if L >= 4:
         c = build(d, 23, 4, 33, 12, 3, roof="flat", core=(31, 6), street_glass=True)
         c.door(26, 4, "north", double=True)
-        furnish(c.room(0, back="south"), "shop")                       # pro shop counter
-        furnish(c.room(1, back="south"), "lounge", seats=4, sit=False)
-        furnish(c.room(2, back="south"), "office", seats=3, sit=False)   # spectators' gallery desks
+        # pro shop: counter across the floor, bow displays on the back wall; lounge; spectators' gallery
+        fit(d, y0, [("s", x, 8, sl("smooth_quartz", "top")) for x in range(25, 30)] +
+            [("s", x, 11, sl("birch", "top")) for x in range(24, 29)] +
+            [("o", x, 11, "decorated_pot[cracked=false,facing=north,waterlogged=false]" if x % 2 else "target[power=0]")
+             for x in range(24, 29)] + [("s", 24, 5, pot(3)), ("G", 27, 6, "sea_lantern"), ("G", 27, 10, "sea_lantern")],
+            "birch")
+        fit(d, 6, [("c", x, 9, "south", False) for x in range(25, 29)] + [
+            ("s", 26, 7, sl("smooth_quartz", "top")), ("s", 27, 7, sl("smooth_quartz", "top")),
+            ("rug", 25, 6, 28, 8, "magenta_carpet"), ("s", 24, 5, pot(3)), ("s", 29, 5, pot(0)),
+            ("G", 27, 8, "pearlescent_froglight[axis=y]")], "birch")
+        fit(d, 10, [("s", x, 6, sl("smooth_quartz", "top")) for x in (25, 27, 29)] +
+            [("c", x, 7, "south", False) for x in (25, 27, 29)] + [("s", 24, 11, pot(3)),
+                                                                   ("G", 27, 9, "sea_lantern")], "birch")
         neo_roof(d, c, [(25, 29, 6, MOSS), (25, 29, 7, 'azalea'), (25, 29, 9, MOSS), (25, 29, 10, 'azalea')])
         d.sign(28, 6, 3, "north", ["PRO SHOP", "BOWS & GEAR"], "birch", glow=True, color="magenta")
     # ---- clubhouse tower (L5)
     if L >= 5:
         t = build(d, 23, 16, 33, 24, 4, roof="flat", core=(31, 18))
         t.door(26, 16, "north")
-        for s_, kind in enumerate(("kiosk", "canteen", "library", "lounge")):    # clubhouse floors
-            furnish(t.room(s_, back="south"), kind, books=8 if kind == "library" else 0, sit=False,
-                    seats=2 if kind == "lounge" else 0)
+        # clubhouse tower: reception, members' canteen, rules library, roof-top lounge
+        ys = [t.stand(s_) for s_ in range(4)]
+        fit(d, ys[0], [("s", 25, 20, sl("smooth_quartz", "top")), ("c", 25, 21, "south", False),
+                       ("s", 24, 23, "chest[facing=north,type=single,waterlogged=false]"), ("s", 28, 17, pot(3)),
+                       ("G", 27, 20, "pearlescent_froglight[axis=y]")], "birch")
+        fit(d, ys[1], [("s", 24, 23, "smoker[facing=north,lit=false]"), ("s", 25, 23, sl("smooth_quartz", "top")),
+                       ("s", 26, 23, "water_cauldron[level=3]"), ("s", 27, 23, "furnace[facing=north,lit=false]")] +
+            [("s", x, 19, sl("birch", "top")) for x in (25, 26, 27)] +
+            [("c", x, 18, "north", False) for x in (25, 26, 27)] + [("c", x, 20, "south", False) for x in (25, 26, 27)] +
+            [("G", 27, 21, "pearlescent_froglight[axis=y]")], "birch")
+        fit(d, ys[2], [("k", 24, z, 2) for z in range(18, 23)] + [
+            ("s", 27, 20, "birch_fence"), ("o", 27, 20, "birch_pressure_plate[powered=false]"),
+            ("c", 26, 20, "west", False), ("c", 28, 20, "east", False), ("G", 27, 18, "pearlescent_froglight[axis=y]")],
+            "birch")
+        fit(d, ys[3], [("c", x, 21, "south", False) for x in range(25, 29)] + [
+            ("s", 26, 19, sl("smooth_quartz", "top")), ("s", 27, 19, sl("smooth_quartz", "top")),
+            ("s", 24, 17, pot(3)), ("s", 24, 23, pot(0)), ("G", 27, 20, "sea_lantern")], "birch")
         neo_roof(d, t, [(25, 29, 18, MOSS), (25, 29, 19, 'azalea'), (25, 29, 21, MOSS), (25, 29, 22, 'azalea')])
         for z in (14, 26, 30):
             lamp_post(d, 34, z, y0, P)
@@ -2137,18 +2169,24 @@ def fl_hw(rel, L):
         d.set(x, 3, 4, AIR)
         d.set(x, 4, 4, AIR)
         d.set(x, y0, 4, sl("oak", "top"))
-        d.set(x, y0 + 1, 4, "bow" if False else _pot(x))
+        d.set(x, y0 + 1, 4, pot(x))
     racks = min(FRACKS[L], 2)
-    furnish(a.room(0, back="south"), "workshop", ["crafting_table"] + ["fletching_table"] * min(FLETCH[L], 3),
-            racks=racks, wood="oak")
+    # bowyer's shop: fletching benches on the back wall, settle by the hearth, racks by the stair corner
+    fit(d, y0, [("i", 13, 7, "crafting_table", "west")] + [("i", x, 10, "fletching_table") for x in (6, 7, 8)[:min(FLETCH[L], 3)]] +
+        [("r", 13, z, 1) for z in (8, 9)[:racks]] + [
+        ("c", 7, 7, "east", False), ("c", 7, 8, "east", False), ("rug", 6, 7, 6, 9, "green_carpet"),
+        ("s", 10, 10, "chest[facing=north,type=single,waterlogged=false]"), ("L", 10, 7)], "oak")
     if sto >= 2:
         for y in range(y0, 7):
             d.set(13, y, 10, "ladder[facing=north,waterlogged=false]")
         d.set(13, 7, 10, AIR)
         d.set(13, 8, 10, AIR)
         n1 = FRACKS[L] - racks if L < 3 else 1
-        furnish(a.room(1, back="north"), "workshop", ["fletching_table"] * max(0, FLETCH[L] - 3), racks=n1,
-                wood="oak")
+        fit(d, 6, [("i", x, 10, "fletching_table") for x in (8, 9)[:max(0, FLETCH[L] - 3)]] + [("r", 10, 10, 1)] + [
+            ("s", 8, 6, sl("oak", "top")), ("c", 8, 7, "south", False), ("s", 12, 6, "chest[facing=west,type=single,waterlogged=false]"),
+            ("s", 6, 6, "oak_fence"), ("s", 6, 9, "oak_fence"), ("L", 10, 7)], "oak")
+        for z in range(6, 10):                                       # bow staves drying on a pole
+            d.set(6, 8, z, lg("stripped_oak_log", "z"))
         racks += n1
     if L >= 2:
         lamp_post(d, 2, 2, y0, P)
@@ -2174,14 +2212,23 @@ def fl_hw(rel, L):
         b = build(d, 19, 4, 27, 13, 1, H=5, roof="gable", axis="z")
         d.sty_over = {}
         b.door(23, 4, "north", double=True)
-        furnish(b.room(0, back="south"), "loft", ["barrel"] * 5, racks=FRACKS[L] - racks)   # stave store
+        fit(d, y0, [("i", 20, z, "barrel", "east") for z in (7, 8, 9, 10, 11)] +
+            [("r", 26, z, 1) for z in (9, 10, 11)[:FRACKS[L] - racks]] + [
+            ("s", 22, 7, "oak_fence"), ("s", 25, 7, "oak_fence"), ("o", 22, 7, "oak_fence"), ("o", 25, 7, "oak_fence"),
+            ("L", 23, 10)], "oak")
+        for x in range(22, 26):                                      # staves seasoning on the rack
+            d.set(x, y0 + 2, 7, lg("stripped_oak_log", "x"))
         racks = FRACKS[L]
     # ---- fletcher's cottage & field pavilion (L4+)
     if L >= 4:
         c = build(d, 19, 17, 29, 24, 2, roof="gable", axis="x", core=(27, 18), chimney=(20, 21, "east"))
         c.door(23, 17, "north")
-        furnish(c.room(0, back="west"), "lounge", wood="oak")          # parlour round the hearth
-        furnish(c.room(1, back="south"), "dorm", beds=1, wood="oak")
+        fit(d, y0, [("c", 22, z, "east", False) for z in (20, 21, 22)] + [
+            ("s", 22, 23, sl("oak", "top")), ("o", 22, 23, "candle[candles=2,lit=false,waterlogged=false]"),
+            ("rug", 21, 20, 21, 22, "yellow_carpet"), ("s", 25, 23, pot(4)), ("s", 21, 18, pot(2)), ("L", 24, 20)], "oak")
+        fit(d, 6, [("bed", 24, 23, "south", "yellow"), ("s", 25, 23, sl("oak", "top")),
+                   ("s", 21, 18, "chest[facing=south,type=single,waterlogged=false]"),
+                   ("s", 22, 18, "chest[facing=south,type=single,waterlogged=false]"), ("L", 25, 20)], "oak")
         # open pavilion at the butts end
         for x, z in ((3, 28), (9, 28), (3, 32), (9, 32)):
             d.fill(x, y0, z, x, 4, z, lg("stripped_oak_log", "y"))
@@ -2191,8 +2238,16 @@ def fl_hw(rel, L):
     if L >= 5:
         g = build(d, 13, 27, 31, 33, 2, roof="gable", axis="x", core=(29, 28), chimney=(14, 30, "east"))
         g.door(20, 27, "north", double=True)
-        furnish(g.room(0, back="south"), "canteen", sit=False, wood="oak")       # guild feast hall
-        furnish(g.room(1, back="south"), "library", books=8, seats=2, sit=False, wood="oak")
+        fit(d, y0, [("s", x, 31, sl("oak", "top")) for x in range(17, 26)] +
+            [("c", x, 30, "north", False) for x in range(17, 26)] + [("c", x, 32, "south", False) for x in range(17, 26)] +
+            [("s", 27, 32, "barrel[facing=north,open=false]"), ("s", 28, 32, "barrel[facing=north,open=false]"),
+             ("L", 20, 29), ("L", 24, 29)], "oak")
+        for x in (19, 23):
+            d.banner(x, y0 + 2, 32, "north", "red")
+        fit(d, 6, [("k", x, 32, 2) for x in range(16, 22)] + [
+            ("s", 24, 29, "oak_fence"), ("o", 24, 29, "oak_pressure_plate[powered=false]"),
+            ("c", 23, 29, "west", False), ("c", 25, 29, "east", False), ("rug", 22, 28, 26, 30, "red_carpet"),
+            ("L", 23, 30)], "oak")
         for x in (31, 33):
             for z in (6, 12, 18):
                 lamp_post(d, x, z, y0, P) if x == 31 else tree(d, x, z, y0, "oak", 4, 1)
@@ -2213,11 +2268,15 @@ def fl_cas(rel, L):
     d.sign(9, 5, 4, "north", ["BOWS", "& ARROWS"], "spruce")
     d.hut(10, y0, 6)
     racks = 2 if L == 1 else 0
-    furnish(a.room(0, back="south"), "workshop", ["crafting_table"] + ["fletching_table"] * min(FLETCH[L], 2),
-            racks=racks)
+    # cabin workshop: fletching benches on the back wall, crafting bench by the hut, racks (L1) on the west wall
+    fit(d, y0, [("i", 10, 8, "crafting_table", "west")] + [("i", x, 12, "fletching_table") for x in (7, 8)[:min(FLETCH[L], 2)]] +
+        ([("r", 4, 10, 1), ("r", 4, 11, 1)] if L == 1 else []) + [
+        ("s", 9, 12, "target[power=0]"), ("s", 10, 12, "chest[facing=north,type=single,waterlogged=false]"),
+        ("L", 8, 11)], "spruce")
     if sto >= 2:                                                     # loft: more benches, racks and the bunk
         n1 = FRACKS[L] if L < 3 else 2
-        furnish(a.room(1, back="south"), "dorm", ["fletching_table"] * max(0, FLETCH[L] - 2), racks=n1, beds=1)
+        fit(d, 6, [("i", x, 12, "fletching_table") for x in (6, 7, 8)[:max(0, FLETCH[L] - 2)]] +
+            [("r", 10, z, 1) for z in (7, 8, 9)[:n1]] + [("bed", 9, 12, "south"), ("L", 8, 7)], "spruce")
         racks += n1
     # side porch = shooting line, range to the east with a hay-bale berm
     for x in range(12, 15):
@@ -2251,7 +2310,9 @@ def fl_cas(rel, L):
         sb = build(d, 3, 16, 12, 22, 1, H=5, roof="gable", axis="x")
         d.sty_over = {}
         sb.door(7, 16, "north", double=True)
-        furnish(sb.room(0, back="south"), "store", ["barrel"] * 5, racks=FRACKS[L] - racks)
+        n2 = min(3, FRACKS[L] - racks)
+        fit(d, y0, [("i", 4, z, "barrel", "east") for z in (18, 19, 20)] + [("i", 11, z, "barrel", "west") for z in (18, 19)] +
+            [("r", x, 21, 1) for x in (6, 7, 8)[:n2]] + [("L", 9, 19)], "spruce")
         racks = FRACKS[L]
         wagon(d, 14, 17, y0, "spruce", "hay_block[axis=z]", "z")
         for x in (1, 13):
@@ -2263,15 +2324,26 @@ def fl_cas(rel, L):
     if L >= 4:
         c = build(d, 16, 15, 26, 23, 2, roof="gable", axis="x", core=(24, 16), chimney=(17, 19, "east"))
         c.door(20, 15, "north", double=True)
-        furnish(c.room(0, back="west"), "lounge", seats=3, sit=False)    # clubhouse fireside
-        furnish(c.room(1, back="south"), "office", seats=2, sit=False)
+        fit(d, y0, [("c", 19, z, "east", False) for z in (18, 19, 20)] + [
+            ("s", 22, 22, "spruce_fence"), ("o", 22, 22, "spruce_pressure_plate[powered=false]"),
+            ("c", 21, 22, "west", False), ("c", 23, 22, "east", False), ("s", 18, 22, "target[power=0]"),
+            ("rug", 18, 18, 18, 20, "green_carpet"), ("L", 21, 19)], "spruce")
+        fit(d, 6, [("s", 19, 22, sl("spruce", "top")), ("c", 19, 21, "north", False),
+                   ("s", 21, 22, sl("spruce", "top")), ("c", 21, 21, "north", False), ("k", 18, 22, 2),
+                   ("L", 22, 19)], "spruce")
         bench(d, 16, 14, y0, "south", 2, "spruce", sit=False) if False else None
     # ---- hunting lodge (L5)
     if L >= 5:
         e = build(d, 3, 25, 26, 33, 2, roof="gable", axis="x", core=(24, 27), chimney=(4, 29, "east"))
         e.door(14, 25, "north", double=True)
-        furnish(e.room(0, back="south"), "canteen", sit=False)           # trophy hall dining
-        furnish(e.room(1, back="south"), "dorm", beds=4, racks=FRACKS[L] - racks)
+        fit(d, y0, [("s", x, 29, sl("spruce", "top")) for x in range(8, 17)] +
+            [("c", x, 28, "north", False) for x in range(8, 17)] + [("c", x, 30, "south", False) for x in range(8, 17)] +
+            [("s", 18, 32, "barrel[facing=north,open=false]"), ("s", 19, 32, "barrel[facing=north,open=false]"),
+             ("L", 10, 27), ("L", 15, 31)], "spruce")
+        for x in (10, 13):
+            d.banner(x, y0 + 2, 32, "north", "green")
+        fit(d, 6, [("bed", x, 32, "south") for x in (7, 10, 13, 16)] + [("r", 19, 32, 1)] +
+            [("s", 8, 32, sl("spruce", "top")), ("s", 11, 32, sl("spruce", "top")), ("L", 12, 29)], "spruce")
         racks = FRACKS[L]
         tree(d, 33, 30, y0, "spruce", 6, 2)
     else:
