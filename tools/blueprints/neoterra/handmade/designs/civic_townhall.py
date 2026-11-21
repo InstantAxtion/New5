@@ -994,12 +994,11 @@ def nt_upper(d, L, leg):
         "..._.......",
         "...........",
         "...........",
-        ".N.N.N.N.N.",            # bed pods with low partitions
         "...........",
-        ".H.H.H.H.H.",
+        "..N.N.N.N..",            # bed pods with low partitions (lamp on each)
+        ".HNHNHNHNH.",
     ], leg | {"H": BED("south", "cyan"), "N": "white_concrete"}, w=11)
-    for x in (34, 36, 38, 40, 42):
-        pts(d, y + 1, [(x, 19)], LANT())
+    pts(d, y + 1, [(35, 21), (37, 21), (39, 21), (41, 21)], LANT())
     hang(d, y, [(38, 16), (38, 19)], kind="sea_lantern")
     # ---------------------------------------------------------------- roof gardens on the wings
     ry = 12
@@ -1603,7 +1602,6 @@ def cs_mayor(d, L, leg):
                         continue
                     d.set(x, yy, z, log("stripped_spruce_log", "y") if yy not in (15, 17) else "spruce_planks")
     d.hip(48, 4, 52, 8, 19, "dark_oak_stairs", "dark_oak_slab", overhang=1)
-    for yy in range(Y0, 13):                                         # service ladder on the street-side leg
 
 
 def cs_street(d, L, leg):
