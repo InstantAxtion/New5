@@ -196,18 +196,31 @@ def hww(rel, L):
     if L >= 2:                                            # string course between the storeys
         ring(d, 1, 2, 9, 11, 5, "stone_bricks")
     d.gable(1, 2, 9, 11, RY, "z", "deepslate_tile_stairs", "deepslate_tile_slab", "bricks", overhang=1)
-    # arched forge doorway in the front gable
-    d.fill(4, 1, 2, 6, 2, 2, AIR)
-    d.set(5, 3, 2, AIR)
-    d.set(4, 3, 2, stair("brick_stairs", "west", "top"))
-    d.set(6, 3, 2, stair("brick_stairs", "east", "top"))
-    d.set(5, 4, 2, "chiseled_stone_bricks")
-    # windows (hand-placed)
-    for x, z in ((1, 5), (1, 8), (9, 5), (9, 8)):
-        d.window(x, 2, z, x, 3, z)
-    d.window(8, 2, 2, 8, 3, 2)
-    d.window(2, 2, 11, 2, 3, 11)
-    d.window(8, 2, 11, 8, 3, 11)
+    if L == 1:
+        # open-sided forge shed: dwarf walls with oak posts and a wall plate, the front open between posts
+        for z in range(3, 11):
+            for x in (1, 9):
+                d.set(x, 3, z, logb("stripped_dark_oak_log") if z in (6, 7) else AIR)
+                d.set(x, 4, z, logb("stripped_dark_oak_log", "z"))
+        for x in range(2, 9):
+            for y in (1, 2, 3):
+                d.set(x, y, 2, logb("stripped_dark_oak_log") if x in (3, 7) else AIR)
+            d.set(x, 4, 2, logb("stripped_dark_oak_log", "x"))
+        d.window(2, 2, 11, 2, 3, 11)
+        d.window(8, 2, 11, 8, 3, 11)
+    else:
+        # arched forge doorway in the front gable
+        d.fill(4, 1, 2, 6, 2, 2, AIR)
+        d.set(5, 3, 2, AIR)
+        d.set(4, 3, 2, stair("brick_stairs", "west", "top"))
+        d.set(6, 3, 2, stair("brick_stairs", "east", "top"))
+        d.set(5, 4, 2, "chiseled_stone_bricks")
+        # windows (hand-placed)
+        for x, z in ((1, 5), (1, 8), (9, 5), (9, 8)):
+            d.window(x, 2, z, x, 3, z)
+        d.window(8, 2, 2, 8, 3, 2)
+        d.window(2, 2, 11, 2, 3, 11)
+        d.window(8, 2, 11, 8, 3, 11)
     # chimney stack behind the hearth (x 4..6, z 10..12) with a flue
     for y in range(3, CH + 1):
         for x in range(4, 7):

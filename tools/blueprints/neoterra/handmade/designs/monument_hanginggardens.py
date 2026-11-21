@@ -126,7 +126,7 @@ def check_water(d):
                                                                        "pressure_plate", "sign", "lantern",
                                                                        "rail", "fern", "short_grass"))
     for x, y, z, s in bp.blocks():
-        if not s.startswith("minecraft:water"):
+        if s.split("[")[0] != "minecraft:water":
             continue
         if not holds(name(x, y - 1, z)) and name(x, y - 1, z) != "water":
             leaks.append((x, y, z, "below"))
@@ -424,8 +424,8 @@ def place_wings(d, res, wsize, whut, top=None):
 # =============================================================================================================
 #                                     NEOTERRA  -  VERDANT SKY GARDENS
 # =============================================================================================================
-NT = dict(size=(47, 58, 53), wsize=(13, 18, 13), whut=(4, 1, 4), res=((1, 2), (33, 2)))
-NT_FLOORS = {1: 2, 2: 3, 3: 4, 4: 6, 5: 7}
+NT = dict(size=(47, 58, 57), wsize=(13, 18, 13), whut=(4, 1, 4), res=((1, 2), (33, 2)))
+NT_FLOORS = {1: 2, 2: 3, 3: 4, 4: 6, 5: 9}
 TX1, TX2, TZ1, TZ2 = 17, 29, 19, 31                     # tower walls
 NS = dict(wood="birch", counter="smooth_stone_slab", rug=("light_gray", "cyan", "white"), block="white_concrete",
           bedcol="cyan")
@@ -525,6 +525,32 @@ NT_PLANS = {
         "...........",
         "A.a.L.a.A.z"], face={},
         lights=[(21, 21), (25, 22), (20, 25), (26, 25), (23, 28)]),
+    7: dict(name="tea pavilion", rows=[     # tea room & meditation: low tea tables, zen basin, bonsai shelves
+        "zfz.....LyL",
+        "...........",
+        ".q1q..o1o..",
+        ".4T2..4T2..",
+        ".q3q..o3o..",
+        "...........",
+        "S..........",
+        "S..&&&&&...",
+        "S..&lWl&..a",
+        "...&&&&&...",
+        "A.z.A.z.A.."], face={"S": "east"},
+        lights=[(20, 21), (25, 21), (20, 26), (24, 28), (27, 25)]),
+    8: dict(name="garden gallery", rows=[   # exhibition of the gardens: display plinths, a model garden, benches
+        "S.e.g.i.e.A",
+        "...........",
+        "e.........y",
+        "...GEGEG...",
+        "i..ELWLE..e",
+        "...GEGEG...",
+        "g.........i",
+        "...........",
+        "..3333.....",
+        "...........",
+        "SSS.SzS.SSS"], face={"S": "south", "e": "south"}, face2={"S": "north"},
+        lights=[(20, 22), (26, 22), (23, 25), (20, 28), (26, 28)]),
 }
 
 # staggered balcony planters per floor (outer edge cells): north row x15..31, west column z18..32, south row
@@ -536,6 +562,8 @@ NT_BALC = {
     4: ("--T--a--A--O--T--", "A---T---a---O", "-a--T--A--O--a---"),
     5: ("O--A--T--a--A--O-", "--T---a---T--", "A--O--a--T--A--O-"),
     6: ("-a--O--T--A--a--T", "O---A---T---a", "--T--a--O--A--T--"),
+    7: ("A--a--O--T--A--a-", "-T---O---a---", "a--T--A--O--a--T-"),
+    8: ("-T--A--a--O--T--A", "a---O---T---A", "-O--a--T--A--O--a"),
 }
 
 
@@ -922,7 +950,8 @@ def nt_gardens(rel, L):
             for xx in (x - 1, x, x + 1):
                 d.set(xx, 1, z, "smooth_stone")
     for x in range(6, 41):
-        d.set(x, 1, 16, "smooth_stone") if not (21 <= x <= 25) else None
+        if not 21 <= x <= 25:
+            d.set(x, 1, 16, "smooth_stone")
         d.set(x, 1, 17, "smooth_stone")
     for x1, x2 in ((15, 19), (27, 31)):                  # twin reflecting pools
         for x in range(x1, x2 + 1):
@@ -930,16 +959,18 @@ def nt_gardens(rel, L):
                 edge = x in (x1, x2) or z in (3, 13)
                 d.set(x, 1, z, "white_concrete" if edge else WATER)
     if L >= 2:
-        nt_column(d, 17, 8, 3 + (L >= 4))
-        nt_column(d, 29, 8, 3 + (L >= 4))
-    # lamps and benches along the entrance walk
-    for z in (2, 8, 14):
-        lamppost(d, 20, z, 2, 3, "diorite_wall", "lantern[hanging=false,waterlogged=false]")
-        lamppost(d, 26, z, 2, 3, "diorite_wall", "lantern[hanging=false,waterlogged=false]")
+        nt_column(d, 17, 8, 3 + (L >= 4) + (L >= 5))
+        nt_column(d, 29, 8, 3 + (L >= 4) + (L >= 5))
+    for z in (2, 8, 14):                                 # lamps along the entrance walk
+        lamppost(d, 20, z, 2, 3, "diorite_wall", lantern())
+        lamppost(d, 26, z, 2, 3, "diorite_wall", lantern())
     bench(d, 20, 2, 5, "west", "birch", 2, along="z", arms=False)
     bench(d, 26, 2, 10, "east", "birch", 2, along="z", arms=False)
-    for x, z, tp in ((14, 4, "b"), (14, 12, "c"), (32, 4, "c"), (32, 12, "b")):
-        tree(d, x, 2, z, 4, "birch_log" if tp == "b" else "cherry_log", "birch" if tp == "b" else "cherry", r=2)
+    tree(d, 14, 2, 4, 4, "birch_log", "birch", r=2)
+    tree(d, 32, 12, 2, 4, "birch_log", "birch", r=2) if False else tree(d, 32, 2, 12, 4, "birch_log", "birch", r=2)
+    if L >= 2:
+        tree(d, 14, 2, 12, 4, "cherry_log", "cherry", r=2)
+        tree(d, 32, 2, 4, 4, "cherry_log", "cherry", r=2)
     # ---------------------------------------------------------------- the tower
     for s in range(n):
         nt_tower_floor(d, s, n, L)
@@ -951,28 +982,26 @@ def nt_gardens(rel, L):
     d.set(23, 3, TZ1, "glass_pane")
     d.sign(23, 4, TZ1 - 1, "north", ["", "Verdant", "Sky Gardens", ""], "birch", glow=True, color="cyan")
     d.hut(23, 2, 26, facing="north")
-    # flower beds along the tower foot
-    for x in range(17, 30):
-        if x in (21, 22, 23, 24, 25):
+    for x in range(17, 30):                              # flower beds along the tower foot
+        if 21 <= x <= 25:
             continue
         d.set(x, 1, 18, "moss_block")
         d.set(x, 2, 18, ("azalea", "fern", "flowering_azalea", "fern")[x % 4])
-    # ---------------------------------------------------------------- super-tree grove
+    # ---------------------------------------------------------------- super-tree grove and sky walk
     trees = []
     if L >= 2:
-        trees += [("A", 8, 23, {2: 12, 3: 18, 4: 20, 5: 22}[L]), ("E", 39, 23, {2: 10, 3: 14, 4: 16, 5: 18}[L])]
+        trees += [("A", 8, 23, {2: 12, 3: 18, 4: 20, 5: 22}[L])]
     if L >= 3:
-        trees += [("C", 8, 41, {3: 12, 4: 18, 5: 20}[L])]
-    if L >= 4:
-        trees += [("D", 23, 44, {4: 20, 5: 26}[L]), ("B", 39, 41, {4: 14, 5: 20}[L])]
+        trees += [("E", 39, 23, {3: 12, 4: 16, 5: 18}[L]), ("C", 8, 41, {3: 12, 4: 18, 5: 20}[L])]
+    if L >= 5:
+        trees += [("B", 39, 41, 20), ("F", 5, 50, 11), ("G", 41, 50, 13)]
     plats = {}
     if L >= 3:
         plats["A"] = [(11, 23), (11, 24)] + ([(9, 26), (10, 26)] if L >= 4 else [])
     if L >= 4:
-        plats["C"] = [(9, 38), (10, 38)] + ([(11, 41), (11, 42)] if L >= 5 else [])
+        plats["C"] = [(9, 38), (10, 38)] + ([(11, 39), (11, 40)] if L >= 5 else [])
     if L >= 5:
-        plats["D"] = [(20, 41), (20, 42), (26, 41), (26, 42)]
-        plats["B"] = [(36, 41), (36, 42), (41, 38), (42, 38)]
+        plats["B"] = [(36, 39), (36, 40), (41, 38), (42, 38)]
         plats["E"] = [(41, 26), (42, 26), (36, 20), (36, 21)]
     for name, x, z, h in trees:
         nt_supertree(d, x, z, h, 11 if name in plats else None, plats.get(name, ()), L)
@@ -983,8 +1012,7 @@ def nt_gardens(rel, L):
     if L >= 4:
         nt_skyway(d, 9, 27, 10, 37, 11, "z")
     if L >= 5:
-        nt_skyway(d, 12, 41, 19, 42, 11, "x")
-        nt_skyway(d, 27, 41, 35, 42, 11, "x")
+        nt_skyway(d, 12, 39, 35, 40, 11, "x")
         nt_skyway(d, 41, 27, 42, 37, 11, "z")
         nt_skyway(d, 33, 20, 35, 21, 11, "x")
         for z in (20, 21):
@@ -992,56 +1020,42 @@ def nt_gardens(rel, L):
                 d.set(32, y, z, AIR)
     # ---------------------------------------------------------------- back garden
     if L >= 2:
-        for x, z in ((3, 31), (14, 36), (32, 36), (44, 31)):
+        for x, z in ((3, 31), (44, 31)):
             tree(d, x, 2, z, 4, "birch_log", "birch", r=2)
-        for x, z, f in ((5, 29, "south"), (41, 29, "south")):
-            bench(d, x, 2, z, f, "birch", 2)
+        bench(d, 5, 2, 29, "south", "birch", 2)
+        bench(d, 41, 2, 29, "south", "birch", 2)
     if L >= 3:
-        for x in range(2, 15):                          # flower meadow strips west and east of the tower
+        for x in range(2, 14):                          # flower meadows west and east of the tower
             for z in (33, 34):
                 d.set(x, 1, z, "moss_block")
                 d.set(x, 2, z, ("allium", "azure_bluet", "oxeye_daisy", "cornflower", "white_tulip")[(x + z) % 5])
-        for x in range(33, 45):
+        for x in range(34, 45):
             for z in (33, 34):
                 d.set(x, 1, z, "moss_block")
                 d.set(x, 2, z, ("cornflower", "allium", "white_tulip", "azure_bluet", "oxeye_daisy")[(x + z) % 5])
-        for x in (16, 30):
-            lamppost(d, x, 34, 2, 3, "diorite_wall", "lantern[hanging=false,waterlogged=false]")
-    if L >= 4:                                          # dragonfly lake behind the tower with a boardwalk
+        for x, z in ((14, 33), (32, 33)):
+            lamppost(d, x, z, 2, 3, "diorite_wall", lantern())
+    if L >= 4:                                          # dragonfly lake with a boardwalk, then the step garden
         for x in range(14, 33):
             for z in range(35, 40):
                 edge = x in (14, 32) or z in (35, 39)
                 d.set(x, 1, z, "white_concrete" if edge else WATER)
-        for x in range(15, 32):
-            if x in (22, 23, 24):
-                continue
-            d.set(x, 1, 36 if x % 3 else 38, WATER)
-        for z in range(35, 40):                          # boardwalk across the lake
+        for z in range(35, 40):
             for x in (22, 23, 24):
                 d.set(x, 1, z, "birch_planks" if x == 23 else "smooth_stone")
             d.set(21, 2, z, "birch_fence")
             d.set(25, 2, z, "birch_fence")
         for x, z in ((16, 37), (19, 36), (28, 38), (30, 36), (26, 37)):
             d.set(x, 2, z, "lily_pad")
-        for x, z in ((15, 38), (31, 38)):
-            d.set(x, 2, z, AIR)
-        for x in range(14, 33):                          # reeds and irises on the bank
-            if x in (21, 22, 23, 24, 25):
+        for x in range(15, 32):                          # irises and ferns on the bank
+            if 21 <= x <= 25:
                 continue
             d.set(x, 1, 34, "moss_block")
             d.set(x, 2, 34, ("blue_orchid", "fern", "allium", "fern")[x % 4])
-    if L >= 5:                                          # back terrace with seats looking over the lake
-        for x in range(13, 34):
-            for z in range(48, 52):
-                d.set(x, 1, z, "smooth_stone" if z < 51 else "polished_diorite")
-        for x in range(13, 34):
-            d.set(x, 2, 52, "birch_leaves[distance=1,persistent=true,waterlogged=false]" if x % 2 else
-                  lv("flowering_azalea"))
-        for x in (14, 18, 28, 32):
-            bench(d, x, 2, 51, "south", "birch", 2)
-        for x in (13, 21, 25, 33):
-            lamppost(d, x, 49, 2, 3, "diorite_wall", "lantern[hanging=false,waterlogged=false]")
-        # crown on the roof: four pylons carrying a solar louvre ring and hanging vines
+        nt_step_garden(d, L)
+    if L >= 5:
+        nt_supertree(d, 23, 52, 16, None, (), L, by=15)  # the tallest super-tree crowns the step garden
+        # crown on the roof: four pylons carrying a solar louvre ring and hanging azalea
         y0 = 2 + 5 * n
         for x, z in ((TX1, TZ1), (TX2, TZ1), (TX1, TZ2), (TX2, TZ2)):
             for y in range(y0, y0 + 6):
@@ -1056,6 +1070,19 @@ def nt_gardens(rel, L):
                         d.set(x, y0 + 6, z, "white_concrete")
                         d.set(x, y0 + 5, z, lv("azalea"))
         d.set(23, y0 + 6, 25, "sea_lantern")
+        # winter-garden arcade linking the two domes across the forecourt
+        for x in range(14, 33):
+            for z in (15, 18):
+                if x % 3 == 2:
+                    for y in range(2, 6):
+                        d.set(x, y, z, "white_concrete")
+            for z in range(15, 19):
+                d.set(x, 6, z, "glass" if z in (16, 17) else "white_concrete")
+            if x % 3 == 2:
+                for z in (16, 17):
+                    d.set(x, 6, z, "white_concrete")
+                    d.set(x, 5, z, lantern(True)) if z == 16 else None
+            d.set(x, 7, 16, slab("smooth_quartz_slab")) if False else None
     place_wings(d, NT["res"], NT["wsize"], NT["whut"])
     connect_walls(d)
     return d
@@ -1094,8 +1121,8 @@ def nt_wing(rel, L):
                 "...........",
                 "..........."]
     else:
-        R = {2: 4.5, 3: 5.5, 4: 6.5, 5: 6.5}[L]
-        V = {2: 6, 3: 7.5, 4: 9, 5: 12}[L]
+        R = {2: 5.5, 3: 6.5, 4: 6.5, 5: 6.5}[L]
+        V = {2: 7, 3: 8.5, 4: 10.5, 5: 13.5}[L]
         inside = set()
         for x in range(13):
             for z in range(13):
@@ -1110,7 +1137,7 @@ def nt_wing(rel, L):
                         for a, b, c in ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, 0, 1), (0, 0, -1)))
             if not shell:
                 continue
-            rib = x == cx or z == cz or abs(x - cx) == abs(z - cz) or y == 1
+            rib = x == cx or z == cz or y == 1 or (y % 4 == 0 and L >= 3)
             d.set(x, y, z, "white_concrete" if rib else ("glass" if L < 5 or y % 4 else "light_blue_stained_glass"))
         zmin = min(z for (x, y, z) in inside if x == cx and y == 1)
         zmax = max(z for (x, y, z) in inside if x == cx and y == 1)

@@ -286,8 +286,8 @@ def lavafarm(pack, rel, L):
     d.tag(12, 2, 6, "farm_output")
     d.set(2, 2, 6, "barrel[facing=up,open=false]")
     approach(d, cx, Z1, ["Lava Dripstone", "Farm", "Bring:", "buckets"])
-    # output is lava in cauldrons (blocks, collected by bucket): ~2300 ticks per cauldron at the test's x10 ticks
-    d.farm_test(expect={}, ticks=8000, blocks=[(x, 2, z, "minecraft:lava_cauldron") for (x, z) in spots],
+    # output is lava in cauldrons (blocks, collected by bucket): ~2300 ticks per cauldron at x10 random ticks
+    d.farm_test(expect={}, ticks=12000, blocks=[(x, 2, z, "minecraft:lava_cauldron") for (x, z) in spots],
                 blocks_min=7)
     return d
 

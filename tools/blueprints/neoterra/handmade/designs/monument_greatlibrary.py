@@ -480,8 +480,7 @@ def hw_rotunda_ground(d, L):
     d.set(cx + 1, y + 1, cz - 1, "potted_red_tulip")
     d.set(cx, y + 1, cz - 1, "chiseled_bookshelf[facing=north,slot_0_occupied=true,slot_1_occupied=true,"
                              "slot_2_occupied=true,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
-    d.rug(cx, cz - 7, cx, cz - 3, y, ("red_carpet",), "plain")
-    d.rug(cx - 2, cz - 2, cx + 2, cz + 2, y, ("blue_carpet", "blue_carpet"))
+    d.rug(cx, cz - 7, cx, cz - 4, y, ("red_carpet",), "plain")
     for a, side in ((0, "west"), (45, "west"), (135, "east"), (180, "east"), (225, "east"), (315, "west")):
         x, z = rim(cx, cz, HW_R, a)
         desk(d, x, y, z, side, "dark_oak",
@@ -553,6 +552,7 @@ def hw_library(rel, L):
         for x in (21, 22, 23):
             d.set(x, 1, z, "stone_bricks")
     hw_rotunda(d, L)
+    hw_hedges(d, L)
     if L >= 3:
         hw_square(d, L)
         hw_range(d, L, west=True)
@@ -569,10 +569,28 @@ def hw_library(rel, L):
     return d
 
 
+def hw_hedges(d, L):
+    """Clipped yew hedges along the outer walls of the ranges (the plot edge under their eaves)."""
+    yew = "spruce_leaves[distance=1,persistent=true,waterlogged=false]"
+    if L >= 3:
+        for z in range(9, 36):
+            d.set(0, 2, z, yew)
+    if L >= 4:
+        for z in range(9, 36):
+            d.set(44, 2, z, yew)
+    if L >= 5:
+        for x in range(1, 44):
+            if x != 22:
+                d.set(x, 2, 44, yew)
+        for z in range(36, 44):
+            d.set(0, 2, z, yew)
+            d.set(44, 2, z, yew)
+
+
 def hw_square(d, L):
     """L3: iron railing on a stone curb round the rotunda with four gaps, four lamp standards, two benches."""
     cx, cz = HW_C
-    for x, z in ring(cx, cz, 11):
+    for x, z in ring(cx, cz, 10):
         a = ang(cx, cz, x, z)
         if min(adiff(a, k * 90) for k in range(4)) < 9:
             continue
@@ -679,7 +697,7 @@ def hw_divinity(d, L, two):
     for z in (13, 17, 27, 31):
         d.item(5, y, z, "lectern[facing=north,has_book=true,powered=false]")
         d.set(5, y, z + 1, "red_carpet")
-    d.rug(4, 11, 6, 33, y, ("red_carpet", "yellow_carpet"))
+    d.rug(5, 11, 5, 33, y, ("red_carpet",), "plain")
     for z in (12, 13, 15, 16, 20, 24, 28, 29, 31, 32):
         if not two or z < 29:
             d.chair(2, y, z, "west", "dark_oak")
@@ -745,7 +763,6 @@ def hw_lecture(d):
     d.set(36, 2, 11, "potted_fern")
     d.set(41, 2, 11, "barrel[facing=up,open=false]")
     d.set(40, 2, 11, "barrel[facing=up,open=false]")
-    d.rug(39, 11, 39, 26, y, ("gray_carpet",), "plain")
     for z in (14, 20, 26):
         d.lamp(39, 6, z)
     hw_range_stair(d, 42, 41)
@@ -1056,7 +1073,7 @@ def hw_gate_tower(d):
     d.chair(20, y, 39, "west", "dark_oak", arms=True)
     d.bookshelf(25, y, 36, 2)
     d.bookshelf(25, y, 42, 2)
-    d.rug(21, 38, 24, 40, y, ("purple_carpet", "magenta_carpet"))
+    d.rug(22, 38, 23, 40, y, ("purple_carpet",), "plain")
     chandelier(d, 22, 39, 24, 23)
 
 
