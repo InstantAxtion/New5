@@ -108,7 +108,7 @@ RIVER = ["cobblestone", "mossy_cobblestone", "andesite", "cobblestone", "tuff", 
 
 
 
-def trim(d, x, z, y1, y2, face, span=1):
+def trim(d, x, z, y1, y2, face, span=1, sill=True):
     """Cascadia window trim for ONE window: a stripped-log lintel over it (one log wider each side, set into
     the horizontal log wall) and a board sill (top trapdoor) outside under it. (x, z) = first window column,
     span = columns along the wall, y1..y2 = pane rows, face = outward side of the wall."""
@@ -119,7 +119,7 @@ def trim(d, x, z, y1, y2, face, span=1):
         b = d.get(cx, y2 + 1, cz)
         if b.startswith("minecraft:spruce_log") or b.startswith("minecraft:spruce_planks"):
             d.set(cx, y2 + 1, cz, LOG("stripped_spruce_log", "x" if fz else "z"))
-    for k in range(span):
+    for k in range(span if sill else 0):
         cx, cz = x + ax * k + fx, z + az * k + fz
         if d.air(cx, y1 - 1, cz):
             d.set(cx, y1 - 1, cz, f"spruce_trapdoor[facing={face},half=top,open=false,powered=false,waterlogged=false]")
@@ -3445,7 +3445,7 @@ def al_cascadia(rel, L):
     for x in range(x1 + 2, X2 - 1, 4):
         if x != door:
             d.window(x, 3, z1, x + 1 if x + 1 != door else x, 4, z1)
-            trim(d, x, z1, 3, 4, "north", span=2 if x + 1 != door else 1)
+            trim(d, x, z1, 3, 4, "north", span=2 if x + 1 != door else 1, sill=False)   # porch: no sill
     d.window(x1, 3, 9, x1, 4, 9)
     trim(d, x1, 9, 3, 4, "west")
     d.sign(door + 1, 4, z1 - 1, "north", ["HERBS &", "TONICS"], "spruce")

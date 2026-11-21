@@ -2369,13 +2369,15 @@ def cottage(d, pack, x1, z1, w=9, kind="poultry"):
         # front garden: path, planted strip, lamp, bench on the east side
         if o["porch"] != "gabled":
             path(d, xm, z1 - 2, xm, z1 - 1, "gravel")
-        path(d, xm, z1 - 3, xm, z1 - 3, "gravel")
-        if o["garden"] == "carrots":
-            carrots(d, x1, z1 - 3, xm - 2, z1 - 3)
-            carrots(d, xm + 2, z1 - 3, x2, z1 - 3)
-        else:
-            flowers(d, x1, xm - 2, (z1 - 3,), o["garden"])
-            flowers(d, xm + 2, x2, (z1 - 3,), o["garden"][::-1])
+        path(d, x1, z1 - 3, x2, z1 - 3, "gravel")                      # garden walk along the front to the lane
+        beds = [a for a in (0, 1, w - 2, w - 1) if a not in o["boxg"] and a != o["lamp"]]
+        for a in beds:                                                 # corner flower / vegetable beds
+            if o["garden"] == "carrots":
+                d.set(x1 + a, 1, z1 - 2, "farmland[moisture=7]")
+                d.set(x1 + a, 2, z1 - 2, "carrots[age=7]")
+            else:
+                d.set(x1 + a, 1, z1 - 2, GRASS)
+                d.set(x1 + a, 2, z1 - 2, o["garden"][a % len(o["garden"])])
         lamp_post(d, x1 + o["lamp"], z1 - 2, pack)
         if w < 15:
             bench(d, x2 + 1, z1 + 2, "east", "dark_oak", 2, "z")
@@ -2522,7 +2524,7 @@ def cot_hw_poultry(d, P, x1, z1, w, bc):
     d.bed(x1 + 4, 7, z1 + 1, "north", bc)
     P(3, 7, 1, BARREL)
     P(3, 8, 1, CANDLE2)
-    P(1, 7, 1, "barrel[facing=east,open=false]")
+    P(1, 7, 4, "barrel[facing=east,open=false]")
     P(1, 7, 5, slab(f"{wd}_slab", "top"))                              # feather pillows on the blanket box
     P(1, 8, 5, "white_carpet")
     P(7, 7, 1, "barrel[facing=west,open=false]")
@@ -2790,9 +2792,9 @@ def cot_cs_poultry(d, P, x1, z1, w, bc):
         _ch(d, x1, z1, a, 2, b, back, wd)
     _ch(d, x1, z1, 7, 2, 3, "west", wd)                                # by the fire
     d.rug(x1 + 7, z1 + 2, x1 + 8, z1 + 4, 2, ("yellow_carpet", "brown_carpet"), "check")
-    P(8, 2, 1, "hay_block[axis=y]")                                   # brooder box
-    P(8, 3, 1, trap(wd, "north", "bottom"))
-    P(9, 2, 1, BARREL)
+    P(9, 2, 1, "hay_block[axis=y]")                                   # brooder box by the fire
+    P(9, 3, 1, trap(wd, "north", "bottom"))
+    P(8, 2, 1, BARREL)
     P(9, 2, 5, "composter[level=6]")
     P(9, 2, 6, BARREL)
     hang2(d, x1 + 5, z1 + 4, 4)
@@ -2970,8 +2972,8 @@ def cot_cs_horse(d, P, x1, z1, w, bc):
     P(1, 2, 1, "barrel[facing=north,open=false]")
     for a in (1, 2):                                                   # deck: bench, boot barrel, saddle on the rail
         _ch(d, x1, z1, a, 2, -1, "south", wd)
-    P(10, 2, -1, BARREL)
-    P(10, 3, -1, LANT)
+    P(3, 2, -1, BARREL)
+    P(8, 2, -1, LANT)
     P(11, 2, -1, "hay_block[axis=x]")
     P(8, 3, -2, "brown_carpet")
     d.banner(x1 + 6, 4, z1 + 1, "south", "red")                        # rodeo pennants over the door wall
@@ -3006,8 +3008,7 @@ def cot_nt_poultry(d, P, x1, z1, w, bc):
     _ch(d, x1, z1, 7, 2, 3, "east", "mangrove")
     P(6, 2, 3, slab("smooth_quartz_slab"))
     d.rug(x1 + 5, z1 + 2, x1 + 6, z1 + 4, 2, ("yellow_carpet", "light_gray_carpet"), "check")
-    P(7, 2, 5, "white_concrete")
-    P(7, 3, 5, "potted_dandelion")
+    P(7, 2, 4, "potted_dandelion")
     P(7, 2, 6, "barrel[facing=up,open=false]")
     _nt_light(d, x1, z1, ((3, 6, 3), (6, 6, 3)))
     d.bed(x1 + 2, 7, z1, "north", bc)
