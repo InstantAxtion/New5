@@ -361,6 +361,8 @@ def building(d, x1, z1, x2, z2, nf=1, axis="x", roof="gable", doors=(("north", N
             d.set(cx, yy, cz, mat if P != "Cascadia" or yy % 3 else "mossy_cobblestone")
         d.set(cx, b.ridge + 2, cz, {"Hearthwood": "brick_wall", "Cascadia": "cobblestone_wall",
                                     "Neoterra": "iron_bars"}[P])
+    import inspect
+    b.line = inspect.stack()[1].lineno
     d._blds = getattr(d, "_blds", []) + [b]
     return b
 
@@ -479,6 +481,7 @@ def legend(d, **over):
         "N": ("black_concrete", "black_stained_glass_pane"), "a": (top, "amethyst_cluster[facing=up,waterlogged=false]"),
         "d": ("oak_fence", "hay_block[axis=y]", "carved_pumpkin[facing=south]"), "D": ("oak_fence", "hay_block[axis=y]", "carved_pumpkin[facing=north]"),
         "@": ("white_concrete", "target[power=0]"), "~": ("water[level=0]",), "w2": None,
+        "|": (f"{w}_fence",), "=": (top,), "$": (top, "potted_red_mushroom"), "^": (top, LANT_S),
     }
     L.pop("w2")
     for k, v in over.items():
@@ -512,6 +515,18 @@ def plan_at(d, y, x0, z0, rows, lights=(), **over):
                     d.set(x, y + kk, z, "chain[axis=y,waterlogged=false]")
                 d.set(x, y + k - 1, z, lamp)
                 break
+
+
+def fbox(d, x, y, z, facing, flower="potted_red_tulip"):
+    """One window box: a trapdoor ledge under the window at (x, y, z) outside the wall, a pot on it."""
+    d.set(x, y, z, TD(_w(d) if d.pack != "Cascadia" else "spruce", facing, "top", "false"))
+    d.set(x, y + 1, z, flower)
+
+
+def wlamp(d, x, y, z):
+    """One wall lantern hung from a short bracket at (x, y+1, z)."""
+    d.set(x, y + 1, z, f"{_w(d)}_fence" if d.pack != "Neoterra" else "iron_bars")
+    d.set(x, y, z, LANT if d.pack != "Neoterra" else SLANT)
 
 
 def put_all(d, y, items):
@@ -684,15 +699,36 @@ def gt_hearthwood(rel, L):
     if L >= 2:
         d.set(x2, 2, 7, AIR)
         d.set(x2, 3, 7, AIR)
-        building(d, 10, 4, 19, 10, nf=1 if L < 3 else 2, axis="x", doors=(("north", 15), ("west", 7)),
-                 chimney=(20, 7))
+        b = building(d, 10, 4, 19, 10, nf=1 if L < 3 else 2, axis="x", doors=(("north", 15), ("west", 7)),
+                     chimney=(20, 7))
+        room(d, b, 0, ["Ku    Mp",            # watch-house mess: kegs, smoker and crocks by the door,
+                       "  nn nnk",            # two refectory tables with benches, forge-side water and
+                       "  TT TTF",            # furnace on the chimney wall
+                       "  ss ssW",
+                       "      lK"], lights=[(3, 2), (5, 2)], F="furnace[facing=west,lit=false]")
+        room(d, b, 1, ["1l1l1l1C",            # barracks: four bunks under the north wall,
+                       "2 2 2 2 ",            # two more by the stair, chests at the ends
+                       "c      K",
+                       "     4 4",
+                       "     3l3"], lights=[(2, 2), (5, 2)])
+        wlamp(d, 14, 4, 3)
+        wlamp(d, 16, 4, 3)
+        fbox(d, 12, 7, 3, "north") if L >= 3 else None
+        fbox(d, 18, 7, 3, "north", "potted_oxeye_daisy") if L >= 3 else None
         d.sign(13, 4, 3, "north", ["Watch", "House"], "dark_oak")
         path(d, 15, 0, 15, 3)
         bench(d, 11, 3, "south", 2)
         lamp_post(d, 18, 2)
     if L >= 3:
         # armoury and smithy behind, drill yard beside it
-        building(d, 10, 13, 19, 19, nf=1, axis="x", doors=(("north", 14), ("west", 16)), chimney=(20, 16))
+        b = building(d, 10, 13, 19, 19, nf=1, axis="x", doors=(("north", 14), ("west", 16)), chimney=(20, 16))
+        room(d, b, 0, ["RR   GAY",            # armoury: spear racks, grindstone / anvil / smithing bench,
+                       "c      F",            # forge on the chimney wall, two pells to practise on
+                       "   D D W",
+                       "       K",
+                       "RRR  Z k"], lights=[(2, 2), (5, 2)], F="furnace[facing=west,lit=false]")
+        wlamp(d, 13, 4, 12)
+        wlamp(d, 15, 4, 12)
         yx1, yz1, yx2, yz2 = 1, 13, 8, 21
         d.fill(yx1, 1, yz1, yx2, 1, yz2, "coarse_dirt")
         for x in range(yx1, yx2 + 1):
@@ -713,14 +749,48 @@ def gt_hearthwood(rel, L):
         cart(d, 15, 21, "x")
     if L >= 4:
         # barracks hall
-        building(d, 23, 4, 34, 11, nf=2, axis="x", doors=(("north", 28), ("west", 8)), chimney=(35, 8))
+        b = building(d, 23, 4, 34, 11, nf=2, axis="x", doors=(("north", 28), ("west", 8)), chimney=(35, 8))
+        room(d, b, 0, ["Ku     MpK",          # barracks refectory
+                       "  nn nnnnk",
+                       "  TT TTTTW",
+                       "  ss ssssF",
+                       "         l",
+                       "     c  K "], lights=[(3, 2), (7, 2)], F="furnace[facing=west,lit=false]")
+        room(d, b, 1, ["1l1l1C1l1l",          # dormitory
+                       "2 2 2 2 2 ",
+                       "c        c",
+                       "         K",
+                       "      4 4 ",
+                       "      3l3K"], lights=[(2, 2), (7, 2)])
+        wlamp(d, 27, 4, 3)
+        wlamp(d, 29, 4, 3)
+        lamp_post(d, 22, 2)
+        lamp_post(d, 35, 2)
+        bench(d, 30, 1, "north", 3)
+        fbox(d, 25, 7, 3, "north")
+        fbox(d, 31, 7, 3, "north", "potted_cornflower")
         path(d, 28, 0, 28, 3)
         flowerbed(d, 23, 1, 26, 2)
         flowerbed(d, 31, 1, 34, 2)
     if L >= 5:
         # stable and a gate tower round a cobbled court
-        building(d, 23, 15, 34, 21, nf=2, axis="x", doors=(("north", 26), ("north", 31)))
-        building(d, 37, 4, 43, 10, nf=3, roof="hip", doors=(("north", None),), ground="stone_bricks")
+        b = building(d, 23, 15, 34, 21, nf=2, axis="x", doors=(("north", 26), ("north", 31)))
+        room(d, b, 0, ["Hh W  W hH",          # stable: troughs by the doors, three stalls with hay
+                       "          ",
+                       "     | | |",
+                       "     h h h",
+                       "     u   K"], lights=[(4, 1), (7, 1)])
+        room(d, b, 1, ["HHHhh hHHH",          # hay loft and saddle store
+                       "H        H",
+                       "m        m",
+                       "      KK c",
+                       "      HHHH"], lights=[(4, 1), (7, 2)])
+        b = building(d, 37, 4, 43, 10, nf=3, roof="hip", doors=(("north", None),), ground="stone_bricks")
+        room(d, b, 0, ["x   C", "R   k", "R t l", "  s  "], lights=[(2, 1)])      # keep: captain's post
+        room(d, b, 1, ["1l1 C", "2 2  ", "c    "], lights=[(1, 2)])                 # officers' bunks
+        room(d, b, 2, ["RR  x", "k   G", "     ", "    c", "Z   K"])                # weapons store under the roof
+        wlamp(d, 39, 4, 3)
+        wlamp(d, 41, 4, 3)
         d.banner(40, 13, 3, "north", "red")
         d.fill(20, 1, 12, 37, 1, 14, "cobblestone")
         for x in (21, 37):
@@ -883,14 +953,37 @@ def gt_cascadia(rel, L):
                    (3, 11, "chest[facing=east,type=single,waterlogged=false]"), (6, 11, SL("spruce", "top"), POT.replace("FACE", "north"))])
     # ---- growth: a ranger station complex
     if L >= 2:                                                    # equipment shed with a work porch
-        building(d, 23, 4, 31, 10, nf=1, axis="z", doors=(("north", 27), ("west", 7)))
+        b = building(d, 23, 4, 31, 10, nf=1, axis="z", doors=(("north", 27), ("west", 7)))
+        room(d, b, 0, ["XYF  OK",             # equipment shed: bench tools along the north wall,
+                       "      k",             # a work table in the middle, saw sharpening by the barrels
+                       "  tt  G",
+                       "       ",
+                       "c  m HK"], lights=[(3, 2)])
+        wlamp(d, 26, 4, 3)
+        wlamp(d, 28, 4, 3)
         for z in range(5, 10):
             d.set(22, 1, z, "spruce_planks")
         cart(d, 33, 6, "z")
         lamp_post(d, 21, 3)
         path(d, 12, 13, 26, 13)
     if L >= 3:                                                    # two-storey bunkhouse
-        building(d, 21, 16, 33, 23, nf=2, axis="x", doors=(("north", 27), ("west", 19)), chimney=(34, 20))
+        b = building(d, 21, 16, 33, 23, nf=2, axis="x", doors=(("north", 27), ("west", 19)), chimney=(34, 20))
+        room(d, b, 0, ["MFW=p  KKu ",         # bunkhouse cookroom: stove, sink, crocks, flour barrels,
+                       "  nnn nnn  ",         # two long tables
+                       "  TTT TTT k",
+                       "  sss sss l",
+                       "          c",
+                       "      K  hH"], lights=[(3, 2), (7, 2)])
+        room(d, b, 1, ["1l1l1C1l1l1",         # bunk room for the fire crew
+                       "2 2 2 2 2 2",
+                       "c         c",
+                       "          K",
+                       "      4 4 4",
+                       "      3l3l3"], lights=[(2, 2), (8, 2)])
+        d.set(25, 4, 15, LANT)
+        d.set(30, 4, 15, LANT)
+        fbox(d, 23, 7, 15, "north", "potted_fern")
+        fbox(d, 29, 7, 15, "north", "potted_fern")
         for x in range(21, 34):                                   # porch along the front
             d.set(x, 1, 15, "spruce_planks")
             d.set(x, 1, 14, "spruce_planks")
@@ -902,7 +995,27 @@ def gt_cascadia(rel, L):
         bench(d, 22, 15, "south", 2)
         bench(d, 31, 15, "south", 2)
     if L >= 4:                                                    # horse barn and corral
-        building(d, 2, 21, 12, 31, nf=2, axis="z", doors=(("north", 7), ("east", 25)))
+        b = building(d, 2, 21, 12, 31, nf=2, axis="z", doors=(("north", 7), ("east", 25)))
+        room(d, b, 0, ["Hh W  hHH",           # horse barn: troughs and hay by the door,
+                       "         ",           # three stalls along the west wall, tack by the side door
+                       "h |     K",
+                       "  |      ",
+                       "h |     k",
+                       "  |     W",
+                       "h |     H",
+                       "  |      ",
+                       "      c H"], lights=[(4, 2), (4, 6)])
+        room(d, b, 1, ["HHHH HHHH",           # hay loft
+                       "H       H",
+                       "m       m",
+                       "H       H",
+                       "        K",
+                       "H       H",
+                       "h       c",
+                       "      HHH",
+                       "      HHH"], lights=[(4, 3)])
+        wlamp(d, 6, 4, 20)
+        wlamp(d, 8, 4, 20)
         for x in range(14, 20):
             for z in range(25, 32):
                 if x in (14, 19) or z in (25, 31):
@@ -912,8 +1025,27 @@ def gt_cascadia(rel, L):
         d.set(16, 2, 30, "hay_block[axis=y]")
         tree(d, 37, 2, 3, "spruce_log", "spruce_leaves", 7, 2, cone=True)
     if L >= 5:                                                    # radio room / mess hall and a second lookout
-        building(d, 21, 26, 37, 32, nf=2, axis="x", doors=(("north", 29), ("north", 24)), chimney=(29, 33))
+        b = building(d, 21, 26, 37, 32, nf=2, axis="x", doors=(("north", 29), ("north", 24)), chimney=(29, 33))
+        room(d, b, 0, ["MF W=p   KKu=$c",     # station mess: kitchen run, two tables for the crews
+                       "    nnn  nnn   ",
+                       "    TTT  TTT  k",
+                       "    sss  sss  F",
+                       "      h    KHH "], lights=[(5, 2), (10, 2)], F="furnace[facing=west,lit=false]")
+        room(d, b, 1, ["xC tj  CCC  t K",     # radio and map room: radio sets, map table, filing
+                       "   s  nn   s   ",
+                       "      TT      c",
+                       "      ss      K",
+                       "          f   f"], lights=[(6, 2), (11, 2)])
+        wlamp(d, 23, 4, 25)
+        wlamp(d, 30, 4, 25)
         t2 = building(d, 35, 8, 39, 12, nf=5, roof="hip", doors=(("west", None),), stairs=False)
+        room(d, t2, 0, ["x k", "   ", "c  "])                 # lookout tower: ranger's desk,
+        room(d, t2, 1, ["1l ", "2  ", "c  "])                 # a night-watch bunk,
+        room(d, t2, 2, ["K x", "   ", "t  "])                 # stores,
+        room(d, t2, 3, ["1 C", "2  ", "   "])                 # a second bunk,
+        room(d, t2, 4, ["x j", "   ", "s  "])                 # and the radio post on top
+        wlamp(d, 34, 4, 9)
+        wlamp(d, 34, 4, 11)
         ladder(d, 38, 11, 2, 22, "north")
         for y in range(t2.ridge + 1, t2.ridge + 4):
             d.set(37, y, 10, "iron_bars")
@@ -1043,7 +1175,15 @@ def gt_neoterra(rel, L):
                         (5, 11, SL("smooth_quartz", "top"), "potted_azure_bluet")])
     # ---- growth: a security campus
     if L >= 2:                                                    # vehicle bay / checkpoint
-        building(d, 23, 3, 33, 10, nf=1, roof="flat", doors=(("north", 26), ("west", 7)))
+        b = building(d, 23, 3, 33, 10, nf=1, roof="flat", doors=(("north", 26), ("west", 7)))
+        room(d, b, 0, ["XY       ",           # vehicle bay: a patrol rover parked inside the roller door,
+                       "O   qqq  ",           # tool benches on the west wall, spares at the back
+                       "G   qqq k",
+                       "    qqq c",
+                       "         ",
+                       "u  ===  K"], lights=[(4, 1), (4, 4)], q=("gray_concrete", "gray_stained_glass_pane"))
+        wlamp(d, 25, 4, 2)
+        wlamp(d, 27, 4, 2)
         for x in range(28, 33):
             for y in (2, 3, 4):
                 d.set(x, y, 3, "iron_bars" if y < 4 else "light_gray_concrete")
@@ -1052,20 +1192,79 @@ def gt_neoterra(rel, L):
         lamp_post(d, 35, 1)
         path(d, 14, 1, 22, 2)
     if L >= 3:                                                    # command centre
-        building(d, 23, 14, 35, 22, nf=2, roof="flat", doors=(("north", 29), ("west", 18)))
+        b = building(d, 23, 14, 35, 22, nf=2, roof="flat", doors=(("north", 29), ("west", 18)))
+        room(d, b, 0, ["NNN    NNNx",         # operations room: screen desks facing north, briefing table,
+                       "sss    sss ",         # map table, files
+                       "   nnn    P",
+                       "   ttt    C",
+                       "   sss    c",
+                       "          K",
+                       "      P   u"], lights=[(4, 2), (8, 2), (4, 5)], C=CHISEL.replace("FACE", "west"))
+        room(d, b, 1, ["Ct P   Ct P",         # two glass offices and a meeting table
+                       " s      s  ",
+                       "     nn    ",
+                       "     TT    ",
+                       "     ss    ",
+                       "      g g K",
+                       "       PPP "], lights=[(5, 2), (5, 5)])
+        wlamp(d, 28, 4, 13)
+        wlamp(d, 30, 4, 13)
         for x in range(24, 35, 3):
             d.set(x, 1, 12, "moss_block")
             d.set(x, 2, 12, "azalea")
         bench(d, 26, 12, "north", 2)
         bench(d, 31, 12, "north", 2)
     if L >= 4:                                                    # barracks block
-        building(d, 2, 20, 15, 29, nf=2 if L == 4 else 3, roof="flat", doors=(("north", 9), ("east", 24)))
+        b = building(d, 2, 20, 15, 29, nf=2 if L == 4 else 3, roof="flat", doors=(("north", 9), ("east", 24)))
+        room(d, b, 0, ["P N       jP",        # crew lounge: sofa facing the screen, dining corner
+                       "  t     nn  ",
+                       " sss    TT  ",
+                       "        ss  ",
+                       "            ",
+                       "C          K",
+                       "g          g",
+                       "      g   ff"], lights=[(2, 2), (8, 2), (5, 5)], C=CHISEL.replace("FACE", "east"))
+        room(d, b, 1, ["1l1l1C1l1l1l",        # dormitory floor
+                       "2 2 2 2 2 2 ",
+                       "c          c",
+                       "           K",
+                       "            ",
+                       "      4 4 4 ",
+                       "      3l3l3 "], lights=[(3, 2), (9, 2)])
+        room(d, b, 2, ["1l1l1C1l1l1l",        # dormitory with a study table
+                       "2 2 2 2 2 2 ",
+                       "    nn      ",
+                       "c   TT     c",
+                       "    ss     K",
+                       "            ",
+                       "      ggg   ",
+                       "        PPP "], lights=[(3, 2), (9, 2)])
+        wlamp(d, 8, 4, 19)
+        wlamp(d, 10, 4, 19)
         path(d, 9, 17, 9, 19)
         for z in range(31, 35):
             d.set(4, 1, z, "moss_block")
             d.set(4, 2, z, "flowering_azalea" if z % 2 else "azalea")
     if L >= 5:                                                    # training hall with a roof court
-        building(d, 18, 25, 40, 34, nf=2, roof="flat", doors=(("north", 23), ("north", 35), ("west", 30)))
+        b = building(d, 18, 25, 40, 34, nf=2, roof="flat", doors=(("north", 23), ("north", 35), ("west", 30)))
+        room(d, b, 0, ["RRR      ZZZ     RRRu",   # training hall: weapon racks, target wall, two lines
+                       "                    k",   # of pells either side of a sparring mat
+                       "   D   D   D   D    G",
+                       "                     ",
+                       " oooooooooooo        ",
+                       "   D   D   D   D    W",
+                       "                    K",
+                       "      @  @  @   PPP  "], lights=[(4, 2), (10, 2), (16, 2), (10, 5)])
+        room(d, b, 1, ["MFW==p  KKu   =$=$=P ",   # canteen upstairs: kitchen line and four tables
+                       "                     ",
+                       "  nnn  nnn  nnn  nnn ",
+                       "  TTT  TTT  TTT  TTT ",
+                       "  sss  sss  sss  sss ",
+                       "                    g",
+                       "      g   g   g   g  ",
+                       "      PPPP          K"], lights=[(3, 3), (8, 3), (13, 3), (18, 3)])
+        wlamp(d, 22, 4, 24)
+        wlamp(d, 36, 4, 24)
         for x in range(38, 42):
             for z in range(14, 23):
                 if (x + z) % 4 == 0:
@@ -1219,8 +1418,20 @@ def ar_hearthwood(rel, L):
                    (4, 8, SL("dark_oak", "top"), "lantern[hanging=false,waterlogged=false]")])
     # ---- growth: the bowyers' guild yard east of the range
     if L >= 2:                                                    # bowyer's workshop (L3: loft store above)
-        building(d, 27, 3, 36, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 31), ("west", 6)),
-                 chimney=(31, 10))
+        b = building(d, 27, 3, 36, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 31), ("west", 6)),
+                     chimney=(31, 10))
+        room(d, b, 0, ["XE   GYK",            # bowyer's shop: fletching and crafting bench, grindstone,
+                       "       R",            # staves stood in a rack, the bow bench by the window
+                       "  tt w R",
+                       "       k",
+                       "      Kc"], lights=[(3, 2), (6, 2)])
+        room(d, b, 1, ["KKmKKmHH",            # loft store of shafts, feathers and twine
+                       "h      m",
+                       "H      c",
+                       "      KK",
+                       "      HH"], lights=[(3, 2)])
+        d.set(30, 4, 2, LANT)
+        d.set(33, 4, 2, LANT)
         d.sign(29, 4, 2, "north", ["Bows &", "Arrows"], "dark_oak")
         for x in range(28, 35):                                   # striped awning over the shop window
             d.set(x, 5, 2, "red_wool" if x % 2 else "white_wool")
@@ -1229,17 +1440,53 @@ def ar_hearthwood(rel, L):
         flowerbed(d, 28, 0, 30, 1)
         flowerbed(d, 32, 0, 34, 1)
     if L >= 3:                                                    # timber store / seasoning shed for staves
-        building(d, 27, 12, 35, 18, nf=1, axis="z", doors=(("north", 31),))
+        b = building(d, 27, 12, 35, 18, nf=1, axis="z", doors=(("north", 31),))
+        room(d, b, 0, ["==   ==",             # seasoning shed: yew staves racked to dry
+                       "       ",
+                       "==   ==",
+                       "       ",
+                       "==K K=="], lights=[(3, 2)], **{"=": ("stripped_oak_log[axis=x]", "oak_log[axis=x]")})
+        wlamp(d, 30, 4, 11)
         for z in range(13, 18):                                   # stacked staves under the eaves
             d.set(37, 2, z, LOG("stripped_oak_log", "z"))
             d.set(37, 3, z, LOG("oak_log", "z") if z % 2 else LOG("birch_log", "z"))
         path(d, 25, 10, 42, 11)
     if L >= 4:                                                    # guild hall with mess and archers' quarters
-        building(d, 27, 21, 42, 29, nf=2, axis="x", doors=(("north", 34), ("west", 25)), chimney=(43, 25))
+        b = building(d, 27, 21, 42, 29, nf=2, axis="x", doors=(("north", 34), ("west", 25)), chimney=(43, 25))
+        room(d, b, 0, ["MFW=p   KKu=$c",      # guild hall: kitchen line, two long tables for the archers
+                       "  nnn   nnnn  ",
+                       "  TTT   TTTT  ",
+                       "  sss   ssss k",
+                       "             l",
+                       "             K",
+                       "      P      K"], lights=[(3, 2), (9, 2)])
+        room(d, b, 1, ["1l1l1C1l1l1l1C",      # archers' quarters with a study table
+                       "2 2 2 2 2 2 2 ",
+                       "c    nn      c",
+                       "     TT      K",
+                       "     ss       ",
+                       "      4 4 4 4 ",
+                       "      3l3l3l3 "], lights=[(3, 2), (9, 2)])
+        wlamp(d, 33, 4, 20)
+        wlamp(d, 35, 4, 20)
+        fbox(d, 29, 7, 20, "north")
+        fbox(d, 38, 7, 20, "north", "potted_blue_orchid")
         bench(d, 28, 20, "south", 3)
         bench(d, 38, 20, "south", 3)
     if L >= 5:                                                    # guildmaster's house and a fenced orchard
-        building(d, 37, 3, 43, 18, nf=4, axis="z", doors=(("west", 14),))
+        b = building(d, 37, 3, 43, 18, nf=4, axis="z", doors=(("west", 14),))
+        room(d, b, 0, ["C x C", "  t  ", "  s  ", "B   B", "  n  ", " wTe ", "  s  ", "B   K", "     ",
+                       "    k", "    c"], lights=[(2, 3), (2, 9)])            # guildmaster's office
+        room(d, b, 1, ["B C B", "  t  ", " sss ", "     ", "f   f", "  n  ", "  T  ", "  s  ", "     ",
+                       "K   c", "     ", "    P"], lights=[(2, 3), (2, 9)])  # reading room
+        room(d, b, 2, ["l11 C", " 22  ", "     ", "c   c", "     ", "  r  ", "K   B"],
+             lights=[(2, 3), (2, 8)])                                         # master bedroom
+        room(d, b, 3, ["KKmKK", "H   H", "     ", "K   K", "     ", "m   m", "     ", "c   H", "     ",
+                       "H   K"], lights=[(2, 5)])                          # attic store
+        wlamp(d, 36, 4, 13)
+        wlamp(d, 36, 4, 15)
+        fbox(d, 36, 7, 5, "west")
+        fbox(d, 36, 12, 8, "west", "potted_oxeye_daisy")
         for x in (30, 34):                                        # a pair of market stalls on the forecourt
             for dx in (0, 2):
                 for y in (2, 3, 4):
@@ -1386,8 +1633,20 @@ def ar_cascadia(rel, L):
                    (9, 10, "hay_block[axis=y]", "target[power=0]"), (8, 12, SL("spruce", "top"), POT.replace("FACE", "north"))])
     # ---- growth: a hunting camp round the range
     if L >= 2:                                                    # outfitter's cabin (L3: loft with bunks)
-        building(d, 33, 3, 42, 10, nf=1 if L == 2 else 2, axis="x", doors=(("north", 37), ("west", 7)),
-                 chimney=(43, 7))
+        b = building(d, 33, 3, 42, 10, nf=1 if L == 2 else 2, axis="x", doors=(("north", 37), ("west", 7)),
+                     chimney=(43, 7))
+        room(d, b, 0, ["Kk   mmH",            # outfitter: sacks and crates of gear, the sales counter,
+                       "        ",            # bows and spears on the back wall, fletching bench
+                       "    ===R",
+                       "     n R",
+                       "       E",
+                       "      Xc"], lights=[(3, 2), (6, 3)])
+        room(d, b, 1, ["1l1l1C1l",            # guides' bunk loft
+                       "2 2 2 2 ",
+                       "c      K",
+                       "        ",
+                       "      4 ",
+                       "      3c"], lights=[(3, 2)])
         for x in range(33, 43):                                   # porch
             d.set(x, 1, 2, "spruce_planks")
             d.set(x, 1, 1, "spruce_planks")
@@ -1412,13 +1671,37 @@ def ar_cascadia(rel, L):
             for y in (2, 3):
                 d.set(44, y, z, LOG("spruce_log" if (y + z) % 2 else "birch_log", "z"))
     if L >= 3:                                                    # smokehouse and game larder
-        building(d, 33, 14, 40, 20, nf=1, axis="z", doors=(("north", 36),), chimney=(41, 17))
+        b = building(d, 33, 14, 40, 20, nf=1, axis="z", doors=(("north", 36),), chimney=(41, 17))
+        room(d, b, 0, ["H   KK",              # smokehouse: three smoking pits under the drying beam
+                       "      ",
+                       "  # # ",
+                       "      ",
+                       "K   Hc"], lights=[(2, 1)])
+        drying_beam(d, 34, 39, 17, 5, "stripped_spruce_log")
+        wlamp(d, 35, 4, 13)
         for z in range(15, 20):
             d.set(43, 2, z, LOG("spruce_log", "z") if z % 2 else LOG("birch_log", "z"))
             d.set(43, 3, z, LOG("oak_log", "z"))
         cart(d, 33, 12, "x")
     if L >= 4:                                                    # lodge hall: mess below, trophy room above
-        building(d, 2, 28, 17, 37, nf=2, axis="x", doors=(("north", 9), ("east", 33)), chimney=(1, 32))
+        b = building(d, 2, 28, 17, 37, nf=2, axis="x", doors=(("north", 9), ("east", 33)), chimney=(1, 32))
+        room(d, b, 0, ["MFW=p   KKu=$c",      # lodge hall: camp kitchen and two long tables
+                       "              ",
+                       "  nnnn  nnnn  ",
+                       "  TTTT  TTTT  ",
+                       "  ssss  ssss  ",
+                       "             k",
+                       "             K",
+                       "      h  HH  K"], lights=[(3, 3), (10, 3)])
+        room(d, b, 1, ["BC f   x  f CB",      # trophy room: map table, armchairs round low tables
+                       "    t    t    ",
+                       "   sss  sss   ",
+                       "              ",
+                       "  r r r r r r ",
+                       "c            c",
+                       "      PP     K",
+                       "      K  m  K "], lights=[(4, 2), (9, 2)])
+        wlamp(d, 8, 4, 27) if False else None
         for x in range(3, 17):
             d.set(x, 1, 27, "spruce_planks")
             d.set(x, 1, 26, "spruce_planks")
@@ -1429,8 +1712,19 @@ def ar_cascadia(rel, L):
                 d.set(x, y, 26, LOG("spruce_log"))
         lamp_post(d, 19, 27)
     if L >= 5:                                                    # guest cabins along the creek path
-        building(d, 21, 29, 29, 37, nf=2, axis="z", doors=(("north", 25),))
-        building(d, 33, 24, 43, 32, nf=2, axis="x", doors=(("north", 38), ("west", 28)), chimney=(44, 28))
+        b = building(d, 21, 29, 29, 37, nf=2, axis="z", doors=(("north", 25),))
+        room(d, b, 0, ["Cf   fK", "       ", "  nn   ", "  TT  c", "  ss  k", "       ", "      K"],
+             lights=[(3, 3)])                                         # guest cabin: table for four
+        room(d, b, 1, ["1l1 1l1", "2 2 2 2", "c     c", "       ", "      K", "       ", "      c"],
+             lights=[(3, 3)])                                         # sleeping loft
+        wlamp(d, 24, 4, 28)
+        b = building(d, 33, 24, 43, 32, nf=2, axis="x", doors=(("north", 38), ("west", 28)), chimney=(44, 28))
+        room(d, b, 0, ["BC     CB", "         ", "  n   n  ", " wTe wTe ", "  s   s  ", "        K", "      fKc"],
+             lights=[(2, 3), (6, 3)])                                 # guest lodge: card room
+        room(d, b, 1, ["1l1l1C1l1", "2 2 2 2 2", "c       c", "        K", "         ", "      4 4", "      3l3"],
+             lights=[(2, 2), (6, 2)])
+        wlamp(d, 37, 4, 23)
+        wlamp(d, 39, 4, 23)
         for x in range(18, 45):
             d.set(x, 1, 38, "coarse_dirt")
         tree(d, 31, 2, 36, "spruce_log", "spruce_leaves", 7, 2, cone=True)
@@ -1557,7 +1851,23 @@ def ar_neoterra(rel, L):
                    (12, 8, "chest[facing=north,type=single,waterlogged=false]"), (16, 8, "chest[facing=north,type=single,waterlogged=false]"), (10, 3, SL("smooth_quartz", "top"), "candle[candles=2,lit=false,waterlogged=false]")])
     # ---- growth: an archery club campus east of the range
     if L >= 2:                                                    # pro shop / bowyer's workshop (L3: offices above)
-        building(d, 25, 2, 37, 10, nf=2, roof="flat", doors=(("north", 28), ("west", 6)))
+        b = building(d, 25, 2, 37, 10, nf=2, roof="flat", doors=(("north", 28), ("west", 6)))
+        room(d, b, 0, ["RR  RRR @@P",         # pro shop: bow racks, demo targets, sales counter,
+                       "           ",         # repair corner with fletching and crafting bench
+                       "   ===   EX",
+                       "    n     G",
+                       "          Y",
+                       "       PP K",
+                       "      g   c"], lights=[(3, 2), (8, 2)])
+        room(d, b, 1, ["C@C  tt  @C",         # club office with the trophy cabinet
+                       "     ss    ",
+                       "  nn       ",
+                       "  TT     P ",
+                       "  ss       ",
+                       "       g  K",
+                       "      ggg  "], lights=[(5, 3)])
+        wlamp(d, 27, 4, 1)
+        wlamp(d, 29, 4, 1)
         d.sign(33, 5, 1, "north", ["", "PRO SHOP"], "birch", glow=True, color="cyan")
         for x in range(26, 37, 2):
             d.set(x, 6, 1, SL("smooth_quartz", "top"))
@@ -1568,7 +1878,10 @@ def ar_neoterra(rel, L):
             d.set(x, 1, 5, "moss_block")
             d.set(x, 2, 5, "azalea")
     if L >= 3:                                                    # cafe pavilion and terrace between shop and hall
-        building(d, 32, 12, 40, 18, nf=1, roof="flat", doors=(("west", 15),))
+        b = building(d, 32, 12, 40, 18, nf=1, roof="flat", doors=(("west", 15),))
+        room(d, b, 0, ["P     M", " wTe  =", "      =", " wTe  =", "P     K"], lights=[(3, 2)])   # cafe
+        wlamp(d, 31, 4, 14)
+        wlamp(d, 31, 4, 16)
         for z in range(13, 18, 2):
             d.table(27, 2, z, "birch", "slab", "smooth_quartz_slab")
             d.chair(26, 2, z, "west", "birch", sit=False)
@@ -1577,7 +1890,45 @@ def ar_neoterra(rel, L):
             d.set(x, 1, 12, "moss_block")
             d.set(x, 2, 12, "azalea" if x % 2 else "flowering_azalea")
     if L >= 4:                                                    # residence for the archers
-        building(d, 25, 20, 42, 30, nf=3 if L == 4 else 4, roof="flat", doors=(("north", 30), ("west", 25)))
+        b = building(d, 25, 20, 42, 30, nf=3 if L == 4 else 4, roof="flat", doors=(("north", 30), ("west", 25)))
+        room(d, b, 0, ["P N       N P jP",    # residence lounge: two sofa corners and dining tables
+                       "  t       t     ",
+                       " sss     sss    ",
+                       "                ",
+                       "      nn  nn   C",
+                       "      TT  TT   c",
+                       "      ss  ss   K",
+                       "               g",
+                       "      g  PPP  gg"], lights=[(2, 2), (10, 2), (7, 5)], C=CHISEL.replace("FACE", "west"))
+        room(d, b, 1, ["1l1l1C1l1l1C1l1l",    # dormitory with two study tables
+                       "2 2 2 2 2 2 2 2 ",
+                       "c              c",
+                       "     nn  nn     ",
+                       "     TT  TT    K",
+                       "     ss  ss     ",
+                       "                ",
+                       "      4 4 4 4 4 ",
+                       "      3l3l3l3l3 "], lights=[(3, 2), (11, 2)])
+        room(d, b, 2, ["1l1C1l1 1l1C1l1 ",    # dormitory with a long study desk
+                       "2 2 2 2 2 2 2 2 ",
+                       "                ",
+                       "    nnnn        ",
+                       "c   TTTT       c",
+                       "    ssss       K",
+                       "                ",
+                       "      4 4 4 4 4 ",
+                       "      3l3l3l3l3 "], lights=[(3, 2), (11, 2)])
+        room(d, b, 3, ["BC P   x    P CB",    # top-floor library lounge
+                       "   t        t   ",
+                       "  sss      sss  ",
+                       "      nnnn      ",
+                       "      TTTT      ",
+                       "      ssss      ",
+                       "g              g",
+                       "      g   g   g ",
+                       "      PP  PP  PP"], lights=[(5, 2), (10, 2), (8, 5)])
+        wlamp(d, 29, 4, 19)
+        wlamp(d, 31, 4, 19)
         path(d, 22, 25, 24, 25)
     if L >= 5:                                                    # field range with clubhouse and covered stand
         fx1, fz1, fx2, fz2 = 16, 33, 42, 44
@@ -1600,7 +1951,18 @@ def ar_neoterra(rel, L):
         for x in range(fx1, fx2, 6):
             for y in range(2, 7):
                 d.set(x, y, fz1 - 1, "light_gray_concrete")
-        building(d, 2, 33, 14, 44, nf=4, roof="flat", doors=(("north", 8), ("east", 38)))
+        b = building(d, 2, 33, 14, 44, nf=4, roof="flat", doors=(("north", 8), ("east", 38)))
+        room(d, b, 0, ["MFW==  KKuc", "           ", " nnn   nnn ", " TTT   TTT ", " sss   sss ", "           ",
+                       " nnn      K", " TTT      k", " sss      c", "      PP  P"],
+             lights=[(2, 3), (7, 3), (2, 7)])                         # field clubhouse canteen
+        room(d, b, 1, ["BC   N   CB", "           ", "   w t e   ", "    sss    ", "           ", "  nn      g",
+                       "  TT     jP", "  ss       "], lights=[(5, 3), (3, 6)])   # members' lounge
+        room(d, b, 2, ["xC t   t Cx", "   s   s   ", "    nnn    ", "    TTT    ", "    sss    ", "C         C",
+                       "c         K", "     P     "], lights=[(5, 3), (5, 6)])   # coaches' office
+        room(d, b, 3, ["1l1l1C1l1l1", "2 2 2 2 2 2", "c         c", "           ", "          K", "      4 4 4",
+                       "      3l3l3"], lights=[(5, 3), (5, 6)])                # visiting archers' rooms
+        wlamp(d, 7, 4, 32)
+        wlamp(d, 9, 4, 32)
 
     return d
 

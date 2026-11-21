@@ -129,8 +129,11 @@ def hearthwood(rel, L):
     need = {1: 8, 2: 18, 3: 22}[L]
     if L == 3:
         d.item(x1 + 1, y0, z1 + 1, "jukebox")
-    seats += d.seating(x1 + 5, z1 + 1, X2 - 3, z2 - 4, y0, max(0, need - seats), "dark_oak", "post",
-                       rug=None, step=3 if L > 1 else 4)
+    sets = {1: [(9, 6, "n")], 2: [(9, 6, "nsew"), (12, 6, "nse")]}.get(L, [(9, 6, "nsew"), (12, 6, "nsew"),
+                                                                          (15, 6, "nse")])
+    for tx, tz, sides in sets:                                       # taproom tables
+        d.dining(tx, y0, tz, 1, "x", "dark_oak", tuple(sides))
+        seats += len(sides)
     for x in range(x1 + 3, X2 - 1, 4):
         d.lamp(x, 5, 6)
     # ---- guest rooms upstairs: 8 beds, rooms off a central corridor ----
@@ -191,7 +194,9 @@ def hearthwood(rel, L):
         d.set(6, y0, gz1, "dark_oak_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
         d.set(7, y0, gz1, "dark_oak_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
         d.fill(6, 1, z2 + 1, 7, 1, gz1, "gravel")
-        seats += d.seating(gx1 + 1, gz1 + 1, gx2 - 1, gz2 - 1, y0, max(0, need - seats), "oak", "post")
+        for tx, tz in ((5, 17), (8, 19)):                           # beer garden tables
+            d.dining(tx, y0, tz, 1, "x", "oak", ("n", "s", "e", "w"))
+            seats += 4
         for x, z in ((gx1, gz1), (gx2, gz1), (gx1, gz2), (gx2, gz2)):
             d.set(x, y0 + 1, z, "lantern[hanging=false,waterlogged=false]")
         d.set(gx1 + 1, y0, gz2 - 1, "flowering_azalea")
@@ -286,7 +291,11 @@ def cascadia(rel, L):
     for y in range(y0, 8):
         d.set(mid, y, z2 - 1, "ladder[facing=north,waterlogged=false]")
     need = {1: 8, 2: 18, 3: 22}[L]
-    seats += d.seating(x1 + 1, z1 + 3, x2 - 5, z2 - 2, y0, max(0, need - seats), "spruce", "post", step=3)
+    sets = {1: [], 2: [(6, 11, "nsew"), (9, 11, "nsew"), (6, 14, "ns")]}.get(
+        L, [(6, 11, "nsew"), (9, 11, "nsew"), (6, 14, "nsew"), (9, 14, "ns")])
+    for tx, tz, sides in sets:                                       # saloon tables
+        d.dining(tx, y0, tz, 1, "x", "spruce", tuple(sides))
+        seats += len(sides)
     if L == 3:
         d.item(x1 + 1, y0, z1 + 3, "jukebox")
     for z in range(z1 + 3, z2 - 1, 4):
@@ -311,7 +320,8 @@ def cascadia(rel, L):
             d.set(x2, y0, z, AIR)
             d.set(x2, y0 + 1, z, AIR)
         # back room: card tables
-        seats += d.seating(lx1 + 1, z1 + 5, lx2 - 1, z1 + 10, y0, max(0, need - seats), "dark_oak", "post", step=3)
+        d.dining(lx1 + 2, y0, z1 + 7, 1, "x", "dark_oak", ("n", "s", "e", "w"))   # card table
+        seats += 4
         d.lamp(lx1 + 2, 5, z1 + 7)
     if L == 3:
         dz1 = z2 + 1
@@ -321,7 +331,9 @@ def cascadia(rel, L):
                 if x in (x1 - 1, x2 + 1) or z == dz1 + 6:
                     d.set(x, y0, z, "spruce_fence")
         d.door(mid + 2, y0, z2, "north", "spruce")
-        seats += d.seating(x1, dz1, x2, dz1 + 5, y0, max(0, need - seats), "spruce", "post", step=3)
+        for tx in (x1 + 3, x1 + 8):                                 # deck tables
+            d.dining(tx, y0, dz1 + 2, 1, "x", "spruce", ("n", "s", "e", "w"))
+            seats += 4
         for x, z in ((x1 - 1, dz1 + 6), (x2 + 1, dz1 + 6)):
             d.set(x, y0 + 1, z, "lantern[hanging=false,waterlogged=false]")
     return d
@@ -381,8 +393,10 @@ def neoterra(rel, L):
     need = {1: 8, 2: 18, 3: 22}[L]
     if L == 3:
         d.item(x2 - 1, y0, z1 + 2, "jukebox")
-    seats += d.seating(x1 + 5, z1 + 1, x2 - 2, z2 - 6, y0, max(0, need - seats), "birch", "post",
-                       rug=("cyan_carpet",), step=4)
+    for tx, tz in {1: [], 2: [(9, 6)]}.get(L, [(9, 6), (13, 6)]):     # lounge tables on rugs
+        d.rug(tx - 1, tz - 1, tx + 1, tz + 1, y0, ("cyan_carpet",), "plain")
+        d.dining(tx, y0, tz, 1, "x", "birch", ("n", "s", "e", "w"))
+        seats += 4
     for x in range(x1 + 2, x2 - 1, 3):
         d.set(x, 6, z1 + 6, "sea_lantern")
     d.plant(x1 + 1, y0, z2 - 1, "potted_bamboo")
@@ -416,7 +430,9 @@ def neoterra(rel, L):
         for y in range(8, 13):
             d.set(x2 - 1, y, z1 + 2, "ladder[facing=west,waterlogged=false]")
         d.set(x2 - 1, 12, z1 + 2, "ladder[facing=west,waterlogged=false]")
-        seats += d.seating(x1 + 1, z1 + 3, x2 - 2, z2 - 2, 13, max(0, need - seats), "birch", "post", step=4)
+        for tx in (x1 + 4, x1 + 9):                                 # roof terrace tables
+            d.dining(tx, 13, z1 + 5, 1, "x", "birch", ("n", "s", "e", "w"))
+            seats += 4
     return d
 
 

@@ -144,6 +144,8 @@ def _transform(base, sx, mirror=False, dz=0):
         P["spaces"].append((k, dk, a, z1 + dz, b, z2 + dz, ml))
     P["doors"] = [(X(x), z + dz, dk, ml, k) for (x, z, dk, ml, k) in base["doors"]]
     P["child_huts"] = {k: (X(x), z + dz) for k, (x, z) in base["child_huts"].items()}
+    P["spaces_base"] = list(base["spaces"])
+    P["mirror"], P["dz"] = mirror, dz
     return P
 
 
@@ -970,6 +972,254 @@ def building(d, pal, x1, z1, x2, z2, nfl, door, kinds, L, style, roof="flat", ch
             for z in zs:
                 if d.air(x, yf + 3, z) and (x, z) not in keep:
                     d.lamp(x, yf + 3, z, "lantern")
+
+
+# ---------------------------------------------------------------------------------------------------- hand plans
+# Every room is furnished from a plan drawn by hand for that room of that pack (designs below). A plan is a list of
+# rows (north -> south) of characters (west -> east), one character per floor cell, drawn in the BASE orientation;
+# Hearthwood's mirrored complex stamps its own plans mirrored. Nothing decides positions by itself: each character is
+# one piece at that cell. Wall-standing pieces turn to face away from the wall they stand against.
+#   .  nothing            *  ceiling light above    =  rug border         -  rug centre        |  railing (fence)
+#   ^ v < >  chair, backrest to the north / south / west / east          N S E W  bed, head to that side
+#   t  table (post)       T  table (slab)          k  counter + candle    K  counter + lantern  d  display case
+#   c  crate (barrel)     C  two crates            a  sacks               p  shelf + pot        P  potted plant
+#   f  flowering azalea   b  bookcase (2)          q  chiseled case (2)   L  locker             u  wash basin
+#   r  medicine shelf     m  machine               g  water tank          o  console            y  radio set
+#   x  weapon rack        X  archery target        H  hay bale            h  punch bag          z  planter
+#   i  lab bench          B  blackboard            l  loom (decor)        n  anvil (decor)      s  grindstone (decor)
+#   required work blocks (counted):  J jukebox  M cartography  F furnace  Q blast furnace  Y smoker  G grindstone
+#   A anvil  I smithing  U crafting  O stonecutter  V fletching  D loom  Z enchanting  e lectern  w water cauldron
+#   j brewing stand (on a shelf)  % composter  & ender chest  0 barrel  $ barrel stack (3)  R rack
+#   [ bookcase column (3)  ] chiseled column (3)  { bookcase (2)  ! work spot (tag only)
+# Digits / other characters are level gates defined per plan: gate[c] = (from level, char if reached, char before).
+MIRROR_CH = {"<": ">", ">": "<", "E": "W", "W": "E"}
+POTS2 = ["decorated_pot[cracked=false,facing=north,waterlogged=false]", "potted_fern", "potted_azure_bluet",
+         "candle[candles=3,lit=false,waterlogged=false]", "potted_bamboo", "potted_red_tulip"]
+
+
+def piece(d, ch, x, y, z, fac, M, pack, L, top, ceil_y, sit, k):
+    """Draw ONE piece `ch` at (x, y, z); fac = side it faces."""
+    wood = M["wood"]
+    S = d.set
+
+    def counter():
+        return M["counter"] if pack != "Neoterra" else "smooth_stone"
+    if ch in ".# ":
+        return
+    if ch == "*":
+        if pack == "Neoterra" and flush_ok(d, x, ceil_y, z):
+            S(x, ceil_y, z, "sea_lantern" if L >= 4 else "glowstone")
+        elif top - y >= 3 and pack != "Neoterra":
+            S(x, top, z, "chain[axis=y,waterlogged=false]")
+            S(x, top - 1, z, "lantern[hanging=true,waterlogged=false]")
+        else:
+            S(x, top, z, "lantern[hanging=true,waterlogged=false]")
+        return
+    rugs = {"Neoterra": ("light_gray_carpet", "cyan_carpet"), "Hearthwood": ("red_carpet", "brown_carpet"),
+            "Cascadia": ("brown_carpet", "green_carpet")}[pack]
+    if ch in "=-":
+        S(x, y, z, rugs[0 if ch == "=" else 1])
+    elif ch == "|":
+        S(x, y, z, f"{wood}_fence" if pack != "Neoterra" else "birch_fence")
+    elif ch in "^v<>":
+        d.chair(x, y, z, {"^": "north", "v": "south", "<": "west", ">": "east"}[ch], wood, sit=sit)
+    elif ch in "NSEW":
+        d.bed(x, y, z, {"N": "north", "S": "south", "E": "east", "W": "west"}[ch], M["bed"])
+    elif ch == "t":
+        d.table(x, y, z, wood, "post")
+    elif ch == "T":
+        d.table(x, y, z, wood, "slab", M["slab"])
+    elif ch == "k":
+        S(x, y, z, counter())
+        S(x, y + 1, z, "candle[candles=2,lit=false,waterlogged=false]")
+    elif ch == "K":
+        S(x, y, z, counter())
+        S(x, y + 1, z, "lantern[hanging=false,waterlogged=false]")
+    elif ch == "d":
+        S(x, y, z, counter())
+        S(x, y + 1, z, POTS2[k % len(POTS2)])
+    elif ch == "c":
+        S(x, y, z, f"barrel[facing={fac},open=false]")
+    elif ch == "C":
+        S(x, y, z, f"barrel[facing={fac},open=false]")
+        S(x, y + 1, z, "barrel[facing=up,open=false]")
+    elif ch == "a":
+        S(x, y, z, {"Neoterra": "light_gray_wool", "Hearthwood": "white_wool", "Cascadia": "brown_wool"}[pack])
+        S(x, y + 1, z, {"Neoterra": "light_gray_carpet", "Hearthwood": "white_carpet", "Cascadia": "brown_carpet"}[pack])
+    elif ch == "p":
+        S(x, y, z, slab(M["slab"]))
+        S(x, y + 1, z, POTS2[k % len(POTS2)])
+    elif ch == "P":
+        S(x, y, z, M["plant"])
+    elif ch == "f":
+        S(x, y, z, "flowering_azalea")
+    elif ch == "b":
+        S(x, y, z, "bookshelf")
+        S(x, y + 1, z, "bookshelf")
+    elif ch == "q":
+        S(x, y, z, chiseled(fac, k))
+        S(x, y + 1, z, chiseled(fac, k + 3))
+    elif ch == "L":
+        mat = {"Neoterra": "light_gray_concrete", "Hearthwood": "dark_oak_planks", "Cascadia": "spruce_planks"}[pack]
+        S(x, y, z, mat)
+        S(x, y + 1, z, f"{'iron' if pack == 'Neoterra' else wood}_trapdoor[facing={fac},half=bottom,open=true,"
+                       f"powered=false,waterlogged=false]")
+    elif ch == "u":
+        S(x, y, z, "water_cauldron[level=3]")
+    elif ch == "r":
+        S(x, y, z, slab(M["slab"]))
+        S(x, y + 1, z, "potted_white_tulip" if k % 2 else "candle[candles=1,lit=false,waterlogged=false]")
+    elif ch == "m":
+        if pack == "Neoterra":
+            S(x, y, z, "cut_copper" if L >= 4 else "iron_block" if False else "light_gray_concrete")
+            S(x, y + 1, z, "lightning_rod[facing=up,powered=false,waterlogged=false]" if L >= 4 else "stone_button"
+              "[face=floor,facing=north,powered=false]")
+        elif pack == "Hearthwood":
+            S(x, y, z, "bricks")
+            S(x, y + 1, z, "cauldron")
+        else:
+            S(x, y, z, "cobblestone")
+            S(x, y + 1, z, "iron_bars")
+        if top - y >= 3:
+            S(x, y + 2, z, "chain[axis=y,waterlogged=false]")
+    elif ch == "g":
+        S(x, y, z, "light_blue_stained_glass")
+        S(x, y + 1, z, "light_blue_stained_glass")
+    elif ch == "o":
+        if pack == "Neoterra":
+            S(x, y, z, "polished_andesite")
+            S(x, y + 1, z, "black_stained_glass_pane" if False else "daylight_detector[inverted=false,power=0]")
+        elif pack == "Hearthwood":
+            S(x, y, z, "dark_oak_planks")
+            S(x, y + 1, z, "candle[candles=1,lit=false,waterlogged=false]")
+        else:
+            S(x, y, z, "spruce_planks")
+            S(x, y + 1, z, "lantern[hanging=false,waterlogged=false]")
+    elif ch == "y":
+        S(x, y, z, "note_block[instrument=harp,note=0,powered=false]")
+        S(x, y + 1, z, "jukebox[has_record=false]")
+    elif ch == "x":
+        S(x, y, z, f"{wood}_fence")
+        S(x, y + 1, z, f"{wood}_trapdoor[facing={fac},half=top,open=true,powered=false,waterlogged=false]")
+    elif ch == "X":
+        S(x, y, z, "hay_block[axis=y]")
+        S(x, y + 1, z, "target[power=0]")
+    elif ch == "H":
+        S(x, y, z, "hay_block[axis=y]")
+    elif ch == "h":
+        S(x, y + 1, z, "hay_block[axis=y]")
+        for yy in range(y + 2, top + 1):
+            S(x, yy, z, "chain[axis=y,waterlogged=false]")
+    elif ch == "z":
+        S(x, y, z, "moss_block")
+        S(x, y + 1, z, "flowering_azalea" if k % 2 else "azalea")
+    elif ch == "i":
+        S(x, y, z, counter())
+        S(x, y + 1, z, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]")
+    elif ch == "B":
+        S(x, y, z, slab(M["slab"]))
+        b = "black_concrete" if pack == "Neoterra" else "black_terracotta" if pack == "Hearthwood" else "dark_oak_planks"
+        S(x, y + 1, z, b)
+        if top >= y + 2:
+            S(x, y + 2, z, b)
+    elif ch == "l":
+        S(x, y, z, f"loom[facing={fac}]")
+    elif ch == "n":
+        S(x, y, z, f"anvil[facing={CW[fac]}]")
+    elif ch == "s":
+        S(x, y, z, f"grindstone[face=floor,facing={fac}]")
+    # ---- counted work blocks
+    elif ch in "JMFQYGAIUOVDZew%&0":
+        name = {"J": "jukebox", "M": "cartography_table", "F": "furnace", "Q": "blast_furnace", "Y": "smoker",
+                "G": "grindstone", "A": "anvil", "I": "smithing_table", "U": "crafting_table", "O": "stonecutter",
+                "V": "fletching_table", "D": "loom", "Z": "enchanting_table", "e": "lectern",
+                "w": "water_cauldron[level=3]", "%": "composter", "&": "ender_chest", "0": "barrel"}[ch]
+        d.item(x, y, z, name, CW[fac] if ch in "AG" else ("up" if ch == "0" else fac))
+        if ch in "FQY" and top >= y + 2 and pack != "Neoterra":
+            S(x, y + 2, z, "bricks" if pack == "Hearthwood" else "cobblestone")
+    elif ch == "j":
+        S(x, y, z, slab(M["slab"]))
+        d.item(x, y + 1, z, "brewing_stand")
+    elif ch == "$":
+        for h in range(3):
+            d.item(x, y + h, z, "barrel", "up" if h == 2 else fac)
+    elif ch == "R":
+        d.rack(x, y, z, fac)
+    elif ch == "[":
+        d.bookshelf(x, y, z, 3)
+    elif ch == "]":
+        for h in range(3):
+            d.item(x, y + h, z, chiseled(fac, k + h))
+    elif ch == "{":
+        d.bookshelf(x, y, z, 2)
+    elif ch == "!":
+        d.spot(x, y, z, "work")
+    else:
+        raise RuntimeError(f"unknown plan character {ch!r}")
+
+
+def edge_facing(x, z, x1, z1, x2, z2, default="south"):
+    if z == z1:
+        return "south"
+    if z == z2:
+        return "north"
+    if x == x1:
+        return "east"
+    if x == x2:
+        return "west"
+    return default
+
+
+def stamp(d, plan, cells, rect, y, top, ceil_y, L, sit=False, keep=(), mirror=False):
+    """Stamp a hand-drawn plan. cells(i, j) -> world (x, z) of plan column i, row j; rect = world interior box."""
+    M, pack = MATS[d.pack], d.pack
+    rows = plan["rows"] if isinstance(plan, dict) else plan
+    gates = plan.get("gates", {}) if isinstance(plan, dict) else {}
+    x1, z1, x2, z2 = rect
+    W = abs(x2 - x1) + 1
+    D = z2 - z1 + 1
+    if len(rows) != D or any(len(r) != W for r in rows):
+        raise RuntimeError(f"plan size {len(rows[0])}x{len(rows)} != room {W}x{D}: {rows[0]!r}")
+    k = 0
+    for j, row in enumerate(rows):
+        for i, ch in enumerate(row):
+            if ch in gates:
+                lv, a, b = gates[ch]
+                ch = a if L >= lv else b
+            if mirror:
+                ch = MIRROR_CH.get(ch, ch)
+            x, z = cells(i, j)
+            if ch not in ".# *=-!" and (x, z) in keep:
+                raise RuntimeError(f"plan puts {ch!r} on a door cell {(x, z)}")
+            piece(d, ch, x, y, z, edge_facing(x, z, x1, z1, x2, z2), M, pack, L, top, ceil_y, sit, k)
+            k += 1
+
+
+def stamp_room(d, pack, sp_base, sp_world, plan, L, sit=False):
+    """Stamp a plan drawn in base orientation into a room of this pack's complex."""
+    P = PLANS[pack]
+    _, deck, bx1, bz1, bx2, bz2, _ = sp_base
+    _, _, x1, z1, x2, z2, _ = sp_world
+    fy, top = LV[deck]
+    mir = P["mirror"]
+
+    def cells(i, j):
+        return ((54 - (bx1 + i)) if mir else bx1 + i), bz1 + j + P["dz"]
+    keep = keep_for(pack, L, deck, x1, z1, x2, z2)
+    stamp(d, plan, cells, (x1, z1, x2, z2), fy + 1, top, top + 1, L, sit, keep, mir)
+
+
+def stamp_floor(d, x1, z1, plan, yf, L, sit=False):
+    """Stamp a surface-building storey plan (world orientation) whose NW interior corner is (x1, z1)."""
+    rows = plan["rows"] if isinstance(plan, dict) else plan
+    W, D = len(rows[0]), len(rows)
+    stamp(d, plan, lambda i, j: (x1 + i, z1 + j), (x1, z1, x1 + W - 1, z1 + D - 1), yf + 1, yf + 3, yf + 4, L, sit)
+
+
+def place(d, items):
+    """Hand-listed exterior pieces: (x, y, z, block)."""
+    for (x, y, z, b) in items:
+        d.set(x, y, z, b)
 
 
 # ---------------------------------------------------------------------------------------------------- hand layouts

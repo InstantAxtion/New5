@@ -634,24 +634,16 @@ def cow_cs(rel, L):
     racks(d, [(12, z1 + 1), (13, z1 + 1), (14, z1 + 1), (14, z1 + 2), (14, z1 + 3)][:nr], 2, "south")
     d.set(x1 + 2, 2, z1 + 1, "barrel[facing=up,open=false]")
     # stalls: west x5..6 + manger x7, aisle 8..11, manger x12 + stalls x13..14
-    need_c = d.req["items"]["minecraft:water_cauldron"]
-    c = 0
+    troughs = [(7, 9), (12, 9), (7, 7)] if z2 == 11 else [(7, 9), (12, 9), (7, 12), (12, 12), (7, 15), (12, 15)]
     for z in range(z1 + 4, z2):
         for mx in (7, 12):
-            if (z % 3 == 0) and c < need_c:
+            if (mx, z) in troughs:
                 d.item(mx, 2, z, "water_cauldron[level=3]")
-                c += 1
             else:
                 hay(d, mx, 2, z, "z")
         if (z - z1 - 4) % 3 == 0 and z > z1 + 4:
             for x in (5, 6, 13, 14):
                 d.set(x, 2, z, "spruce_fence")
-    for z in range(z1 + 4, z2):                                        # extra troughs if the barn is short
-        if c < need_c:
-            for mx in (7, 12):
-                if c < need_c and d.get(mx, 2, z).startswith("minecraft:hay"):
-                    d.item(mx, 2, z, "water_cauldron[level=3]")
-                    c += 1
     for z in range(z1 + 5, z2, 3):                                     # stall doors into the pasture
         d.set(x2, 2, z, gate("spruce", "east"))
         d.set(x2, 3, z, AIR)
@@ -1213,22 +1205,14 @@ def pig_nt(rel, L):
     d.set(15, 3, z1 + 1, "iron_block")
     d.set(17, 4, z1 + 4, "sea_lantern")
     # pens x3..13: steel rails, drinkers, gate to the run; corridor along the south wall
-    need_c = d.req["items"]["minecraft:water_cauldron"]
-    c = 0
     for x in range(x1 + 1, 14):
         d.set(x, 2, z2 - 2, "iron_bars" if x % 4 != 0 else gate("birch", "south"))
         if x % 4 == 3:
             for z in range(z1 + 1, z2 - 2):
                 if x + 2 < 14:
                     d.set(x + 2, 2, z, "iron_bars")
-    for x in range(x1 + 1, 14):
-        if x % 4 == 1 and c < need_c:
-            d.item(x, 2, z2 - 3, "water_cauldron[level=3]")
-            c += 1
-    for x in range(x1 + 1, 14):
-        if c < need_c and d.air(x, 2, z1 + 1) and x % 2 == 0:
-            d.item(x, 2, z1 + 1, "water_cauldron[level=3]")
-            c += 1
+    for x, z in ((5, z2 - 3), (9, z2 - 3), (13, z2 - 3), (4, z1 + 1), (6, z1 + 1)):     # drinkers
+        d.item(x, 2, z, "water_cauldron[level=3]")
     for x in range(x1 + 1, 14, 4):
         d.set(x + 1, 2, z1, gate("birch", "north"))
         d.set(x + 1, 3, z1, AIR)
@@ -1475,12 +1459,12 @@ def rabbithutch(pack, rel, L):
 
 
 # ============================================================================================ BEEKEEPER
-def flowers(d, x1, z1, x2, z2, kinds, ground=GRASS, step=1):
-    for x in range(x1, x2 + 1):
-        for z in range(z1, z2 + 1):
+def flowers(d, x1, x2, rows, kinds, ground=GRASS):
+    """Planted rows: along each row z in `rows`, from x1 to x2, flowers cycling through `kinds`."""
+    for z in rows:
+        for x in range(x1, x2 + 1):
             d.set(x, 1, z, ground)
-            if (x + 2 * z) % step == 0:
-                d.set(x, 2, z, kinds[(x * 3 + z) % len(kinds)])
+            d.set(x, 2, z, kinds[(x * 3 + z) % len(kinds)])
 
 
 def bee_hw(rel, L):
@@ -1540,10 +1524,10 @@ def bee_hw(rel, L):
         d.set(x, 1, 7, "gravel")
     for z in range(gz1 + 1, gz2):
         d.set(14, 1, z, "gravel")
-    flowers(d, gx1 + 1, gz1 + 1, 13, 6, ("allium", "lily_of_the_valley", "cornflower"))
-    flowers(d, 15, gz1 + 1, gx2 - 1, 6, ("oxeye_daisy", "poppy", "azure_bluet"))
-    flowers(d, gx1 + 1, 8, 13, gz2 - 2, ("cornflower", "allium", "lily_of_the_valley"), step=2)
-    flowers(d, 15, 8, gx2 - 1, gz2 - 2, ("dandelion", "oxeye_daisy", "poppy"), step=2)
+    flowers(d, gx1 + 1, 13, (4, 5, 6), ("allium", "lily_of_the_valley", "cornflower"))
+    flowers(d, 15, gx2 - 1, (4, 5, 6), ("oxeye_daisy", "poppy", "azure_bluet"))
+    flowers(d, gx1 + 1, 13, (9, 13), ("cornflower", "allium", "lily_of_the_valley"))
+    flowers(d, 15, gx2 - 1, (9, 13, 15), ("dandelion", "oxeye_daisy", "poppy"))
     if L >= 2:
         d.sign(5, 3, z1 - 1, "north", ["Honey", "House"], "dark_oak")
     if L >= 3:                                                          # apple tree (flowering) in the garden
@@ -1614,8 +1598,8 @@ def bee_cs(rel, L):
             if x in (1, 21) or z == mz2 or (z == mz1 and not (x1 <= x <= x2)):
                 d.set(x, 2, z, "spruce_fence")
     d.set(15, 2, mz1, gate("spruce", "north"))
-    flowers(d, 2, mz1 + 1, 20, mz2 - 1, ("dandelion", "poppy", "cornflower", "oxeye_daisy", "short_grass",
-                                         "fern"), step=2)
+    flowers(d, 2, 20, (mz1 + 2, mz1 + 4, mz1 + 6), ("dandelion", "poppy", "cornflower", "oxeye_daisy",
+                                                       "short_grass", "fern"))
     hives = d.req["yard"]["minecraft:beehive"]
     spots = [(6, 16), (11, 17), (16, 16), (8, 19), (14, 19)]
     for i, (x, z) in enumerate(spots):
@@ -1672,8 +1656,8 @@ def bee_nt(rel, L):
     mx1, mz1, mx2, mz2 = 11, 2, 17, 17
     pen(d, mx1, mz1, mx2, mz2, "birch_fence", gates=[(14, mz1), (mx1, 6)])
     d.set(x2 + 1, 1, 6, "polished_andesite")
-    flowers(d, mx1 + 1, mz1 + 1, mx2 - 1, mz2 - 1, ("cornflower", "allium", "oxeye_daisy", "azure_bluet",
-                                                      "short_grass"), step=2)
+    flowers(d, mx1 + 1, mx2 - 1, (mz1 + 2, mz1 + 4, mz1 + 7, mz1 + 10, mz1 + 13),
+            ("cornflower", "allium", "oxeye_daisy", "azure_bluet", "short_grass"))
     for z in range(mz1 + 1, mz2):
         d.set(14, 1, z, "polished_andesite")
         d.set(14, 2, z, AIR)
@@ -1685,7 +1669,7 @@ def bee_nt(rel, L):
             d.yard_item(13, 3, z, "beehive[facing=east,honey_level=3]")
     d.sign(4, 5, z1 - 1, "north", ["APIARY", "city honey"], "birch", glow=True, color="yellow")
     # second meadow strip behind the lab
-    flowers(d, 2, 11, 9, 17, ("poppy", "dandelion", "cornflower", "short_grass"), step=2)
+    flowers(d, 2, 9, (13, 15), ("poppy", "dandelion", "cornflower", "short_grass"))
     for x in range(2, 10):
         d.set(x, 2, 11, "birch_fence")
     if L >= 3:
@@ -2100,14 +2084,6 @@ def tree(d, x, z, log="oak_log", leaves="oak_leaves", h=4, r=2):
     d.set(x, top + 1, z, leaves + LEAVES)
 
 
-def bed_of(d, x1, z1, x2, z2, kinds, ground=GRASS, edge=None):
-    """Flower bed with an optional edging (slabs/trapdoors) at y=2 around it."""
-    for x in range(x1, x2 + 1):
-        for z in range(z1, z2 + 1):
-            d.set(x, 1, z, ground)
-            d.set(x, 2, z, kinds[(x * 5 + z * 3) % len(kinds)])
-
-
 def bench(d, x, z, back, wood, n=2, along="x"):
     for i in range(n):
         cx, cz = (x + i, z) if along == "x" else (x, z + i)
@@ -2156,10 +2132,16 @@ def shed(d, pack, x1, z1, w=7):
         d.set(x1 + 5, 2, z2 - 3, "composter[level=4]")
         for x in (x1 + 4, x1 + 5):
             d.set(x, 4, z2 - 1, "tripwire_hook[attached=false,facing=north,powered=false]")
-        for x in range(x1 + 7, x2):                                   # extra bays: sacks, kegs, a plough
-            for y in (2, 3):
-                d.set(x, y, z2 - 1, ("white_wool", "brown_wool", "barrel[facing=up,open=false]")[(x + y) % 3])
-            d.set(x, 2, z2 - 2, "hay_block[axis=x]" if x % 2 else "barrel[facing=north,open=false]")
+        # further bays (as wide as this shed is): grain sacks two high, seed barrels, a hay bale by the post
+        for k, (lo, hi) in ((7, ("white_wool", "brown_wool")), (8, ("barrel[facing=up,open=false]", None)),
+                            (10, ("white_wool", "white_wool")), (11, ("hay_block[axis=x]", None)),
+                            (13, ("barrel[facing=up,open=false]", "white_wool")), (14, ("brown_wool", None)),
+                            (16, ("hay_block[axis=x]", "hay_block[axis=z]")), (17, ("barrel[facing=up,open=false]",
+                                                                                    None))):
+            if x1 + k < x2:
+                d.set(x1 + k, 2, z2 - 1, lo)
+                if hi:
+                    d.set(x1 + k, 3, z2 - 1, hi)
         if w >= 10:
             d.set(x2 - 2, 2, z1 + 1, "anvil[facing=east]")
             d.set(x2 - 1, 2, z1 + 1, "dark_oak_fence")
@@ -2203,9 +2185,16 @@ def shed(d, pack, x1, z1, w=7):
             d.set(x1 + 1, 2, z, "iron_block" if z == z1 + 1 else "white_concrete")
             d.set(x1 + 1, 3, z, "lightning_rod[facing=up,powered=false,waterlogged=false]" if z == z1 + 1 else
                   "iron_trapdoor[facing=east,half=bottom,open=false,powered=false,waterlogged=false]")
-        for x in range(x1 + 2, x2):
-            d.set(x, 2, z2 - 1, "barrel[facing=north,open=false]" if x % 2 else "light_gray_concrete")
-            d.set(x, 3, z2 - 1, "potted_bamboo" if x % 2 else slab("smooth_quartz_slab"))
+        for k, lo, hi in ((2, "light_gray_concrete", "potted_bamboo"), (3, "barrel[facing=north,open=false]", None),
+                          (4, "barrel[facing=north,open=false]", None), (5, "light_gray_concrete", None),
+                          (7, "barrel[facing=north,open=false]", None), (8, "light_gray_concrete", "potted_bamboo"),
+                          (10, "barrel[facing=north,open=false]", None), (11, "barrel[facing=north,open=false]", None),
+                          (13, "light_gray_concrete", "potted_azure_bluet"),
+                          (14, "barrel[facing=north,open=false]", None)):
+            if x1 + k < x2:                                           # tool lockers along the back wall
+                d.set(x1 + k, 2, z2 - 1, lo)
+                if hi:
+                    d.set(x1 + k, 3, z2 - 1, hi)
         d.set(x2 - 1, 2, z1 + 1, "smooth_quartz_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]")
         d.set(x2 - 1, 4, z1 + 2, "sea_lantern")
         d.set(x1 + 3, 4, z1 + 2, "end_rod[facing=down]")
@@ -2219,10 +2208,25 @@ def shed(d, pack, x1, z1, w=7):
 
 
 # ------------------------------------------------------------------------------------------- L3: cottage
-def cottage(d, pack, x1, z1, w=9):
+BEDCOL = {"poultry": "yellow", "cattle": "white", "sheep": "light_gray", "pig": "pink", "rabbit": "brown",
+          "bees": "orange", "horse": "red"}
+HOBBY = {   # two pieces per herder: (block, thing on top)
+    "poultry": (("WOOD_slab[type=top,waterlogged=false]", "turtle_egg[eggs=4,hatch=0]"), ("composter[level=6]", None)),
+    "cattle": (("cauldron", None), ("barrel[facing=up,open=false]", "cake[bites=0]")),
+    "sheep": (("loom[facing=north]", None), ("white_wool", "white_carpet")),
+    "pig": (("smoker[facing=north,lit=false]", None), ("barrel[facing=up,open=false]", "dried_kelp_block")),
+    "rabbit": (("composter[level=8]", None), ("WOOD_slab[type=top,waterlogged=false]", "potted_dandelion")),
+    "bees": (("WOOD_slab[type=top,waterlogged=false]", "candle[candles=4,lit=false,waterlogged=false]"),
+             ("barrel[facing=up,open=false]", "honey_block")),
+    "horse": (("WOOD_fence", "brown_carpet"), ("barrel[facing=up,open=false]", "lantern[hanging=false,waterlogged=false]")),
+}
+
+
+def cottage(d, pack, x1, z1, w=9, kind="poultry"):
     """Herder's cottage, w x 8, front door to the north."""
     x2, z2 = x1 + w - 1, z1 + 7
     xm = x1 + 4
+    bc = BEDCOL[kind]
     if pack == "Hearthwood":
         hw_walls(d, x1, z1, x2, z2, 5, floor="oak_planks", infill="bricks", lower=4)
         hw_walls(d, x1, z1, x2, z2, 9, floor="spruce_planks", y0=7, lower=0, post_step=2)
@@ -2260,8 +2264,8 @@ def cottage(d, pack, x1, z1, w=9):
         for x in (x1 + 4, x1 + 5):
             d.set(x, 7, z2 - 2, "dark_oak_fence")
         # bedroom upstairs
-        d.bed(x1 + 1, 7, z1 + 1, "north", "red")
-        d.bed(x1 + 3, 7, z1 + 1, "north", "red")
+        d.bed(x1 + 1, 7, z1 + 1, "north", bc)
+        d.bed(x1 + 3, 7, z1 + 1, "north", bc)
         d.set(x1 + 2, 7, z1 + 1, "barrel[facing=up,open=false]")
         d.candle(x1 + 2, 8, z1 + 1, 1)
         d.set(x1 + 5, 7, z1 + 1, "chiseled_bookshelf[facing=south,slot_0_occupied=true,slot_1_occupied=true,"
@@ -2274,8 +2278,8 @@ def cottage(d, pack, x1, z1, w=9):
         hang(d, x1 + 3, 11, z1 + 3, 9)
         # garden front: path, beds, bench, lamp
         path(d, xm, z1 - 2, xm, z1 - 1, "gravel")
-        bed_of(d, x1, z1 - 2, xm - 2, z1 - 1, ("poppy", "cornflower", "oxeye_daisy", "allium"))
-        bed_of(d, xm + 2, z1 - 2, x2, z1 - 1, ("azure_bluet", "poppy", "lily_of_the_valley"))
+        flowers(d, x1, xm - 2, (z1 - 2,), ("poppy", "cornflower", "oxeye_daisy", "allium"))
+        flowers(d, xm + 2, x2, (z1 - 2,), ("azure_bluet", "poppy", "lily_of_the_valley"))
         lamp_post(d, xm - 1, z1 - 2, pack)
         bench(d, x2 + 1, z1 + 2, "east", "dark_oak", 2, "z")
     elif pack == "Cascadia":
@@ -2329,8 +2333,8 @@ def cottage(d, pack, x1, z1, w=9):
         d.table(x1 + 5, 2, z1 + 3, "spruce")
         d.chair(x1 + 5, 2, z1 + 2, "north", "spruce", sit=False)
         d.chair(x1 + 5, 2, z1 + 4, "south", "spruce", sit=False)
-        d.bed(x2 - 1, 2, z1 + 1, "east", "brown")
-        d.bed(x2 - 1, 2, z2 - 1, "east", "brown")
+        d.bed(x2 - 1, 2, z1 + 1, "east", bc)
+        d.bed(x2 - 1, 2, z2 - 1, "east", bc)
         d.set(x2 - 1, 2, z1 + 3, "barrel[facing=up,open=false]")
         d.set(x2 - 1, 3, z1 + 3, "candle[candles=2,lit=false,waterlogged=false]")
         d.banner(x2 - 1, 4, z1 + 4, "west", "brown")
@@ -2373,8 +2377,8 @@ def cottage(d, pack, x1, z1, w=9):
         d.set(x1 + 4, 7, z2 - 2, "glass_pane")
         d.set(x1 + 5, 7, z2 - 2, "glass_pane")
         # bedroom
-        d.bed(x1 + 2, 7, z1, "north", "cyan")
-        d.bed(x1 + 4, 7, z1, "north", "cyan")
+        d.bed(x1 + 2, 7, z1, "north", bc)
+        d.bed(x1 + 4, 7, z1, "north", bc)
         d.set(x1 + 3, 7, z1, "white_concrete")
         d.set(x1 + 3, 8, z1, "potted_bamboo")
         d.set(x1 + 1, 7, z1 + 3, "white_concrete")
@@ -2390,6 +2394,16 @@ def cottage(d, pack, x1, z1, w=9):
             d.set(x, 2, z1 - 2, "azalea" if x != xm else AIR)
         path(d, xm, z1 - 2, xm + 1, z1 - 1, "polished_andesite")
         d.set(xm, 2, z1 - 2, AIR)
+
+
+    # the herder's own corner: what this particular herder keeps at home
+    a, b = {"Hearthwood": ((x1 + 6, z1 + 1), (x1 + 6, z1 + 5)), "Cascadia": ((x1 + 6, z1 + 1), (x1 + 6, z2 - 1)),
+            "Neoterra": ((x1 + 6, z1 + 5), (x1 + 7, z1 + 5))}[pack]
+    wd = MAT[pack]["wood"]
+    for (x, z), (blk, top) in zip((a, b), HOBBY[kind]):
+        d.set(x, 2, z, blk.replace("WOOD", wd))
+        if top:
+            d.set(x, 3, z, top)
 
 
 # ------------------------------------------------------------------------------------------- L4: livestock hall
@@ -2494,20 +2508,32 @@ def hall(d, pack, kind, x1, z1, size):
         for x in xs[1::3]:
             d.set(x, 2, zc, slab(f"{wood}_slab", "top"))
             d.set(x, 3, zc, "potted_dandelion")
-    elif kind == "bees":
-        for zz, face in ((z1 + 1, "south"), (z2 - 1, "north")):
-            for x in xs:
-                k = x % 4
-                d.set(x, 2, zz, ("barrel[facing=up,open=false]", "honey_block", "beehive[facing=%s,honey_level=5]"
-                                 % face, "honeycomb_block")[k])
-                shelf(d, x, 3, zz, wood, ("candle[candles=4,lit=false,waterlogged=false]", "honey_block",
-                                          "decorated_pot[cracked=false,facing=north,waterlogged=false]",
-                                          "candle[candles=2,lit=false,waterlogged=false]")[k])
-        for x in xs[1::4]:
-            d.set(x, 2, zc, slab(f"{wood}_slab", "top"))
-            if x + 1 not in (xm, xm + 1):
-                d.set(x + 1, 2, zc, "water_cauldron[level=3]")
-            d.set(x, 3, zc, "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=true]")
+    elif kind == "bees":                                               # honey extraction & candle workshop
+        tb = slab(f"{wood}_slab", "top")
+        for x, z, blk, top_ in (
+                (x1 + 1, z1 + 1, "water_cauldron[level=3]", None),             # washing tub
+                (x1 + 2, z1 + 1, tb, "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]"),
+                (x1 + 3, z1 + 1, tb, "honey_block"),                             # bottling bench
+                (x1 + 4, z1 + 1, "barrel[facing=up,open=false]", None),
+                (x1 + 4, zc, tb, "candle[candles=4,lit=false,waterlogged=false]"),   # candle table
+                (x1 + 5, zc, tb, "candle[candles=2,lit=false,waterlogged=false]"),
+                (x1 + 2, z2 - 1, tb, "beehive[facing=north,honey_level=0]"),     # skeps wintering on a bench
+                (x1 + 3, z2 - 1, tb, None),
+                (x1 + 4, z2 - 1, tb, "beehive[facing=north,honey_level=0]"),
+                (x1 + 5, z2 - 1, tb, None),
+                (x1 + 6, z2 - 1, tb, "beehive[facing=north,honey_level=0]"),
+                (x2 - 3, z2 - 1, "piston[extended=false,facing=up]", None),       # wax press and melt pot
+                (x2 - 2, z2 - 1, "water_cauldron[level=3]", None),
+                (x2 - 1, z1 + 1, "barrel[facing=up,open=false]", "honeycomb_block"),  # store bay
+                (x2 - 1, z1 + 2, "barrel[facing=up,open=false]", "honey_block"),
+                (x2 - 2, z1 + 1, "honeycomb_block", None),
+                (xm + 3, z1 + 1, tb, "honey_block"),                             # sales counter by the door
+                (xm + 4, z1 + 1, tb, "candle[candles=3,lit=false,waterlogged=false]")):
+            d.set(x, 2, z, blk)
+            if top_:
+                d.set(x, 3, z, top_)
+        d.chair(x1 + 4, 2, zc + 1, "south", wood, sit=False)
+        d.chair(x1 + 5, 2, zc + 1, "south", wood, sit=False)
     elif kind == "horse":                                              # indoor riding school
         for x in range(x1 + 1, x2):
             for z in range(z1 + 1, z2):
@@ -2543,7 +2569,7 @@ def hall(d, pack, kind, x1, z1, size):
             d.set(x2 - 1, y, z1 + 1, "ladder[facing=west,waterlogged=false]")
         d.set(x2 - 1, 7, z1 + 1, "ladder[facing=west,waterlogged=false]")
         d.set(x2 - 1, 7, z1 + 3, AIR)
-    for x in range(x1 + 2, x2 - 1, 4):
+    for x in (x1 + 3, xm + 2, x2 - 3):                                # three lights down the aisle
         if pack == "Neoterra":
             d.set(x, 5, zc + 1, "sea_lantern")
         elif loft and kind != "horse":
@@ -2775,14 +2801,20 @@ def extra(d, pack, kind, x1, z1):
         d.set(x1 + 3, 2, z1 + 1, "cauldron")
         d.set(x1 + 8, 2, z1 + 1, slab(f"{w}_slab", "top"))
         d.set(x1 + 8, 3, z1 + 1, "cake[bites=0]")
-        for x in range(x1 + 2, x1 + 9):                                # shop counter and shelves
-            if x not in (x1 + 5, x1 + 6):
-                d.set(x, 2, z1 + 4, slab(f"{w}_slab", "top"))
-                d.set(x, 3, z1 + 4, ("cake[bites=0]", "yellow_terracotta", "candle[candles=2,lit=false,"
-                                     "waterlogged=false]")[x % 3])
-            d.set(x, 2, z1 + 6, "barrel[facing=up,open=false]" if x % 2 else "water_cauldron[level=3]")
-            shelf(d, x, 4, z1 + 6, w, ("yellow_terracotta", "decorated_pot[cracked=false,facing=north,"
-                                       "waterlogged=false]", "honey_block")[x % 3])
+        tb = slab(f"{w}_slab", "top")
+        for k, top_ in ((2, "cake[bites=0]"), (3, "yellow_terracotta"), (4, CANDLE),          # shop counter, gap
+                        (7, "yellow_terracotta"), (8, "cake[bites=0]")):                      # for the door
+            d.set(x1 + k, 2, z1 + 4, tb)
+            d.set(x1 + k, 3, z1 + 4, top_)
+        for k, low, sh in ((2, "water_cauldron[level=3]", "yellow_terracotta"),      # cheese room behind:
+                           (3, "barrel[facing=up,open=false]", None),               # vats, brine barrels,
+                           (4, "water_cauldron[level=3]", "yellow_terracotta"),     # cheese wheels on shelves
+                           (6, "barrel[facing=up,open=false]", POT),
+                           (7, "barrel[facing=up,open=false]", "yellow_terracotta"),
+                           (8, "water_cauldron[level=3]", None)):
+            d.set(x1 + k, 2, z1 + 6, low)
+            if sh:
+                shelf(d, x1 + k, 4, z1 + 6, w, sh)
         hang(d, x1 + 5, ridge - 1, z1 + 4, 4)
         d.sign(x1 + 7, 4, z1 + 1, "north", ["Creamery", "milk ~ cheese"], w)
     elif kind == "sheep":                                              # dye house + drying racks
@@ -2865,11 +2897,11 @@ def extra(d, pack, kind, x1, z1):
                         d.set(tx + dx, 4, tz + dz, "flowering_azalea_leaves" + LEAVES)
                 d.set(tx, 5, tz, "flowering_azalea_leaves" + LEAVES)
                 d.set(tx + 1, 2, tz + 1, "beehive[facing=south,honey_level=2]" if (tx + tz) % 2 else "poppy")
-        for x in range(x1 + 3, x1 + 8):                                # honey stall under an awning
-            d.set(x, 2, z1 + 8, slab(f"{w}_slab", "top"))
-            d.set(x, 3, z1 + 8, ("honey_block", "candle[candles=3,lit=false,waterlogged=false]",
-                                 "honeycomb_block")[x % 3])
-            d.set(x, 5, z1 + 8, M["awn"][x % 2])
+        for k, top_ in ((4, "honey_block"), (5, CANDLE), (6, "honeycomb_block")):  # honey stall, awning
+            d.set(x1 + k, 2, z1 + 8, slab(f"{w}_slab", "top"))
+            d.set(x1 + k, 3, z1 + 8, top_)
+        for k in range(3, 8):
+            d.set(x1 + k, 5, z1 + 8, M["awn"][k % 2])
         for x in (x1 + 3, x1 + 7):
             d.set(x, 4, z1 + 8, M["fence"])
             d.set(x, 4, z1 + 8, M["fence"])
@@ -3041,6 +3073,50 @@ def downgrade(d):
                     row[x] = f"minecraft:chain[axis={ax},waterlogged=false]"
                 elif n in PREMIUM_DOWN:
                     row[x] = "minecraft:" + PREMIUM_DOWN[n] + ("[" + rest if rest else "")
+
+
+# ------------------------------------------------------------------------------------------- street fronts
+HWF = ("poppy", "cornflower", "oxeye_daisy", "allium")
+CSF = ("fern", "dandelion", "fern", "red_tulip")
+FRONTS = {   # hand-placed street furniture along each farm's road edge: lamp posts, benches, planted strips
+    ("Hearthwood", "poultry"): [("bed", 19, 21, 1, HWF)],
+    ("Cascadia", "poultry"): [("bed", 12, 13, 1, CSF), ("lamp", 18, 1)],
+    ("Neoterra", "poultry"): [("bench", 3, 1, 2), ("lamp", 9, 1), ("planter", 2, 1)],
+    ("Hearthwood", "cattle"): [("lamp", 11, 1), ("bench", 13, 1, 2), ("bed", 16, 17, 1, HWF)],
+    ("Cascadia", "cattle"): [("lamp", 13, 1), ("bed", 20, 21, 1, CSF)],
+    ("Neoterra", "cattle"): [("lamp", 12, 1), ("bench", 24, 1, 2)],
+    ("Hearthwood", "sheep"): [("lamp", 2, 1), ("bench", 12, 1, 2), ("bed", 15, 17, 1, HWF)],
+    ("Cascadia", "sheep"): [("lamp", 5, 1), ("bed", 10, 11, 1, CSF), ("bench", 13, 1, 2)],
+    ("Neoterra", "sheep"): [("lamp", 5, 1), ("bench", 16, 1, 2)],
+    ("Hearthwood", "pig"): [("lamp", 2, 1), ("bench", 13, 1, 2), ("bed", 16, 18, 1, HWF)],
+    ("Cascadia", "pig"): [("lamp", 4, 1), ("bed", 9, 10, 1, CSF), ("bench", 15, 1, 2)],
+    ("Neoterra", "pig"): [("bench", 3, 1, 2), ("lamp", 11, 1), ("planter", 20, 1)],
+    ("Hearthwood", "rabbit"): [("lamp", 8, 1), ("bench", 14, 1, 2)],
+    ("Cascadia", "rabbit"): [("lamp", 11, 1), ("bed", 13, 13, 1, CSF), ("bed", 17, 17, 1, CSF)],
+    ("Neoterra", "rabbit"): [("bench", 2, 1, 2), ("lamp", 9, 1)],
+    ("Hearthwood", "bees"): [("lamp", 4, 1), ("bench", 8, 1, 2), ("bed", 16, 18, 1, ("allium", "allium",
+                                                                                   "lily_of_the_valley"))],
+    ("Cascadia", "bees"): [("bed", 2, 3, 1, CSF), ("bench", 11, 1, 2), ("lamp", 14, 1)],
+    ("Neoterra", "bees"): [("lamp", 9, 1), ("bench", 16, 1, 2)],
+    ("Hearthwood", "horse"): [("bench", 15, 1, 2), ("bed", 19, 21, 1, HWF)],
+    ("Cascadia", "horse"): [("bed", 5, 6, 1, CSF), ("bench", 13, 1, 2)],
+    ("Neoterra", "horse"): [("lamp", 12, 1), ("bench", 14, 1, 2)],
+}
+
+
+def front(d, pack, kind, L):
+    """Street front of the farm (from L1): the hand-placed pieces of FRONTS for this type and pack."""
+    wood = MAT[pack]["wood"]
+    for piece in FRONTS[(pack, kind)]:
+        if piece[0] == "lamp":
+            lamp_post(d, piece[1], piece[2], pack)
+        elif piece[0] == "bench":
+            bench(d, piece[1], piece[2], "south", wood, piece[3])
+        elif piece[0] == "planter":
+            d.set(piece[1], 1, piece[2], "moss_block")
+            d.set(piece[1], 2, piece[2], "flowering_azalea")
+        elif piece[0] == "bed":
+            flowers(d, piece[1], piece[2], (piece[3],), piece[4])
 
 
 # ------------------------------------------------------------------------------------------- core rooms

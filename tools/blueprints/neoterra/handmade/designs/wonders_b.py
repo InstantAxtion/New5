@@ -1923,6 +1923,60 @@ def F(d, b, items):
         piece(d, kind, b["x1"] + dx, b["y0"] + dy, b["z1"] + dz, arg, S)
 
 
+# Plan symbols (hand-drawn room plans, one character per interior cell, rows north->south, columns west->east).
+# '.' / ' ' = keep free.  Oriented pieces carry their facing in the symbol; the per-room `face` dict gives the
+# facing of workstations (K smoker, F furnace, G grindstone, V stonecutter, Q lectern, A anvil, M loom).
+LEGEND = {
+    "b": ("barrel", None), "B": ("barrels", "north"), "s": ("sacks", None), "h": ("hay", True), "H": ("hay", None),
+    "k": ("crafting_table", None), "m": ("cartography_table", None), "f": ("fletching_table", None),
+    "w": ("smithing_table", None), "c": ("counter", None),
+    "d": ("counter", "candle[candles=3,lit=false,waterlogged=false]"),
+    "e": ("counter", "decorated_pot[cracked=false,facing=north,waterlogged=false]"),
+    "g": ("counter", "potted_red_tulip"), "i": ("counter", "potted_fern"),
+    "n": ("nightstand", None), "j": ("nightstand", "candle"),
+    "p": ("=", "potted_fern"), "a": ("=", "potted_azalea_bush"), "z": ("=", "potted_bamboo"),
+    "u": ("=", "potted_red_tulip"), "P": ("pot", "north"), "C": ("cauldron", None), "r": ("brewing", None),
+    "T": ("table", None), "t": ("table", "candle[candles=2,lit=false,waterlogged=false]"),
+    "^": ("bed", "north"), "v": ("bed", "south"), "<": ("bed", "west"), ">": ("bed", "east"),
+    "1": ("chair", "north"), "2": ("chair", "east"), "3": ("chair", "south"), "4": ("chair", "west"),
+    "5": ("shelf", "north"), "6": ("shelf", "east"), "7": ("shelf", "south"), "8": ("shelf", "west"),
+    "9": ("books", None), "x": ("keg", "east"), "y": ("keg", "north"),
+    "X": ("=", "spruce_log[axis=x]"), "Z": ("=", "stripped_spruce_log[axis=x]"),
+    "W": ("=", "white_wool"), "Y": ("=", "yellow_wool"), "O": ("=", "orange_wool"), "J": ("=", "jukebox[has_record=false]"),
+}
+FACED = {"U": "blast_furnace", "K": "smoker", "F": "furnace", "G": "grindstone", "V": "stonecutter", "Q": "lectern", "A": "anvil",
+         "M": "loom"}
+
+
+def plan(d, b, storey, rows, face=None, lamps=(), rugs=None):
+    """Furnish one storey of building b from a hand-drawn plan. rows must cover the interior exactly.
+    'R' / 'o' = carpet in the pack's two rug colours, '@' = carpet with a hanging lamp above, 'l' = hanging lamp
+    over free floor."""
+    S = b["S"]
+    yb = b["y0"] + 5 * storey
+    W = b["x2"] - b["x1"] - 1
+    assert len(rows) == b["z2"] - b["z1"] - 1, (b["x1"], b["z1"], storey, len(rows))
+    rc = rugs or S["rug"]
+    for r, row in enumerate(rows):
+        assert len(row) == W, (b["x1"], b["z1"], storey, r, row)
+        z = b["z1"] + 1 + r
+        for c, ch in enumerate(row):
+            x = b["x1"] + 1 + c
+            if ch in ". ":
+                continue
+            if ch in "Ro@":
+                d.set(x, yb, z, rc[1] if ch == "o" else rc[0])
+                if ch == "@":
+                    piece(d, "lamp", x, yb + 3, z, None, S)
+            elif ch == "l":
+                piece(d, "lamp", x, yb + 3, z, None, S)
+            elif ch in FACED:
+                piece(d, FACED[ch], x, yb, z, (face or {}).get(ch, "north"), S)
+            else:
+                k, a = LEGEND[ch]
+                piece(d, k, x, yb, z, a, S)
+
+
 def building(d, x1, z1, x2, z2, storeys, door="south", doorpos=None, ladder=None, hearth=None, y0=2,
              roof="gable", axis=None, pal=0):
     """Shell of a building in the pack's style: floors, walls, window openings, door, ladder (explicit cell and
@@ -2058,6 +2112,13 @@ def path(d, x1, z1, x2, z2, block):
             d.set(x, 1, z, block)
 
 
+def hedge(d, x1, z1, x2, z2, leaves="oak_leaves"):
+    """A clipped hedge along the line (x1, z1)-(x2, z2) given by hand."""
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            d.set(x, 2, z, f"{leaves}[distance=1,persistent=true,waterlogged=false]")
+
+
 def flowerrow(d, cells, soil="grass_block[snowy=false]"):
     """A flower border written out cell by cell: [(x, z, flower), ...]."""
     for x, z, f in cells:
@@ -2109,6 +2170,12 @@ rg_hearthwood, rg_cascadia, rg_neoterra = core_rg_hearthwood, core_rg_cascadia, 
 
 
 # ----------------------------------------------------------------------------------------------- bridges
+def put(d, S, items):
+    """Hand-written absolute placements: (x, y, z, kind, arg)."""
+    for x, y, z, kind, arg in items:
+        piece(d, kind, x, y, z, arg, S)
+
+
 def gb_hearthwood(rel, L):
     OX, OZ = 13, 9
     big = Design("Hearthwood", rel, (59, 30, 41), gy=1, paving="grass_block[snowy=false]")
@@ -2121,43 +2188,149 @@ def gb_hearthwood(rel, L):
     for x in list(range(0, OX)) + list(range(OX + 33, d.sx)):
         for z in range(19, 22):
             d.set(x, 1, z, road if (x + z) % 5 else ("mossy_cobblestone" if L >= 3 else "coarse_dirt"))
-        if L >= 3 and x % 2 == 0:
-            d.set(x, 1, 18, "stone_brick_slab[type=top,waterlogged=false]") if False else None
-    # bridge-foot town, a building more per level
-    if L >= 2:                                             # toll house by the west gate
-        building(d, 4, 11, 10, 17, ["office"], door="south", name=["Toll", "House"], pal=0)
+    if L >= 2:
+        # ---- Toll House: the toll keeper's office, fire on the west wall, desk facing the door
+        b = building(d, 4, 11, 10, 17, 1, door="south", hearth=(5, 14, "east"), pal=0)
+        plan(d, b, 0, ["9m77b",
+                       "..1..",
+                       ".2d.8",
+                       ".R@Re",
+                       "pR.Rb"])
+        put(d, b["S"], [(7, 4, 18, "sign", ("south", ["Toll", "House"])), (6, 4, 18, "torch", "south"),
+                        (8, 4, 18, "torch", "south"), (9, 2, 18, "box", ("south", "poppy")),
+                        (3, 3, 13, "shutter", "west"), (3, 3, 15, "shutter", "west"),
+                        (11, 2, 16, "hay", None), (11, 2, 18, "barrel", None), (11, 3, 18, "pot", "south")])
         bench_pair(d, 1, 17, "north", "dark_oak")
-        d.set(11, 2, 18, "barrel[facing=up,open=false]")
-        d.set(11, 2, 16, "hay_block[axis=y]")
-    if L >= 3:                                             # the bridge inn
-        building(d, 46, 8, 56, 16, ["inn", "home"], door="south", name=["The", "Ferryman"], pal=1)
+    if L >= 3:
+        # ---- The Ferryman: taproom with kegs and bar, stools, settle by the fire; guest room upstairs
+        b = building(d, 46, 8, 56, 16, 2, door="south", ladder=(47, 9, "south"), hearth=(55, 12, "west"), pal=1)
+        plan(d, b, 0, [".xxP7xxKb",
+                       ".........",
+                       ".ccdcec..",
+                       ".333334..",
+                       "......4..",
+                       "b4T2.4T2p",
+                       "P.l...l.b"], face={"K": "south"})
+        plan(d, b, 1, [".vnvjvnv7",
+                       ".........",
+                       "..R@RR@R.",
+                       "........8",
+                       "b.......B",
+                       "6..4t2...",
+                       "p.......p"])
+        put(d, b["S"], [(51, 4, 17, "sign", ("south", ["The", "Ferryman"])), (50, 4, 17, "torch", "south"),
+                        (52, 4, 17, "torch", "south"), (48, 2, 17, "box", ("south", "poppy")),
+                        (54, 2, 17, "box", ("south", "oxeye_daisy")), (48, 7, 17, "box", ("south", "cornflower")),
+                        (51, 7, 17, "box", ("south", "poppy")), (54, 7, 17, "box", ("south", "allium")),
+                        (48, 2, 18, "barrel", None), (54, 2, 18, "barrel", None), (54, 3, 18, "pot", "south")])
         lamppost(d, 45, 17, post="dark_oak_fence")
-        for x in (48, 54):
-            d.set(x, 2, 18, "barrel[facing=up,open=false]")
-        bench_pair(d, 53, 18, "north", "dark_oak")
+        bench_pair(d, 52, 19, "south", "dark_oak")
         hedge(d, 46, 3, 56, 3)
         tree(d, 51, 2, h=4)
-    if L >= 4:                                             # water mill on the west bank, cottage behind
-        building(d, 13, 32, 20, 39, ["mill", "granary"], door="north", name=["Bridge", "Mill"], chimney=False, pal=2)
+    if L >= 4:
+        # ---- Bridge Mill: millstone floor with sacks and grain, loft above; the wheel turns in the river
+        b = building(d, 13, 32, 20, 39, 2, door="north", ladder=(19, 38, "north"), pal=2)
+        plan(d, b, 0, ["s...Bs",
+                       "h....b",
+                       "s.GV.h",
+                       "h....s",
+                       "s.....",
+                       "hhsB.."], face={"G": "north", "V": "north"})
+        plan(d, b, 1, ["sshhss",
+                       "......",
+                       "s.ll.s",
+                       "h....h",
+                       "s.....",
+                       "hssB.."])
+        put(d, b["S"], [(16, 4, 31, "sign", ("north", ["Bridge", "Mill"])), (15, 4, 31, "torch", "north"),
+                        (18, 2, 31, "box", ("north", "poppy")), (15, 7, 31, "box", ("north", "allium")),
+                        (18, 7, 31, "box", ("north", "poppy")), (14, 2, 31, "sacks", None), (13, 2, 31, "barrel", None)])
         waterwheel(d, 22, 35.5, 3, 2.5)
-        building(d, 2, 25, 10, 33, ["kitchen", "home"], door="north", name=["Miller's", "Cottage"], pal=3)
-        flowerbed(d, 2, 35, 10, 36, ("poppy", "oxeye_daisy", "cornflower", "allium"))
+        # ---- Miller's Cottage: kitchen with range and dining table, settle by the fire; bedroom upstairs
+        b = building(d, 2, 25, 10, 33, 2, door="north", ladder=(9, 32, "north"), hearth=(3, 29, "east"), pal=3)
+        plan(d, b, 0, ["pc...cb",
+                       "b.l...K",
+                       "......F",
+                       "..2...C",
+                       ".11...c",
+                       "pTt...B",
+                       "b33...."], face={"K": "west", "F": "west"})
+        plan(d, b, 1, ["jv.9.vn",
+                       ".......",
+                       "6.R@R.8",
+                       "..RoR..",
+                       "b......",
+                       "4t2....",
+                       "p...B.."])
+        put(d, b["S"], [(6, 4, 24, "sign", ("north", ["Miller's", "Cottage"])), (5, 4, 24, "torch", "north"),
+                        (4, 2, 24, "box", ("north", "cornflower")), (4, 7, 24, "box", ("north", "poppy")),
+                        (7, 7, 24, "box", ("north", "oxeye_daisy"))])
+        flowerrow(d, [(2, 35, "poppy"), (3, 35, "oxeye_daisy"), (4, 35, "rose_bush"), (5, 35, "cornflower"),
+                      (6, 35, "allium"), (7, 35, "poppy"), (8, 35, "peony"), (9, 35, "oxeye_daisy"),
+                      (10, 35, "cornflower")])
         for x in range(1, 12):
-            d.set(x, 2, 38, "oak_fence")
+            d.set(x, 2, 37, "oak_fence")
         for z in (23, 22):
             d.set(6, 1, z, "gravel")
-            d.set(16, 1, z + 9, "gravel")
         path(d, 16, 23, 16, 31, "gravel")
-    if L >= 5:                                             # guildhall, boathouse, second cottage, gardens
-        building(d, 46, 25, 56, 34, ["shop", "office"], door="north", name=["Guild", "Hall"], pal=4)
-        building(d, 38, 32, 44, 39, ["store"], door="west", name=["Boat", "House"], chimney=False, pal=5)
-        building(d, 2, 1, 10, 8, ["kitchen", "home"], door="south", name=["Bridge", "Cottage"], pal=6)
-        flowerbed(d, 47, 36, 56, 37, ("rose_bush[half=lower]", "peony[half=lower]"))
-        for x in range(47, 57):
-            st = d.get(x, 2, 36).split(":")[1]
-            d.set(x, 3, 36, st.replace("lower", "upper"))
-            st = d.get(x, 2, 37).split(":")[1]
-            d.set(x, 3, 37, st.replace("lower", "upper"))
+    if L >= 5:
+        # ---- Guild Hall: wool market with sales counters below, council chamber with long table above
+        b = building(d, 46, 25, 56, 34, 2, door="north", ladder=(55, 33, "north"), hearth=(47, 29, "east"), pal=4)
+        plan(d, b, 0, ["bs.....sb",
+                       "..l...l..",
+                       ".cec.cdc.",
+                       ".2.......",
+                       ".........",
+                       "6.B.l.B.8",
+                       "6.......8",
+                       "bs9s9sB.."])
+        plan(d, b, 1, ["979.m.979",
+                       "....l....",
+                       "..1111...",
+                       ".4TtTt2..",
+                       "..3333...",
+                       "R...l...8",
+                       "6...Q...8",
+                       "pB......."], face={"Q": "north"})
+        put(d, b["S"], [(51, 4, 24, "sign", ("north", ["Guild", "Hall"])), (50, 4, 24, "torch", "north"),
+                        (52, 4, 24, "torch", "north"), (48, 2, 24, "box", ("north", "poppy")),
+                        (54, 2, 24, "box", ("north", "poppy")), (48, 7, 24, "box", ("north", "allium")),
+                        (51, 7, 24, "box", ("north", "cornflower")), (54, 7, 24, "box", ("north", "allium")),
+                        (49, 5, 24, "banner", ("north", "blue")), (53, 5, 24, "banner", ("north", "blue"))])
+        # ---- Boat House: oars, nets and caulking barrels, a repair bench
+        b = building(d, 38, 32, 44, 39, 2, door="west", ladder=(39, 38, "north"), pal=5)
+        plan(d, b, 0, ["Bs.bB",
+                       "....s",
+                       ".....",
+                       "....h",
+                       "..l.b",
+                       "..k.s"])
+        plan(d, b, 1, ["WWsWW",                    # net loft: bales of netting and rope
+                       ".....",
+                       "s.l.B",
+                       "....s",
+                       "....b",
+                       "..pBW"])
+        put(d, b["S"], [(37, 4, 35, "sign", ("west", ["Boat", "House"])), (37, 4, 34, "torch", "west")])
+        # ---- Bridge Cottage: kitchen-parlour by the fire, bedroom with two beds upstairs
+        b = building(d, 2, 1, 10, 8, 2, door="south", ladder=(3, 2, "south"), hearth=(9, 4, "west"), pal=6)
+        plan(d, b, 0, [".cKFCcb",
+                       "..l....",
+                       ".1..4..",
+                       "4T2.4..",
+                       ".3....B",
+                       "pb.l.Pb"], face={"K": "south", "F": "south"})
+        plan(d, b, 1, [".9vnvj7",
+                       ".......",
+                       "..R@R.8",
+                       "..RRR.8",
+                       "6......",
+                       "p4t2..b"])
+        put(d, b["S"], [(6, 4, 9, "sign", ("south", ["Bridge", "Cottage"])), (5, 4, 9, "torch", "south"),
+                        (7, 4, 9, "torch", "south"), (4, 2, 9, "box", ("south", "poppy")),
+                        (4, 7, 9, "box", ("south", "cornflower")), (7, 7, 9, "box", ("south", "oxeye_daisy"))])
+        flowerrow(d, [(47, 36, "rose_bush"), (48, 36, "peony"), (49, 36, "rose_bush"), (50, 36, "peony"),
+                      (52, 36, "rose_bush"), (53, 36, "peony"), (54, 36, "rose_bush"), (55, 36, "peony")])
         for x, z in ((25, 3), (30, 37), (33, 5)):
             d.set(x, 2, z, "lily_pad")
         tree(d, 12, 3, h=5, log="dark_oak_log", leaves="dark_oak_leaves")
@@ -2178,51 +2351,149 @@ def gb_cascadia(rel, L):
     for x in list(range(0, OX)) + list(range(OX + 33, d.sx)):
         for z in range(17, 22):
             d.set(x, 1, z, "coarse_dirt" if (x + z) % 4 else "gravel")
-    for x in range(0, d.sx):                              # rail fence along the road edges outside the bridge
-        if OX - 1 <= x <= OX + 33:
-            continue
-        for z in (16, 22):
-            if x % 4 == 0:
-                d.set(x, 2, z, "spruce_fence") if False else None
-    if L >= 2:                                             # ranger & toll station
-        building(d, 3, 9, 10, 15, ["office"], door="south", name=["Ranger", "Station"], pal=0)
+    if L >= 2:
+        # ---- Ranger Station: map table, log-book lectern, desk by the stove
+        b = building(d, 3, 9, 10, 15, 1, door="south", hearth=(9, 12, "west"), pal=0)
+        plan(d, b, 0, ["m77.Qb",
+                       "......",
+                       "6.d2..",
+                       "R@R...",
+                       "pR.R.b"], face={"Q": "south"})
+        put(d, b["S"], [(6, 4, 16, "sign", ("south", ["Ranger", "Station"])), (5, 4, 16, "torch", "south"),
+                        (8, 2, 16, "box", ("south", "fern")), (2, 3, 10, "shutter", "west"),
+                        (2, 3, 12, "shutter", "west"), (2, 2, 16, "barrel", None), (1, 2, 16, "hay", None)])
         lamppost(d, 11, 16, post="spruce_fence")
-        d.set(2, 2, 16, "barrel[facing=up,open=false]")
-        d.set(1, 2, 16, "hay_block[axis=y]")
         tree(d, 5, 3, h=6, log="spruce_log", leaves="spruce_leaves", r=2)
-    if L >= 3:                                             # general store with a porch
-        building(d, 48, 7, 58, 15, ["shop", "home"], door="south", name=["General", "Store"], pal=1)
+    if L >= 3:
+        # ---- General Store: counters, shelves of goods and a porch; the storekeeper's family lives upstairs
+        b = building(d, 48, 7, 58, 15, 2, door="south", ladder=(49, 8, "south"), pal=1)
+        plan(d, b, 0, [".b77s77Bb",
+                       "..l...l..",
+                       ".cce.cdc.",
+                       ".........",
+                       "6.B.l.s.8",
+                       "6.......8",
+                       "bs.....Hb"])
+        plan(d, b, 1, [".9vjvn.97",
+                       ".........",
+                       "..R@R....",
+                       "..RoR...8",
+                       "6.......8",
+                       ".........",
+                       "b4t2..Bpb"])
         for x in range(47, 60):
             d.set(x, 1, 16, "spruce_planks")
             d.set(x, 6, 16, stair("dark_oak_stairs", "north"))
         for x in (47, 52, 54, 59):
             for y in range(2, 6):
                 d.set(x, y, 16, "spruce_log[axis=y]")
-        for x in (49, 57):
-            d.set(x, 2, 16, "barrel[facing=up,open=false]")
-        d.set(50, 2, 16, stair("spruce_stairs", "north"))
-        d.set(56, 2, 16, stair("spruce_stairs", "north"))
-    if L >= 4:                                             # sawmill on the river with its wheel, bunkhouse
-        building(d, 14, 29, 23, 37, ["mill", "workshop"], door="north", name=["Sawmill"], chimney=False, pal=2)
+        put(d, b["S"], [(53, 4, 16, "sign", ("south", ["General", "Store"])), (49, 2, 16, "barrel", None),
+                        (57, 2, 16, "barrels", "south"), (50, 2, 16, "chair", "north"), (56, 2, 16, "chair", "north"),
+                        (51, 5, 16, "lamp", None), (55, 5, 16, "lamp", None),
+                        (50, 7, 16, "box", ("south", "blue_orchid")), (53, 7, 16, "box", ("south", "dandelion")),
+                        (56, 7, 16, "box", ("south", "blue_orchid"))])
+    if L >= 4:
+        # ---- Sawmill: log carriage running to the saw, sharpening bench; lumber loft above
+        b = building(d, 14, 29, 23, 37, 2, door="north", ladder=(22, 36, "north"), pal=2)
+        plan(d, b, 0, ["bB...B.b",
+                       "........",
+                       "XXXXVZZ.",
+                       "...l....",
+                       "k..G....",
+                       "ss....h.",
+                       "hhs.B..."], face={"V": "west", "G": "north"})
+        plan(d, b, 1, ["ZZZ..ZZZ",
+                       "........",
+                       "k.w...b.",
+                       "...l....",
+                       "6..A...b",
+                       "B.......",
+                       "bss.B..."], face={"A": "north"})
+        put(d, b["S"], [(18, 4, 28, "sign", ("north", ["Sawmill"])), (17, 4, 28, "torch", "north")])
         waterwheel(d, 25, 33.5, 3, 2.5)
-        for z in range(24, 28):                            # log deck
-            for x in range(15, 23, 2):
+        for z in range(24, 28):                            # log deck in front of the mill
+            for x in (15, 17, 19, 21):
                 d.set(x, 2, z, "spruce_log[axis=z]")
             d.set(16, 3, z, "spruce_log[axis=z]")
             d.set(20, 3, z, "spruce_log[axis=z]")
-        building(d, 2, 25, 10, 33, ["kitchen", "home"], door="north", name=["Bunk", "House"], pal=3)
+        # ---- Bunk House: mess hall with a long table and the cook's range; bunk room upstairs
+        b = building(d, 2, 25, 10, 33, 2, door="north", ladder=(9, 32, "north"), hearth=(3, 29, "east"), pal=3)
+        plan(d, b, 0, ["bc...KF",
+                       "...l..C",
+                       ".......",
+                       "..1111c",
+                       "..TtTT.",
+                       "..3333B",
+                       "pb....."], face={"K": "south", "F": "south"})
+        plan(d, b, 1, ["jv.9.vj",
+                       ".......",
+                       ">.....<",
+                       "n.R@R.n",
+                       ">.RRR.<",
+                       ".......",
+                       "b4t2..."])
+        put(d, b["S"], [(6, 4, 24, "sign", ("north", ["Bunk", "House"])), (5, 4, 24, "torch", "north"),
+                        (3, 3, 24, "shutter", "north"), (5, 3, 24, "shutter", "north")])
         for x in range(1, 12):
             d.set(x, 2, 35, "spruce_fence")
-    if L >= 5:                                             # hotel, cabins, firs, lamp posts
-        building(d, 48, 25, 58, 35, ["inn", "home", "home"], door="north", name=["Timberline", "Hotel"], pal=4)
-        building(d, 38, 30, 45, 37, ["home"], door="west", name=["Cabin"], pal=5)
+    if L >= 5:
+        # ---- Timberline Hotel: lobby with desk and fireside chairs, dining, kitchen; two floors of rooms
+        b = building(d, 48, 25, 58, 35, 3, door="north", ladder=(57, 34, "north"), hearth=(49, 30, "east"), pal=4)
+        plan(d, b, 0, ["9b.....b9",
+                       "..l...l..",
+                       "...cdc...",
+                       "..2.3....",
+                       "..t...4T2",
+                       "..2......",
+                       "......4T2",
+                       "K......b.",
+                       "CFcxxB..."], face={"K": "east", "F": "north"})
+        plan(d, b, 1, ["jvnv..vj.",
+                       ".........",
+                       "6.R@R...8",
+                       "6.RoR....",
+                       "....l....",
+                       ">.......<",
+                       "n.......n",
+                       ">......b.",
+                       "n4t2....."])
+        plan(d, b, 2, ["9.v.v.9.7",
+                       ".........",
+                       "..R@R....",
+                       "6.RRR...8",
+                       ".........",
+                       "b4t2....B",
+                       ".........",
+                       "pk.....b.",
+                       "bB......."])
         for x in range(47, 60):
             d.set(x, 1, 24, "spruce_planks")
             d.set(x, 6, 24, stair("dark_oak_stairs", "south"))
         for x in (47, 52, 54, 59):
             for y in range(2, 6):
                 d.set(x, y, 24, "spruce_log[axis=y]")
-        building(d, 2, 1, 9, 7, ["workshop"], door="west", name=["Smithy"], chimney=False, pal=0)
+        put(d, b["S"], [(53, 4, 24, "sign", ("north", ["Timberline", "Hotel"])), (50, 5, 24, "lamp", None),
+                        (56, 5, 24, "lamp", None), (49, 2, 24, "chair", "south"), (50, 2, 24, "chair", "south"),
+                        (57, 2, 24, "barrel", None), (50, 7, 24, "box", ("north", "blue_orchid")),
+                        (53, 7, 24, "box", ("north", "dandelion")), (56, 7, 24, "box", ("north", "blue_orchid")),
+                        (50, 12, 24, "box", ("north", "fern")), (56, 12, 24, "box", ("north", "fern"))])
+        # ---- Cabin: one-room log cabin with bed, fireside chair, table and cook stove
+        b = building(d, 38, 30, 45, 37, 1, door="west", hearth=(44, 33, "west"), pal=5)
+        plan(d, b, 0, ["jv.9b7",
+                       "......",
+                       "....4.",
+                       "4T2.4.",
+                       "......",
+                       "pKFC.b"], face={"K": "north", "F": "north"})
+        put(d, b["S"], [(37, 4, 33, "sign", ("west", ["Cabin"])), (37, 4, 32, "torch", "west")])
+        # ---- Smithy: forge fire under the chimney, anvil, quench barrel and tool benches
+        b = building(d, 2, 1, 9, 7, 1, door="west", hearth=(8, 4, "west"), pal=0)
+        plan(d, b, 0, ["bwkGU.",
+                       "......",
+                       "...A..",
+                       "......",
+                       "bC.s.B"], face={"G": "south", "U": "south", "A": "north"})
+        put(d, b["S"], [(1, 4, 4, "sign", ("west", ["Smithy"])), (1, 4, 3, "torch", "west")])
         for x, z in ((13, 2), (58, 2), (59, 37), (47, 37)):
             tree(d, x, z, h=7, log="spruce_log", leaves="spruce_leaves", r=2)
         for x in (13, 47):
@@ -2247,41 +2518,132 @@ def gb_neoterra(rel, L):
         d.set(x, 1, 22, "white_concrete" if x % 3 == 0 else "gray_concrete")
         for z in (18, 26):                                 # sidewalks
             d.set(x, 1, z, "smooth_stone")
-    if L >= 2:                                             # river cafe pavilion
-        building(d, 3, 9, 11, 16, ["shop"], door="south", name=["RIVER", "CAFE"], pal=0)
-        for x in (4, 8):
-            d.set(x, 2, 17, "birch_fence") if False else None
-        for x in range(3, 12, 4):
+    if L >= 2:
+        # ---- River Cafe: espresso bar on the back wall, pastry counter, two cafe tables, terrace outside
+        b = building(d, 3, 9, 11, 16, 1, door="south", pal=0)
+        plan(d, b, 0, ["Kcrecb7",
+                       ".......",
+                       "cgcd...",
+                       ".....l.",
+                       "4T2.4T2",
+                       "z.l...z"], face={"K": "south"})
+        put(d, b["S"], [(7, 4, 17, "sign", ("south", ["RIVER", "CAFE"])),
+                        (6, 5, 17, "=", "smooth_quartz_slab[type=top,waterlogged=false]"),
+                        (7, 5, 17, "=", "smooth_quartz_slab[type=top,waterlogged=false]"),
+                        (8, 5, 17, "=", "smooth_quartz_slab[type=top,waterlogged=false]"),
+                        (3, 2, 17, "=", "potted_bamboo"), (11, 2, 17, "=", "potted_bamboo")])
+        for x in (3, 7, 11):                               # terrace tables by the river walk
             d.set(x, 1, 6, "smooth_stone")
             d.table(x, 2, 6, "birch", "post")
             d.chair(x - 1, 2, 6, "west", "birch", sit=False)
             d.chair(x + 1, 2, 6, "east", "birch", sit=False)
-    if L >= 3:                                             # transit & bike hub with a terrace
-        building(d, 49, 8, 60, 16, ["office"], door="south", name=["TRANSIT", "HUB"], pal=1)
-        for x in range(49, 61, 2):
+    if L >= 3:
+        # ---- Transit Hub: ticket desk, info lectern, rows of waiting benches, bike repair corner
+        b = building(d, 49, 8, 60, 16, 1, door="south", pal=1)
+        plan(d, b, 0, ["m.cdc.Q.7b",
+                       "..l....l..",
+                       ".333..333.",
+                       "..........",
+                       ".333..333.",
+                       "kA.......z",
+                       "bB...l...b"], face={"Q": "south", "A": "east"})
+        put(d, b["S"], [(54, 4, 17, "sign", ("south", ["TRANSIT", "HUB"]))])
+        for x in (49, 51, 53, 55, 57, 59):                 # bike stands
             d.set(x, 2, 6, "iron_bars")
             d.set(x, 2, 5, "smooth_stone_slab[type=bottom,waterlogged=false]")
-        for x in (48, 61):
-            for z in (3, 17):
-                d.set(x, 2, z, "smooth_quartz")
-                d.set(x, 3, z, "sea_lantern")
-    if L >= 4:                                             # riverside offices and a kayak house
-        building(d, 2, 29, 12, 38, ["office", "lab"], door="north", name=["RIVER", "LAB"], pal=2)
-        building(d, 40, 35, 47, 42, ["store"], door="west", name=["KAYAK", "HIRE"], pal=3)
+        for x, z in ((48, 3), (61, 3), (48, 17), (61, 17)):
+            d.set(x, 2, z, "smooth_quartz")
+            d.set(x, 3, z, "sea_lantern")
+    if L >= 4:
+        # ---- River Lab: monitoring office with desks below, wet lab with island benches above
+        b = building(d, 2, 29, 12, 38, 2, door="north", ladder=(11, 37, "north"), pal=2)
+        plan(d, b, 0, ["97.....79",
+                       "..l...l..",
+                       "6.......8",
+                       "..d...d..",
+                       "..3...3..",
+                       "6.......8",
+                       "z.t......",
+                       "bkQ...B.."], face={"Q": "north"})
+        plan(d, b, 1, ["rCr..crc7",
+                       ".........",
+                       "6.rc.rc.8",
+                       "....l....",
+                       "6.rc.rc..",
+                       ".........",
+                       "kQ.......",
+                       "bBz...C.."], face={"Q": "north"})
+        put(d, b["S"], [(7, 4, 28, "sign", ("north", ["RIVER", "LAB"]))])
+        # ---- Kayak Hire: kayaks racked along the walls, hire counter by the door
+        b = building(d, 40, 35, 47, 42, 1, door="west", pal=3)
+        plan(d, b, 0, ["OOO.YY",
+                       "cg....",
+                       ".....b",
+                       "....l.",
+                       "k....s",
+                       "YYY.OO"])
+        put(d, b["S"], [(39, 4, 38, "sign", ("west", ["KAYAK", "HIRE"]))])
         for x in range(2, 13):
             d.set(x, 1, 27, "smooth_stone")
-        for z in range(31, 44, 3):
+        for z in (31, 34, 37, 40, 43):
             d.set(39, 1, z, "smooth_stone")
-    if L >= 5:                                             # apartment tower, park
-        building(d, 50, 29, 60, 39, ["shop", "home", "home", "home", "office"], door="north",
-                 name=["SKYLINE", "RESIDENCES"], pal=4)
+    if L >= 5:
+        # ---- Skyline Residences: lobby, three different apartments, a co-working floor on top
+        b = building(d, 50, 29, 60, 39, 5, door="north", ladder=(59, 38, "north"), pal=4)
+        plan(d, b, 0, ["z7.....7z",
+                       "..l...l..",
+                       ".........",
+                       "...cdc...",
+                       "....3....",
+                       "4T2...4T2",
+                       "b........",
+                       "B........",
+                       "pBz...b.."])
+        plan(d, b, 1, ["KFCcc...9",
+                       "........j",
+                       ".11.....<",
+                       ".TT.R@R.j",
+                       ".33.RoR.<",
+                       "....RRR.j",
+                       "4t......8",
+                       "4.......8",
+                       "zJ....b.."], face={"K": "south", "F": "south"})
+        plan(d, b, 2, ["97Q...vjv",
+                       ".........",
+                       "..d...R@R",
+                       "..3...RoR",
+                       ".........",
+                       "6.4t2...8",
+                       "6.......8",
+                       ".........",
+                       "bKCcc.B.."], face={"Q": "south", "K": "north"})
+        plan(d, b, 3, ["jvjv.jvj7",
+                       ".........",
+                       "..R@R....",
+                       "..RoR...8",
+                       "9.......8",
+                       ".........",
+                       "4T2..4T2.",
+                       ".........",
+                       "pKFC..b.."], face={"K": "north", "F": "north"})
+        plan(d, b, 4, ["979.m.979",
+                       "....l....",
+                       "..d..d...",
+                       "..3..3...",
+                       ".........",
+                       "..d..d...",
+                       "..3..3...",
+                       "6...l....",
+                       "kQz...B.."], face={"Q": "north"})
+        put(d, b["S"], [(55, 4, 28, "sign", ("north", ["SKYLINE", "RESIDENCES"]))])
         for x, z in ((2, 2), (14, 3), (61, 2), (48, 42), (20, 41)):
             tree(d, x, z, h=5, log="birch_log", leaves="birch_leaves", r=2)
-        for x in (14, 48):
-            for z in (17, 27):
-                d.set(x, 2, z, "smooth_quartz")
-                d.set(x, 3, z, "sea_lantern")
-        flowerbed(d, 50, 41, 60, 42, ("azure_bluet", "white_tulip", "allium", "lily_of_the_valley"), "moss_block")
+        for x, z in ((14, 17), (14, 27), (48, 17), (48, 27)):
+            d.set(x, 2, z, "smooth_quartz")
+            d.set(x, 3, z, "sea_lantern")
+        flowerrow(d, [(50, 41, "azure_bluet"), (51, 41, "white_tulip"), (52, 41, "allium"), (53, 41, "azure_bluet"),
+                      (55, 41, "lily_of_the_valley"), (56, 41, "allium"), (57, 41, "white_tulip"),
+                      (58, 41, "azure_bluet"), (59, 41, "allium")], "moss_block")
     connect_walls(d)
     return d
 

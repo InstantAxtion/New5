@@ -713,24 +713,44 @@ def builder_neo(rel, L):
     a.door(8, 3, "north", double=True)
     d.hut(4, y0, 4)
     d.sign(11, 6, 2, "north", ["BUILD", "& DESIGN"], "birch", glow=True, color="cyan")
-    # ground floor: plan desk at the window, workshop bench run on the back wall, rack bay on the west wall
-    work = ["crafting_table", "cartography_table", "barrel", "barrel"]
+    FL = "pearlescent_froglight[axis=y]"
+    # ground floor: plan desk at the street window, bench run on the back wall, rack bay on the west wall
+    bench_run = [("i", 5, 11, "crafting_table"), ("i", 6, 11, "barrel", "north"), ("i", 7, 11, "barrel", "north")]
     if L >= 2:
-        work += ["smithing_table", "anvil", "grindstone", "stonecutter"] + (["hopper"] if L <= 3 else [])
+        bench_run += [("i", 8, 11, "smithing_table"), ("i", 9, 11, "anvil", "east"),
+                      ("i", 10, 11, "grindstone", "north"), ("i", 11, 11, "stonecutter", "north")]
+        bench_run += [("i", 12, 11, "hopper")] if L <= 3 else []
     if L >= 5:
-        work.append("ender_chest")
+        bench_run += [("i", 12, 11, "ender_chest", "north")]
     racks = BRACKS[L] if L <= 2 else 12
-    furnish(a.room(0, back="south"), "workshop", work, racks=racks, rack_h=3, seats=2)
+    rack_z = (7, 8, 9) if racks <= 9 else (6, 7, 8, 9)
+    fit(d, y0, bench_run + [("r", 4, z, 3) for z in rack_z] + [
+        ("s", 11, 5, sl("smooth_quartz", "top")), ("s", 12, 5, sl("smooth_quartz", "top")),
+        ("c", 11, 6, "south"), ("c", 12, 6, "south"), ("o", 12, 5, "white_candle[candles=1,lit=false,waterlogged=false]"),
+        ("i", 13, 5, "cartography_table"),
+        ("s", 8, 8, sl("birch", "top")), ("s", 9, 8, lg("stripped_birch_log", "x")), ("s", 10, 8, sl("birch", "top")),
+        ("o", 8, 8, "potted_bamboo"), ("rug", 6, 5, 9, 6, "light_gray_carpet"),
+        ("s", 4, 11, pot(3)), ("s", 13, 11, "chest[facing=north,type=single,waterlogged=false]"),
+        ("G", 6, 8, FL), ("G", 11, 8, FL)], "birch")
     if sto >= 2:                                                     # drafting library
-        furnish(a.room(1, back="west"), "library", ["lectern", "cartography_table", "crafting_table"], books=12,
-                seats=2)
+        fit(d, 6, [("k", 4, z, 2) for z in range(5, 11)] + [
+            ("i", 7, 11, "lectern", "north"), ("i", 8, 11, "cartography_table"), ("i", 9, 11, "crafting_table"),
+            ("s", 7, 7, sl("birch", "top")), ("s", 8, 7, sl("birch", "top")), ("c", 7, 8, "south"), ("c", 8, 8, "south"),
+            ("o", 7, 7, "white_candle[candles=2,lit=false,waterlogged=false]"),
+            ("s", 11, 5, sl("birch", "top")), ("o", 11, 5, "potted_bamboo"), ("s", 4, 11, pot(0)),
+            ("rug", 6, 9, 10, 9, "cyan_carpet"), ("G", 8, 6, FL), ("G", 11, 9, FL)], "birch")
     if sto >= 3:                                                     # staff lounge with the duty bed
-        furnish(a.room(2, back="south"), "lounge", ["jukebox"], beds=1, seats=4)
+        fit(d, 10, [("bed", 5, 11, "south", "white"), ("s", 6, 11, sl("birch", "top")),
+                    ("o", 6, 11, "white_candle[candles=1,lit=false,waterlogged=false]"), ("i", 12, 11, "jukebox"),
+                    ("rug", 7, 7, 10, 8, "light_gray_carpet"), ("s", 8, 7, sl("smooth_quartz", "top")),
+                    ("s", 9, 7, sl("smooth_quartz", "top")), ("c", 7, 9, "south"), ("c", 8, 9, "south"),
+                    ("c", 9, 9, "south"), ("c", 10, 9, "south"), ("s", 4, 4, pot(3)), ("s", 13, 4, pot(1)),
+                    ("G", 8, 5, FL), ("G", 11, 9, FL)], "birch")
         if sto >= 4:                                                 # top: meeting room
-            furnish(a.room(3, back="north"), "office", seats=4, sit=False)
-        neo_roof(d, a, [(5, 15, 5, MOSS), (5, 15, 6, 'azalea'), (5, 15, 8, MOSS), (5, 15, 9, 'azalea')])
-    else:
-        neo_roof(d, a, [(5, 12, 5, SOLAR), (5, 12, 7, SOLAR), (5, 12, 9, SOLAR)])
+            fit(d, 14, [("s", x, 7, sl("smooth_quartz", "top")) for x in range(7, 12)] +
+                [("c", x, 6, "north", False) for x in range(7, 12)] + [("c", x, 8, "south", False) for x in range(7, 12)] +
+                [("k", 4, z, 1) for z in range(5, 10)] + [("s", 4, 11, pot(3)), ("s", 13, 11, pot(0)),
+                                                          ("G", 9, 7, "sea_lantern")], "birch")
     # street front: planters with trees, benches, lamp posts
     for x in (1, 19):
         d.set(x, y0, 2, "moss_block")
@@ -749,15 +769,21 @@ def builder_neo(rel, L):
             d.set(x, y0 + 1, 2, "black_concrete")
         d.sign(25, hb.stand(0) + 3 if L < 5 else 6, 2, "north", ["MATERIALS", "STORE"], "birch", glow=True, color="yellow")
         need = BRACKS[L] - racks
-        rh = hb.room(0, back="north")
         y1 = hb.stand(0)
         n = aisles(d, 21, 6, 29, 13, y1, min(need, 48 if L < 5 else 27))
         racks += n
-        rh.keep |= {(x, z) for x in range(21, 30) for z in range(5, 15)}
-        furnish(rh, "loft")                                          # pallets of stock by the loading door
-        if L >= 5:
+        top = 6 if L < 5 else 5
+        fit(d, y1, [("s", 21, 4, "stone_bricks"), ("o", 21, 4, "stone_bricks"), ("s", 22, 4, "bricks"),
+                    ("s", 28, 4, "white_concrete"), ("o", 28, 4, "white_concrete"), ("s", 29, 4, "glass"),
+                    ("s", 31, 8, lg("birch_log", "z")), ("s", 31, 9, lg("birch_log", "z")),
+                    ("o", 31, 8, lg("birch_log", "z")), ("s", 31, 12, "chest[facing=west,type=single,waterlogged=false]"),
+                    ("s", 32, 14, pot(3)), ("G", 25, 8, FL, top), ("G", 25, 12, FL, top), ("G", 31, 10, FL, top)])
+        if L >= 5:                                                   # first floor: overflow racks & break room
             more = max(9, BRACKS[L] - racks)
-            furnish(hb.room(1, back="south"), "store", racks=more, rack_h=3, seats=4, sit=False)
+            fit(d, 6, [("r", x, 14, 3) for x in range(22, 22 + (more + 2) // 3)] + [
+                ("s", 25, 9, sl("birch", "top")), ("c", 24, 9, "west", False), ("c", 26, 9, "east", False),
+                ("c", 25, 8, "north", False), ("c", 25, 10, "south", False), ("rug", 23, 7, 27, 11, "gray_carpet"),
+                ("s", 21, 4, pot(3)), ("G", 25, 9, "sea_lantern")], "birch")
             racks += more
             neo_roof(d, hb, [(22, 31, 6, SOLAR), (22, 31, 9, SOLAR), (22, 31, 12, SOLAR)])
         else:
@@ -768,10 +794,23 @@ def builder_neo(rel, L):
         c = build(d, 3, 16, 17, 25, cs, roof="flat", core=(4, 18) if cs > 1 else None)
         c.door(10, 16, "north", double=True)
         rest = max(0, BRACKS[L] - racks) if L < 5 else 0
-        furnish(c.room(0, back="south"), "workshop", ["domum_ornamentum:architectscutter"], racks=rest, rack_h=3)
+        fit(d, y0, [("i", 8, 24, "domum_ornamentum:architectscutter", "north"),
+                    ("s", 7, 21, lg("stripped_birch_log", "x")), ("s", 8, 21, "crafting_table"),
+                    ("s", 9, 21, sl("smooth_quartz", "top")), ("s", 10, 21, "stonecutter[facing=north]"),
+                    ("s", 11, 21, sl("smooth_quartz", "top")), ("s", 12, 21, lg("stripped_birch_log", "x")),
+                    ("s", 15, 24, "white_concrete"), ("o", 15, 24, "white_concrete"), ("s", 16, 24, "glass"),
+                    ("s", 16, 20, "chest[facing=west,type=single,waterlogged=false]"), ("s", 12, 24, pot(3)),
+                    ("G", 9, 19, FL), ("G", 9, 23, FL), ("G", 14, 21, FL)] +
+            [("r", x, 24, 3) for x in range(4 if cs == 1 else 6, (4 if cs == 1 else 6) + (rest + 2) // 3)], "birch")
         racks += rest
-        if cs > 1:
-            furnish(c.room(1, back="south"), "canteen", sit=False)
+        if cs > 1:                                                   # canteen over the workshop
+            fit(d, 6, [("s", 8, 24, "smoker[facing=north,lit=false]"), ("s", 9, 24, sl("smooth_quartz", "top")),
+                       ("s", 10, 24, "water_cauldron[level=3]"), ("s", 11, 24, "furnace[facing=north,lit=false]"),
+                       ("s", 12, 24, sl("smooth_quartz", "top"))] +
+                [("s", x, 21, sl("birch", "top")) for x in range(8, 13)] +
+                [("c", x, 20, "north", False) for x in range(8, 13)] + [("c", x, 22, "south", False) for x in range(8, 13)] +
+                [("s", 16, 17, pot(3)), ("s", 16, 24, pot(0)), ("G", 10, 19, "sea_lantern"), ("G", 10, 23, "sea_lantern")],
+                "birch")
             neo_roof(d, c, [(5, 15, 18, MOSS), (5, 15, 19, 'azalea'), (5, 15, 21, MOSS), (5, 15, 22, 'azalea')])
         else:
             neo_roof(d, c, [(5, 15, 18, SOLAR), (5, 15, 21, SOLAR)])
@@ -790,23 +829,23 @@ def builder_neo(rel, L):
         d.set(26, 13, mz, "stone_bricks")
     # yard: paving, stacks
     if L >= 3:
-        for x in range(18, 35):
-            for z in range(17, 29):
-                if d.get(x, 1, z) == "minecraft:smooth_stone":
-                    d.set(x, 1, z, "gray_concrete" if (x + z) % 7 else "yellow_concrete")
+        path(d, 20, 17, 33, 28, "gray_concrete")
+        path(d, 24, 17, 26, 28, "yellow_concrete")
         for x, z, b, h in ((22, 19, "stone_bricks", 2), (23, 19, "stone_bricks", 1), (22, 20, "bricks", 2),
                            (29, 19, "white_concrete", 2), (30, 19, "white_concrete", 1), (29, 20, "glass", 1)):
             for k in range(h):
                 d.set(x, y0 + k, z, b)
-        log_pile(d, 24, 25, 28, 26, y0, 2, "birch_log", "x")
+        log_pile(d, 20, 25, 23, 26, y0, 2, "birch_log", "x")
         for x in (21, 33):
             lamp_post(d, x, 27, y0, P)
     if L >= 5:                                                       # site gatehouse kiosk at the yard entrance
         k = build(d, 28, 19, 33, 25, 1, roof="flat")
         k.door(30, 19, "north")
-        furnish(k.room(0, back="south"), "kiosk", sit=False)
+        fit(d, y0, [("s", 31, 23, sl("smooth_quartz", "top")), ("c", 31, 22, "north", False),
+                    ("o", 31, 23, "white_candle[candles=1,lit=false,waterlogged=false]"), ("s", 29, 24, pot(3)),
+                    ("s", 32, 24, "chest[facing=north,type=single,waterlogged=false]"), ("G", 30, 22, "sea_lantern")], "birch")
         neo_roof(d, k, [(30, 31, 21, MOSS), (30, 31, 23, 'azalea')])
-        for z in range(17, 29, 3):
+        for z in (17, 20, 23, 26):
             lamp_post(d, 34, z, y0, P)
         for x in (20, 23):
             d.set(x, y0, 28, "moss_block")
@@ -826,20 +865,44 @@ def builder_hw(rel, L):
     a.door(9, 3, "north")
     d.hut(4, y0, 4)
     d.sign(10, 4, 2, "north", ["Master Builder", "& Mason"], "dark_oak")
-    # workshop: bench run on the back wall, rack bay on the west wall, plan desks by the street windows
-    work = ["cartography_table", "crafting_table", "barrel", "barrel"]
+    # workshop: bench run on the back wall, racks by the door and in the corner, plan desk at the front window,
+    # fireside rug by the inglenook
+    run = [("i", 5, 12, "crafting_table"), ("i", 6, 12, "cartography_table"),
+           ("i", 7, 12, "barrel", "north"), ("i", 8, 12, "barrel", "north")]
     if L >= 2:
-        work += ["smithing_table", "anvil", "grindstone", "stonecutter"] + (["hopper"] if L <= 3 else [])
+        run += [("i", 9, 12, "smithing_table"), ("i", 10, 12, "anvil", "east"), ("i", 11, 12, "grindstone", "north"),
+                ("i", 12, 12, "stonecutter", "north")] + ([("i", 13, 12, "hopper")] if L <= 3 else [])
     if L >= 5:
-        work.append("ender_chest")
+        run += [("i", 13, 12, "ender_chest", "north")]
     racks = BRACKS[L] if L <= 2 else 9
-    seats = furnish(a.room(0, back="south"), "workshop", work, racks=racks, rack_h=3, seats=2)
+    rk = [("r", 4, 5, 3), ("r", 4, 6, 3), ("r", 4, 11, 3)] + ([("r", 15, 12, 3)] if racks > 9 else [])
+    seats = fit(d, y0, run + rk + [
+        ("s", 11, 5, sl("dark_oak", "top")), ("s", 12, 5, sl("dark_oak", "top")), ("c", 11, 6, "south"),
+        ("c", 12, 6, "south"), ("o", 11, 5, "candle[candles=2,lit=false,waterlogged=false]"),
+        ("rug", 6, 8, 7, 10, "red_carpet"), ("st", 7, 8, "north"), ("st", 7, 10, "south"),
+        ("s", 16, 12 if racks <= 9 else 11, pot(2)) if L == 1 else ("s", 14, 12, pot(2)),
+        ("L", 9, 8), ("L", 13, 10)], "dark_oak")
     if sto >= 2:                                                     # drafting room & library upstairs
-        seats += furnish(a.room(1, back="west"), "library",
-                         ["lectern", "cartography_table", "crafting_table"] + (["jukebox"] if L >= 4 else []),
-                         books=12, seats=2)
+        seats += fit(d, 6, [("k", x, 12, 2) for x in range(5, 11)] + [
+            ("i", 11, 12, "lectern", "north"), ("i", 12, 12, "cartography_table"), ("i", 13, 12, "crafting_table"),
+            ("s", 7, 6, sl("dark_oak", "top")), ("s", 8, 6, sl("dark_oak", "top")), ("c", 7, 7, "south"),
+            ("c", 8, 7, "south"), ("o", 8, 6, "candle[candles=3,lit=false,waterlogged=false]"),
+            ("rug", 6, 9, 10, 10, "red_carpet"), ("s", 13, 4, pot(0)), ("L", 9, 9)] +
+            ([("i", 5, 4, "jukebox")] if L >= 4 else []), "dark_oak")
     if sto >= 3:                                                     # top floor: apprentices' dormitory
-        furnish(a.room(2, back="south"), "dorm", beds=3, wood="oak")
+        fit(d, 10, [("bed", x, 12, "south") for x in (6, 9, 12)] +
+            [("s", x, 12, sl("oak", "top")) for x in (7, 10)] + [("o", 7, 12, "candle[candles=1,lit=false,waterlogged=false]"),
+             ("s", 5, 4, "chest[facing=south,type=single,waterlogged=false]"),
+             ("s", 6, 4, "chest[facing=south,type=single,waterlogged=false]"),
+             ("s", 9, 7, "oak_fence"), ("o", 9, 7, "oak_pressure_plate[powered=false]"),
+             ("c", 8, 7, "west", False), ("c", 10, 7, "east", False), ("L", 9, 8)], "oak")
+    # window boxes on the street front
+    if sto >= 2:
+        for x in (5, 11, 14):
+            flower_box(d, x, 6, 3, "north", "dark_oak", ("red_tulip", "oxeye_daisy", "cornflower")[x % 3])
+    else:
+        for x in (5, 14):
+            flower_box(d, x, 2, 3, "north", "dark_oak", "red_tulip")
     # yard walls and gate
     for x in range(16, 33):
         d.set(x, y0, 12, "cobblestone_wall") if L < 3 else None
@@ -853,14 +916,18 @@ def builder_hw(rel, L):
                    core=(27, 12) if bs > 1 else None)
         bb.opening(19, 8, 19, 10, 3, lg("stripped_dark_oak_log", "z"))
         bb.door(24, 3, "north")
-        need = BRACKS[L] - racks
-        n0 = need if L < 5 else 30
-        furnish(bb.room(0, back="east"), "store", racks=n0)          # shelving bays across the barn
-        racks += n0
-        if bs > 1:
-            n1 = max(9, BRACKS[L] - racks)
-            furnish(bb.room(1, back="east"), "store", racks=n1)
-            racks += n1
+        cols = {3: 5, 4: 9, 5: 12}[L]                               # shelving bays across the barn
+        cells = [(x, 6) for x in range(21, 27)] + [(x, 7) for x in range(21, 27)]
+        fit(d, bb.stand(0), [("r", x, z, 3) for x, z in cells[:cols]] + [
+            ("s", 21, 18, "stone_bricks"), ("o", 21, 18, "stone_bricks"), ("s", 22, 18, "cobblestone"),
+            ("s", 28, 4, "chest[facing=west,type=single,waterlogged=false]"), ("L", 24, 9), ("L", 24, 13)])
+        log_pile(d, 21, 14, 25, 16, bb.stand(0), 2, "oak_log", "x")
+        racks += cols * 3
+        if bs > 1:                                                   # timber loft
+            fit(d, 6, [("s", 21, 5, "oak_planks"), ("o", 21, 5, sl("oak")), ("s", 21, 6, "oak_planks"),
+                       ("s", 22, 18, "white_wool"), ("s", 21, 18, "brown_wool"), ("o", 21, 18, "brown_carpet"),
+                       ("L", 24, 9)])
+            log_pile(d, 21, 9, 24, 10, 6, 1, "stripped_oak_log", "x")
         d.sign(23, 6, 2, "north", ["Timber", "& Stone Store"], "dark_oak")
     # ---- mason's lodge (L4+), upper floor at L5
     if L >= 4:
@@ -868,17 +935,34 @@ def builder_hw(rel, L):
         c = build(d, 3, 17, 15, 25, cs, roof="gable", axis="x", core=(4, 19) if cs > 1 else None,
                   chimney=(14, 21, "west"))
         c.door(9, 17, "north", double=True)
-        rest = max(0, BRACKS[L] - racks)
-        seats += furnish(c.room(0, back="south"), "workshop", ["domum_ornamentum:architectscutter"], racks=rest,
-                         seats=2)
-        racks += rest
-        seats += furnish(c.room(1, back="south"), "office", books=4, seats=2, beds=1)   # master's quarters
+        # mason's banker benches, cutter by the back wall; master's quarters with desk and bookcase above
+        seats += fit(d, y0, [("i", 8, 24, "domum_ornamentum:architectscutter", "north"),
+                             ("s", 8, 21, "stone_bricks"), ("s", 9, 21, "chiseled_stone_bricks"),
+                             ("s", 10, 21, sl("stone_brick", "top")), ("c", 8, 20, "north"), ("c", 10, 20, "north"),
+                             ("s", 12, 24, "stone_bricks"), ("o", 12, 24, sl("stone_brick")), ("s", 13, 24, "cobblestone"),
+                             ("s", 7, 18, "water_cauldron[level=3]"), ("L", 9, 19), ("L", 11, 23)], "dark_oak")
+        seats += fit(d, 6, [("bed", 12, 24, "south"), ("s", 11, 24, sl("dark_oak", "top")),
+                            ("o", 11, 24, "candle[candles=1,lit=false,waterlogged=false]"),
+                            ("s", 8, 24, sl("dark_oak", "top")), ("c", 8, 23, "north"),
+                            ("s", 9, 24, sl("dark_oak", "top")), ("c", 9, 23, "north"),
+                            ("k", 6, 24, 2), ("k", 7, 24, 2), ("rug", 8, 20, 11, 21, "red_carpet"),
+                            ("s", 13, 18, pot(2)), ("L", 9, 21)], "dark_oak")
     if L >= 5:                                                       # guild hall closing the yard
         g = build(d, 19, 21, 31, 28, 3, roof="gable", axis="x", core=(29, 23), chimney=(20, 25, "east"))
         g.door(24, 21, "north", double=True)
-        furnish(g.room(0, back="south"), "canteen", sit=False)       # guild feast hall
-        furnish(g.room(1, back="south"), "library", books=10, seats=2, sit=False)
-        furnish(g.room(2, back="south"), "loft")                     # model & archive loft
+        # feast hall: long table with benches before the hearth; library above; model loft in the roof
+        fit(d, y0, [("s", x, 25, sl("dark_oak", "top")) for x in range(22, 28)] +
+            [("c", x, 24, "north", False) for x in range(22, 28)] + [("c", x, 26, "south", False) for x in range(22, 28)] +
+            [("s", 27, 22, "barrel[facing=north,open=false]"), ("s", 26, 22, "barrel[facing=north,open=false]"),
+             ("s", 22, 22, pot(2)), ("L", 23, 23), ("L", 26, 23)], "dark_oak")
+        fit(d, 6, [("k", x, 27, 2) for x in range(21, 27)] + [
+            ("s", 24, 24, "dark_oak_fence"), ("o", 24, 24, "dark_oak_pressure_plate[powered=false]"),
+            ("c", 23, 24, "west", False), ("c", 25, 24, "east", False), ("rug", 22, 23, 26, 25, "red_carpet"),
+            ("s", 21, 22, pot(0)), ("L", 25, 24)], "dark_oak")
+        fit(d, 10, [("s", 22, 24, "oak_planks"), ("o", 22, 24, sl("oak")), ("s", 24, 24, "bricks"),
+                    ("o", 24, 24, sl("brick")), ("s", 26, 24, "stone_bricks"), ("s", 21, 27, "white_wool"),
+                    ("s", 22, 27, "brown_wool"), ("s", 27, 27, "chest[facing=north,type=single,waterlogged=false]"),
+                    ("L", 25, 25)])
         d.sign(26, 5, 20, "north", ["Builders'", "Guild"], "dark_oak")
         for x in range(16, 33):
             if d.air(x, y0, 29):
@@ -951,17 +1035,33 @@ def builder_cas(rel, L):
     d.set(mid, a.ridge - 6, 2, "hay_block[axis=y]")
     d.sign(mid - 3, 5, 3, "north", ["TIMBER", "FRAMERS"], "spruce")
     d.hut(16, y0, 5)
-    sawhorse(d, 10, 10, y0, "spruce", "z")
-    work = ["crafting_table", "cartography_table", "barrel", "barrel"]
+    # barn floor: saw horse in the nave, bench & cabinets on the east wall, rack bay, plan desk by the doors
+    sawhorse(d, 9, 9, y0, "spruce", "x")
+    run = [("i", 16, 7, "crafting_table"), ("i", 16, 8, "cartography_table"), ("i", 16, 9, "barrel", "west"),
+           ("i", 16, 10, "barrel", "west")]
     if L >= 2:
-        work += ["smithing_table", "anvil", "grindstone", "stonecutter"] + (["hopper"] if L <= 3 else [])
+        run += [("i", 16, 11, "smithing_table"), ("i", 16, 12, "anvil", "north"), ("i", 16, 13, "grindstone", "west"),
+                ("i", 16, 14, "stonecutter", "west")] + ([("i", 14, 15, "hopper")] if L <= 3 else [])
     racks = min(BRACKS[L], 12)
-    seats = furnish(a.room(0, back="south"), "workshop", work, racks=racks, rack_h=3, seats=2)
+    rk = [("r", 6, z, 3) for z in (6, 7, 8)] if L == 1 else [("r", x, 15, 3) for x in (9, 10, 11, 12)]
+    seats = fit(d, y0, run + rk + [
+        ("s", 13, 5, sl("spruce", "top")), ("s", 14, 5, sl("spruce", "top")), ("c", 13, 6, "south"),
+        ("c", 14, 6, "south"), ("o", 14, 5, "candle[candles=2,lit=false,waterlogged=false]"),
+        ("s", 9, 11 if L == 1 else 13, lg("spruce_log", "x")), ("s", 10, 11 if L == 1 else 13, lg("spruce_log", "x")),
+        ("L", 11, 6), ("L", 11, 10 if L == 1 else 14)], "spruce")
+    shutter_pair(d, 7, 3, 4, "north", "spruce")
+    shutter_pair(d, 13, 3, 4, "north", "spruce")
     if sto >= 2:                                                     # plan loft with the library
-        seats += furnish(a.room(1, back="east"), "library", ["lectern", "cartography_table", "crafting_table"],
-                         books=12, seats=2)
+        seats += fit(d, 6, [("k", 16, z, 2) for z in range(5, 11)] + [
+            ("i", 9, 15, "lectern", "north"), ("i", 10, 15, "cartography_table"), ("i", 11, 15, "crafting_table"),
+            ("s", 13, 13, sl("spruce", "top")), ("s", 14, 13, sl("spruce", "top")), ("c", 13, 12, "north"),
+            ("c", 14, 12, "north"), ("o", 13, 13, "candle[candles=2,lit=false,waterlogged=false]"),
+            ("rug", 10, 6, 13, 9, "green_carpet"), ("s", 6, 5, pot(0)), ("L", 11, 10)], "spruce")
     if sto >= 3:                                                     # hay & seasoning loft
-        furnish(a.room(2, back="south"), "loft")
+        fit(d, 10, [("s", 9, 14, "hay_block[axis=y]"), ("s", 10, 14, "hay_block[axis=y]"),
+                    ("o", 9, 14, "hay_block[axis=y]"), ("s", 12, 14, "white_wool"), ("s", 13, 14, "brown_wool"),
+                    ("L", 11, 10)])
+        log_pile(d, 14, 6, 15, 9, 10, 2, "stripped_spruce_log", "z")
     # front: bench, lamp, logs
     log_pile(d, 1, 6, 3, 14, y0, 3, "spruce_log", "z")
     lamp_post(d, 4, 2, y0, P)
@@ -1022,10 +1122,17 @@ def builder_cas(rel, L):
             d.set(x, 6, 17, st("dark_oak", "south"))
             for z in (18, 19, 20):
                 d.set(x, 6, z, sl("dark_oak"))
-        seats += furnish(c.room(0, back="west"), "lounge",               # sofa round the stone fireplace
-                         ["domum_ornamentum:architectscutter", "jukebox"] + (["ender_chest"] if L >= 5 else []),
-                         seats=4)
-        furnish(c.room(1, back="south"), "dorm", beds=2)
+        # cabin parlour: settle facing the stone fireplace, armchair, the drawing cabinet on the back wall
+        seats += fit(d, y0, [("c", 9, z, "east") for z in (25, 26, 27)] + [
+            ("c", 8, 28, "south"), ("s", 8, 26, sl("spruce", "top")), ("rug", 7, 25, 7, 27, "brown_carpet"),
+            ("i", 8, 30, "domum_ornamentum:architectscutter", "north"), ("i", 10, 30, "jukebox")] +
+            ([("i", 11, 30, "ender_chest", "north")] if L >= 5 else []) +
+            [("s", 7, 22, pot(0)), ("L", 9, 23), ("L", 10, 28)], "spruce")
+        fit(d, 6, [("bed", 8, 30, "south"), ("bed", 10, 30, "south"), ("s", 9, 30, sl("spruce", "top")),
+                   ("o", 9, 30, "candle[candles=1,lit=false,waterlogged=false]"),
+                   ("s", 7, 22, "chest[facing=south,type=single,waterlogged=false]"),
+                   ("s", 8, 22, "chest[facing=south,type=single,waterlogged=false]"),
+                   ("rug", 8, 26, 10, 28, "green_carpet"), ("L", 11, 26)], "spruce")
         bench(d, 5, 19, y0, "south", 2, "spruce", sit=False)
         for z in (20, 26, 31):
             lamp_post(d, 18, z, y0, P)
@@ -1034,10 +1141,16 @@ def builder_cas(rel, L):
         sm = build(d, 20, 21, 30, 29, 2, roof="gable", axis="z", core=(28, 23), chimney=(21, 26, "east"))
         sm.door(25, 21, "north", double=True)
         rest = max(0, BRACKS[L] - racks)
-        furnish(sm.room(0, back="south"), "workshop", ["anvil" if False else "smithing_table"] if False else (),
-                racks=rest, rack_h=3)
+        fit(d, y0, [("s", 23, 25, "anvil[facing=north]"), ("s", 23, 27, "grindstone[face=floor,facing=north]"),
+                    ("s", 22, 23, "water_cauldron[level=3]"), ("s", 25, 28, lg("spruce_log", "x")),
+                    ("s", 26, 28, "chest[facing=north,type=single,waterlogged=false]"), ("L", 25, 25)] +
+            [("r", x, 28, 3) for x in range(22, 22 + (rest + 2) // 3)], "spruce")
         racks += rest
-        furnish(sm.room(1, back="south"), "canteen", sit=False)       # smiths' mess room
+        fit(d, 6, [("s", 24, 25, sl("spruce", "top")), ("s", 25, 25, sl("spruce", "top")),
+                   ("c", 24, 24, "north", False), ("c", 25, 24, "north", False),
+                   ("c", 24, 26, "south", False), ("c", 25, 26, "south", False),
+                   ("s", 22, 28, "barrel[facing=north,open=false]"), ("s", 23, 28, "barrel[facing=north,open=false]"),
+                   ("L", 25, 23)], "spruce")
         log_pile(d, 1, 20, 3, 31, y0, 3, "spruce_log", "z")
         for z in range(19, 33):                                      # split-rail fence round the log yard
             d.set(0, y0, z, "spruce_fence")
@@ -1149,8 +1262,16 @@ def saw_neo(rel, L):
     d.sign(9, 5, 3, "north", ["NEOTERRA", "TIMBER WORKS"], "mangrove", glow=True, color="orange")
     n = SAWS[L]
     saw_line(d, [(x, 9) for x in range(6, 6 + n + 2)], y0, n, "stripped_mangrove_log")
-    # saw hall: crafting bench and timber racks on the back wall, sorted stock by the doors
-    furnish(a.room(0, back="south"), "workshop", ["crafting_table"], racks=L, wood="mangrove")
+    # saw hall: foreman's bench by the hut, timber racks with stacked boards on the back wall, ceiling lights
+    FL = "pearlescent_froglight[axis=y]"
+    rx = [5, 7, 9, 11, 13][:L]
+    fit(d, y0, [("i", 4, 7, "crafting_table")] + [("r", x, 12, 1) for x in rx] +
+        [("s", x, 12, "birch_planks") for x in (6, 8, 10, 12, 14) if x < x2 - 1] +
+        [("o", x, 12, sl("mangrove")) for x in (6, 10) if x < x2 - 1] +
+        [("s", 4, 11, "chest[facing=east,type=single,waterlogged=false]"), ("s", 4, 12, pot(3)),
+         ("G", 7, 7, FL, 6), ("G", 11, 7, FL, 6), ("G", 7, 11, FL, 6), ("G", 11, 11, FL, 6)] +
+        ([("G", 16, 7, FL, 6), ("G", 16, 11, FL, 6), ("s", 18, 12, lg("birch_log", "x")),
+          ("s", 19, 12, lg("birch_log", "x")), ("o", 18, 12, lg("birch_log", "x"))] if L >= 2 else []), "mangrove")
     for x in range(6, 8 + n):
         d.set(x, 1, 8, "orange_concrete")
         d.set(x, 1, 10, "orange_concrete")
@@ -1184,11 +1305,23 @@ def saw_neo(rel, L):
         so = 3 if L >= 5 else 2
         b = build(d, 24, 4, 32, 12, so, roof="flat", core=(30, 6), street_glass=True)
         b.door(26, 4, "north")
-        furnish(b.room(0, back="south"), "office", ["lectern", "cartography_table"], seats=2, sit=False,
-                wood="mangrove")
-        furnish(b.room(1, back="south"), "canteen", sit=False, wood="mangrove")   # staff canteen
+        # ground: mill office (desks along the west wall, plans on the lectern); first floor: staff canteen
+        fit(d, y0, [("i", 25, 11, "lectern", "north"), ("i", 26, 11, "cartography_table"),
+                    ("s", 25, 7, sl("smooth_quartz", "top")), ("c", 26, 7, "east", False),
+                    ("s", 25, 9, sl("smooth_quartz", "top")), ("c", 26, 9, "east", False),
+                    ("o", 25, 7, "white_candle[candles=1,lit=false,waterlogged=false]"),
+                    ("rug", 27, 6, 28, 9, "orange_carpet"), ("s", 28, 11, pot(3)), ("G", 27, 8, "sea_lantern")],
+            "mangrove")
+        fit(d, 6, [("s", 25, 11, "smoker[facing=north,lit=false]"), ("s", 26, 11, sl("smooth_quartz", "top")),
+                   ("s", 27, 11, "water_cauldron[level=3]"), ("s", 28, 11, "furnace[facing=north,lit=false]"),
+                   ("s", 26, 8, sl("mangrove", "top")), ("s", 27, 8, sl("mangrove", "top")),
+                   ("c", 26, 7, "north", False), ("c", 27, 7, "north", False),
+                   ("c", 26, 9, "south", False), ("c", 27, 9, "south", False), ("s", 25, 5, pot(0)),
+                   ("G", 27, 6, "sea_lantern")], "mangrove")
         if so >= 3:
-            furnish(b.room(2, back="west"), "library", books=6, seats=2, sit=False, wood="mangrove")
+            fit(d, 10, [("k", 25, z, 2) for z in (6, 7, 8)] + [
+                ("s", 27, 9, sl("mangrove", "top")), ("c", 27, 8, "north", False), ("c", 27, 10, "south", False),
+                ("s", 28, 6, pot(3)), ("rug", 26, 9, 26, 10, "orange_carpet"), ("G", 27, 7, "sea_lantern")], "mangrove")
             neo_roof(d, b, [(26, 30, 6, MOSS), (26, 30, 8, 'azalea'), (26, 30, 10, MOSS)])
         else:
             neo_roof(d, b, [(26, 30, 6, SOLAR), (26, 30, 9, SOLAR)])
@@ -1197,10 +1330,18 @@ def saw_neo(rel, L):
     if L >= 4:
         k = build(d, 21, 16, 32, 25, 2 if L == 4 else 3, roof="flat", core=(22, 18))
         k.door(27, 16, "north", double=True)
-        furnish(k.room(0, back="south"), "workshop", ["domum_ornamentum:architectscutter"], wood="mangrove")
-        for s_ in range(1, k.storeys):                                # kiln floors: stickered timber stacks
-            furnish(k.room(s_, back="south"), "loft")
-        for x in range(23, 31, 3):                                    # roof vents
+        # kiln floors: boards stacked on stickers in two rows, the architect's cutter by the door
+        fit(d, y0, [("i", 30, 24, "domum_ornamentum:architectscutter", "north")] +
+            [("s", x, 21, "birch_planks") for x in (26, 27, 28, 29)] +
+            [("o", x, 21, sl("birch")) for x in (26, 27, 28, 29)] +
+            [("s", x, 23, lg("stripped_birch_log", "x")) for x in (26, 27, 28)] +
+            [("G", 27, 19, "pearlescent_froglight[axis=y]"), ("G", 29, 22, "pearlescent_froglight[axis=y]")])
+        for s_ in range(1, k.storeys):
+            yy = k.stand(s_)
+            fit(d, yy, [("s", x, z, "birch_planks") for x in (26, 27, 28, 29) for z in (20, 23)] +
+                [("o", x, z, "stripped_birch_wood[axis=x]") for x in (26, 28) for z in (20, 23)] +
+                [("G", 27, 22, "pearlescent_froglight[axis=y]")])
+        for x in (23, 26, 29):                                        # roof vents
             d.set(x, k.yr + 1, 20, "campfire[facing=north,lit=false,signal_fire=false,waterlogged=false]")
             d.set(x, k.yr + 1, 22, tr("iron", "north", "bottom"))
     # ---- covered log yard with gantry crane (L5)
@@ -1275,12 +1416,22 @@ def saw_hw(rel, L):
     d.fill(13, y0 + 1, 9, 13, 3, 9, lg("dark_oak_log", "y"))
     d.set(13, 4, 9, lg("dark_oak_log", "x"))
     racks = min(L, 3)
-    furnish(a.room(0, back="west"), "workshop", ["crafting_table"], racks=racks, wood="oak")
+    # mill floor: sawyer's bench by the door, board racks on the west wall, a log ready at the in-feed
+    zz = z2 - 1
+    fit(d, y0, [("i", 5, 7, "crafting_table")] + [("r", 5, z, 1) for z in (9, 10, 11)[:racks]] + [
+        ("s", 6, zz, "chest[facing=north,type=single,waterlogged=false]"), ("s", 10, zz, "oak_planks"),
+        ("o", 10, zz, sl("oak")), ("s", 11 if sto == 1 else 13, 5 if sto == 1 else 14, pot(2)),
+        ("L", 9, 6), ("L", 9, 10)], "oak")
     if sto >= 2:                                                     # sack floor over the saws
-        furnish(a.room(1, back="west"), "loft", racks=L - racks)
+        fit(d, 6, [("r", 5, z, 1) for z in (6, 7)[:L - racks]] + [
+            ("s", 6, zz, "white_wool"), ("s", 7, zz, "brown_wool"), ("o", 6, zz, "white_wool"),
+            ("s", 9, zz, "hay_block[axis=y]"), ("s", 5, zz, "chest[facing=east,type=single,waterlogged=false]"),
+            ("L", 8, 10)])
+        log_pile(d, 6, 9, 9, 10, 6, 1, "stripped_oak_log", "x")
         racks = L
-    if sto >= 3:
-        furnish(a.room(2, back="west"), "loft")
+    if sto >= 3:                                                     # grain & sack loft
+        fit(d, 10, [("s", 6, zz, "hay_block[axis=y]"), ("o", 6, zz, "hay_block[axis=y]"), ("s", 7, zz, "white_wool"),
+                    ("s", 5, 9, "brown_wool"), ("s", 5, 10, "white_wool"), ("L", 8, 10)])
     if L >= 4:
         spot_trees(d, [(1, 18), (1, 24), (14, 27)], "oak", 4)
     if L >= 5:
@@ -1297,11 +1448,20 @@ def saw_hw(rel, L):
         b = build(d, 20, 4, 30, 11, 2 if L < 5 else 3, roof="gable", axis="x", core=(28, 6), chimney=(21, 8, "east"))
         d.sty_over = {}
         b.door(24, 4, "north")
-        furnish(b.room(0, back="south"), "office", ["lectern", "cartography_table"], seats=2, sit=False,
-                wood="oak")
-        furnish(b.room(1, back="south"), "dorm", beds=2, wood="oak")
+        # sawyer's cottage: office & settle by the fire below, bedroom above, parlour in the attic (L5)
+        fit(d, y0, [("i", 23, 10, "lectern", "north"), ("i", 24, 10, "cartography_table"),
+                    ("s", 26, 10, sl("oak", "top")), ("c", 26, 9, "north", False),
+                    ("o", 26, 10, "candle[candles=2,lit=false,waterlogged=false]"),
+                    ("c", 23, 7, "east", False), ("c", 23, 9, "east", False), ("rug", 22, 7, 22, 9, "red_carpet"),
+                    ("s", 26, 5, pot(2)), ("L", 25, 7)], "oak")
+        fit(d, 6, [("bed", 23, 10, "south"), ("bed", 25, 10, "south"), ("s", 24, 10, sl("oak", "top")),
+                   ("o", 24, 10, "candle[candles=1,lit=false,waterlogged=false]"),
+                   ("s", 22, 5, "chest[facing=south,type=single,waterlogged=false]"),
+                   ("s", 23, 5, "chest[facing=south,type=single,waterlogged=false]"),
+                   ("rug", 23, 7, 25, 8, "orange_carpet"), ("L", 26, 7)], "oak")
         if L >= 5:
-            furnish(b.room(2, back="south"), "lounge", seats=3, sit=False, wood="oak")
+            fit(d, 10, [("c", x, 8, "south", False) for x in (24, 25, 26)] + [
+                ("s", 25, 6, sl("oak", "top")), ("s", 22, 5, pot(0)), ("s", 22, 10, pot(4)), ("L", 26, 7)], "oak")
         for x in range(20, 31):
             if x not in (24,):
                 d.set(x, y0, 2, "oak_fence")
@@ -1313,14 +1473,22 @@ def saw_hw(rel, L):
         c.opening(24, 15, 26, 15, 3, lg("stripped_oak_log", "x"))
         for z in (16, 20, 24, 28):
             lamp_post(d, 32, z, y0, P)
-        furnish(c.room(0, back="east"), "loft", ["domum_ornamentum:architectscutter"])
-        furnish(c.room(1, back="east"), "loft")
+        # drying barn: plank stacks on bearers in two rows each floor
+        fit(d, y0, [("i", 21, 24, "domum_ornamentum:architectscutter", "east")] +
+            [("s", x, 20, "oak_planks") for x in (22, 23, 24, 25)] + [("o", x, 20, "oak_planks") for x in (22, 24)] +
+            [("s", x, 23, lg("stripped_oak_log", "x")) for x in (23, 24, 25)] + [("L", 25, 18), ("L", 25, 22)])
+        fit(d, 6, [("s", x, 23, "oak_planks") for x in (22, 23, 24, 25)] + [("o", x, 23, sl("oak")) for x in (22, 23)] +
+            [("s", x, 19, "spruce_planks") for x in (23, 24, 25)] + [("L", 25, 21)])
     if L >= 5:
         e = build(d, 3, 19, 13, 27, 2, roof="gable", axis="x", core=(4, 21))
         e.opening(7, 19, 9, 19, 3, lg("stripped_oak_log", "x"))
         wagon(d, 8, 24, y0, "oak", "oak_planks")
-        furnish(e.room(0, back="south"), "loft")                      # cart shed
-        furnish(e.room(1, back="south"), "workshop", ["anvil", "grindstone"], wood="oak")   # wheelwright
+        fit(d, y0, [("s", 12, 26, "hay_block[axis=y]"), ("s", 12, 25, "white_wool"),
+                    ("s", 7, 21, "chest[facing=south,type=single,waterlogged=false]"), ("L", 9, 21)])
+        # wheelwright's loft: anvil, grindstone, a wheel in the making
+        fit(d, 6, [("s", 9, 26, "anvil[facing=east]"), ("s", 10, 26, "grindstone[face=floor,facing=north]"),
+                   ("s", 11, 26, "oak_planks"), ("o", 11, 26, sl("oak")), ("s", 9, 23, lg("stripped_oak_log", "x")),
+                   ("s", 10, 23, lg("stripped_oak_log", "x")), ("s", 12, 21, pot(2)), ("L", 9, 24)], "oak")
     return d
 
 
@@ -1393,20 +1561,38 @@ def saw_cas(rel, L):
         d.set(26, y0, 1, AIR)
         d.set(26, y0 + 1, 1, AIR)
         d.sign(28, b.ridge, 0, "north", ["MILL", "OFFICE"], "spruce")
-        furnish(b.room(0, back="south"), "shop", ["lectern", "cartography_table"])   # pay counter
-        furnish(b.room(1, back="south"), "office", seats=2, sit=False)
+        # mill office: pay window and ledger desk below, the boss's desk and map case above
+        fit(d, y0, [("i", 26, 8, "lectern", "north"), ("i", 26, 6, "cartography_table"),
+                    ("s", 30, 8, "chest[facing=west,type=single,waterlogged=false]"), ("s", 30, 6, pot(0)),
+                    ("s", 30, 4, "oak_fence"), ("o", 30, 4, "spruce_pressure_plate[powered=false]"),
+                    ("L", 26, 5)], "spruce")
+        fit(d, 6, [("s", 26, 8, sl("spruce", "top")), ("c", 26, 7, "north", False),
+                   ("o", 26, 8, "candle[candles=2,lit=false,waterlogged=false]"), ("k", 30, 8, 2), ("k", 30, 7, 1),
+                   ("s", 30, 5, pot(3)), ("L", 26, 5)], "spruce")
     # ---- planing mill (L4+)
     if L >= 4:
         c = build(d, 4, 21, 16, 29, 2, roof="gable", axis="x", core=(14, 23))
         c.opening(8, 21, 10, 21, 3, lg("spruce_log", "x"))
-        furnish(c.room(0, back="south"), "workshop", ["domum_ornamentum:architectscutter", "grindstone"])
-        furnish(c.room(1, back="south"), "loft")
+        # planing mill: planer bench across the floor, cutter by the wall; board loft above
+        fit(d, y0, [("i", 6, 28, "domum_ornamentum:architectscutter", "north"),
+                    ("s", 8, 25, "spruce_planks"), ("s", 9, 25, lg("stripped_spruce_log", "x")),
+                    ("s", 10, 25, "grindstone[face=floor,facing=north]"), ("s", 11, 25, lg("stripped_spruce_log", "x")),
+                    ("s", 12, 25, "spruce_planks"), ("s", 12, 28, "spruce_planks"), ("o", 12, 28, sl("spruce")),
+                    ("s", 11, 28, "dark_oak_planks"), ("L", 9, 23), ("L", 10, 27)], "spruce")
+        fit(d, 6, [("s", x, 27, "spruce_planks") for x in (6, 7, 8, 9)] + [("o", x, 27, "dark_oak_planks") for x in (6, 7)] +
+            [("s", x, 24, "stripped_spruce_wood[axis=x]") for x in (7, 8, 9)] + [("L", 10, 25)])
     # ---- bunkhouse and log flume (L5)
     if L >= 5:
         e = build(d, 19, 22, 25, 31, 2, roof="gable", axis="z", core=(20, 24), chimney=(24, 28, "west"))
         e.door(22, 22, "north")
-        furnish(e.room(0, back="south"), "canteen", sit=False)
-        furnish(e.room(1, back="east"), "dorm", beds=2)
+        # bunkhouse: cook stove and mess table below, bunks above
+        fit(d, y0, [("s", 24, 24, "smoker[facing=west,lit=false]"), ("s", 24, 25, "water_cauldron[level=3]"),
+                    ("s", 23, 26, sl("spruce", "top")), ("s", 23, 27, sl("spruce", "top")),
+                    ("c", 22, 26, "west", False), ("c", 22, 27, "west", False), ("s", 23, 30, "barrel[facing=north,open=false]"),
+                    ("L", 23, 28)], "spruce")
+        fit(d, 6, [("bed", 23, 30, "south"), ("bed", 24, 24, "east"), ("s", 24, 30, sl("spruce", "top")),
+                   ("o", 24, 30, "candle[candles=1,lit=false,waterlogged=false]"),
+                   ("s", 22, 30, "chest[facing=north,type=single,waterlogged=false]"), ("L", 23, 27)], "spruce")
         for x in range(27, 34):                                         # flume on trestles
             for z in (26, 27):
                 d.set(x, 5, z, "spruce_planks" if z == 26 else "water_cauldron[level=3]")
@@ -1462,11 +1648,19 @@ def jack_neo(rel, L):
     a.door(6, 4, "north", double=True)
     d.hut(4, y0, 5)
     d.sign(9, 5, 3, "north", ["FORESTRY", "STATION"], "birch", glow=True, color="lime")
-    # ranger room: tool bench and gear racks; rangers' office upstairs
+    # ranger room: tool bench and gear racks by the back wall, map table; rangers' office upstairs
     racks = min(JACK_RACKS[L], 3)
-    furnish(a.room(0, back="south"), "workshop", ["crafting_table"], racks=racks)
+    fit(d, y0, [("i", 5, 10, "crafting_table", "north"), ("s", 6, 10, "grindstone[face=floor,facing=north]"),
+                ("r", 4, 8, 1), ("r", 4, 9, 1)] + ([("r", 7, 10, 1)] if racks > 2 else []) + [
+        ("s", 8, 7, sl("birch", "top")), ("o", 8, 7, "potted_oak_sapling"), ("c", 8, 8, "south", False),
+        ("s", 9, 10, "chest[facing=north,type=single,waterlogged=false]"), ("s", 12, 10 if L == 1 else 5, pot(3)),
+        ("G", 6, 7, "pearlescent_froglight[axis=y]"), ("G", 9, 8, "pearlescent_froglight[axis=y]")], "birch")
     if sto >= 2:
-        furnish(a.room(1, back="south"), "office", racks=JACK_RACKS[L] - racks, seats=2, sit=False)
+        n1 = JACK_RACKS[L] - racks
+        fit(d, 6, [("r", 4, z, 1) for z in (6, 7, 8)[:n1]] + [
+            ("s", 6, 10, sl("birch", "top")), ("c", 6, 9, "north", False), ("s", 8, 10, sl("birch", "top")),
+            ("c", 8, 9, "north", False), ("o", 6, 10, "white_candle[candles=1,lit=false,waterlogged=false]"),
+            ("k", 5, 10, 2), ("s", 9, 5, pot(0)), ("G", 7, 8, "sea_lantern")], "birch")
         racks = JACK_RACKS[L]
         neo_roof(d, a, [(5, 11, 6, MOSS), (5, 11, 7, 'azalea'), (5, 11, 8, MOSS), (5, 11, 9, 'azalea')])
     else:
@@ -1523,18 +1717,36 @@ def jack_neo(rel, L):
     if L >= 4:
         c = build(d, 16, 12, 26, 20, 2, roof="flat", core=(24, 14))
         c.opening(19, 12, 21, 12, 3, "lime_concrete")
-        furnish(c.room(0, back="south"), "workshop", ["anvil", "grindstone"], racks=max(0, JACK_RACKS[L] - racks))
-        racks = JACK_RACKS[L]
-        furnish(c.room(1, back="south"), "canteen", sit=False)
+        # equipment depot: sharpening bench, log stock and gear chests; crew canteen above
+        fit(d, y0, [("s", 18, 19, "anvil[facing=east]"), ("s", 19, 19, "grindstone[face=floor,facing=north]"),
+                    ("s", 20, 19, sl("birch", "top")), ("s", 17, 14, "chest[facing=east,type=single,waterlogged=false]"),
+                    ("s", 17, 15, "chest[facing=east,type=single,waterlogged=false]"),
+                    ("G", 20, 15, "pearlescent_froglight[axis=y]"), ("G", 20, 18, "pearlescent_froglight[axis=y]")], "birch")
+        log_pile(d, 18, 17, 21, 17, y0, 1, "birch_log", "x")
+        fit(d, 6, [("s", 18, 19, "smoker[facing=north,lit=false]"), ("s", 19, 19, sl("smooth_quartz", "top")),
+                   ("s", 20, 19, "water_cauldron[level=3]"), ("s", 21, 19, "furnace[facing=north,lit=false]"),
+                   ("s", 19, 16, sl("birch", "top")), ("s", 20, 16, sl("birch", "top")),
+                   ("c", 19, 15, "north", False), ("c", 20, 15, "north", False),
+                   ("c", 19, 17, "south", False), ("c", 20, 17, "south", False), ("s", 17, 13, pot(3)),
+                   ("G", 20, 14, "sea_lantern")], "birch")
         neo_roof(d, c, [(18, 22, 14, SOLAR), (18, 22, 17, SOLAR)])
         wagon(d, 22, 23, y0, "birch", lg("birch_log", "x")) if L == 4 else None
     # ---- ranger watch tower (L5)
     if L >= 5:
         t = build(d, 18, 21, 24, 28, 5, roof="flat", core=(19, 23))
         t.door(24, 25, "east")
-        for s, kind in enumerate(("kiosk", "office", "dorm", "library", "lounge")):   # ranger floors
-            furnish(t.room(s, back="north"), kind, books=4 if kind == "library" else 0,
-                    seats=2 if kind in ("office", "lounge") else 0, sit=False)
+        # ranger tower floors (east half beside the stair): desk, map room, bunk, archive, lookout lounge
+        y_ = [t.stand(s) for s in range(5)]
+        fit(d, y_[0], [("s", 23, 22, sl("birch", "top")), ("c", 22, 22, "west", False), ("s", 23, 27, pot(3)),
+                       ("G", 22, 26, "sea_lantern")], "birch")
+        fit(d, y_[1], [("s", 23, 23, sl("birch", "top")), ("o", 23, 23, "potted_spruce_sapling"),
+                       ("c", 22, 23, "west", False), ("k", 23, 27, 2), ("G", 22, 26, "sea_lantern")], "birch")
+        fit(d, y_[2], [("bed", 23, 27, "south", "lime"), ("s", 22, 22, "chest[facing=east,type=single,waterlogged=false]"),
+                       ("s", 23, 22, pot(0)), ("G", 22, 24, "sea_lantern")], "birch")
+        fit(d, y_[3], [("k", 23, z, 2) for z in (22, 23)] + [("s", 23, 27, sl("birch", "top")),
+                                                             ("c", 22, 27, "west", False), ("G", 22, 25, "sea_lantern")], "birch")
+        fit(d, y_[4], [("c", 23, 26, "east", False), ("c", 23, 27, "east", False), ("s", 23, 22, pot(3)),
+                       ("G", 22, 24, "sea_lantern")], "birch")
         # glazed lookout on top
         for x, z in ring(17, 20, 25, 29):
             d.set(x, t.yr + 1, z, "glass_pane" if (x + z) % 2 else "white_concrete")
@@ -1556,8 +1768,10 @@ def jack_hw(rel, L):
     d.hut(7, y0, 5)
     # parlour-kitchen with the hearth: settle facing the fire, work table, tools on the wall
     racks = min(JACK_RACKS[L], 2)
-    seats = furnish(a.room(0, back="east"), "lounge", ["crafting_table"], racks=racks,
-                    seats=2 if L >= 3 else 0, wood="spruce")
+    seats = fit(d, y0, [("i", 8, 9, "crafting_table", "north"), ("r", 10, 9, 1), ("r", 11, 9, 1)][:1 + racks] + [
+        ("c", 12, 6, "west", L >= 3), ("c", 12, 8, "west", L >= 3), ("s", 12, 7, sl("spruce", "top")),
+        ("o", 12, 7, "candle[candles=2,lit=false,waterlogged=false]"), ("rug", 10, 6, 11, 8, "brown_carpet"),
+        ("s", 8, 5, "barrel[facing=up,open=false]"), ("L", 8, 7)], "spruce")
     if sto >= 2:
         # outside stair to the bedroom loft (cottage style): ladder in the corner
         for y in range(y0, 7):
@@ -1568,7 +1782,10 @@ def jack_hw(rel, L):
         d.set(7, 7, 9, AIR)
         d.set(7, 8, 9, AIR)
         n1 = JACK_RACKS[L] - racks if L < 3 else 1
-        furnish(a.room(1, back="north"), "dorm", racks=n1, beds=1, wood="spruce")
+        fit(d, 6, [("bed", 13, 9, "south"), ("s", 12, 9, sl("spruce", "top")),
+                   ("o", 12, 9, "candle[candles=1,lit=false,waterlogged=false]"), ("r", 9, 9, 1),
+                   ("s", 10, 9, "chest[facing=north,type=single,waterlogged=false]"), ("s", 8, 5, pot(2)),
+                   ("rug", 10, 6, 12, 7, "red_carpet"), ("L", 12, 6)], "spruce")
         racks += n1
     if L >= 5:
         spot_trees(d, [(31, 2), (31, 8), (17, 2)], "oak", 4)
@@ -1593,7 +1810,9 @@ def jack_hw(rel, L):
         d.sty_over = {}
         b.opening(23, 4, 25, 4, 4, lg("stripped_dark_oak_log", "x"))
         log_pile(d, 22, 8, 26, 10, y0, 2, "oak_log", "x")
-        furnish(b.room(0, back="west"), "loft", racks=JACK_RACKS[L] - racks)
+        fit(d, y0, [("r", 20, z, 1) for z in (11, 12, 13)[:JACK_RACKS[L] - racks]] + [
+            ("s", 27, 12, "chest[facing=west,type=single,waterlogged=false]"), ("s", 27, 13, "hay_block[axis=y]"),
+            ("L", 24, 6), ("L", 24, 12)])
         racks = JACK_RACKS[L]
         wagon(d, 22, 16, y0, "oak", lg("oak_log", "x"))
     # ---- charcoal burner's hut with clamp + garden (L4+)
@@ -1602,8 +1821,11 @@ def jack_hw(rel, L):
         c = build(d, 3, 17, 11, 25, 2, roof="gable", axis="z", core=(9, 19), chimney=(4, 22, "east"))
         d.sty_over = {}
         c.door(8, 17, "north")
-        furnish(c.room(0, back="south"), "workshop", ["barrel", "composter"], wood="spruce")
-        furnish(c.room(1, back="south"), "dorm", beds=1, wood="spruce")
+        # burner's hut: settle by the fire, coal sacks, the barrel and composter for the leaf litter
+        fit(d, y0, [("i", 6, 24, "composter"), ("i", 7, 24, "barrel", "north"), ("s", 5, 18, "coal_block"),
+                    ("s", 6, 18, "black_wool"), ("c", 6, 22, "east", False), ("L", 6, 20)], "spruce")
+        fit(d, 6, [("bed", 6, 24, "south"), ("s", 7, 24, sl("spruce", "top")), ("s", 5, 18, "chest[facing=south,type=single,waterlogged=false]"),
+                   ("s", 7, 18, pot(0)), ("L", 6, 23)], "spruce")
         # charcoal clamp: earth mound with smoke
         cx, cz = 16, 21
         for dx in range(-2, 3):
@@ -1623,8 +1845,11 @@ def jack_hw(rel, L):
     if L >= 5:
         e = build(d, 19, 15, 29, 22, 3, roof="gable", axis="x", core=(20, 16))
         e.door(29, 18, "east", double=True)
-        for s_ in (0, 1, 2):
-            furnish(e.room(s_, back="south"), "loft")
+        for s_ in (0, 1, 2):                                       # timber store floors
+            yy = e.stand(s_)
+            log_pile(d, 24, 19, 27, 20, yy, 2 if s_ < 2 else 1, "oak_log" if s_ == 0 else "stripped_oak_log", "x")
+            fit(d, yy, [("s", 24, 17, "oak_planks"), ("s", 25, 17, "oak_planks"), ("o", 24, 17, sl("oak")),
+                        ("L", 26, 18)])
         # hoist beam on the gable
         d.set(30, e.yr - 1, 18, lg("dark_oak_log", "x"))
         d.set(31, e.yr - 1, 18, lg("dark_oak_log", "x"))
@@ -1647,12 +1872,19 @@ def jack_cas(rel, L):
               chimney=(10, z2 - 1, "north"))
     a.door(8, 7, "north")
     d.hut(6, y0, 8)
-    # lodge room: fireplace (back wall) with a settle facing it, tool bench, gear racks; sleeping loft above
+    # lodge room: settle facing the stone fireplace on the back wall, tool bench, gear racks; sleeping loft above
+    fz = z2 - 1
     racks = min(JACK_RACKS[L], 3)
-    furnish(a.room(0, back="south"), "lounge", ["crafting_table"], racks=racks, seats=3, sit=False)
+    fit(d, y0, [("i", 7, fz, "crafting_table", "north"), ("r", 6, 9, 1), ("r", 6, 10, 1)] +
+        ([("r", 6, 11, 1)] if racks > 2 else []) +
+        [("c", x, fz - 2, "north", False) for x in (9, 10, 11)] +
+        [("s", 12, 8, "chest[facing=south,type=single,waterlogged=false]"), ("L", 9, 9)], "spruce")
     if sto >= 2:
-        n1 = JACK_RACKS[L] - racks if L < 5 else 1
-        furnish(a.room(1, back="west"), "dorm", racks=n1, beds=1)
+        n1 = {2: 0, 3: 1, 4: 2, 5: 2}[L]
+        fit(d, 6, [("bed", 7, fz, "south"), ("s", 8, fz, sl("spruce", "top")),
+                   ("o", 8, fz, "candle[candles=1,lit=false,waterlogged=false]")] +
+            [("r", 6, z, 1) for z in (9, 10)[:n1]] + [("s", 11, 8, "chest[facing=south,type=single,waterlogged=false]"),
+                                                      ("L", 9, 9)], "spruce")
         racks += n1
     # front deck with railing
     for x in range(4, 17):
@@ -1696,7 +1928,9 @@ def jack_cas(rel, L):
     if L >= 3:
         f = build(d, 19, 23, 27, 29, 1, roof="gable", axis="x", chimney=(26, 26, "west"))
         f.door(22, 23, "north")
-        furnish(f.room(0, back="south"), "workshop", ["grindstone", "anvil"])   # saw filing benches
+        fit(d, y0, [("s", 21, 28, "grindstone[face=floor,facing=north]"), ("s", 22, 28, "anvil[facing=east]"),
+                    ("s", 23, 28, sl("spruce", "top")), ("o", 23, 28, "iron_bars"), ("c", 23, 27, "north", False),
+                    ("s", 20, 24, "chest[facing=east,type=single,waterlogged=false]"), ("L", 21, 26)], "spruce")
         bench(d, 24, 22, y0, "south", 2, "spruce", sit=False)
     # ---- fire lookout tower (L4+)
     if L >= 4:
@@ -1731,15 +1965,27 @@ def jack_cas(rel, L):
     if L >= 4:
         e = build(d, 4, 21, 16, 29, 2, roof="gable", axis="x", core=(14, 23), chimney=(5, 25, "east"))
         e.door(9, 21, "north")
-        furnish(e.room(0, back="south"), "lounge", racks=1, seats=4, sit=False)
-        furnish(e.room(1, back="south"), "dorm", beds=3)
+        fit(d, y0, [("c", 7, z, "east", False) for z in (24, 25, 26)] + [
+            ("s", 10, 27, "spruce_fence"), ("o", 10, 27, "spruce_pressure_plate[powered=false]"),
+            ("c", 9, 27, "west", False), ("c", 11, 27, "east", False), ("rug", 6, 24, 6, 26, "green_carpet"),
+            ("s", 12, 22, "barrel[facing=south,open=false]"), ("L", 10, 24)], "spruce")
+        fit(d, 6, [("bed", x, 28, "south") for x in (7, 9, 11)] + [("s", 8, 28, sl("spruce", "top")),
+                                                                    ("s", 10, 28, sl("spruce", "top")),
+                                                                    ("s", 12, 22, "chest[facing=south,type=single,waterlogged=false]"),
+                                                                    ("L", 10, 25)], "spruce")
     # ---- cookhouse / mess hall (L5)
     if L >= 5:
         m = build(d, 4, 33, 20, 40, 3, roof="gable", axis="x", core=(18, 35), chimney=(5, 36, "east"))
         m.door(11, 33, "north", double=True)
-        furnish(m.room(0, back="south"), "canteen", sit=False)
-        furnish(m.room(1, back="south"), "dorm", beds=4)
-        furnish(m.room(2, back="south"), "loft")
+        fit(d, y0, [("s", 8, 39, "smoker[facing=north,lit=false]"), ("s", 9, 39, sl("spruce", "top")),
+                    ("s", 10, 39, "water_cauldron[level=3]"), ("s", 11, 39, "furnace[facing=north,lit=false]")] +
+            [("s", x, 36, sl("spruce", "top")) for x in range(9, 15)] +
+            [("c", x, 35, "north", False) for x in range(9, 15)] + [("c", x, 37, "south", False) for x in range(9, 15)] +
+            [("L", 11, 35), ("L", 14, 38)], "spruce")
+        fit(d, 6, [("bed", x, 39, "south") for x in (7, 9, 11, 13)] + [("s", 15, 39, "chest[facing=north,type=single,waterlogged=false]"),
+                                                                        ("L", 10, 36)], "spruce")
+        fit(d, 10, [("s", 7, 39, "hay_block[axis=y]"), ("s", 8, 39, "white_wool"), ("s", 9, 39, "brown_wool"),
+                    ("o", 7, 39, "hay_block[axis=y]"), ("L", 10, 36)])
     tree(d, 27, 37 if L >= 3 else 28, y0, "spruce", 6, 2)
     tree(d, 1, 26, y0, "spruce", 5, 2) if L < 4 else None
     return d
@@ -2061,11 +2307,9 @@ def wh_list(L, first=True):
         (["ender_chest"] if L >= 5 else [])
 
 
-def wh_racks(d, room, x1, z1, x2, z2, need, along="z"):
-    """Rack aisles filling x1..x2/z1..z2 at the room's floor; the area is reserved for walking."""
-    n = aisles(d, x1, z1, x2, z2, room.y, need, 3, along)
-    room.keep |= {(x, z) for x in range(x1 - 1, x2 + 2) for z in range(z1 - 1, z2 + 2)}
-    return n
+def wh_racks(d, y, x1, z1, x2, z2, need, along="z"):
+    """Rack aisles over the rectangle given for that floor (row start, double rows, 1-wide walkways)."""
+    return aisles(d, x1, z1, x2, z2, y, need, 3, along)
 
 
 def wh_neo(rel, L):
@@ -2149,17 +2393,16 @@ def wh_neo(rel, L):
     return d
 
 
-def barn_bays(d, room, x1, x2, nave, z0, units, need):
-    """Tithe-barn storage: double rows of rack columns across the barn either side of a central nave,
-    a cross aisle after every pair. Returns racks placed."""
+def barn_bays(d, y, x1, x2, nave, z0, units, need):
+    """Tithe-barn storage: double rows of rack columns across the barn either side of the given nave, a cross
+    aisle after every pair, starting at row z0. Returns racks placed."""
     n = 0
     for u in range(units):
         za = z0 + 3 * u
         for z in (za, za + 1):
             for x in list(range(x1, nave[0])) + list(range(nave[1] + 1, x2 + 1)):
                 if n < need:
-                    n += rack_col(d, x, z, room.y)
-    room.keep |= {(x, z) for x in range(x1, x2 + 1) for z in range(z0 - 1, z0 + 3 * units + 1)}
+                    n += rack_col(d, x, z, y)
     return n
 
 
