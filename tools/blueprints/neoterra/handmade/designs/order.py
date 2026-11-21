@@ -1144,7 +1144,7 @@ def gt_hearthwood(rel, L):
 
 
 def gt_cascadia(rel, L):
-    d = Design("Cascadia", rel, (41, 32, 35), paving="coarse_dirt")
+    d = Design("Cascadia", rel, (41, 38, 35), paving="coarse_dirt")
     # bunk cabin
     x1, z1, x2, z2 = 2, 6, 10, 12
     cs_walls(d, x1, z1, x2, z2, 2, 5)
@@ -2387,7 +2387,7 @@ def ca_cascadia(rel, L):
         building(d, 23, 24, 42, 34, nf=2, axis="x", doors=(("north", 29), ("west", 29)), chimney=(43, 29),
                  kinds=["gym", "bunks"])
     if L >= 5:                                                    # trophy lodge and boathouse-style gym
-        building(d, 2, 36, 20, 44, nf=2, axis="x", doors=(("north", 11), ("east", 40)), chimney=(1, 40),
+        building(d, 2, 35, 21, 44, nf=2, axis="x", doors=(("north", 11), ("east", 40)), chimney=(1, 40),
                  kinds=["mess", "lounge"])
         building(d, 23, 36, 37, 43, nf=2, axis="x", doors=(("north", 30),), kinds=["gym", "office"])
         for z in range(3, 44, 5):
@@ -2559,7 +2559,12 @@ def ca_neoterra(rel, L):
             d.set(16, 2, z, "azalea" if z % 4 == 1 else "flowering_azalea")
         bench(d, 17, 22, "north", 3)
         lamp_post(d, 1, 22)
-        lamp_post(d, 16, 37)
+        lamp_post(d, 18, 37)
+        for x in range(17, 23):                                   # covered bike shelter by the residence
+            d.set(x, 2, 20, "iron_bars")
+            d.set(x, 3, 20, "iron_bars")
+            for z in (20, 21):
+                d.set(x, 4, z, "smooth_stone_slab[type=bottom,waterlogged=false]")
         for x in range(3, 15, 2):                                 # bike / gear racks along the residence
             d.set(x, 2, 38, "iron_bars")
             d.set(x, 3, 38, "iron_bars")

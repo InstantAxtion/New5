@@ -71,6 +71,12 @@ def posts(d, pts, y1, y2, mat):
 def ladder(d, x, z, y1, y2, facing):
     for y in range(y1, y2 + 1):
         d.set(x, y, z, f"ladder[facing={facing},waterlogged=false]")
+    # keep the landing at every floor the ladder passes clear of furniture
+    if not hasattr(d, "_doors"):
+        d._doors = set()
+    for y in range(y1, y2 + 2):
+        for dx, dz in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)):
+            d._doors.add((x + dx, y, z + dz))
 
 
 def track(d, pts, y):
@@ -1329,7 +1335,6 @@ def miner_neoterra(rel, L):
     if L >= 5:
         lay_lounge(Rm(d, ad, 6, "n", "birch"))
         lay_office(Rm(d, ad, 10, "n", "birch"))
-        lay_kitchen(Rm(d, ad, 10, "e", "birch"), dining=False)
     paste_cluster(d, cx, cz)
     return d
 
@@ -2360,7 +2365,7 @@ def plantation_hearthwood(rel, L):
     if L >= 3:
         lay_office(Rm(d, hc, 6, "s", "oak"))
     if L >= 5:
-        lay_store(Rm(d, ap, 6, "e", "spruce"), 0, rows=(0, 2), kinds=(BARREL, "red_wool", "lime_wool"))
+        lay_store(Rm(d, ap, 6, "e", "spruce"), 0, rows=(0,), kinds=(BARREL, "red_wool", "lime_wool"))
     paste_cluster(d, 2, 6)                                                   # beds 2..28 x 6..32
     return d
 
@@ -2999,6 +3004,12 @@ def farmer_neoterra(rel, L):
     if L >= 5:
         lay_office(Rm(d, sb, 6, "s", "birch"))
         lay_lab(Rm(d, sb, 6, "e", "birch"))
+        rm = Rm(d, sb, 6, "n", "birch")                               # seminar table for the agronomists
+        for u in range(5, 10):
+            rm.put(u, 5, "smooth_stone_slab[type=top,waterlogged=false]")
+            rm.chair(u, 4, "back")
+            rm.chair(u, 6, "in")
+        rm.put(7, 5, "potted_azalea_bush", 1)
     return d
 
 

@@ -1353,6 +1353,25 @@ def core_rg_cascadia(rel, L):
     d.set(15, 2, 16, "composter[level=4]")
     d.set(15, 3, 16, "hopper[enabled=true,facing=down]")
     d.set(15, 6, 16, lantern(True))
+    # hand-placed workfloor: sacks on the west wall, the agent's desk and ledger, bins on the back wall,
+    # barrels and a fanning mill (loom stand-in) on the east wall; ladder corner (18, 19) kept clear
+    for z in (15, 16):
+        d.set(12, 2, z, "white_wool")
+    d.set(12, 3, 15, "white_wool")
+    d.set(12, 2, 17, "spruce_slab[type=top,waterlogged=false]")
+    d.set(12, 3, 17, "candle[candles=2,lit=false,waterlogged=false]")
+    d.set(13, 2, 17, stair("spruce_stairs", "east"))
+    d.set(12, 2, 18, "lectern[facing=east,has_book=false,powered=false]")
+    d.set(12, 2, 19, "potted_fern")
+    for x in (13, 14):
+        d.set(x, 2, 19, "barrel[facing=up,open=false]")
+        d.set(x, 3, 19, "barrel[facing=north,open=false]")
+    d.set(16, 2, 19, "composter[level=7]")
+    d.set(18, 2, 15, "barrel[facing=up,open=false]")
+    d.set(18, 2, 16, "loom[facing=west]")
+    d.set(18, 2, 17, "grindstone[face=floor,facing=west]")
+    for x, z in ((14, 16), (16, 16), (15, 15), (15, 17)):
+        d.set(x, 1, z, "iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
     # ---- levels
     if L >= 3:                                             # loading spout over the rail siding
         for i in range(0, 8):

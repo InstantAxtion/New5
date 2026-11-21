@@ -1414,8 +1414,11 @@ def builder_cas(rel, L):
             d.set(32, y, 30, "ladder[facing=south,waterlogged=false]") if False else None
     if L >= 4:
         spot_trees(d, [(32, 18), (32, 12)], "spruce", 5)
+        for z in (20, 24):
+            lamp_post(d, 33, z, y0, P)
     if L >= 5:
-        spot_trees(d, [(32, 6), (1, 34) if False else (19, 33)], "spruce", 5)
+        spot_trees(d, [(32, 6), (19, 33)], "spruce", 5)
+        lamp_post(d, 33, 28, y0, P)
     if seats < BSEATS[L]:
         bench(d, 13, 2, y0, "north", BSEATS[L] - seats, "spruce")
     tree(d, 32, 32, y0, "spruce", 5, 2)
@@ -1489,6 +1492,7 @@ def saw_neo(rel, L):
     if L >= 2:
         for x in (1, 22):
             lamp_post(d, x, 6, y0, P)
+        lamp_post(d, 22, 12, y0, P)
     if L >= 4:
         spot_trees(d, [(34, 14), (34, 20), (34, 26)], "birch", 3)
     # log yard behind the hall
@@ -1609,6 +1613,10 @@ def saw_hw(rel, L):
         furnish(a.room(2, back="west"), "loft")
     if L >= 4:
         spot_trees(d, [(1, 18), (1, 24), (14, 27)], "oak", 4)
+    if L >= 5:
+        for z in (6, 12):
+            lamp_post(d, 1, z, y0, P)
+        spot_trees(d, [(31, 27), (31, 2)], "oak", 4)
     log_pile(d, 4, z2 + 3, 12, z2 + 4, y0, 2, "oak_log", "x")
     flower_bed(d, 5, 1, 8, 2, y0, seed=3)
     lamp_post(d, 12, 1, y0, P)

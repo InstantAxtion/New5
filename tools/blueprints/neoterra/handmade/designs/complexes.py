@@ -2359,6 +2359,62 @@ LAYOUTS = {"lounge": lay_lounge, "hall": lay_hall, "dining": lay_dining, "kitche
            "store": lay_store, "workshop": lay_workshop, "spa": lay_spa}
 
 
+COMPANION = {"lounge": ["lounge", "library", "bar"], "dining": ["dining", "kitchen", "store"],
+             "office": ["office", "drawing", "store"], "library": ["library", "lounge", "office"],
+             "workshop": ["workshop", "store", "office"], "store": ["store", "workshop", "office"],
+             "gym": ["gym", "lounge", "store"], "bar": ["bar", "lounge", "kitchen"], "hall": ["hall", "lounge", "office"],
+             "drawing": ["drawing", "office", "library"], "kitchen": ["kitchen", "dining", "store"],
+             "spa": ["spa", "lounge", "store"]}
+PARTITION = {"Neoterra": "light_gray_concrete", "Hearthwood": "calcite", "Cascadia": "spruce_planks"}
+
+
+def rooms(d, pack, kind, x1, z1, x2, z2, Y, H, keep, zone, st):
+    """Divide a wing floor into rooms along its long side (partition walls with doors between them) and lay out
+    each room for its use: the floor's main use first, then its companion rooms."""
+    lx, lz = x2 - x1 + 1, z2 - z1 + 1
+    along_z = lz >= lx
+    ln = lz if along_z else lx
+    n = 1 if ln <= 12 else max(2, round(ln / 8))
+    start = z1 if along_z else x1
+    cuts = [start + k * ln // n for k in range(1, n)]
+    blocked = set()
+    for kx, kz in keep:
+        blocked.add((kx, kz))
+    if zone:
+        for x, z in cells(*zone):
+            blocked.add((x, z))
+    keep = list(keep)
+    wall = PARTITION[pack]
+    for p in cuts:
+        if along_z:
+            dx_ = (x1 + min(x2, zone[0] - 1 if zone else x2)) // 2
+            for x in range(x1, x2 + 1):
+                if (x, p) in blocked:
+                    continue
+                for yy in range(Y, Y + H - 1):
+                    d.set(x, yy, p, wall)
+            d.door(dx_, Y, p, "south", st["door"])
+            keep += [(dx_, p - 1), (dx_, p + 1)]
+        else:
+            dz_ = (z1 + z2) // 2
+            for z in range(z1, z2 + 1):
+                if (p, z) in blocked:
+                    continue
+                for yy in range(Y, Y + H - 1):
+                    d.set(p, yy, z, wall)
+            d.door(p, Y, dz_, "east", st["door"])
+            keep += [(p - 1, dz_), (p + 1, dz_)]
+    bounds = [start - 1] + cuts + [(z2 if along_z else x2) + 1]
+    kinds = COMPANION[kind]
+    for i in range(n):
+        a, b = bounds[i] + 1, bounds[i + 1] - 1
+        if along_z:
+            furnish(d, pack, kinds[i % len(kinds)], x1, a, x2, b, Y, Y + H - 1, keep, zone)
+        else:
+            furnish(d, pack, kinds[i % len(kinds)], a, z1, b, z2, Y, Y + H - 1, keep, zone)
+
+
+
 def furnish(d, pack, kind, x1, z1, x2, z2, y, ceil, keep=(), zone=None):
     """Lay out one room by hand for its use (see the lay_* functions)."""
     LAYOUTS[kind](Room(d, pack, x1, z1, x2, z2, y, ceil, keep, zone))
@@ -2489,7 +2545,7 @@ def wing(d, pack, x1, z1, x2, z2, y0, n, kinds, H=5, roof="flat", axis="x", door
         kk = keep if f == 0 else []
         kk = kk + [(fx2, zs - 1), (fx2, zs + H), (fx2 + 1, zs + H + 1)]
         zone = (fx2 - 1, z1, fx2, zs + H + 2) if stair and n > 1 else None
-        furnish(d, pack, kinds[f % len(kinds)], x1 + 1, z1 + 1, fx2, z2 - 1, Y, Y + H - 1, kk, zone)
+        rooms(d, pack, kinds[f % len(kinds)], x1 + 1, z1 + 1, fx2, z2 - 1, Y, H, kk, zone, st)
     # roof
     if roof == "flat":
         for x, z in cells(x1, z1, x2, z2):
