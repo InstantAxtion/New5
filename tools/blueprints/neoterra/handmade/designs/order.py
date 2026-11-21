@@ -2122,7 +2122,13 @@ def ca_hearthwood(rel, L):
     put_all(d, 7, [(6, 3, CHISEL.replace("FACE", "south")), (3, 11, "chest[facing=east,type=single,waterlogged=false]"), (9, 11, KEG.replace("FACE", "north")), (3, 6, SL("dark_oak", "top"), ROD())])
     # ---- growth: a school of arms round the tiltyard
     if L >= 2:                                                    # stable for the tilting horses
-        building(d, 31, 3, 40, 9, nf=1, axis="x", doors=(("north", 33), ("north", 38)))
+        b = building(d, 31, 3, 40, 9, nf=1, axis="x", doors=(("north", 33), ("north", 38)))
+        room(d, b, 0, ["W  HH  H",            # tilting stable: trough, feed, three stalls
+                       "        ",
+                       "        ",
+                       "  |  |  ",
+                       "h |h |hK"], lights=[(3, 2)])
+        wlamp(d, 35, 4, 2)
         for x in range(31, 41):                                   # paddock
             for z in range(11, 16):
                 if x in (31, 40) or z in (11, 15):
@@ -2132,7 +2138,15 @@ def ca_hearthwood(rel, L):
         d.set(38, 2, 13, "water_cauldron[level=3]")
         lamp_post(d, 29, 1)
     if L >= 3:                                                    # armourer's forge with a loft
-        building(d, 31, 18, 42, 24, nf=2, axis="z", doors=(("north", 36), ("west", 21)), chimney=(43, 21))
+        b = building(d, 31, 18, 42, 24, nf=2, axis="z", doors=(("north", 36), ("west", 21)), chimney=(43, 21))
+        room(d, b, 0, ["XYG   FFAW",          # armourer's forge: benches, twin furnaces, anvil, quench,
+                       "         k",          # finished harness on stands
+                       "   R R R K",
+                       "         c",
+                       "      =p=K"], lights=[(3, 2), (7, 2)])
+        room(d, b, 1, ["KKmKKHHmKK", "          ", "c        H", "      KK  ", "      HHm "], lights=[(5, 2)])
+        wlamp(d, 35, 4, 17)
+        wlamp(d, 37, 4, 17)
         d.set(30, 2, 18, "anvil[facing=north]")
         d.set(30, 2, 19, "water_cauldron[level=3]") if False else None
         d.sign(34, 4, 17, "north", ["Armourer"], "dark_oak")
@@ -2140,14 +2154,54 @@ def ca_hearthwood(rel, L):
         lamp_post(d, 43, 16)
         bench(d, 37, 16, "north", 3)
     if L >= 4:                                                    # masters' house: library, office, rooms
-        building(d, 2, 27, 17, 36, nf=2, axis="x", doors=(("north", 9), ("east", 31)), chimney=(18, 31))
+        b = building(d, 2, 27, 17, 36, nf=2, axis="x", doors=(("north", 9), ("east", 31)), chimney=(18, 31))
+        room(d, b, 0, ["BbBBbB  BBbBBB",      # masters' library: stacks, two reading tables, lectern
+                       "              ",
+                       "  nnn    nnn  ",
+                       "  TTT    TTT  ",
+                       "  sss    sss  ",
+                       "             z",
+                       "B            B",
+                       "      x    CCB"], lights=[(3, 3), (10, 3)])
+        room(d, b, 1, ["1lC  t  t  Cl1",      # masters' rooms and a council table
+                       "2    s  s    2",
+                       "              ",
+                       "     nnnn     ",
+                       "     TTTT     ",
+                       "     ssss     ",
+                       "c            c",
+                       "      K  P   K"], lights=[(3, 3), (10, 3)])
+        wlamp(d, 8, 4, 26)
+        wlamp(d, 10, 4, 26)
         flowerbed(d, 3, 25, 6, 26)
         flowerbed(d, 12, 25, 15, 26)
         bench(d, 8, 25, "south", 2) if False else None
         lamp_post(d, 1, 25)
     if L >= 5:                                                    # great hall with a gatehouse tower
-        building(d, 20, 28, 38, 37, nf=2, axis="x", doors=(("north", 29), ("west", 33)), chimney=(29, 38))
-        building(d, 39, 28, 45, 37, nf=4, roof="hip", ground="stone_bricks", doors=(("north", None),))
+        b = building(d, 20, 28, 38, 37, nf=2, axis="x", doors=(("north", 29), ("west", 33)), chimney=(29, 38))
+        room(d, b, 0, ["nnnnnnn   nnnnnnn",   # great hall: high table, two long tables, kitchen end
+                       "TTTTTTT   TTTTTTT",
+                       "                 ",
+                       "  nnnnn   nnnnn  ",
+                       "  TTTTT   TTTTT  ",
+                       "  sssss   sssss  ",
+                       "                K",
+                       "      MFW=p   KK "], lights=[(4, 3), (12, 3), (8, 5)])
+        room(d, b, 1, ["1l1l1C1l1l1C1l1l1",   # cadets' dormitory
+                       "2 2 2 2 2 2 2 2 2",
+                       "c               c",
+                       "                 ",
+                       "     nnn  nnn    ",
+                       "     TTT  TTT    ",
+                       "      4 4 4 4 4 4",
+                       "      3l3l3l3l3l3"], lights=[(4, 2), (12, 2)])
+        wlamp(d, 28, 4, 27)
+        wlamp(d, 30, 4, 27)
+        b = building(d, 39, 28, 45, 37, nf=4, roof="hip", ground="stone_bricks", doors=(("north", None),))
+        room(d, b, 0, ["R   R", "R   R", "     ", "  D  ", "     ", "G   K", "    k"], lights=[(2, 3)])
+        room(d, b, 1, ["x   C", "  t  ", "  s  ", "     ", "C   B", "     "], lights=[(2, 3)])
+        room(d, b, 2, ["1l1 C", "2 2  ", "     ", "c   K", "     ", "  r  "], lights=[(2, 3)])
+        room(d, b, 3, ["x t C", "  s  ", "     ", "K   K", "     ", "R   R"])
         for x in range(20, 39, 4):
             d.banner(x, 5, 27, "north", "red" if x % 8 else "white")
     return d

@@ -1216,7 +1216,6 @@ def cottage_nt(rel, L, v=0):
     elif v == 2:    # dining pavilion: table for four, rug, plant
         rugc(d, 5, 7, 5, 9, y0, "orange")
         d.dining(7, y0, 8, 2, "x", W, ("n", "s"), sit=False)
-        d.set(9, y0, 6, "potted_bamboo")
     elif v == 3:    # yoga / music room: mats, a lute (note block), plants
         rugc(d, 5, 7, 8, 9, y0, "lime")
         fit(d, [(9, y0, 9, "note_block[instrument=guitar,note=0,powered=false]"), (9, y0, 7, "potted_fern"),
@@ -1921,12 +1920,14 @@ def quadplex_nt(rel, L, U=None, v=0):
             d.set(a, 2, z1 + 1, "potted_bamboo")
             rugc(d, a, z1 + 2, a + 2, z1 + 2, 2, "cyan")
         elif alt == 1:  # two lounge chairs either side of a low table
-            fit(d, [(a, 2, z1 + 2, stair(W, "west")), (a + 2, 2, z1 + 2, stair(W, "east")),
-                    (a + 1, 2, z1 + 2, slab("smooth_quartz")), (a, 2, z1 + 1, "potted_fern")])
+            d.chair(a, 2, z1 + 2, "west", W)
+            d.chair(a + 2, 2, z1 + 2, "east", W)
+            fit(d, [(a + 1, 2, z1 + 2, slab("smooth_quartz")), (a, 2, z1 + 1, "potted_fern")])
             rugc(d, a, z1 + 3, a + 2, z1 + 3, 2, "orange")
         else:           # work-from-home corner: desk on the glass, chair, plant
+            d.chair(a, 2, z1 + 2, "south", W)
             fit(d, [(a, 2, z1 + 1, slab("smooth_quartz", "top")), (a + 1, 2, z1 + 1, slab("smooth_quartz", "top")),
-                    (a, 2, z1 + 2, stair(W, "south")), (a + 2, 2, z1 + 1, "potted_bamboo")])
+                    (a + 2, 2, z1 + 1, "potted_bamboo")])
             rugc(d, a, z1 + 3, a + 2, z1 + 3, 2, "lime")
         d.table(a + 1, 2, z1 + 6, W, "slab", "smooth_quartz_slab")
         d.chair(a, 2, z1 + 6, "west", W)
@@ -3734,6 +3735,12 @@ def house_estate_ca(rel, L):
         for x in range(48, 56):                           # cordwood stacked by the stable
             d.set(x, 2, 42, log("spruce_log", "x"))
             d.set(x, 3, 42, log("spruce_log", "x"))
+        outbuilding(d, 44, 49, 57, 57, "garage", h=4)      # implement shed: sled, plough, saw bench
+        recolor(d, [("dark_oak", "mangrove")], (43, 48, 58, 58))
+        wagon(d, 46, 54, 2, "spruce", log("spruce_log", "x"))
+        fit(d, [(56, 2, 56, GRIND("west")), (55, 2, 56, slab("spruce", "top")), (54, 2, 56, slab("spruce", "top")),
+                (54, 3, 56, LANTF), (45, 2, 56, CHEST("north")), (56, 2, 52, "anvil[facing=north]"),
+                (56, 2, 50, BRL("west")), (45, 2, 50, HAYY), (48, 5, 52, LANT), (53, 5, 52, LANT)])
     return d
 
 
@@ -3959,6 +3966,11 @@ def cottage_retreat_ca(rel, L):
             d.set(33, 1, z, "spruce_planks")
             d.set(34, 1, z, "spruce_planks")
         d.set(33, 2, 29, fence("spruce"))
+        fit(d, [(23, 1, 30, "cobblestone"), (23, 2, 30, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]"),
+                (21, 2, 30, log("spruce_log", "z")), (21, 2, 29, log("spruce_log", "z")),
+                (25, 2, 30, log("spruce_log", "z")), (25, 2, 31, log("spruce_log", "z")),
+                (23, 2, 33, log("spruce_log", "x")), (24, 2, 33, log("spruce_log", "x"))])
+        lamp_post(d, 34, 23, 1, "ca")
         addon(d, 42, 24, 52, 31, "workshop")
         fit(d, [(44, 2, 28, fence("spruce")), (48, 2, 28, fence("spruce"))]                    # canoe workshop
             + [(x, 3, 28, slab("spruce")) for x in (44, 45, 46, 47, 48)]

@@ -1324,6 +1324,17 @@ def netherworker_design(pack, rel, L):
                             P.b("magma_block")])
         nw_brazier(d, X + 4, Z + 12, pack)
         nw_brazier(d, X + 11, Z + 12, pack)
+        lk = "soul_lantern" if pack == "Neoterra" else "lantern"
+        hang(d, 9, [(X + 4, Z + 9), (X + 11, Z + 9)], lk)
+        if pack == "Neoterra":                                        # instrument desk watching the gate
+            pl(d, 2, [(X + 12, Z + 7, "smooth_quartz_slab[type=top,waterlogged=false]")])
+            pl(d, 3, [(X + 12, Z + 7, "observer[facing=up,powered=false]")])
+        elif pack == "Hearthwood":                                    # prayer stool and candle stand
+            d.chair(X + 4, 2, Z + 8, "west", W, sit=False)
+            d.candle(X + 3, 2, Z + 12, 4, "red")
+        else:                                                         # drum and fur by the fire
+            pl(d, 2, [(X + 12, Z + 7, "note_block[instrument=basedrum,note=0,powered=false]")])
+            d.rug(X + 3, Z + 9, X + 4, Z + 10, 2, ("brown_carpet",), "plain")
         d.sign(X + 9, 4, Z + 5, "north", names[pack], W, glow=pack == "Neoterra", color="red" if pack == "Neoterra" else "black")
         for x in (X + 2, X + 13):
             lamp_post(d, x, Z + 4)
@@ -1336,14 +1347,17 @@ def netherworker_design(pack, rel, L):
             counter(d, nx, "w", 2, 1, [P.b("chest[facing={f},type=single,waterlogged=false]"), P.books(), P.chair(W)])
             counter(d, nx, "w", 6, 0, [P.books(), P.books(), P.b("lectern[facing={f},has_book=true,powered=false]")])
             counter(d, nx, "n", 6, 1, [P.chair(W), P.shelf("polished_blackstone_brick", "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]")])
-            floor_rug(d, nx, 2, ("red_carpet", "black_carpet"), inset=2)
-            floor_rug(d, nx, 6, ("red_carpet", "black_carpet"), inset=2)
+            d.rug(X + 6, Z + 3, X + 8, Z + 4, 2, ("red_carpet", "black_carpet"))
+            d.rug(X + 6, Z + 3, X + 8, Z + 4, 6, ("red_carpet", "black_carpet"))
+            hang(d, 4, [(X + 6, Z + 3)], lk)
+            hang(d, 8, [(X + 7, Z + 4)], lk)
             vs = bld(d, X + 13, Z + 8, X + 18, Z + 13, floors=1, roof=roof, axis="x", doors=[(X + 13, Z + 10, "w")],
                      blind=("w",))
             counter(d, vs, "e", 2, 0, [P.b("barrel[facing=up,open=false]", "barrel[facing=up,open=false]"),
                                 P.b("chest[facing={f},type=single,waterlogged=false]"), P.b("crying_obsidian")])
             counter(d, vs, "s", 2, 1, [P.shelf("polished_blackstone_brick", "potted_crimson_fungus"), P.b("smithing_table")])
             rack_bay(d, vs, "n", 2, 1)
+            hang(d, 4, [(X + 15, Z + 11)], lk)
             flowerbed(d, X + 2, Z + 15, X + 13, Z + 16, ("crimson_roots", "warped_roots", "poppy", "wither_rose"))
     else:
         # ---- the great hall that takes the cluster's glazed gallery as its front ----
@@ -1362,9 +1376,20 @@ def netherworker_design(pack, rel, L):
         rack_bay(d, hl, "w", 2, 6)
         for x in (X + 5, X + 10):
             nw_brazier(d, x, Z + 6, pack)
-        for x in range(X + 6, X + 10):
-            d.set(x, 2, Z + 4, stair(W, "north"))
-        d.rug(X + 6, Z + 5, X + 9, Z + 7, 2, ("red_carpet",), "plain")
+        if pack == "Hearthwood":                                      # two rows of pews facing the gate
+            for x in range(X + 6, X + 10):
+                d.set(x, 2, Z + 3, stair(W, "north"))
+                d.set(x, 2, Z + 4, stair(W, "north"))
+            d.rug(X + 6, Z + 5, X + 9, Z + 7, 2, ("red_carpet",), "plain")
+        elif pack == "Cascadia":                                      # log benches and a bear-skin rug
+            for x in range(X + 6, X + 10):
+                d.set(x, 2, Z + 4, "stripped_dark_oak_log[axis=x]")
+            d.rug(X + 6, Z + 5, X + 9, Z + 7, 2, ("brown_carpet", "black_carpet"))
+        else:                                                         # monitoring consoles before the portal
+            pl(d, 2, [(X + 6, Z + 4, "observer[facing=up,powered=false]"), (X + 7, Z + 4, "smooth_quartz_slab[type=top,waterlogged=false]"),
+                      (X + 8, Z + 4, "smooth_quartz_slab[type=top,waterlogged=false]"), (X + 9, Z + 4, "observer[facing=up,powered=false]")])
+            pl(d, 3, [(X + 7, Z + 4, "lantern[hanging=false,waterlogged=false]")])
+            d.rug(X + 6, Z + 5, X + 9, Z + 7, 2, ("magenta_carpet", "black_carpet"))
         d.set(X + 2, 2, Z + 4, "lectern[facing=east,has_book=true,powered=false]")
         d.set(X + 12, 2, Z + 11, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]")
         d.set(X + 14, 2, Z + 12, "cauldron")
@@ -1402,7 +1427,9 @@ def netherworker_design(pack, rel, L):
             d.set(x, 6, Z + 18, "polished_blackstone_slab[type=top,waterlogged=false]")
             d.chair(x, 6, Z + 19, "south", W, sit=False)
             d.candle(x, 7, Z + 18, 2, "red")
-        floor_rug(d, sa, 2, ("black_carpet", "red_carpet"), inset=2)
+        d.rug(X + 6, Z + 16, X + 10, Z + 17, 2, ("black_carpet", "red_carpet"))
+        hang(d, 4, [(X + 8, Z + 17), (X + 12, Z + 16)], "soul_lantern" if pack == "Neoterra" else "lantern")
+        hang(d, 8, [(X + 9, Z + 16)], "soul_lantern" if pack == "Neoterra" else "lantern")
         # ---- L4: east wing: library & sample laboratory over a vaulted store ----
         if L >= 4:
             ex1 = x2 + 2
@@ -1431,9 +1458,16 @@ def netherworker_design(pack, rel, L):
                 d.bed(x, 10, Z + 11, "south")
                 d.set(x + 1, 10, Z + 11, "polished_blackstone_slab[type=top,waterlogged=false]")
             counter(d, ew, "n", 10, 1, [P.b("chest[facing={f},type=single,waterlogged=false]")] * 3)
-            floor_rug(d, ew, 10, ("magenta_carpet" if pack == "Neoterra" else "red_carpet",), inset=3)
-            floor_rug(d, ew, 2, ("black_carpet", "red_carpet"), inset=3)
-            floor_rug(d, ew, 6, ("red_carpet", "black_carpet"), inset=2)
+            d.rug(ex1 + 4, Z + 7, ex1 + 6, Z + 9, 10, ("magenta_carpet" if pack == "Neoterra" else "red_carpet",), "plain")
+            d.rug(ex1 + 4, Z + 5, ex1 + 6, Z + 7, 2, ("black_carpet", "red_carpet"))
+            for y in (4, 8, 12):
+                hang(d, y, [(ex1 + 5, Z + 5)], "soul_lantern" if pack == "Neoterra" else "lantern")
+            if pack == "Neoterra":                                    # sealed sample cabinets in the store
+                pl(d, 2, [(ex1 + 3, Z + 10, "tinted_glass"), (ex1 + 4, Z + 10, "tinted_glass")])
+            elif pack == "Hearthwood":                                # casks of blaze-wine in the vault
+                pl(d, 2, [(ex1 + 3, Z + 10, "barrel[facing=east,open=false]"), (ex1 + 4, Z + 10, "barrel[facing=east,open=false]")])
+            else:                                                     # hides and a fur pile
+                pl(d, 2, [(ex1 + 3, Z + 10, "brown_wool"), (ex1 + 4, Z + 10, "black_wool")])
         # ---- L5: watch tower over the gate and an ember garden ----
         if L >= 5:
             # west wing: guest cells and refectory around a small court
@@ -1456,10 +1490,12 @@ def netherworker_design(pack, rel, L):
                 d.bed(wx1 + 1, 6, z, "west")
                 if z < Z + 11:
                     d.set(wx1 + 1, 6, z + 1, "polished_blackstone_slab[type=top,waterlogged=false]")
-            floor_rug(d, ww, 6, ("red_carpet", "black_carpet"), inset=3)
-            for x in range(wx1, X - 2, 3):
+            d.rug(wx1 + 4, Z + 4, wx1 + 6, Z + 8, 6, ("red_carpet", "black_carpet"))
+            hang(d, 4, [(wx1 + 5, Z + 4)], "soul_lantern" if pack == "Neoterra" else "lantern")
+            hang(d, 8, [(wx1 + 5, Z + 6)], "soul_lantern" if pack == "Neoterra" else "lantern")
+            for x in (wx1, wx1 + 3, wx1 + 6, wx1 + 9):
                 lamp_post(d, x, Z + 15)
-            for x in range(wx1 + 1, X - 3, 3):
+            for x in (wx1 + 1, wx1 + 4, wx1 + 7):
                 tree(d, x, Z + 18, 4, None, None, 1)
             tx = x2 + 2
             tw = bld(d, tx, Z + 15, tx + 5, Z + 20, floors=6, roof="hip" if pack != "Neoterra" else "flat", axis="x",
@@ -1473,15 +1509,18 @@ def netherworker_design(pack, rel, L):
                 d.set(tx + 2, y, Z + 16, "barrel[facing=up,open=false]")
                 d.set(tx + 1, y + 2, Z + 18, "soul_lantern[hanging=true,waterlogged=false]")
             gx1, gz1 = X, Z + 22
-            for x in range(gx1, gx1 + 15):
-                for z in range(gz1, gz1 + 5):
-                    edge = x in (gx1, gx1 + 14) or z in (gz1, gz1 + 4)
-                    if edge:
-                        d.set(x, 2, z, "polished_blackstone_brick_wall" if (x + z) % 4 else "polished_blackstone_bricks")
-                    else:
-                        d.set(x, 1, z, ("crimson_nylium", "warped_nylium", "soul_soil")[(x + z) % 3])
-                        if (x + z) % 3 == 0:
-                            d.set(x, 2, z, ("crimson_fungus", "warped_fungus", "crimson_roots", "warped_roots")[(x * 7 + z) % 4])
+            for x in range(gx1, gx1 + 15):                            # low wall round the ember garden, piers at the corners
+                for z in (gz1, gz1 + 4):
+                    d.set(x, 2, z, "polished_blackstone_bricks" if x in (gx1, gx1 + 14) else "polished_blackstone_brick_wall")
+            for z in range(gz1 + 1, gz1 + 4):
+                d.set(gx1, 2, z, "polished_blackstone_brick_wall")
+                d.set(gx1 + 14, 2, z, "polished_blackstone_brick_wall")
+            d.fill(gx1 + 1, 1, gz1 + 1, gx1 + 6, 1, gz1 + 3, "crimson_nylium")    # crimson bed west, warped bed east
+            d.fill(gx1 + 8, 1, gz1 + 1, gx1 + 13, 1, gz1 + 3, "warped_nylium")
+            d.fill(gx1 + 7, 1, gz1 + 1, gx1 + 7, 1, gz1 + 3, "soul_soil")
+            for dx, dz, plant in ((1, 1, "crimson_fungus"), (2, 3, "crimson_roots"), (4, 1, "crimson_roots"), (5, 3, "crimson_fungus"),
+                                  (9, 1, "warped_fungus"), (10, 3, "warped_roots"), (12, 1, "warped_roots"), (13, 3, "warped_fungus")):
+                d.set(gx1 + dx, 2, gz1 + dz, plant)
             for x in (gx1 + 3, gx1 + 11):
                 nw_brazier(d, x, gz1 + 2, pack)
             d.set(gx1 + 7, 2, gz1 + 2, "lodestone")
