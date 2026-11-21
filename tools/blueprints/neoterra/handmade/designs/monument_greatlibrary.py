@@ -149,9 +149,10 @@ def rim(cx, cz, R, a):
     return best
 
 
-def dome(d, cx, cz, y0, R, H, block, rib=None, nrib=16, hole=0.0):
+def dome(d, cx, cz, y0, R, H, block, rib=None, nrib=16, hole=0.0, stairs=None):
     """Solid-shell dome on the circle of radius R whose foot is at y0, H high; ribs every 360/nrib degrees;
-    cells within `hole` of the centre stay open (for a lantern)."""
+    cells within `hole` of the centre stay open (for a lantern). With `stairs`, each step of the outer face
+    is smoothed by a stair facing up-slope."""
     tops = {}
     for x, z in disk(cx, cz, R):
         dd = math.hypot(x - cx, z - cz)
@@ -165,6 +166,13 @@ def dome(d, cx, cz, y0, R, H, block, rib=None, nrib=16, hole=0.0):
         isrib = rib and dd > 0.8 and min(adiff(a, k * 360 / nrib) for k in range(nrib)) * math.pi / 180 * dd < 0.55
         for y in range(max(y0, min(lo, t)), t + 1):
             d.set(x, y, z, rib if isrib else block)
+        if stairs and not isrib and dd > hole + 0.6:
+            dx, dz = x - cx, z - cz
+            out = ("east" if dx > 0 else "west") if abs(dx) >= abs(dz) else ("south" if dz > 0 else "north")
+            ox, oz = D4[out]
+            ix, iz = D4[OPP[out]]
+            if tops.get((x + ox, z + oz), y0 - 1) < t and tops.get((x + ix, z + iz), t + 1) > t:
+                d.set(x, t + 1, z, stair(stairs, OPP[out]))
     return max(tops.values())
 
 
@@ -315,107 +323,104 @@ def hw_wing(rel, L):
 
 
 def hw_rotunda(d, L):
+    """Radcliffe-Camera-like rotunda. Floor on the ground (y=1), ground storey y=2..8, gallery floor y=9,
+    upper storey y=10..16, entablature 17, balustrade 18, drum 18..23, dome from 25 (L3+)."""
     cx, cz = HW_C
     R = HW_R
     rg = ring(cx, cz, R)
     inn = interior(cx, cz, R)
-    # plinth and floor
     for x, z in disk(cx, cz, 9.3):
-        d.set(x, 2, z, "stone_bricks")
+        d.set(x, 1, z, "stone_bricks")
     for x, z in inn:
         dd = math.hypot(x - cx, z - cz)
-        d.set(x, 2, z, "polished_deepslate" if int(dd + 0.5) in (2, 5) else "calcite")
-    for x in (21, 22, 23):
-        d.set(x, 2, 12, stair("stone_brick_stairs", "south"))
+        d.set(x, 1, z, "polished_deepslate" if int(dd + 0.5) in (2, 5) else "calcite")
     # ground storey: rusticated walls, arched bays every 45 degrees (north bay = entrance)
     for x, z in rg:
-        for y in range(3, 10):
-            d.set(x, y, z, HQ if y % 2 else HS)
+        for y in range(2, 9):
+            d.set(x, y, z, HQ if y % 2 == 0 else HS)
         a = ang(cx, cz, x, z)
         bay = min(range(8), key=lambda k: adiff(a, k * 45))
-        if adiff(a, bay * 45) * math.pi / 180 * R < 1.3:
-            if bay == 6:
-                continue
-            for y in range(4, 8):
+        if adiff(a, bay * 45) * math.pi / 180 * R < 1.3 and bay != 6:
+            for y in range(3, 7):
                 d.set(x, y, z, "glass_pane")
-            d.set(x, 8, z, HC)
-    d.door(22, 3, 14, "south", "dark_oak")
-    for y in (5, 6, 7):
+            d.set(x, 7, z, HC)
+    d.door(22, 2, 14, "south", "dark_oak")
+    for y in (4, 5, 6):
         d.set(22, y, 14, "glass_pane")
-    d.set(22, 8, 14, HC)
-    for x in (21, 23):                                 # entrance surround
-        for y in range(3, 8):
-            d.set(x, y, 13, HQ if y < 7 else HC)
-    d.set(22, 8, 13, slab("smooth_sandstone_slab", "top"))
-    d.set(21, 8, 13, stair("sandstone_stairs", "east"))
-    d.set(23, 8, 13, stair("sandstone_stairs", "west"))
-    d.set(22, 9, 13, slab("smooth_sandstone_slab"))
-    # cornice ring at y=10
-    for x, z in disk(cx, cz, 9):
+    d.set(22, 7, 14, HC)
+    for x in (21, 23):                                 # entrance surround with a little pediment
+        for y in range(2, 7):
+            d.set(x, y, 13, HQ if y < 6 else HC)
+    d.set(22, 7, 13, slab("smooth_sandstone_slab", "top"))
+    d.set(21, 7, 13, stair("sandstone_stairs", "east"))
+    d.set(23, 7, 13, stair("sandstone_stairs", "west"))
+    d.set(22, 8, 13, slab("smooth_sandstone_slab"))
+    for x, z in disk(cx, cz, 9):                       # cornice
         if not inside(cx, cz, x, z, R):
-            d.set(x, 10, z, slab("smooth_sandstone_slab", "top"))
+            d.set(x, 9, z, slab("smooth_sandstone_slab", "top"))
     for x, z in rg:
-        d.set(x, 10, z, HQ)
+        d.set(x, 9, z, HQ)
     hw_rotunda_ground(d, L)
-    if L == 1:
-        for x, z in inn:
-            d.set(x, 10, z, "dark_oak_planks")
-        top = dome(d, cx, cz, 11, R, 3, "deepslate_tiles", "polished_deepslate", 16)
+    if L == 1:                                         # temporary low lead dome with a finial lantern
+        top = dome(d, cx, cz, 10, R, 3, "deepslate_tiles", "polished_deepslate", 16, stairs="deepslate_tile_stairs")
         d.set(cx, top + 1, cz, HQ)
         d.set(cx, top + 2, cz, wallb("sandstone_wall"))
         d.set(cx, top + 3, cz, lantern(False))
-        chandelier(d, cx, cz, 9, 7, arms=None)
+        chandelier(d, cx, cz, top - 1, 7)
         return
-    # ---- L2+: upper storey with paired pilasters, tall windows, entablature and balustrade
+    # ---- L2+: upper storey with pilasters, tall windows, entablature and balustrade
     for x, z in rg:
-        for y in range(11, 18):
+        for y in range(10, 17):
             d.set(x, y, z, HS)
         a = ang(cx, cz, x, z)
         bay = min(range(8), key=lambda k: adiff(a, k * 45))
         if adiff(a, bay * 45) * math.pi / 180 * R < 0.9:
-            for y in range(12, 16):
+            for y in range(11, 15):
                 d.set(x, y, z, "glass_pane")
-            d.set(x, 16, z, HC)
-    for x, z in disk(cx, cz, 9):                      # pilasters between the bays, entablature
+            d.set(x, 15, z, HC)
+    for x, z in disk(cx, cz, 9):
         if inside(cx, cz, x, z, R):
             continue
         a = ang(cx, cz, x, z)
-        if min(adiff(a, 22.5 + 45 * k) for k in range(8)) * math.pi / 180 * 9 < 1.0:
-            d.set(x, 11, z, HQ)
-            for y in range(12, 17):
-                d.set(x, y, z, "sandstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
-            d.set(x, 17, z, HC)
-        d.set(x, 18, z, HQ)
-        d.set(x, 19, z, HQ if min(adiff(a, 22.5 + 45 * k) for k in range(8)) * math.pi / 180 * 9 < 1.0
-              else wallb("sandstone_wall"))
+        pil = min(adiff(a, 22.5 + 45 * k) for k in range(8)) * math.pi / 180 * 9 < 1.0
+        if pil:
+            d.set(x, 10, z, HQ)
+            for y in range(11, 16):
+                d.set(x, y, z, wallb("sandstone_wall"))
+            d.set(x, 16, z, HC)
+        d.set(x, 17, z, HQ)
+        d.set(x, 18, z, HQ if pil else wallb("sandstone_wall"))
     for x, z in rg:
-        d.set(x, 18, z, HQ)
+        d.set(x, 17, z, HQ)
     hw_gallery(d, L)
     if L == 2:
-        for x, z in inn:
-            d.set(x, 18, z, "dark_oak_planks")
-        top = dome(d, cx, cz, 19, R, 3, "deepslate_tiles", "polished_deepslate", 16)
+        top = dome(d, cx, cz, 18, R - 1, 3, "deepslate_tiles", "polished_deepslate", 16,
+                   stairs="deepslate_tile_stairs")
+        for x, z in rg:
+            d.set(x, 18, z, HS)
         d.set(cx, top + 1, cz, HQ)
         d.set(cx, top + 2, cz, wallb("sandstone_wall"))
         d.set(cx, top + 3, cz, lantern(False))
-        chandelier(d, cx, cz, 17, 8)
+        chandelier(d, cx, cz, top - 1, 6)
         return
     # ---- L3+: drum, ribbed lead dome, lantern
     for x, z in inn:
-        if not inside(cx, cz, x, z, 5):
-            d.set(x, 18, z, "dark_oak_planks")
-    for x, z in ring(cx, cz, 6):
-        for y in range(19, 24):
+        if not inside(cx, cz, x, z, 6):
+            d.set(x, 17, z, "dark_oak_planks")
+    for x, z in ring(cx, cz, 7):
+        for y in range(18, 24):
             d.set(x, y, z, HS)
         a = ang(cx, cz, x, z)
-        if min(adiff(a, 45 * k) for k in range(8)) * math.pi / 180 * 6 < 0.7:
-            for y in (20, 21, 22):
+        if min(adiff(a, 22.5 + 45 * k) for k in range(8)) * math.pi / 180 * 7 < 0.8:
+            for y in (19, 20, 21):
                 d.set(x, y, z, "glass_pane")
+            d.set(x, 22, z, HC)
         d.set(x, 24, z, HQ)
-    for x, z in disk(cx, cz, 7):
-        if not inside(cx, cz, x, z, 6):
-            d.set(x, 24, z, slab("smooth_sandstone_slab"))
-    top = dome(d, cx, cz, 25, 6, 6, "deepslate_tiles", "polished_deepslate", 16, hole=1.5)
+    for x, z in disk(cx, cz, 8):
+        if not inside(cx, cz, x, z, 7):
+            d.set(x, 24, z, slab("smooth_sandstone_slab", "top"))
+    top = dome(d, cx, cz, 25, 7, 8, "deepslate_tiles", "polished_deepslate", 16, hole=1.5,
+               stairs="deepslate_tile_stairs")
     for dx in (-1, 0, 1):                              # lantern
         for dz in (-1, 0, 1):
             if (dx, dz) == (0, 0):
@@ -423,28 +428,26 @@ def hw_rotunda(d, L):
             for y in range(top, top + 3):
                 d.set(cx + dx, y, cz + dz, HQ if dx and dz else "glass_pane")
             d.set(cx + dx, top + 3, cz + dz, HQ)
-            d.set(cx + dx, top + 4, cz + dz, stair("sandstone_stairs", OPP[("east" if dx > 0 else "west")] if dz == 0
-                                                  else ("north" if dz > 0 else "south")))
+            d.set(cx + dx, top + 4, cz + dz, slab("smooth_sandstone_slab"))
+    for y in range(top - 1, top + 3):
+        d.set(cx, y, cz, AIR)
     d.set(cx, top + 3, cz, HQ)
     d.set(cx, top + 4, cz, HQ)
     d.set(cx, top + 5, cz, wallb("sandstone_wall"))
     d.set(cx, top + 6, cz, "lightning_rod[facing=up,powered=false,waterlogged=false]")
-    chandelier(d, cx, cz, top - 1, 8, arms=None)
-    d.set(cx, 13, cz, "chain[axis=y,waterlogged=false]")
-    for dx, dz in D4.values():                         # corona of lights in the well
-        d.set(cx + dx * 2, 13, cz + dz * 2, slab("dark_oak_slab", "top"))
-        d.set(cx + dx * 2, 12, cz + dz * 2, lantern(True))
-    for dx, dz in D4.values():
-        d.set(cx + dx, 13, cz + dz, slab("dark_oak_slab", "top"))
+    chandelier(d, cx, cz, top + 2, 6)
+    for dx, dz in D4.values():                         # corona of lights hanging in the well
+        d.set(cx + dx, 12, cz + dz, slab("dark_oak_slab", "top"))
+        d.set(cx + dx * 2, 12, cz + dz * 2, slab("dark_oak_slab", "top"))
+        d.set(cx + dx * 2, 11, cz + dz * 2, lantern(True))
 
 
 def hw_rotunda_ground(d, L):
-    """Ground-floor reading room (walk y=3): circular issue desk, window desks, shelf piers, the book stair (L2+)."""
+    """Ground-floor reading room (walk y=2): circular issue desk, window desks, shelf piers, the book stair (L2+)."""
     cx, cz = HW_C
-    y = 3
+    y = 2
     d.hut(24, y, 16, "north")
-    # circular issue desk with the librarian's chair, open to the south
-    for dx in (-1, 0, 1):
+    for dx in (-1, 0, 1):                              # circular issue desk, open to the south
         for dz in (-1, 0, 1):
             if (dx, dz) in ((0, 0), (0, 1)):
                 continue
@@ -454,14 +457,12 @@ def hw_rotunda_ground(d, L):
     d.set(cx + 1, y + 1, cz - 1, "potted_red_tulip")
     d.set(cx, y + 1, cz - 1, "chiseled_bookshelf[facing=north,slot_0_occupied=true,slot_1_occupied=true,"
                              "slot_2_occupied=true,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
-    d.rug(cx, cz - 7, cx, cz - 2, y, ("red_carpet",), "plain")
+    d.rug(cx, cz - 7, cx, cz - 3, y, ("red_carpet",), "plain")
     d.rug(cx - 2, cz - 2, cx + 2, cz + 2, y, ("blue_carpet", "blue_carpet"))
-    # desks under six windows, chairs facing the light
     for a, side in ((0, "west"), (45, "west"), (135, "east"), (180, "east"), (225, "east"), (315, "west")):
         x, z = rim(cx, cz, HW_R, a)
         desk(d, x, y, z, side, "dark_oak",
              light="candle[candles=1,lit=false,waterlogged=false]" if a in (0, 180) else None)
-    # shelf piers between the windows, a lantern on each
     piers = (22.5, 67.5, 112.5, 157.5, 202.5, 247.5, 292.5, 337.5) if L == 1 else \
         (22.5, 157.5, 202.5, 247.5, 292.5, 337.5)
     for a in piers:
@@ -472,34 +473,32 @@ def hw_rotunda_ground(d, L):
         x, z = rim(cx, cz, HW_R, 90)
         desk(d, x, y, z, "north", "dark_oak", light="candle[candles=2,lit=false,waterlogged=false]")
         return
-    # book stair along the south wall: steps rise to the east, shelves fill the stringer
-    for i in range(8):
+    for i in range(8):                                 # book stair: steps rise east, shelves fill the stringer
         x = 18 + i
         d.set(x, y + i, 28, stair("dark_oak_stairs", "east"))
         for yy in range(y, y + i):
             d.bookshelf(x, yy, 28)
-    d.set(17, y, 28, "potted_fern")
 
 
 def hw_gallery(d, L):
-    """Gallery ring (walk y=11) around the open well: shelf piers, window desks, globe, railing."""
+    """Gallery ring (walk y=10) around the open well: shelf piers, window desks, globe, railing."""
     cx, cz = HW_C
-    y = 11
+    y = 10
     inn = interior(cx, cz, HW_R)
     for x, z in inn:
         dd = math.hypot(x - cx, z - cz)
-        d.set(x, 10, z, AIR if dd <= 3.45 else "dark_oak_planks")
-    for x in range(18, 25):                       # stair well
-        d.set(x, 10, 28, AIR)
-    for x, z in inn:                              # railing round the well
+        d.set(x, 9, z, AIR if dd <= 3.45 else "dark_oak_planks")
+    for x in range(18, 25):                            # stair well
+        d.set(x, 9, 28, AIR)
+    for x, z in inn:                                   # railing round the well
         dd = math.hypot(x - cx, z - cz)
         if dd > 3.45 and any(math.hypot(x + dx - cx, z + dz - cz) <= 3.45 for dx, dz in D4.values()):
             d.set(x, y, z, fence("dark_oak_fence"))
     for x in range(18, 25):
         d.set(x, y, 27, fence("dark_oak_fence"))
-    for x in range(20, 25):
+    for x in range(20, 25):                            # low book wall behind the stair well
         d.bookshelf(x, y, 29)
-    for a in (22.5, 112.5, 157.5, 202.5, 247.5, 292.5, 337.5):
+    for a in (22.5, 157.5, 202.5, 247.5, 292.5, 337.5):
         x, z = rim(cx, cz, HW_R, a)
         d.bookshelf(x, y, z, 2)
         d.set(x, y + 2, z, lantern(False))
@@ -514,22 +513,29 @@ def hw_gallery(d, L):
     x, z = rim(cx, cz, HW_R, 270)
     d.set(x, y, z, "chiseled_bookshelf[facing=south,slot_0_occupied=true,slot_1_occupied=false,"
                    "slot_2_occupied=true,slot_3_occupied=true,slot_4_occupied=true,slot_5_occupied=false]")
-    d.rug(cx - 6, cz - 1, cx - 5, cz + 1, y, ("green_carpet", "green_carpet"), "plain")
-    d.rug(cx + 5, cz - 1, cx + 6, cz + 1, y, ("green_carpet", "green_carpet"), "plain")
+    d.rug(cx - 6, cz - 1, cx - 5, cz + 1, y, ("green_carpet",), "plain")
+    d.rug(cx + 5, cz - 1, cx + 6, cz + 1, y, ("green_carpet",), "plain")
 
 
 def hw_library(rel, L):
     d = Design("Hearthwood", rel, HW_SIZE, gy=1, paving="gravel")
     cx, cz = HW_C
-    # Radcliffe Square: cobbled setts round the rotunda
-    for x, z in disk(cx, cz, 12):
+    if L >= 3:                                         # the quad lawn
+        for x in range(10, 35):
+            for z in range(9, 36):
+                d.set(x, 1, z, "grass_block[snowy=false]")
+    for x, z in disk(cx, cz, 12):                      # Radcliffe Square setts
         d.set(x, 1, z, "cobblestone" if (x + z) % 3 else "andesite")
+    for z in range(0, 11):                             # walk from the street
+        for x in (21, 22, 23):
+            d.set(x, 1, z, "stone_bricks")
     hw_rotunda(d, L)
     if L >= 3:
         hw_square(d, L)
-    if L >= 4:
         hw_range(d, L, west=True)
+    if L >= 4:
         hw_range(d, L, west=False)
+        hw_garden(d, L)
     if L >= 5:
         hw_south_range(d)
         hw_screen(d)
@@ -540,30 +546,412 @@ def hw_library(rel, L):
 
 
 def hw_square(d, L):
-    """L3: iron railing ring on a stone curb round the rotunda, gaps north and south, four lamp standards."""
+    """L3: iron railing on a stone curb round the rotunda with four gaps, four lamp standards, two benches."""
     cx, cz = HW_C
     for x, z in ring(cx, cz, 11):
         a = ang(cx, cz, x, z)
-        if adiff(a, 270) < 9 or adiff(a, 90) < 9:
+        if min(adiff(a, k * 90) for k in range(4)) < 9:
             continue
         d.set(x, 2, z, "stone_bricks")
         d.set(x, 3, z, "iron_bars")
     for x, z in ((14, 12), (30, 12), (14, 32), (30, 32)):
         lamp_post(d, x, z, 2, "stone_bricks", fence("dark_oak_fence"), h=2)
-    for x, z, f in ((19, 11, "south"), (25, 11, "south")):
-        d.chair(x, 2, z, "north", "dark_oak", sit=False)
+    for x in (18, 26):
+        d.chair(x, 2, 10, "north", "dark_oak", sit=False)
+        d.chair(x + 1, 2, 10, "north", "dark_oak", sit=False)
 
 
 def hw_range(d, L, west):
-    pass
+    """Gothic library range (Bodleian Old Schools): sandstone, buttresses, lancets, steep slate gable.
+    West: Divinity School below, Duke Humfrey's Library above. East: lecture room below, map room above.
+    The west range is single-storey at L3 and gets its upper floor at L4."""
+    x1, x2 = (1, 9) if west else (35, 43)
+    qx, ox = (x2, x1) if west else (x1, x2)           # quad-side and outer wall
+    qo = 1 if west else -1                             # step from the quad wall out into the quad
+    z1, z2 = 10, 34
+    two = L >= 4
+    top = 12 if two else 6
+    d.fill(x1 + 1, 1, z1 + 1, x2 - 1, 1, z2 - 1, "polished_andesite")
+    for x in range(x1 + 1, x2):
+        for z in range(z1 + 1, z2):
+            if (x + z) % 2 == 0:
+                d.set(x, 1, z, "stone_bricks")
+    d.box(x1, 2, z1, x2, top, z2, HS)
+    for x, z in ((x1, z1), (x2, z1), (x1, z2), (x2, z2)):
+        for y in range(2, top + 1):
+            d.set(x, y, z, HQ)
+    for x in range(x1, x2 + 1):                        # plinth and string course
+        for z in (z1, z2):
+            d.set(x, 2, z, "stone_bricks")
+    for z in range(z1, z2 + 1):
+        for x in (x1, x2):
+            d.set(x, 2, z, "stone_bricks")
+    if two:
+        d.fill(x1 + 1, 7, z1 + 1, x2 - 1, 7, z2 - 1, "dark_oak_planks")
+        for x in range(x1, x2 + 1):
+            for z in (z1, z2):
+                d.set(x, 7, z, HQ)
+        for z in range(z1, z2 + 1):
+            for x in (x1, x2):
+                d.set(x, 7, z, HQ)
+    # buttresses on the quad side
+    for z in (14, 18, 26, 30):
+        for y in range(2, top):
+            d.set(qx + qo, y, z, HQ if y < top - 1 else stair("sandstone_stairs", "west" if west else "east"))
+        d.set(qx + qo, 2, z, "stone_bricks")
+    # windows: lancets on both long sides, a big window at each storey of the north gable
+    storeys = ((3, 5), (9, 11)) if two else ((3, 5),)
+    for y1, y2 in storeys:
+        for z in (12, 16, 28, 32):
+            hw_lancet(d, qx, z, y1, y2, None)
+        for z in (12, 16, 20, 24, 28, 32):
+            hw_lancet(d, ox, z, y1, y2, None)
+        mx = (x1 + x2) // 2
+        for x in (mx - 1, mx, mx + 1):
+            for y in range(y1, y2 + 1):
+                d.set(x, y, z1, "glass_pane")
+        d.set(mx, y2 + 1, z1, HC)
+    for z in (20, 24):
+        hw_lancet(d, qx, z, 3, 5, None)
+    if two:                                            # great window over the door
+        for z in (21, 22, 23):
+            for y in range(9, 12):
+                d.set(qx, y, z, "glass_pane")
+        d.set(qx, 12, 22, HC)
+    d.door(qx, 2, 22, "east" if west else "west", "dark_oak")
+    d.set(qx, 4, 22, HC)
+    # roof
+    ridge = d.gable(x1, z1, x2, z2, top + 1, "z", stairs="deepslate_tile_stairs", ridge="deepslate_tile_slab",
+                    end=HS, overhang=1)
+    for z in (z1, z2):
+        d.set((x1 + x2) // 2, ridge + 1, z, wallb("sandstone_wall"))
+        d.set((x1 + x2) // 2, ridge + 2, z, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+    if west:
+        hw_divinity(d, L, two)
+        if two:
+            hw_humfrey(d)
+    else:
+        hw_lecture(d)
+        hw_maproom(d)
+
+
+def hw_range_stair(d, sx, inner):
+    """Stair up the outer wall at the south end of a range (walk 2 -> 8), shelves under it, rail beside the well."""
+    for i in range(6):
+        z = 33 - i
+        d.set(sx, 2 + i, z, stair("dark_oak_stairs", "north"))
+        for yy in range(2, 2 + i):
+            d.bookshelf(sx, yy, z)
+        if i < 5:
+            d.set(sx, 7, z, AIR)
+    for z in range(29, 34):
+        d.set(inner, 8, z, fence("dark_oak_fence"))
+
+
+def hw_divinity(d, L, two):
+    """West range ground floor (walk 2): the Divinity School as an exhibition hall – lecterns with open books,
+    benches along the walls, a long carpet, hanging lights."""
+    y = 2
+    for z in (13, 17, 27, 31):
+        d.item(5, y, z, "lectern[facing=north,has_book=true,powered=false]")
+        d.set(5, y, z + 1, "red_carpet")
+    d.rug(4, 11, 6, 33, y, ("red_carpet", "yellow_carpet"))
+    for z in (12, 13, 15, 16, 20, 24, 28, 29, 31, 32):
+        if not two or z < 29:
+            d.chair(2, y, z, "west", "dark_oak")
+    for z in (12, 13, 15, 16, 28, 29, 31, 32):
+        d.chair(8, y, z, "east", "dark_oak")
+    for z in (14, 18, 26, 30):
+        d.set(8, y + 2, z, "yellow_wall_banner[facing=west]")
+        d.set(2, y + 2, z, "yellow_wall_banner[facing=east]")
+    for z in (20, 24):
+        d.set(8, y, z, "potted_fern")
+    d.set(2, y, 22, "potted_fern")
+    d.bookshelf(2, y, 21, 2)
+    d.bookshelf(2, y, 23, 2)
+    if two:
+        for z in (13, 19, 25):
+            d.lamp(5, 6, z)
+        hw_range_stair(d, 2, 3)
+    else:
+        for z in (13, 19, 25, 31):
+            chandelier(d, 5, z, 9, 6)
+
+
+def hw_humfrey(d):
+    """West range upper floor (walk 8): Duke Humfrey's Library – book presses between the windows with desks."""
+    y = 8
+    for z in (14, 18, 22, 26):                         # presses on the outer side
+        d.bookshelf(2, y, z, 2)
+        d.bookshelf(3, y, z, 2)
+    for z in (12, 16, 20, 24):
+        desk(d, 2, y, z, "east", "dark_oak", light="candle[candles=1,lit=false,waterlogged=false]"
+             if z in (12, 20) else None)
+    for z in (14, 18, 26, 30):                         # presses on the quad side
+        d.bookshelf(8, y, z, 2)
+        d.bookshelf(7, y, z, 2)
+    for z in (12, 16, 28, 32):
+        desk(d, 8, y, z, "west", "dark_oak")
+    d.rug(4, 12, 6, 32, y, ("brown_carpet",), "plain")
+    for z in (20, 22, 24):                             # reading table under the great window
+        d.set(7, y, z, slab("spruce_slab", "top"))
+    d.chair(7, y, 21, "north", "spruce")
+    d.chair(7, y, 23, "south", "spruce")
+    d.set(7, y + 1, 22, "lantern[hanging=false,waterlogged=false]")
+    for z in (11, 33):
+        d.set(5, y, z, "potted_fern")
+    for z in (12, 18, 24, 30):                         # tie beams with lamps under the roof
+        d.fill(2, 13, z, 8, 13, z, log("dark_oak_log", "x"))
+        d.set(5, 12, z, CHAIN)
+        d.set(5, 11, z, lantern(True))
+
+
+def hw_lecture(d):
+    """East range ground floor (walk 2): lecture room – rows of benches facing the lectern and blackboard."""
+    y = 2
+    for z in (13, 16, 19, 22):
+        for x in (37, 38, 40, 41):
+            d.chair(x, y, z, "north", "oak")
+    d.item(39, y, 28, "lectern[facing=north,has_book=true,powered=false]")
+    d.fill(37, 3, 34, 40, 5, 34, "black_terracotta")      # blackboard set into the end wall
+    d.fill(37, 2, 33, 40, 2, 33, slab("dark_oak_slab", "top"))   # chalk ledge / demonstrator's bench
+    d.set(37, 3, 33, "potted_red_tulip")
+    d.set(40, 3, 33, "candle[candles=3,lit=false,waterlogged=false]")
+    d.chair(37, y, 30, "west", "oak")
+    d.set(36, 2, 11, "potted_fern")
+    d.set(41, 2, 11, "barrel[facing=up,open=false]")
+    d.set(40, 2, 11, "barrel[facing=up,open=false]")
+    d.rug(39, 11, 39, 26, y, ("gray_carpet",), "plain")
+    for z in (14, 20, 26):
+        d.lamp(39, 6, z)
+    hw_range_stair(d, 42, 41)
+
+
+def hw_maproom(d):
+    """East range upper floor (walk 8): map room and archive – map tables, plan chests, globes, cartographers."""
+    y = 8
+    for z in (13, 14, 15):                             # big map table
+        for x in (38, 39, 40):
+            d.set(x, y, z, slab("spruce_slab", "top") if (x + z) % 2 else "dark_oak_planks")
+    d.set(39, y + 1, 14, "white_carpet")
+    for x, z, s in ((37, 14, "east"), (41, 14, "west")):
+        d.chair(x, y, z, s, "spruce")
+    d.item(36, y, 18, "cartography_table")
+    d.item(36, y, 24, "cartography_table")
+    d.chair(37, y, 18, "east", "spruce")
+    d.chair(37, y, 24, "east", "spruce")
+    for z in (19, 20, 21, 25, 26, 27):                 # plan chests along the walls
+        d.set(36, y, z, "chest[facing=east,type=single,waterlogged=false]")
+    for z in (17, 18, 20, 22, 24, 26):
+        d.bookshelf(42, y, z, 2)
+    for x, z in ((40, 20), (40, 24)):                  # globes
+        d.set(x, y, z, fence("dark_oak_fence"))
+        d.set(x, y + 1, z, "light_blue_stained_glass" if z == 20 else "lime_stained_glass")
+    d.rug(38, 17, 40, 27, y, ("light_blue_carpet", "blue_carpet"))
+    d.set(36, y, 11, "potted_fern")
+    d.set(42, y, 11, "barrel[facing=up,open=false]")
+    for z in (12, 18, 24, 30):
+        d.fill(36, 13, z, 42, 13, z, log("dark_oak_log", "x"))
+        d.set(39, 12, z, CHAIN)
+        d.set(39, 11, z, lantern(True))
+
+
+def hw_garden(d, L):
+    """L4: the quad garden – four clipped trees, flower borders, benches facing the rotunda."""
+    for x, z in ((12, 11), (32, 11), (12, 33), (32, 33)):
+        tree(d, x, z, 2, "oak_log", "oak_leaves", h=3, r=2)
+    for x, z, b in ((16, 34, "north"), (17, 34, "north"), (27, 34, "north"), (28, 34, "north")):
+        d.chair(x, 2, z, "south", "dark_oak", sit=False)
+    for x in range(14, 31, 2):
+        d.set(x, 2, 35, ("rose_bush[half=lower]" if x % 4 else "peony[half=lower]"))
+        d.set(x, 3, 35, ("rose_bush[half=upper]" if x % 4 else "peony[half=upper]"))
 
 
 def hw_south_range(d):
-    pass
+    """L5: south range with the gate tower (Tower of the Five Orders): exam hall west, tea room east,
+    porter's lodge, muniment room, bindery and rare-book treasury in the tower."""
+    z1, z2 = 37, 43
+    d.fill(2, 1, z1 + 1, 42, 1, z2 - 1, "oak_planks")
+    d.box(1, 2, z1, 43, 6, z2, HS)
+    for x in range(1, 44):
+        for z in (z1, z2):
+            d.set(x, 2, z, "stone_bricks")
+    for z in range(z1, z2 + 1):
+        for x in (1, 43):
+            d.set(x, 2, z, "stone_bricks")
+    d.gable(1, z1, 43, z2, 7, "x", stairs="deepslate_tile_stairs", ridge="deepslate_tile_slab", end=HS, overhang=1)
+    for x in (4, 8, 12, 16, 28, 32, 36, 40):
+        for z in (z1, z2):
+            hw_lancet(d, x, z, 3, 5, None)
+    # partitions to the tower
+    d.fill(17, 2, z1 + 1, 17, 6, z2 - 1, HS)
+    d.fill(27, 2, z1 + 1, 27, 6, z2 - 1, HS)
+    d.door(13, 2, z1, "south", "dark_oak")
+    d.door(31, 2, z1, "south", "dark_oak")
+    for x in (1, 43):
+        for z in (z1 + 2, z1 + 4):
+            hw_lancet(d, x, z, 3, 5, None)
+    hw_exam(d)
+    hw_tearoom(d)
+    hw_gate_tower(d)
+
+
+def hw_exam(d):
+    """Exam Schools hall (walk 2, x 2..16, z 38..42): rows of single desks, invigilator's desk, clock."""
+    y = 2
+    for x in (3, 6, 9):
+        for z in (39, 41):
+            desk(d, x, y, z, "east", "oak")
+    d.set(15, y, 40, slab("dark_oak_slab", "top"))
+    d.set(15, y, 39, slab("dark_oak_slab", "top"))
+    d.chair(16, y, 40, "east", "dark_oak")
+    d.set(15, y + 1, 39, "candle[candles=2,lit=false,waterlogged=false]")
+    d.set(16, y + 2, 42, "clock" if False else "bell[attachment=single_wall,facing=north,powered=false]")
+    d.rug(12, 38, 13, 42, y, ("light_gray_carpet",), "plain")
+    d.set(2, y, 38, "potted_fern")
+    d.set(16, y, 38, "barrel[facing=up,open=false]")
+    for x in (5, 11):
+        d.lamp(x, 6, 40)
+
+
+def hw_tearoom(d):
+    """Tea room (walk 2, x 28..42, z 38..42): counter with a stove and kettle, small tables, dresser."""
+    y = 2
+    d.counter(38, 38, 42, 38, y, "spruce_slab")
+    d.item(42, y, 39, "smoker", "west")
+    d.set(42, y, 40, "water_cauldron[level=3]")
+    d.set(42, y, 41, "barrel[facing=up,open=false]")
+    d.set(39, y + 1, 38, "potted_red_tulip")
+    d.set(41, y + 1, 38, "candle[candles=1,lit=false,waterlogged=false]")
+    for x, z in ((30, 40), (34, 40)):
+        d.table(x, y, z, "dark_oak", "post")
+        d.chair(x - 1, y, z, "west", "dark_oak")
+        d.chair(x + 1, y, z, "east", "dark_oak")
+        d.chair(x, y, z + 1, "south", "dark_oak")
+    d.rug(29, 39, 35, 41, y, ("red_carpet", "white_carpet"), "check")
+    for x in (29, 30):
+        d.set(x, y, 42, slab("dark_oak_slab", "top"))
+        d.set(x, y + 1, 42, "flower_pot")
+    d.set(28, y, 38, "potted_fern")
+    for x in (31, 38):
+        d.lamp(x, 6, 40)
+
+
+def hw_gate_tower(d):
+    """Gate tower x 18..26, z 35..43 with a passage at x=22; porter's lodge west with the ladder."""
+    x1, x2, z1, z2 = 18, 26, 35, 43
+    top = 25
+    d.fill(x1 + 1, 1, z1 + 1, x2 - 1, 1, z2 - 1, "stone_bricks")
+    d.box(x1, 2, z1, x2, top, z2, HS)
+    for x, z in ((x1, z1), (x2, z1), (x1, z2), (x2, z2)):
+        for y in range(2, top + 6):
+            d.set(x, y, z, HQ)
+        d.set(x, top + 6, z, wallb("sandstone_wall"))
+        d.set(x, top + 7, z, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+    for F in (7, 13, 19):
+        d.fill(x1 + 1, F, z1 + 1, x2 - 1, F, z2 - 1, "spruce_planks")
+        for x in range(x1, x2 + 1):
+            for z in (z1, z2):
+                d.set(x, F, z, HQ)
+    d.fill(x1 + 1, top, z1 + 1, x2 - 1, top, z2 - 1, "stone_bricks")
+    for i in range(0, 9):                              # battlements
+        for x, z in ((x1 + i, z1), (x1 + i, z2), (x1, z1 + i), (x2, z1 + i)):
+            d.set(x, top + 1, z, HS)
+            if i % 2 == 0:
+                d.set(x, top + 2, z, slab("smooth_sandstone_slab"))
+    # the five orders on the quad face: paired columns each storey
+    for y1, y2 in ((2, 6), (8, 12), (14, 18), (20, 24)):
+        for x in (19, 20, 24, 25):
+            d.set(x, y1, z1 - 1, HQ)
+            for y in range(y1 + 1, y2):
+                d.set(x, y, z1 - 1, wallb("sandstone_wall"))
+            d.set(x, y2, z1 - 1, HC)
+    for y in (13, 19, 25):
+        for x in range(19, 26):
+            d.set(x, y, z1 - 1, slab("smooth_sandstone_slab", "top"))
+    for yw in ((9, 11), (15, 17), (21, 23)):
+        for x in (21, 22, 23):
+            for y in range(yw[0], yw[1] + 1):
+                d.set(x, y, z1, "glass_pane")
+                d.set(x, y, z2, "glass_pane")
+        d.set(22, yw[1] + 1, z1, HC)
+    d.fill(21, 13, z1 - 1, 23, 14, z1 - 1, HC)            # carved royal arms panel
+    # passage
+    d.fill(21, 2, z1, 21, 6, z2, HS)
+    d.fill(23, 2, z1, 23, 6, z2, HS)
+    d.clear(22, 2, z1, 22, 5, z2)
+    d.set(22, 6, z1, HC)
+    d.set(22, 6, z2, HC)
+    d.lamp(22, 5, 39)
+    d.door(21, 2, 39, "east", "dark_oak")
+    d.set(22, 1, 44, "stone_bricks")
+    # porter's lodge (x 19..20): ladder, desk, key cabinet
+    for y in range(2, 20):
+        d.set(19, y, 42, ladder("north"))
+    for F in (7, 13, 19):
+        d.set(19, F, 42, ladder("north"))
+    d.set(20, 2, 36, slab("dark_oak_slab", "top"))
+    d.chair(20, 2, 37, "south", "dark_oak")
+    d.set(19, 2, 36, "barrel[facing=up,open=false]")
+    d.set(19, 3, 38, "candle[candles=1,lit=false,waterlogged=false]") if False else None
+    d.set(24, 2, 36, "potted_fern")
+    d.set(25, 2, 42, "barrel[facing=up,open=false]")
+    d.set(24, 2, 42, "barrel[facing=up,open=false]")
+    d.set(25, 2, 36, "chest[facing=west,type=single,waterlogged=false]")
+    d.door(23, 2, 41, "west", "dark_oak")
+    d.lamp(20, 6, 39)
+    d.lamp(25, 6, 39)
+    # muniment room (walk 8): charters in chests, a clerk's desk
+    y = 8
+    for z in (36, 37, 38):
+        d.set(25, y, z, "chest[facing=west,type=single,waterlogged=false]")
+    for x in (22, 23, 24, 25):
+        d.set(x, y, 42, "barrel[facing=north,open=false]")
+    desk(d, 21, y, 36, "south", "dark_oak", light="candle[candles=2,lit=false,waterlogged=false]")
+    d.rug(20, 38, 23, 40, y, ("brown_carpet", "orange_carpet"))
+    d.bookshelf(19, y, 36, 2)
+    d.lamp(22, 12, 39)
+    # bindery (walk 14): bench, press, loom for headbands, glue pot
+    y = 14
+    d.item(25, y, 37, "crafting_table")
+    d.item(25, y, 38, "loom", "west")
+    d.item(25, y, 40, "anvil", "north")
+    d.set(25, y, 41, "water_cauldron[level=3]")
+    d.counter(20, 36, 23, 36, y, "spruce_slab")
+    d.set(21, y + 1, 36, "brown_carpet")
+    d.set(22, y + 1, 36, "white_carpet")
+    d.chair(22, y, 37, "south", "spruce")
+    d.set(20, y, 42, "barrel[facing=up,open=false]")
+    d.set(21, y, 42, "barrel[facing=up,open=false]")
+    d.lamp(22, 18, 39)
+    # treasury of rare books (walk 20): glass cases, a lectern, a padded chair, chandelier
+    y = 20
+    for x, z in ((21, 37), (23, 37), (21, 41), (23, 41)):
+        d.set(x, y, z, "dark_oak_planks")
+        d.set(x, y + 1, z, "glass")
+    d.item(25, y, 39, "lectern[facing=west,has_book=true,powered=false]")
+    d.chair(20, y, 39, "west", "dark_oak", arms=True)
+    d.bookshelf(25, y, 36, 2)
+    d.bookshelf(25, y, 42, 2)
+    d.rug(21, 38, 24, 40, y, ("purple_carpet", "magenta_carpet"))
+    chandelier(d, 22, 39, 24, 23)
 
 
 def hw_screen(d):
-    pass
+    """L5: the street screen between the towers – stone dwarf wall with iron railings, gate piers, lamps."""
+    z = 4
+    for x in range(8, 37):
+        if 20 <= x <= 24:
+            continue
+        d.set(x, 2, z, "stone_bricks")
+        d.set(x, 3, z, "iron_bars" if (x - 8) % 4 else HQ)
+        if (x - 8) % 4 == 0:
+            d.set(x, 4, z, slab("smooth_sandstone_slab"))
+    for x in (19, 25):
+        for y in range(2, 5):
+            d.set(x, y, z, HQ)
+        d.set(x, 5, z, HC)
+        d.set(x, 6, z, lantern(False))
 
 
 # ------------------------------------------------------------------------------------------------ registry
