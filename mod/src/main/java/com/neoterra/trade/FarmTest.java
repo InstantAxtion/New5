@@ -62,6 +62,7 @@ final class FarmTest
         int sx, sy, sz;
         int ticks;
         final List<BlockPos> randomTicking = new ArrayList<>();
+        final Map<Integer, Integer> mined = new HashMap<>();
         boolean built;
         String error;
     }
@@ -94,6 +95,7 @@ final class FarmTest
                 {
                     runTicks++;
                     randomTicks(level);
+                    player(level);
                     if (runTicks % 1200 == 0)
                     {
                         log("%d / %d ticks", runTicks, maxTicks);
@@ -275,7 +277,13 @@ final class FarmTest
                         while (count > 0 && slot < c.getContainerSize())
                         {
                             final int n = Math.min(count, item.getDefaultMaxStackSize());
-                            c.setItem(slot++, new ItemStack(item, n));
+                            final ItemStack stack = new ItemStack(item, n);
+                            if (item == net.minecraft.world.item.Items.POTION)
+                            {
+                                stack.set(net.minecraft.core.component.DataComponents.POTION_CONTENTS,
+                                    new net.minecraft.world.item.alchemy.PotionContents(net.minecraft.world.item.alchemy.Potions.WATER));
+                            }
+                            c.setItem(slot++, stack);
                             count -= n;
                         }
                     }
@@ -308,6 +316,55 @@ final class FarmTest
         }
         level.getServer().tickRateManager().requestGameToSprint(maxTicks + 200);
         log("inputs loaded, mobs spawned, sprinting %d ticks", maxTicks);
+    }
+
+    /** What the player does at the farm: mine regenerating blocks, press buttons. */
+    private void player(final ServerLevel level)
+    {
+        for (final Farm f : farms)
+        {
+            if (!f.built || runTicks > f.ticks)
+            {
+                continue;
+            }
+            final JsonArray mine = f.spec.getAsJsonArray("mine");
+            if (mine != null && runTicks % 40 == 0)
+            {
+                for (int i = 0; i < mine.size(); i++)
+                {
+                    final JsonArray m = mine.get(i).getAsJsonArray();
+                    final BlockPos p = f.anchor.offset(m.get(0).getAsInt(), m.get(1).getAsInt(), m.get(2).getAsInt());
+                    final String id = BuiltInRegistries.BLOCK.getKey(level.getBlockState(p).getBlock()).toString();
+                    if (id.equals(m.get(3).getAsString()))
+                    {
+                        level.destroyBlock(p, false);
+                        f.mined.merge(i, 1, Integer::sum);
+                    }
+                }
+            }
+            final JsonArray presses = f.spec.getAsJsonArray("presses");
+            if (presses != null && runTicks % 200 == 100)
+            {
+                for (final JsonElement e : presses)
+                {
+                    final JsonArray q = e.getAsJsonArray();
+                    final BlockPos p = f.anchor.offset(q.get(0).getAsInt(), q.get(1).getAsInt(), q.get(2).getAsInt());
+                    final BlockState st = level.getBlockState(p);
+                    if (st.getBlock() instanceof net.minecraft.world.level.block.ButtonBlock b)
+                    {
+                        b.press(st, level, p, null);
+                    }
+                    else if (st.getBlock() instanceof net.minecraft.world.level.block.LeverBlock l)
+                    {
+                        l.pull(st, level, p, null);
+                    }
+                    else
+                    {
+                        f.error = "press at " + q + " is not a button/lever (" + st + ")";
+                    }
+                }
+            }
+        }
     }
 
     private static BlockPos rel(final String key)
@@ -402,6 +459,34 @@ final class FarmTest
                 final int have = got.getOrDefault(e.getKey(), 0);
                 sb.append(e.getKey().replace("minecraft:", "")).append(' ').append(have).append('/').append(need).append(", ");
                 ok &= have >= need;
+            }
+            final JsonArray mine = f.spec.getAsJsonArray("mine");
+            if (mine != null)
+            {
+                for (int i = 0; i < mine.size(); i++)
+                {
+                    final JsonArray m = mine.get(i).getAsJsonArray();
+                    final int n = f.mined.getOrDefault(i, 0);
+                    sb.append("mined ").append(m.get(3).getAsString().replace("minecraft:", "")).append(' ').append(n).append('/').append(m.get(4).getAsInt()).append(", ");
+                    ok &= n >= m.get(4).getAsInt();
+                }
+            }
+            final JsonArray blocks = f.spec.getAsJsonArray("blocks");
+            if (blocks != null && !blocks.isEmpty())
+            {
+                int found = 0;
+                for (final JsonElement e : blocks)
+                {
+                    final JsonArray b = e.getAsJsonArray();
+                    final BlockPos p = f.anchor.offset(b.get(0).getAsInt(), b.get(1).getAsInt(), b.get(2).getAsInt());
+                    if (BuiltInRegistries.BLOCK.getKey(level.getBlockState(p).getBlock()).toString().equals(b.get(3).getAsString()))
+                    {
+                        found++;
+                    }
+                }
+                final int need = f.spec.has("blocks_min") ? f.spec.get("blocks_min").getAsInt() : blocks.size();
+                sb.append("blocks ").append(found).append('/').append(need).append(", ");
+                ok &= found >= need;
             }
             final JsonArray outs = f.spec.getAsJsonArray("outputs");
             if (f.spec.getAsJsonObject("expect").size() > 0 && (outs == null || outs.isEmpty()))

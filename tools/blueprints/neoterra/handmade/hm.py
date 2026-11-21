@@ -590,7 +590,8 @@ class Design:
             self.set(x, y, z, f"{self.req['hut']}[facing={facing}]")
         self.hut_pos = (x, y, z)
 
-    def farm_test(self, expect, inputs=None, spawns=None, ticks=6000, min_count=1, light=None):
+    def farm_test(self, expect, inputs=None, spawns=None, ticks=6000, min_count=1, light=None, mine=None,
+                  blocks=None, blocks_min=None, presses=None):
         """Farmworks: how the in-game farm test runs this farm (python handmade.py writes it for the mod's test).
         expect   : {"minecraft:sugar_cane": 8, ...} items that must turn up in the farm's output containers
                    (containers tagged with d.tag(x, y, z, "farm_output")) after `ticks` game ticks;
@@ -598,10 +599,19 @@ class Design:
                    (what a player would load: fuel, bone meal, seeds, buckets...);
         spawns   : [("minecraft:cow", x, y, z, count), ...] mobs / animals / villagers the player brings in
                    (mob farms: mobs put on the spawning floor, as if they had spawned there);
+        mine     : [(x, y, z, "minecraft:cobblestone", n), ...] the test plays the player mining a generator: every 40
+                   ticks, if that block is there it is broken; passes when it was broken at least n times
+                   (i.e. it regenerated);
+        blocks   : [(x, y, z, "minecraft:lava_cauldron"), ...] blocks to find at the end – at least `blocks_min`
+                   of them (default all) must hold the given block;
+        presses  : [(x, y, z), ...] buttons / levers the player presses every 200 ticks (e.g. dispensers);
+        Item "minecraft:potion" in inputs is a water bottle.
         Coordinates are this design's grid coordinates. Blocks that random-tick (crops, cane, bamboo, kelp, cocoa,
         saplings, ...) are random-ticked by the test at the default rate x 10."""
         self.farm = dict(expect=dict(expect), inputs={f"{x},{y},{z}": list(v) for (x, y, z), v in (inputs or {}).items()},
-                         spawns=[list(s) for s in (spawns or [])], ticks=ticks, light=light)
+                         spawns=[list(s) for s in (spawns or [])], ticks=ticks, light=light,
+                         mine=[list(m) for m in (mine or [])], blocks=[list(b) for b in (blocks or [])],
+                         blocks_min=blocks_min, presses=[list(p) for p in (presses or [])])
 
     def anchor(self, x, y, z):
         """Plain pieces (walls, roads, rails, canals, bridges, subway, boardwalk, cliff climb): the placement anchor
@@ -744,7 +754,11 @@ class Design:
                 outs = [f"{x - hx},{y - hy},{z - hz}" for (x, y, z), ns in self.tags.items() if "farm_output" in ns]
                 bp.farm_test = dict(expect=farm["expect"], ticks=farm["ticks"], outputs=outs,
                                     inputs={rel(k): v for k, v in farm["inputs"].items()},
-                                    spawns=[[s[0], s[1] - hx, s[2] - hy, s[3] - hz, s[4]] for s in farm["spawns"]])
+                                    spawns=[[s[0], s[1] - hx, s[2] - hy, s[3] - hz, s[4]] for s in farm["spawns"]],
+                                    mine=[[m[0] - hx, m[1] - hy, m[2] - hz, m[3], m[4]] for m in farm["mine"]],
+                                    blocks=[[b[0] - hx, b[1] - hy, b[2] - hz, b[3]] for b in farm["blocks"]],
+                                    blocks_min=farm["blocks_min"] if farm["blocks_min"] is not None else len(farm["blocks"]),
+                                    presses=[[q[0] - hx, q[1] - hy, q[2] - hz] for q in farm["presses"]])
             bp.architects = [self.pack]
             bp.name = f"{name}.blueprint"
             if self.req.get("hut") is None:          # plain piece: no controller, no tags

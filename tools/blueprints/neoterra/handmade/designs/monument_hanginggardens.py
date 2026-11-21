@@ -137,7 +137,7 @@ def check_water(d):
             yy = y
             while name(x + dx, yy - 1, z + dz) == "air":
                 yy -= 1
-            if yy == y or name(x + dx, yy - 1, z + dz) != "water":
+            if name(x + dx, yy - 1, z + dz) != "water":
                 leaks.append((x, y, z, (dx, dz)))
     return leaks
 
@@ -336,8 +336,7 @@ def piece(d, ch, x, y, z, S, face):
         d.set(x, y, z, "farmland[moisture=7]")
         d.set(x, y + 1, z, "beetroots[age=3]")
     elif ch == "w":
-        d.set(x, y - 1, z, WATER)
-        d.set(x, y, z, trap(S.get("trapw", w), "north", "bottom"))
+        d.set(x, y, z, WATER)
     elif ch in "<>^v":
         fac = {"<": "west", ">": "east", "^": "north", "v": "south"}[ch]
         d.bed(x, y, z, fac, S.get("bedcol"))

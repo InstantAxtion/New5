@@ -278,21 +278,24 @@ def hww(rel, L):
     if L >= 3:
         # pentice roof over the door on brackets, lamps beside it, corbelled chimney cap
         for x in range(3, 8):
-            d.set(x, 4 if L < 3 else 4, 1, stair("deepslate_tile_stairs", "south"))
+            d.set(x, 4, 1, stair("deepslate_tile_stairs", "south"))
         d.set(3, 3, 1, "dark_oak_fence")
         d.set(7, 3, 1, "dark_oak_fence")
+        put(d, [(1, 2, 1, "stone_bricks"), (1, 3, 1, "lantern[hanging=false,waterlogged=false]"),
+                (9, 2, 1, "stone_bricks"), (9, 3, 1, "lantern[hanging=false,waterlogged=false]")])
+    if L >= 4:
+        # corbelled chimney cap with pots, window boxes under the side windows
         for x in range(3, 8):
-            for z in (9, 13):
-                if 0 <= z <= 12:
-                    d.set(x, CH, z, stair("brick_stairs", "south" if z == 9 else "north", "top"))
+            d.set(x, CH, 9, stair("brick_stairs", "south", "top"))
         for z in range(10, 13):
             d.set(3, CH, z, stair("brick_stairs", "east", "top"))
             d.set(7, CH, z, stair("brick_stairs", "west", "top"))
         for x in (4, 6):
             d.set(x, CH + 1, 10, "terracotta")
             d.set(x, CH + 1, 12, "terracotta")
-        put(d, [(1, 2, 1, "stone_bricks"), (1, 3, 1, "lantern[hanging=false,waterlogged=false]"),
-                (9, 2, 1, "stone_bricks"), (9, 3, 1, "lantern[hanging=false,waterlogged=false]")])
+        for x, z, f in ((0, 5, "west"), (0, 8, "west"), (10, 5, "east"), (10, 8, "east")):
+            d.set(x, 1, z, trap("dark_oak_trapdoor", f, "top"))
+            d.set(x, 2, z, "potted_red_tulip" if z == 5 else "potted_cornflower")
     if L >= 5:
         # cast-iron cresting on the ridge, weather vane, window boxes, horseshoe arch banner
         top = RY + 4
@@ -302,9 +305,6 @@ def hww(rel, L):
             d.set(5, top + 1, z, "iron_bars")
         d.set(5, top + 1, 2, "stone_bricks")
         d.set(5, top + 2, 2, "lightning_rod[facing=up,powered=false,waterlogged=false]")
-        for x, z, f in ((0, 5, "west"), (0, 8, "west"), (10, 5, "east"), (10, 8, "east")):
-            d.set(x, 1, z, trap("dark_oak_trapdoor", f, "top"))
-            d.set(x, 2, z, "potted_red_tulip" if z == 5 else "potted_cornflower")
         d.banner(5, 3, 1, "north", "black")
     connect_walls(d)
     return d
@@ -695,3 +695,5 @@ def hw_river(d, L):
     for z in range(46, 49):
         for x in range(48, 51):
             d.set(x, 1, z, "gravel")
+
+
