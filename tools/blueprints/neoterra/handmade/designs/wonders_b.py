@@ -1307,6 +1307,46 @@ def core_rg_cascadia(rel, L):
         d.fill(X1 + 1, fy, Z1 + 1, X2 - 1, fy, Z2 - 1, "spruce_planks")
     for y in range(2, T + 1):
         d.set(X2 - 1, y, Z2 - 1, "ladder[facing=north,waterlogged=false]")
+    # every bin floor has its own job (hand-placed; ladder corner (18, 19) and its landing (17, 19) kept clear)
+    S_ = STYLE["Cascadia"]
+    floors_ = {
+        8: [  # distributor floor: the turn-head spout fed from the leg, spout tools, oil and spare buckets
+            (15, 8, 16, "hopper[enabled=true,facing=down]"), (15, 9, 16, "hopper[enabled=true,facing=down]"),
+            (12, 8, 13, "barrel[facing=up,open=false]"), (12, 9, 13, "barrel[facing=north,open=false]"),
+            (13, 8, 13, "barrel[facing=up,open=false]"), (18, 8, 13, "crafting_table"),
+            (12, 8, 15, "chest[facing=east,type=single,waterlogged=false]"),
+            (12, 8, 19, "grindstone[face=floor,facing=east]"), (14, 8, 19, "cauldron"),
+            (13, 7, 18, "iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]"),
+            (17, 7, 14, "iron_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]"),
+            (13, 10, 16, "LAMP"), (17, 10, 16, "LAMP")],
+        13: [  # seed-grain bin floor: sacks stacked on pallets along the walls, the weigh scale and tally desk
+            (12, 13, 14, "hay_block[axis=y]"), (12, 14, 14, "hay_block[axis=z]"), (12, 13, 15, "hay_block[axis=y]"),
+            (12, 13, 17, "white_wool"), (12, 14, 17, "brown_carpet"), (12, 13, 18, "white_wool"),
+            (13, 13, 13, "white_wool"), (14, 13, 13, "white_wool"), (13, 14, 13, "white_carpet"),
+            (17, 13, 13, "spruce_slab[type=top,waterlogged=false]"), (17, 14, 13, "candle[candles=2,lit=false,waterlogged=false]"),
+            (17, 13, 14, "spruce_stairs[facing=north,half=bottom,shape=straight,waterlogged=false]"),
+            (18, 13, 15, "lectern[facing=west,has_book=false,powered=false]"),
+            (18, 13, 17, "composter[level=6]"), (15, 13, 19, "barrel[facing=up,open=false]"),
+            (14, 15, 16, "LAMP"), (16, 15, 17, "LAMP")],
+        18: [  # cleaning floor: fanning mill, sieves, screenings bins and the oiling bench under the roof
+            (12, 18, 14, "loom[facing=east]"), (12, 18, 16, "stonecutter[facing=east]"),
+            (12, 18, 18, "composter[level=3]"), (13, 18, 19, "composter[level=5]"),
+            (16, 18, 13, "smithing_table"), (17, 18, 13, "spruce_slab[type=top,waterlogged=false]"),
+            (17, 19, 13, "lantern[hanging=false,waterlogged=false]"), (18, 18, 14, "barrel[facing=up,open=false]"),
+            (18, 18, 15, "barrel[facing=up,open=false]"), (18, 19, 15, "barrel[facing=west,open=false]"),
+            (15, 18, 16, "spruce_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]"),
+            (15, 20, 17, "LAMP")],
+    }
+    for wy, items in floors_.items():
+        if wy + 1 > T:
+            continue
+        for x, y, z, st in items:
+            if st == "LAMP":
+                piece(d, "lamp", x, y, z, None, S_)
+            elif st == "cauldron":
+                d.set(x, y, z, "water_cauldron[level=3]")
+            else:
+                d.set(x, y, z, st if ":" in st or "[" in st or st in ("crafting_table", "smithing_table", "white_wool", "brown_carpet", "white_carpet") else st)
     # small windows
     for y in range(9, T - 1, 5):
         for x in (13, 17):
@@ -1560,7 +1600,7 @@ def core_rg_neoterra(rel, L):
             d.set(x, 5, z, "light_gray_concrete")
             if not edge and z > 13:
                 pass
-        if z % 3 == 0:
+        if z % 2 == 0:
             d.set(16, 5, z, "sea_lantern")
     for y in range(2, 4):
         d.set(16, y, VZ1, AIR)
@@ -1635,6 +1675,10 @@ def core_rg_neoterra(rel, L):
         for x in range(x1 + 1, x2):
             if x % 3 == 0:
                 d.set(x, 3, z2 - 1, "potted_fern")
+        for x, z, bush in ((22, 8, "flowering_azalea"), (32, 8, "azalea"), (22, 17, "azalea"),
+                           (32, 17, "flowering_azalea")):          # planters at the canopy corners
+            d.set(x, 1, z, "moss_block")
+            d.set(x, 2, z, bush)
     if L >= 4:
         x1, x2, z1, z2 = 1, 9, 9, 16
         for x in range(x1, x2 + 1):
@@ -1655,6 +1699,11 @@ def core_rg_neoterra(rel, L):
                 for z in (z1 + 1, z1 + 2, z1 + 4, z1 + 5):
                     d.set(x, 1, z, "farmland[moisture=7]")
                     d.set(x, 2, z, crop if z < z1 + 3 else ("potatoes[age=7]" if crop.startswith("wheat") else "beetroots[age=3]"))
+        for x, z in ((3, 12), (7, 12), (3, 15), (7, 15)):   # grow lights over the walks
+            d.set(x, 5, z, "sea_lantern")
+        d.set(2, 2, 15, "water_cauldron[level=3]")
+        d.set(8, 2, 15, "composter[level=4]")
+        d.set(2, 2, 12, "barrel[facing=up,open=false]")
     if L >= 5:                                             # reflecting pools and flag poles on the plaza
         for x0 in (9, 20):
             for x in range(x0, x0 + 4):
@@ -2113,6 +2162,35 @@ def building(d, x1, z1, x2, z2, storeys, door="south", doorpos=None, ladder=None
     return info
 
 
+def eaves(d, cells):
+    """Dress the drip line of a building by hand: each (x, z, kind) puts ONE piece on the ground at y=2.
+    kinds: butt (rain barrel), logs (firewood stack), comp (compost bin), pot (decorated pot), bush (azalea in a
+    planter), fern, lamp (lantern on a post)."""
+    for x, z, kind in cells:
+        if kind == "butt":
+            d.set(x, 2, z, "barrel[facing=up,open=false]")
+        elif kind == "logs":
+            log = {"Hearthwood": "oak_log", "Cascadia": "spruce_log", "Neoterra": "birch_log"}[d.pack]
+            d.set(x, 2, z, f"{log}[axis=x]")
+            d.set(x, 3, z, f"{log}[axis=x]")
+        elif kind == "comp":
+            d.set(x, 2, z, "composter[level=5]")
+        elif kind == "pot":
+            d.set(x, 2, z, _pot("south"))
+        elif kind == "bush":
+            d.set(x, 1, z, "moss_block")
+            d.set(x, 2, z, "flowering_azalea")
+        elif kind == "fern":
+            d.set(x, 1, z, "moss_block")
+            d.set(x, 2, z, "large_fern[half=lower]")
+            d.set(x, 3, z, "large_fern[half=upper]")
+        elif kind == "lamp":
+            lamppost(d, x, z, h=2, post={"Hearthwood": "dark_oak_fence", "Cascadia": "spruce_fence",
+                                         "Neoterra": "birch_fence"}[d.pack])
+        else:
+            raise ValueError(kind)
+
+
 def bench_pair(d, x, z, facing, wood, y=2):
     """Outdoor bench of two stair seats starting at (x, z), backs toward `facing`."""
     dx, dz = (1, 0) if facing in ("north", "south") else (0, 1)
@@ -2241,6 +2319,7 @@ def gb_hearthwood(rel, L):
         bench_pair(d, 52, 19, "south", "dark_oak")
         hedge(d, 46, 3, 56, 3)
         tree(d, 51, 2, h=4)
+        eaves(d, [(45, 7, "butt"), (57, 7, "logs"), (57, 17, "pot")])
     if L >= 4:
         # ---- Bridge Mill: millstone floor with sacks and grain, loft above; the wheel turns in the river
         b = building(d, 13, 32, 20, 39, 2, door="north", ladder=(19, 38, "north"), pal=2)
@@ -2510,6 +2589,8 @@ def gb_cascadia(rel, L):
         put(d, b["S"], [(1, 4, 4, "sign", ("west", ["Smithy"])), (1, 4, 3, "torch", "west")])
         for x, z in ((13, 2), (58, 2), (59, 37), (47, 37)):
             tree(d, x, z, h=7, log="spruce_log", leaves="spruce_leaves", r=2)
+        for x, z in ((57, 1), (59, 3), (57, 3), (60, 2)):   # fern understorey of the street-corner fir
+            d.set(x, 2, z, "fern")
         for x in (13, 47):
             lamppost(d, x, 23, post="spruce_fence")
         for x, z in ((3, 37), (4, 37), (5, 37)):
@@ -2716,9 +2797,21 @@ def rg_hearthwood(rel, L):
                        "sW......."])
         put(d, b["S"], [(54, 4, 13, "sign", ("south", ["Royal", "Stables"])), (53, 4, 13, "torch", "south"),
                         (55, 4, 13, "torch", "south"), (52, 2, 14, "cauldron", None), (56, 2, 14, "hay", None)])
+        eaves(d, [(48, 3, "butt"), (60, 3, "comp"), (48, 13, "logs"), (60, 13, "butt")])
         for x in range(48, 61):                            # paddock rail with two gates
             gate = x in (50, 58)
             d.set(x, 2, 15, "oak_fence_gate[facing=south,in_wall=false,open=false,powered=false]" if gate else "oak_fence")
+        # ---- Dutch hay barrack by the stable yard: four posts, a stack of hay and a sliding roof over it
+        for x, z in ((55, 23), (59, 23), (55, 26), (59, 26)):
+            for y in range(2, 7):
+                d.set(x, y, z, "stripped_dark_oak_log[axis=y]")
+        for x in range(56, 59):
+            for z in range(23, 27):
+                for y in range(2, 5 if z in (23, 26) else 6):
+                    d.set(x, y, z, "hay_block[axis=y]")
+        for x in range(55, 60):
+            for z in range(23, 27):
+                d.set(x, 7, z, slab("dark_oak_slab", "bottom"))
         # ---- Seed Granary: sacks and seed bins, the weighing counter by the door
         b = building(d, 2, 17, 10, 24, 1, door="east", pal=5)
         plan(d, b, 0, ["sWsWsBb",
@@ -2752,6 +2845,7 @@ def rg_hearthwood(rel, L):
                         (8, 4, 27, "torch", "north"), (4, 2, 27, "box", ("north", "poppy")),
                         (10, 2, 27, "box", ("north", "cornflower")), (4, 7, 27, "box", ("north", "allium")),
                         (7, 7, 27, "box", ("north", "poppy")), (10, 7, 27, "box", ("north", "oxeye_daisy"))])
+        eaves(d, [(1, 27, "pot"), (13, 27, "butt"), (1, 38, "logs"), (13, 38, "comp")])
         flowerrow(d, [(2, 25, "poppy"), (3, 25, "rose_bush"), (4, 25, "cornflower"), (5, 25, "oxeye_daisy"),
                       (9, 25, "allium"), (10, 25, "peony"), (11, 25, "poppy"), (12, 25, "cornflower")])
         # ---- Malt House: barley spread on the malting floor, kiln furnaces; grain loft above
@@ -2779,6 +2873,44 @@ def rg_hearthwood(rel, L):
         lamppost(d, 13, 27)
         lamppost(d, 47, 27)
         bench_pair(d, 9, 26, "south", "dark_oak")          # bench under the steward's windows
+        # ---- orchard behind the steward's house: two rows of apple trees, hives between them, a hurdle fence
+        for x in range(1, 13):
+            for z in (40, 47):
+                d.set(x, 2, z, "oak_fence")
+        for z in range(41, 47):
+            d.set(1, 2, z, "oak_fence")
+            d.set(12, 2, z, "oak_fence")
+        d.set(7, 2, 40, "oak_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
+        for x, z in ((3, 42), (7, 42), (10, 42), (3, 45), (7, 45), (10, 45)):
+            tree(d, x, z, h=4, leaves="oak_leaves", r=1)
+        for x in (5, 9):
+            d.set(x, 2, 44, "beehive[facing=south,honey_level=3]")
+        for z in range(41, 47):
+            d.set(7, 1, z, "dirt_path") if z not in (42, 45) else None
+        d.set(5, 2, 41, "composter[level=7]")
+        bench_pair(d, 8, 46, "south", "oak")
+        # ---- walled kitchen garden behind the barn
+        for x in range(14, 47):
+            for z in (41, 47):
+                d.set(x, 2, z, "cobblestone_wall")
+        for z in range(41, 48):
+            d.set(14, 2, z, "cobblestone_wall")
+            d.set(46, 2, z, "cobblestone_wall")
+        d.set(30, 2, 41, AIR)
+        crops = (("wheat[age=7]", 17, 19), ("carrots[age=7]", 21, 23), ("potatoes[age=7]", 25, 27),
+                 ("beetroots[age=3]", 29, 31), ("wheat[age=7]", 33, 35), ("carrots[age=7]", 37, 39),
+                 ("potatoes[age=7]", 41, 43))
+        for x in range(16, 45):                            # gravel walk between the beds
+            d.set(x, 1, 42, "gravel")
+            d.set(x, 1, 46, "gravel")
+        for crop, xa, xb in crops:
+            for x in range(xa, xb + 1):
+                for z in (43, 44, 45):
+                    d.set(x, 1, z, "farmland[moisture=7]")
+                    d.set(x, 2, z, crop)
+        for x, z in ((14, 41), (46, 41), (14, 47), (46, 47)):  # gate piers with lamps
+            d.set(x, 3, z, "cobblestone_wall")
+            d.set(x, 4, z, lantern())
         for x in range(48, 59):                            # malt-house yard fence with a gate
             d.set(x, 2, 26, "oak_fence_gate[facing=north,in_wall=false,open=false,powered=false]" if x == 53 else "oak_fence")
     if L >= 5:
@@ -2840,25 +2972,22 @@ def rg_hearthwood(rel, L):
                        ".4.4....",
                        "p......."], face={"Q": "west"})
         put(d, b["S"], [(48, 4, 43, "sign", ("west", ["Alms", "House"])), (48, 4, 42, "torch", "west")])
-        # ---- walled kitchen garden behind the barn
-        for x in range(14, 47):
-            for z in (41, 47):
-                d.set(x, 2, z, "cobblestone_wall")
-        for z in range(41, 48):
-            d.set(14, 2, z, "cobblestone_wall")
-            d.set(46, 2, z, "cobblestone_wall")
-        d.set(30, 2, 41, AIR)
-        crops = (("wheat[age=7]", 17, 19), ("carrots[age=7]", 21, 23), ("potatoes[age=7]", 25, 27),
-                 ("beetroots[age=3]", 29, 31), ("wheat[age=7]", 33, 35), ("carrots[age=7]", 37, 39),
-                 ("potatoes[age=7]", 41, 43))
-        for x in range(16, 45):                            # gravel walk between the beds
-            d.set(x, 1, 42, "gravel")
-            d.set(x, 1, 46, "gravel")
-        for crop, xa, xb in crops:
-            for x in range(xa, xb + 1):
-                for z in (43, 44, 45):
-                    d.set(x, 1, z, "farmland[moisture=7]")
-                    d.set(x, 2, z, crop)
+        # ---- Brew House: mash tuns and the brewing bench on the ground floor, kegs along the north wall;
+        #      hop and malt loft with the brewer's bed upstairs
+        b = building(d, 47, 16, 59, 22, 2, door="south", doorpos=53, ladder=(48, 17, "south"),
+                     hearth=(58, 19, "west"), pal=2)
+        plan(d, b, 0, [".CrC..xxxxb",
+                       "....l......",
+                       "s.cdc......",
+                       "s......2l..",
+                       "WsB.....ybp"])
+        plan(d, b, 1, [".hhsWs.ssWs",
+                       "...........",
+                       "h...l......",
+                       "s..R@R...vj",
+                       "Ws.4t2....."])
+        put(d, b["S"], [(55, 4, 23, "sign", ("south", ["Brew", "House"])), (54, 4, 23, "torch", "south"),
+                        (51, 2, 23, "barrel", None), (50, 2, 23, "keg", "east"), (56, 2, 23, "box", ("south", "poppy"))])
         for x in (16, 44):
             tree(d, x, 39, h=4, leaves="oak_leaves", r=1)
     connect_walls(d)
@@ -2910,6 +3039,7 @@ def rg_cascadia(rel, L):
             d.set(x, 1, 4, "spruce_planks")
         put(d, b["S"], [(50, 4, 5, "sign", ("north", ["Feed &", "Seed"])), (46, 2, 4, "barrel", None),
                         (48, 2, 4, "barrel", None), (53, 2, 4, "barrel", None), (54, 2, 4, "sacks", "white_wool")])
+        eaves(d, [(44, 5, "butt"), (56, 5, "logs"), (44, 15, "logs"), (56, 15, "butt")])
     if L >= 4:
         # ---- Feed Mill: millstones and mixing tub on the ground floor, repair shop above
         b = building(d, 2, 33, 12, 42, 2, door="north", ladder=(11, 41, "north"), pal=5)
@@ -3011,6 +3141,8 @@ def rg_cascadia(rel, L):
             lamppost(d, x, 34, post="spruce_fence")
         for x, z in ((14, 48), (43, 48), (55, 48)):
             tree(d, x, z, h=7, log="spruce_log", leaves="spruce_leaves", r=2)
+        for x, z in ((54, 47), (56, 49), (54, 49), (56, 47), (55, 50)):   # ferns under the back fir
+            d.set(x, 2, z, "fern")
     connect_walls(d)
     return d
 

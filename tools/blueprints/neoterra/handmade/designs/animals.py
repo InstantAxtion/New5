@@ -651,6 +651,9 @@ def cow_cs(rel, L):
     for z in range(z1 + 2, z2, 4):
         d.lamp(9, 5, z)
         d.lamp(10, 5, z + 2)
+    for z in range(z1 + 7, z2, 3):                                     # stall lanterns over the partitions
+        hang2(d, 6, z, 4)
+        hang2(d, 13, z, 4)
     # loft: ladder up, hay stacks along both slopes
     for y in range(2, 7):
         d.set(10, y, z2 - 1, "ladder[facing=north,waterlogged=false]")
@@ -764,6 +767,8 @@ def cow_nt(rel, L):
             d.set(x + 1, 2, bz2 - 1, "gray_carpet")
     for x in range(x1 + 2, bx2, 4):
         d.set(x, 6, 15, "end_rod[facing=down]")
+    for x in ((3, 7, 11) if L < 3 else (3, 7, 11, 15, 19, 23)):        # pendant lamps over the cubicle rails
+        hang2(d, x, bz2 - 2, 4)
     d.sign(5, 6, z1 - 1, "north", ["AGRI-DAIRY", "fresh milk"], "birch", glow=True, color="cyan")
     if L >= 2:                                                         # canopy over the entrance
         for x in range(3, 9):
@@ -1218,6 +1223,8 @@ def pig_nt(rel, L):
         d.set(x + 1, 3, z1, AIR)
     for x in range(x1 + 2, 14, 3):
         d.set(x, 5, z2 - 1, "sea_lantern")
+    for x in (5, 9):                                                   # heat lamps over the pen rails
+        hang2(d, x, z1 + 3, 4)
     # run: mud wallow and shade
     for x in range(4, 8):
         for z in range(z1 - 4, z1 - 1):
@@ -2381,6 +2388,10 @@ def cottage(d, pack, x1, z1, w=9, kind="poultry"):
         lamp_post(d, x1 + o["lamp"], z1 - 2, pack)
         if w < 15:
             bench(d, x2 + 1, z1 + 2, "east", "dark_oak", 2, "z")
+        d.set(x1 - 1, 2, z2 + 1, "water_cauldron[level=3]")             # rain butt at the back corner
+        d.set(x2 + 1, 2, z2 + 1, "oak_log[axis=x]")                    # log pile with a chopping block
+        d.set(x2 + 1, 3, z2 + 1, "oak_log[axis=x]")
+        d.set(x2 + 1, 2, z2, "stripped_oak_log[axis=y]")
     elif pack == "Cascadia":
         cs_logs(d, x1, z1, x2, z2, 4, log="spruce_log")
         for x in range(x1 + 1, x2):                                    # light stripped logs between dark posts
@@ -2449,6 +2460,13 @@ def cottage(d, pack, x1, z1, w=9, kind="poultry"):
         if x2 + 3 < d.sx and o["chim"] == "w":
             lamp_post(d, x2 + 2, z1 - 3, pack)
             tree(d, x2 + 2, z2 + 1, "spruce_log", "spruce_leaves", 6, 1)
+        if kind in ("poultry", "sheep"):                               # winter woodpile under the west eave
+            for z in range(z1 + 1, z2):
+                for y in (2, 3, 4):
+                    d.set(x1 - 1, y, z, "spruce_log[axis=x]")
+            d.set(x1 - 2, 2, z1 + 3, "stripped_spruce_log[axis=y]")    # chopping block
+            d.set(x1 - 1, 2, z2 + 1, "water_cauldron[level=3]")         # rain butt and compost bin
+            d.set(x1, 2, z2 + 1, "composter[level=4]")
     else:
         nt_walls(d, x1, z1, x2, z2, 5, sides="nse", col_step=4)
         d.fill(x1, 6, z1 - 1, x2, 6, z2, "light_gray_concrete")
@@ -3211,6 +3229,9 @@ def cot_nt_horse(d, P, x1, z1, w, bc):
     P(2, 8, 0, CANDLE)
     _ch(d, x1, z1, 2, 7, 1, "south", "birch")
     d.rug(x1 + 4, z1 + 2, x1 + 8, z1 + 4, 7, ("red_carpet", "light_gray_carpet"), "border")
+    _ch(d, x1, z1, 4, 7, 2, "west", "mangrove")                        # reading corner on the rug
+    P(4, 7, 3, "barrel[facing=up,open=false]")
+    P(4, 8, 3, "potted_fern")
     _nt_light(d, x1, z1, ((4, 10, 3), (9, 10, 2)))
 
 
@@ -3326,6 +3347,7 @@ def _hall_hw_rooms(d, pack, kind, x1, z1, x2, z2, xm, zc, wood, loft, top, ytop,
                 if (x - x1) % 3 == 0:
                     for z in range(min(zb, zf) + 1, max(zb, zf)):
                         d.set(x, 2, z, lower if kind == "pig" else upper)
+                    hang2(d, x, zf, 4)                                 # stall lantern over the partition
             for x in xs:
                 if kind == "pig" and x % 4 == 1:
                     d.set(x, 1, (zb + zf) // 2, "hay_block[axis=x]")
@@ -3442,6 +3464,8 @@ def hall_cs(d, kind, x1, z1, x2, z2, loft):
         for a0 in range(3, E, 4):                                      # pens 3 wide: manger, gate, trough
             for b in range(4, B + 1):
                 P(a0, 2, b, f"{wd}_planks" if kind == "pig" else f"{wd}_fence")
+            if a0 > 3:
+                hang2(d, x1 + a0, z1 + B - 1, 4)                       # stall lantern over the partition
             for k, blk in ((1, manger), (2, gate(wd, "north")), (3, trough)):
                 if a0 + k <= E:
                     P(a0 + k, 2, 3, blk)
@@ -3575,6 +3599,8 @@ def hall_nt(d, kind, x1, z1, x2, z2, loft):
         for a0 in range(8, E, 4):                                      # pen dividers
             for b in list(range(1, bc - 1)) + list(range(bc + 2, B + 1)):
                 P(a0, 2, b, div)
+            for b in (1, B):                                           # pendant lamps over each divider
+                hang2(d, x1 + a0, z1 + b, 4)
         for a, b, blk in {"cattle": ((1, 1, "cauldron"), (1, 2, "cauldron"), (1, B, BARREL), (1, B - 1, BARREL)),
                           "sheep": ((1, 1, "white_wool"), (1, 2, "white_wool"), (1, 3, "loom[facing=east]")),
                           "pig": ((1, 1, "composter[level=8]"), (1, 2, BARREL), (1, 3, BARREL))}[kind]:
@@ -3602,8 +3628,15 @@ def hall_nt(d, kind, x1, z1, x2, z2, loft):
         P(1, 2, 1, "composter[level=5]")
         P(1, 2, 2, BARREL)
         P(1, 2, B, "hay_block[axis=y]")
+        P(1, 3, B, "hay_block[axis=y]")
+        P(1, 2, B - 1, BARREL)
+        P(2, 2, B, "composter[level=6]")
         P(E, 2, 1, QT)
         P(E, 3, 1, "potted_dandelion")
+        P(E, 2, B, "hay_block[axis=y]")                               # bedding store in the far corner
+        P(E, 3, B, "hay_block[axis=y]")
+        P(E, 2, B - 1, BARREL)
+        P(E - 1, 2, B, BARREL)
     elif kind == "bees":                                               # honey lab: central island
         isl = ((QT, BREW), (QT, "honey_block"), (WCAULD, None), ("cauldron", None), (QT, "honeycomb_block"),
                (QT, CANDLE4), (QT, BREW), (QT, "honey_block"), (WCAULD, None), (QT, CANDLE2))
@@ -3689,7 +3722,7 @@ def haybarn(d, pack, x1, z1, size=(11, 9)):
             shutters(d, wx, z1, 3, 4, "north", "dark_oak")
         for x in [x for x in range(x1 + 1, x2) if abs(x - xm) > 1]:   # hay bays, stepped toward the floor
             for z in range(z1 + 1, z2):
-                for y in range(2, 2 + min(4, abs(x - xm))):
+                for y in range(2, 2 + min(5, abs(x - xm))):
                     hay(d, x, y, z, "z" if (y + x) % 2 else "x")
         for x in (xm - 1, xm, xm + 1):                                 # loaded wagon on the threshing floor
             d.set(x, 2, z1 + 3, slab("dark_oak_slab", "top"))
@@ -3769,7 +3802,7 @@ def haybarn(d, pack, x1, z1, size=(11, 9)):
         for x in range(x1 + 1, x2):
             for z in range(z1 + 4, z2):
                 if x not in (xm - 1, xm, xm + 1):
-                    for y in range(2, 2 + (3 if z > z1 + 5 else 2)):
+                    for y in range(2, 2 + (4 if z > z1 + 5 else 3 if z == z1 + 5 else 2)):   # stepped stack
                         hay(d, x, y, z, "x")
         d.set(xm, 2, z1 + 2, "iron_block")
         d.set(xm, 3, z1 + 2, "hopper[enabled=true,facing=down]")
@@ -3864,6 +3897,9 @@ def extra(d, pack, kind, x1, z1):
         d.door(tx1 + 2, 2, tz1, "south", w)
         shutters(d, tx1 + 1, tz1, 3, 4, "north", w, sides="l")        # one shutter: the door is beside it
         d.set(tx1 + 2, ridge + 1, tz1 + 2, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+        d.set(tx1 - 1, 2, tz1 - 1, "composter[level=6]")                # grain bin, rain butt, straw bale
+        d.set(tx1 - 1, 2, tz1 + 5, "water_cauldron[level=3]")          # at the tower's corners
+        d.set(tx1 + 5, 2, tz1 + 5, "hay_block[axis=y]")
         for x in range(x1 + 7, x1 + 11):
             for z in range(z1 + 3, z1 + 7):
                 edge = x in (x1 + 7, x1 + 10) or z in (z1 + 3, z1 + 6)
@@ -4420,6 +4456,95 @@ def core_dress(d, pack, kind):
                 d.set(x, y, z - 1, trap("birch", "east", "bottom", open_=True))
 
 
+def paddock(d, pack, x1, z1, x2, z2, gate_at, high=True):
+    """Fenced horse paddock: post-and-rail fence (two rails high for horses), one gate, lanterns on the corner
+    posts. Every coordinate is chosen per farm by the caller."""
+    fence = MAT[pack]["fence"]
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            if x in (x1, x2) or z in (z1, z2):
+                if (x, z) == gate_at:
+                    d.set(x, 2, z, gate(MAT[pack]["wood"], "east" if x in (x1, x2) else "south"))
+                    continue
+                d.set(x, 2, z, fence)
+                if high:
+                    d.set(x, 3, z, fence)
+    for x, z in ((x1, z1), (x2, z1), (x1, z2), (x2, z2)):
+        d.set(x, 4 if high else 3, z, "lantern[hanging=false,waterlogged=false]")
+
+
+def jump(d, pack, x, z):
+    """Show jump across z..z+3: wing standards with coloured caps, a ground rail and a top pole."""
+    w = MAT[pack]["wood"]
+    caps = ("cyan_concrete", "white_concrete") if pack == "Neoterra" else ("white_wool", "red_wool")
+    for zz, cap in ((z, caps[0]), (z + 3, caps[1])):
+        d.set(x, 2, zz, f"{w}_fence")
+        d.set(x, 3, zz, f"{w}_fence")
+        d.set(x, 4, zz, cap)
+    for zz in (z + 1, z + 2):
+        d.set(x, 2, zz, trap(w, "north", "top"))
+        d.set(x, 3, zz, f"stripped_{w}_log[axis=z]")
+
+
+def field_shelter(d, pack, x1, z1):
+    """3 x 2 open field shelter in a paddock corner: four posts, slab roof, hay and water under it."""
+    w = MAT[pack]["wood"]
+    for x in (x1, x1 + 2):
+        for z in (z1, z1 + 1):
+            d.set(x, 2, z, f"{w}_fence")
+            d.set(x, 3, z, f"{w}_fence")
+    for x in range(x1, x1 + 3):
+        for z in (z1, z1 + 1):
+            d.set(x, 4, z, slab(MAT[pack]["rsl"] if pack != "Cascadia" else "spruce_slab"))
+    d.set(x1 + 1, 2, z1 + 1, "hay_block[axis=y]")
+    d.set(x1 + 1, 2, z1, "water_cauldron[level=3]")
+    d.set(x1 + 1, 3, z1, "lantern[hanging=true,waterlogged=false]")
+
+
+def stackyard(d, pack, cx, cz, ring=False):
+    """L5 stackyard: a big hay rick (wrapped bales in Neoterra) centred on (cx, cz), with a fenced ring and a
+    gate where the farm has room for it."""
+    rick(d, pack, cx - 1, cz - 1, True)
+    if ring:
+        for x in range(cx - 4, cx + 5):
+            for z in range(cz - 4, cz + 5):
+                if abs(x - cx) == 4 or abs(z - cz) == 4:
+                    d.set(x, 2, z, MAT[pack]["fence"] if (x, z) != (cx - 4, cz) else gate(MAT[pack]["wood"], "east"))
+
+
+def yard_extras(d, pack, core, L):
+    """Hand-placed yard pieces that make the later levels grow: paddocks with jumps for the stables and a hay
+    stackyard at L5 for the big-stock farms (coordinates chosen per farm from its L5 layout)."""
+    n = core.__name__
+    if n == "stable_cs":
+        if L >= 3:
+            paddock(d, pack, 28, 21, 48, 31, (28, 26))
+        if L >= 4:
+            for x in (32, 36, 40, 44):
+                jump(d, pack, x, 24)
+            d.set(46, 2, 22, "water_cauldron[level=3]")
+            d.set(47, 2, 22, "hay_block[axis=y]")
+            field_shelter(d, pack, 45, 29)
+    elif n == "stable_hw" and L >= 4:
+        paddock(d, pack, 29, 19, 44, 26, (29, 22))
+        for x in (34, 37, 40, 43):
+            jump(d, pack, x, 21)
+        field_shelter(d, pack, 30, 24)
+        d.set(31, 2, 20, "water_cauldron[level=3]")
+        d.set(32, 2, 20, "hay_block[axis=y]")
+        d.set(28, 2, 21, st("dark_oak_stairs", "east"))                  # mounting block by the gate
+        d.set(28, 2, 20, "stone_bricks")
+    elif n == "stable_nt" and L >= 4:
+        paddock(d, pack, 33, 19, 46, 25, (33, 22))
+        for x in (37, 42):
+            jump(d, pack, x, 20)
+    if L >= 5:
+        spot = {"cow_cs": (52, 22, True), "cow_hw": (47, 21, False), "cow_nt": (46, 20, False),
+                "pig_nt": (43, 19, False), "stable_nt": (52, 20, False), "stable_hw": (50, 22, True)}.get(n)
+        if spot:
+            stackyard(d, pack, *spot)
+
+
 def farmstead(core, pack, rel, L, kind):
     d = core(rel, L)
     core_rooms(d, pack, kind, L)
@@ -4445,6 +4570,7 @@ def farmstead(core, pack, rel, L, kind):
         extra(d, pack, kind, ex + 17, 8)
         haybarn(d, pack, barn_x, ez + 2, sz_barn)
     front(d, pack, kind, L)
+    yard_extras(d, pack, core, L)
     recolor(d, RECOLOR[(pack, kind)])
     if L <= 3:
         downgrade(d)

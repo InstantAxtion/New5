@@ -1007,6 +1007,9 @@ def cottage_hw(rel, L, v=0):
         d.bed(13, 6, 11, "east", "yellow")
     wardrobe(d, 5, 6, 13, "east", "spruce")
     wardrobe(d, 13, 6, 13, "west", "spruce")
+    rugc(d, 6, 10, 7, 10, 6, ("pink", "light_blue")[v % 2])                # rag rugs and a blanket chest
+    rugc(d, 11, 10, 12, 10, 6, ("orange", "lime")[v % 2])
+    fit(d, [(7, 6, 12, CHEST("west")), (11, 6, 12, CHEST("east"))])
     # ---- garden: picket fence, flower borders, path, a bench and an apple tree corner
     garden(d, 1, 0, 8, z1 - 3, y0, "spruce", ((8, 2, "east"),),
            plants=((2, 1, "rose_bush[half=lower]"), (3, 1, "poppy"), (6, 1, "oxeye_daisy"), (2, 3, "cornflower"),
@@ -2038,6 +2041,16 @@ def quadplex_nt(rel, L, U=None, v=0):
         d.set(a + 1, 6, z2 - 1, slab("smooth_quartz", "top"))
         d.chair(a + 1, 6, z2 - 2, "south", W, sit=False)
         d.set(a + 2, 9, z1 + 4, "sea_lantern")
+        # middle of the bedroom (the walk from the stair head along z1+7 stays free)
+        rugc(d, a, z1 + 4, a + 2, z1 + 5, 6, ("light_gray", "white", "gray", "light_blue")[k])
+        if alt == 0:    # armchair and side table
+            fit(d, [(a, 6, z1 + 6, stair(W, "west")), (a, 6, z1 + 7, slab(W, "top")), (a, 7, z1 + 7, "potted_bamboo")])
+        elif alt == 1:  # reading wall
+            fit(d, [(a, 6, z1 + 6, "bookshelf"), (a, 6, z1 + 7, "bookshelf"), (a, 7, z1 + 6, "potted_fern"),
+                    (a + 1, 6, z1 + 6, stair(W, "west"))])
+        else:           # dressing corner
+            fit(d, [(a, 6, z1 + 6, CHEST("east")), (a, 6, z1 + 7, "potted_azalea_bush"),
+                    (a, 7, z1 + 6, "candle[candles=2,lit=false,waterlogged=false]")])
         # front planter + walk
         planter(d, a, z1 - 2, a + 2, z1 - 2, 1)
         for z in range(0, z1):
@@ -2162,6 +2175,12 @@ def playerhouse_hw(rel, L):
         d.chair(x, y0, 11, "south", W)
     d.lamp(7, 5, 10)
     d.lamp(5, 5, 6)
+    # entrance hall: console table, coat stand, a runner and a pair of hall chairs
+    fit(d, [(9, y0, 4, slab(W, "top")), (9, y0 + 1, 4, "potted_fern"), (10, y0, 4, slab(W, "top")),
+            (10, y0 + 1, 4, "candle[candles=3,lit=false,waterlogged=false]"), (11, y0, 4, fence(W)),
+            (11, y0 + 1, 4, "brown_banner[rotation=8]"), (8, y0, 7, stair(W, "south")),
+            (10, y0, 7, stair(W, "south")), (9, y0, 7, slab(W, "top")), (9, y0 + 1, 7, POT)])
+    rugc(d, 7, 5, 10, 6, y0, "brown")
     d.hut(4, y0, 4)
     if L >= 4:
         d.item(4, y0, 11, "jukebox")
@@ -2232,11 +2251,12 @@ def playerhouse_hw(rel, L):
             d.set(11, y, bz1, "oak_planks")
         d.fill(9, 4, bz1, 11, 5, bz1, "oak_planks")
         d.fill(9, 4, bz1, 10, 4, bz1, log("dark_oak_log", "x"))
+        # two double-sided island racks (two high) first, then the side walls three high
+        isl = [(x, z, f) for z, f in ((19, "north"), (20, "south"), (23, "north"), (24, "south")) for x in range(7, 14)]
+        placed = barrel_lines(d, isl, y0, nb - 19, h=2)
         cols = [(4, z, "east") for z in range(17, 26)] + [(16, z, "west") for z in range(17, 26)] \
-            + [(x, 26, "north") for x in range(5, 16)] \
-            + [(x, 19, "north") for x in range(7, 14)] + [(x, 20, "south") for x in range(7, 14)] \
-            + [(x, 23, "north") for x in range(7, 14)] + [(x, 24, "south") for x in range(7, 14)]
-        barrel_lines(d, cols, y0, nb - 19)
+            + [(x, 26, "north") for x in range(5, 16)]
+        barrel_lines(d, cols, y0, nb - 19 - placed)
         for x in (6, 10, 14):
             d.set(x, 6, 21, lantern(True))
         for z in (18, 22):
@@ -2398,6 +2418,12 @@ def playerhouse_ca(rel, L):
             d.item(6, 7, 7, "lectern", "east")
         d.set(4, 7, 6, "chest[facing=east,type=single,waterlogged=false]")
         d.set(4, 7, 7, "chest[facing=east,type=single,waterlogged=false]")
+        # study loft: writing desk by the stair head, reading corner with books, a rag rug
+        fit(d, [(12, 7, 6, slab(W, "top")), (12, 8, 6, "candle[candles=2,lit=false,waterlogged=false]"),
+                (12, 7, 7, stair(W, "south")), (13, 7, 6, "bookshelf"), (3, 7, 9, "bookshelf"),
+                (3, 7, 10, "bookshelf"), (4, 7, 9, slab(W, "top")), (4, 8, 9, LANTF), (4, 7, 10, stair(W, "west")),
+                (4, 7, 11, "potted_fern"), (3, 7, 11, BRL("east"))])
+        rugc(d, 7, 6, 9, 8, 7, "brown")
     # ---- root-cellar lean-to at the back (pantry, 19 barrels)
     px1, px2, pz1, pz2 = x1, x2, z2, 17
     for x, z in cells(px1, pz1, px2, pz2):
@@ -2442,9 +2468,14 @@ def playerhouse_ca(rel, L):
             d.set(x, 5, bz1, "spruce_planks")
         for x in (22, 23, 24):                                  # X-braced barn door look above
             d.set(x, 6, bz1, log("stripped_spruce_log", "x"))
-        cols = [(18, z, "east") for z in range(7, 25)] + [(28, z, "west") for z in range(7, 25)] \
-            + [(x, 24, "north") for x in range(19, 28)]
-        barrel_lines(d, cols, y0, nb - 19)
+        # storage: barrels three high along the west wall, two free-standing island racks (two high) with
+        # aisles between; the east side keeps a hay store and a work bench, the middle aisle stays wide for a cart
+        placed = barrel_lines(d, [(18, z, "east") for z in range(7, 25)], y0, 54)
+        isl = [(x, z, "west" if x == 21 else "east") for z in range(9, 22) for x in (21, 25)]
+        barrel_lines(d, isl, y0, nb - 19 - placed, h=2)
+        fit(d, [(28, y0, 7, HAYY), (28, y0, 8, HAYY), (28, y0 + 1, 7, HAYY), (28, y0, 23, CHEST("west")),
+                (28, y0, 24, CHEST("west")), (28, y0, 15, slab(W, "top")), (28, y0, 16, slab(W, "top")),
+                (28, y0 + 1, 15, LANTF), (27, y0, 16, stair(W, "west"))])
         for z in (9, 15, 21):
             d.set(23, 7, z, lantern(True))
         for z in (12, 18):
@@ -2595,6 +2626,9 @@ def playerhouse_nt(rel, L):
         d.set(9, 7, 14, slab("smooth_quartz", "top"))
         d.set(9, 8, 14, "potted_flowering_azalea_bush")
         d.set(11, 7, 17, "potted_bamboo")
+        rugc(d, 6, 16, 8, 17, 7, "light_gray")                         # study rug, reading chair and lamp
+        fit(d, [(5, 7, 16, stair(W, "west")), (5, 7, 15, slab("smooth_quartz", "top")),
+                (5, 8, 15, "end_rod[facing=up]"), (3, 7, 18, "potted_bamboo")])
     # ---- L2 workshop studio (NE) and storage hall (SE)
     if L >= 2:
         sx1, sx2, sz1, sz2 = 15, 27, 3, 10
@@ -2628,12 +2662,17 @@ def playerhouse_nt(rel, L):
             for y in range(y0, 5):
                 d.set(x, y, bz1, "light_gray_stained_glass_pane")
         d.double_door(20, y0, bz1, "x", "south", W)
+        # four island racks (two high) in two double-sided pairs, then the side walls three high
+        isl = [(x, z, f) for z, f in ((18, "north"), (19, "south"), (22, "north"), (23, "south"))
+               for x in range(18, 24)]
+        placed = barrel_lines(d, isl, y0, nb - 19, h=2)
         cols = [(15, z, "east") for z in range(15, 27)] + [(26, z, "west") for z in range(15, 27)] \
-            + [(x, 27, "north") for x in range(16, 26)] + [(x, 20, "north") for x in range(19, 23)] \
-            + [(x, 21, "south") for x in range(19, 23)]
-        barrel_lines(d, cols, y0, nb - 19)
+            + [(x, 27, "north") for x in range(16, 26)]
+        barrel_lines(d, cols, y0, nb - 19 - placed)
         for x, z in ((18, 18), (23, 18), (18, 24), (23, 24)):
             d.set(x, 6, z, "sea_lantern")
+        fit(d, [(20, y0, 26, slab("smooth_quartz", "top")), (21, y0, 26, slab("smooth_quartz", "top")),   # packing
+                (20, y0 + 1, 26, LANTF), (21, y0 + 1, 26, CHEST("north"))])                               # bench
         for x in range(16, 26, 2):
             for z in range(15, 27, 3):
                 d.set(x, 8, z, "daylight_detector[inverted=false,power=0]")
@@ -3392,9 +3431,9 @@ def player_estate(rel, L):
     if pack == "Neoterra" and L >= 3:
         nt_court(d, L)
     if pack == "Cascadia" and L >= 3:                    # spruce stands: north meadow (L3), east of the garden
-        trees = [(37, 19), (47, 18), (57, 18), (30, 40)]  # (L4), round the watch tower and chapel (L5)
+        trees = [(37, 19), (47, 18), (57, 18), (30, 40), (61, 20)]  # (L4), round the watch tower and chapel (L5)
         trees += [(52, 45), (58, 45)] if L >= 4 else []
-        trees += [(45, 55), (45, 60), (60, 52), (60, 58), (38, 60), (5, 60), (53, 60), (24, 30), (27, 60)] if L >= 5 else []
+        trees += [(45, 55), (45, 60), (60, 52), (60, 58), (38, 60), (5, 60), (53, 60), (24, 30), (27, 60), (10, 30)] if L >= 5 else []
         for tx, tz in trees:
             tree(d, tx, tz, 2, "spruce", 7, 2)
     if pack == "Hearthwood" and L >= 3:                  # walnut by the library tower; apple orchard round the
@@ -3767,7 +3806,12 @@ def house_estate_hw(rel, L):
             (36, 3, 11, HAYZ), (37, 3, 11, HAYZ), (36, 4, 11, HAYX),
             (48, 2, 11, BRL()), (47, 2, 11, BRL("north")), (48, 2, 10, "composter[level=4]"),
             (48, 2, 6, BRL("west")), (36, 2, 4, CHEST("east")), (36, 2, 5, GRIND("east")),
-            (38, 6, 7, LANT), (45, 6, 7, LANT)])
+            (38, 6, 7, LANT), (45, 6, 7, LANT),
+            # workbench and tool rack on the west wall, grain store and water trough on the east wall
+            (36, 2, 7, "crafting_table"), (36, 2, 8, slab("dark_oak", "top")), (36, 3, 8, LANTF),
+            (36, 4, 7, "brown_wall_banner[facing=east]"),
+            (48, 2, 4, BRL("west")), (48, 2, 5, BRL("west")), (48, 3, 4, BRL("west")), (48, 2, 8, CAUL),
+            (48, 2, 9, CAUL), (40, 2, 11, BRL("north")), (41, 2, 11, BRL("north")), (40, 3, 11, HAYX)])
         wagon(d, 43, 8, 2, "dark_oak")
         recolor(d, [("deepslate_tile", "mud_brick")], (34, 2, 50, 13))
         for x in range(35, 50):
@@ -3883,7 +3927,11 @@ def house_estate_ca(rel, L):
                (43, 2, 19, fence("spruce")), (43, 2, 20, fence("spruce")), (32, 6, 22, LANT), (40, 6, 22, LANT),
                (34, 2, 26, CAUL), (35, 2, 26, CAUL), (36, 2, 26, BRL("north")),                  # trough and feed
                (36, 2, 18, BRL("south")), (37, 2, 18, BRL("south")), (38, 2, 18, slab("spruce", "top")),
-               (38, 3, 18, LANTF), (39, 2, 18, "smithing_table"), (32, 6, 19, LANT), (40, 6, 25, LANT)])
+               (38, 3, 18, LANTF), (39, 2, 18, "smithing_table"), (32, 6, 19, LANT), (40, 6, 25, LANT)]
+            # horse box in the west bay: rails with an opening, hay and water
+            + [(x, 2, 20, fence("spruce")) for x in (30, 31, 32, 33)]
+            + [(33, 2, z, fence("spruce")) for z in (21, 23, 24)]
+            + [(30, 2, 21, HAYY), (30, 2, 22, CAUL), (33, 3, 20, LANTF), (31, 2, 24, "brown_carpet")])
         wagon(d, 38, 22, 2, "spruce")
         recolor(d, [("spruce_planks", "mangrove_planks"), ("dark_oak", "deepslate_tile")], (27, 16, 45, 28, 3),
                 parts=("stairs", "slab"))
@@ -4263,8 +4311,15 @@ def cottage_pavilions_nt(rel, L):
         addon(d, 24, 3, 34, 10, "teahouse", h=4)
         fit(d, [(29, 2, 7, "bamboo_slab[type=top,waterlogged=false]"),                        # tea room
                 (29, 3, 7, "candle[candles=3,lit=false,waterlogged=false]"),
-                (28, 2, 7, "green_carpet"), (30, 2, 7, "green_carpet"), (29, 2, 8, "green_carpet"),
-                (29, 2, 6, "lime_carpet"), (25, 2, 9, "potted_bamboo"), (33, 2, 9, "potted_bamboo"),
+                (28, 2, 7, stair("bamboo", "west")), (30, 2, 7, stair("bamboo", "east")),    # floor cushions
+                (29, 2, 8, stair("bamboo", "south")), (29, 2, 6, "lime_carpet"), (28, 2, 6, "green_carpet"),
+                (30, 2, 6, "green_carpet"), (28, 2, 8, "green_carpet"), (30, 2, 8, "green_carpet"),
+                (25, 2, 9, "potted_bamboo"), (33, 2, 9, "potted_bamboo"),
+                (27, 2, 9, "chiseled_bookshelf[facing=north,slot_0_occupied=true,slot_1_occupied=true,"
+                           "slot_2_occupied=false,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]"),
+                (30, 2, 9, BRL("north")), (32, 2, 9, slab("birch", "top")),                      # tea chest, kettle
+                (32, 3, 9, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=false]"),
+                (33, 2, 5, stair("bamboo", "east")), (33, 2, 6, slab("birch", "top")), (33, 3, 6, "potted_fern"),
                 (25, 2, 4, "potted_azalea_bush"), (29, 4, 9, "green_wall_banner[facing=north]"),
                 (31, 2, 9, slab("birch", "top")), (31, 3, 9, POT), (27, 6, 6, "sea_lantern"), (31, 6, 6, "sea_lantern")])
         recolor(d, [("white_concrete", "glass")], (24, 3, 34, 10, 3))

@@ -735,6 +735,23 @@ def skytower_nt(rel, L):
     if PZ >= 11:
         d.chair(6, Y, PZ - 2, "south", "birch", sit=False)
         d.chair(7, Y, PZ - 2, "south", "birch", sit=False)
+    # roof-terrace dining set by the penthouse (all levels) and a grill corner until the hot tub arrives
+    d.set(14, Y, 7, slab("smooth_quartz", "top"))
+    d.set(15, Y, 7, slab("smooth_quartz", "top"))
+    d.set(14, Y + 1, 7, "potted_white_tulip")
+    d.chair(13, Y, 7, "west", "birch", sit=False)
+    d.chair(16, Y, 7, "east", "birch", sit=False)
+    d.chair(14, Y, 8, "south", "birch", sit=False) if PZ > 9 else None
+    d.chair(15, Y, 8, "south", "birch", sit=False) if PZ > 9 else None
+    if L < 3:
+        d.set(5, Y, 5, "smoker[facing=south,lit=false]")
+        d.set(6, Y, 5, slab("smooth_quartz", "top"))
+        d.set(7, Y, 5, "barrel[facing=up,open=false]")
+        for x in (8, 9, 10):
+            d.set(x, Y, 9, "light_gray_carpet")
+        d.chair(9, Y, 8, "north", "birch", sit=False)
+        d.set(10, Y, 8, slab("smooth_quartz", "top"))
+        d.set(10, Y + 1, 8, "potted_azure_bluet")
     if L >= 3:                                          # hot tub and loungers
         for x, z in cells(5, 5, 8, 7):
             d.set(x, Y, z, "smooth_quartz" if x in (5, 8) or z in (5, 7) else "water[level=0]")
@@ -1034,6 +1051,21 @@ def skytower_hw(rel, L):
         else:
             d.keg(a + 1, 17, 9, "north")
             d.set(a + 2, 17, 9, "chest[facing=north,type=single,waterlogged=false]")
+    # attic sitting corners and trunk stores either side of the stair (all levels)
+    for (rx, cx, bx, back) in ((3, 3, 2, "west"), (24, 26, 28, "east")):
+        rugc(d, rx, 12, rx + 2, 14, 17, "brown" if rx == 3 else "green")
+        d.chair(cx, 17, 12, back, "dark_oak", sit=False)
+        d.set(bx, 17, 14, "bookshelf")
+        d.set(bx, 18, 14, "bookshelf")
+        d.set(rx + 1, 22, 11, lantern())
+    for x in (8, 9, 19, 20):
+        d.set(x, 17, 15, "chest[facing=north,type=single,waterlogged=false]")
+    d.set(11, 17, 15, "barrel[facing=up,open=false]")
+    d.set(22, 17, 15, "barrel[facing=up,open=false]")
+    d.set(4, 17, 14, slab("dark_oak", "top"))
+    d.set(4, 18, 14, "candle[candles=2,lit=false,waterlogged=false]")
+    d.set(25, 17, 14, slab("dark_oak", "top"))
+    d.set(25, 18, 14, "potted_fern")
     # ---- front: portico, steps, railings and gardens
     for x in (13, 17):
         for y in (2, 3, 4):
@@ -1788,6 +1820,17 @@ def twin_hw(rel, L):
         for z in (5, 6, 13, 14):
             if x != 7:
                 d.set(x, 7, z, log("stripped_oak_log", "x"))
+    for z in (8, 9):                                          # loft: trunks, sawhorses, a bench under the light
+        d.set(3, 7, z, "chest[facing=east,type=single,waterlogged=false]")
+        d.set(11, 7, z + 1, "barrel[facing=west,open=false]")
+    for x in (5, 6):
+        d.set(x, 7, 10, fence("oak"))
+        d.set(x, 8, 10, slab("oak"))
+    d.set(8, 7, 16, slab("dark_oak", "top"))
+    d.set(8, 8, 16, lantern(False))
+    d.set(3, 7, 16, "hay_block[axis=y]")
+    d.set(4, 7, 16, "hay_block[axis=y]")
+    d.set(7, 9, 10, lantern())
     # ---- annex (masons' lodge) and the yard
     add_child(d, G["AX"], 2, G["AZ"], G["AW"], G["AH"], G["AD"], G["HUT"], ANNEX)
     for x in range(14, 17):                                    # timber stack
@@ -4406,6 +4449,95 @@ HW_S_PLANS["attic"] += """
         L 49 3
         L 40 8
 """
+HW_S_PLANS["third"] += """
+        K 0 6 2
+        K 0 7 2
+        T 14 3 candle
+        C 13 3 w
+        C 15 3 e
+        R 42 3 44 5 blue
+        L 14 3
+"""
+HW_S_PLANS["fourth"] += """
+        T 12 5 lamp
+        C 11 5 w
+        C 13 5 e
+        X 12 0 chest:s
+        X 13 0 chest:s
+        X 14 0 barrel:s
+        R 26 4 30 6 red
+        G 28 0 s
+        C 46 7 s
+        C 47 7 s
+        R 45 8 48 9 gray
+        L 12 5
+"""
+HW_S_PLANS["attic"] += """
+        X 12 6 chest:n
+        T 14 3 candle
+        C 13 3 w
+        C 15 3 e
+        K 37 2 2
+        K 37 3 2
+        P 33 1 potted_fern
+        R 45 7 48 9 green
+        T 51 8 lamp
+        C 50 8 w
+        C 52 8 e
+        L 14 3
+        L 51 8
+"""
+HW_S_PLANS["attic"] += """
+        X 3 0 red_bed[facing=north,occupied=false,part=head]
+        X 3 1 red_bed[facing=north,occupied=false,part=foot]
+        X 6 0 blue_bed[facing=north,occupied=false,part=head]
+        X 6 1 blue_bed[facing=north,occupied=false,part=foot]
+        X 11 0 green_bed[facing=north,occupied=false,part=head]
+        X 11 1 green_bed[facing=north,occupied=false,part=foot]
+        X 16 0 yellow_bed[facing=north,occupied=false,part=head]
+        X 16 1 yellow_bed[facing=north,occupied=false,part=foot]
+        S 4 0 candle
+        S 7 0 candle
+        S 12 0 candle
+        X 3 2 chest:n
+        X 6 2 chest:n
+        X 11 2 chest:n
+        X 16 2 chest:n
+        X 28 6 green_wool
+        X 29 6 green_wool
+        X 30 6 green_wool
+        X 28 7 green_wool
+        X 29 7 green_wool
+        X 30 7 green_wool
+        X 26 10 fence
+        X 27 10 fence
+        L 29 6
+        X 41 4 barrel
+        X 41 4 barrel 1
+        X 42 4 barrel
+        X 42 4 barrel 1
+        X 42 1 chest:s
+        X 43 1 chest:s
+        X 44 1 chest:s
+"""
+HW_S_PLANS["fourth"] += """
+        C 24 9 s
+        C 25 9 s
+        C 26 9 s
+        C 30 9 s
+        C 31 9 s
+        C 32 9 s
+        X 26 0 candle
+        X 30 0 candle
+        X 7 2 barrel
+        X 7 2 barrel 1
+        X 7 3 barrel
+        X 7 3 barrel 1
+        X 7 7 barrel
+        X 7 7 barrel 1
+        X 7 8 barrel
+        X 7 8 barrel 1
+"""
 HW_E_PLANS["billiard"] += """
         T 6 9 candle
         C 5 9 w
@@ -5010,6 +5142,30 @@ CA_S_PLANS = {
 CA_S_FLOORS = ["dining", "lounge", "library", "bar", "hall"]
 
 # round 5: hand-placed extras where the east wing and the south chalet were still thin
+CA_HALL_PLANS["loft"] += """
+        K 0 2 2
+        K 0 3 2
+        K 0 13 2
+        K 0 14 2
+        T 3 12 candle
+        C 3 11 n
+        C 3 13 s
+        X 12 13 chest:w
+        X 12 14 chest:w
+        X 5 16 barrel:n
+        S 6 16 pot
+        R 5 13 8 15 brown
+        L 3 12
+"""
+CA_E_PLANS["lounge"] += """
+        K 0 9 2
+        K 0 10 2
+        T 7 10 candle
+        C 6 10 w
+        C 8 10 e
+        X 0 13 chest:e
+        L 7 10
+"""
 CA_E_PLANS["games"] += """
         K 10 9 2
         K 10 10 2
@@ -5430,6 +5586,55 @@ NT_CANTEEN_PLANS = {
 }
 NT_CANTEEN_FLOORS = ["canteen", "kitchen", "lockers", "gym", "training"]
 
+# round 5: fuller fit-out of the depot's precast hall, canteen kitchen and locker floor (hand-placed)
+NT_HALL_PLANS["casting"] += """
+%s
+%s
+        X 21 1 spruce_slab[type=bottom,waterlogged=false]
+        X 22 1 spruce_slab[type=bottom,waterlogged=false]
+        X 23 1 spruce_slab[type=bottom,waterlogged=false]
+        X 21 1 smooth_stone 1
+        X 22 1 white_concrete 1
+        X 23 1 smooth_stone 1
+%s
+        T 24 10 lamp
+        C 25 10 e
+        C 24 9 n
+        L 5 3
+        L 13 3
+        L 17 8
+        L 24 10
+""" % (_row("X", [(x, z) for x in range(13, 21) for z in (3, 4)], "smooth_stone_slab[type=bottom,waterlogged=false]"),
+       _row("X", [(x, z) for x in range(13, 21) for z in (8, 9)], "smooth_stone_slab[type=bottom,waterlogged=false]"),
+       _row("X", [(x, 11) for x in range(3, 9)], "iron_bars"))
+NT_CANTEEN_PLANS["kitchen"] += """
+        X 4 6 counter
+        X 5 6 counter
+        X 6 6 counter
+        X 5 6 pot 1
+        X 12 14 iron_block
+        X 13 14 iron_block
+        X 12 14 iron_block 1
+        X 13 14 iron_block 1
+        X 13 13 barrel:w
+        S 0 8 pot
+        S 0 9 candle
+        X 0 10 cauldron
+        X 0 11 sink
+        L 5 6
+        L 12 13
+"""
+NT_CANTEEN_PLANS["lockers"] += """
+%s
+%s
+        X 3 16 cauldron
+        X 4 16 cauldron
+        C 7 13 e
+        C 7 14 e
+        L 9 4
+""" % (_row("X", [(9, z) for z in range(2, 10)], "chest:w"), _row("X", [(9, z) for z in range(2, 10)], "chest:w 1"))
+
+
 # Hearthwood twin builder – timber seasoning barn (9 x 13; stair lx 6-8; door lx 4)
 HW_BARN_PLANS = {
     "timber": """
@@ -5642,6 +5847,35 @@ HW_JOIN_PLANS["store"] += """
         L 7 9
 """ % (_row("X", [(x, z) for x in (0, 7, 13) for z in (2, 5, 8, 11)], "fence"),
        _row("X", [(x, z) for x in (0, 7, 13) for z in (2, 5, 8, 11)], "fence 1"))
+HW_MASON_PLANS["mess"] += """
+        X 0 7 barrel:e
+        X 0 8 barrel:e
+        X 2 10 counter
+        X 3 10 counter
+        X 2 10 pot 1
+        X 3 10 lamp 1
+        T 22 8 candle
+        C 21 8 w
+        C 23 8 e
+        K 26 9 2
+        K 26 10 2
+        R 6 8 12 9 red
+        G 13 0 s
+        L 22 8
+        L 3 9
+"""
+HW_BARN_PLANS["loft"] += """
+        X 4 12 hay
+        X 5 12 hay
+        X 4 12 hay 1
+        X 2 12 barrel:n
+        T 4 7
+        C 4 8 s
+        X 4 7 lamp 1
+        X 8 10 chest:w
+        X 8 11 chest:w
+        L 4 9
+"""
 HW_MASON_PLANS["banker"] += """
         X 0 4 chest:e
         X 0 5 chest:e
@@ -5896,6 +6130,27 @@ CA_MILL_PLANS["filing"] += """
         G 0 3 e
         K 20 8 2
 """
+CA_COOK_PLANS["kitchen"] += """
+        X 0 6 barrel:e
+        X 0 7 barrel:e
+        S 0 8 pot
+        X 0 9 cauldron
+        X 5 7 counter
+        X 6 7 counter
+        X 7 7 counter
+        X 7 7 lamp 1
+        X 6 7 pot 1
+        X 13 12 hay
+        X 14 12 hay
+        X 18 10 chest:w
+        X 18 11 chest:w
+        T 3 9
+        C 3 10 s
+        X 3 9 melon 1
+        K 18 8 2
+        L 3 9
+        L 15 11
+"""
 CA_COOK_PLANS["lounge"] += """
         K 0 10 2
         K 0 11 2
@@ -6109,6 +6364,96 @@ def grow_sky_hw(d, L):
     return d
 
 
+def lookout_ca(d, n):
+    """Fire-lookout character for the Cascadia tower: stone skirt at the foot, flower boxes under the windows of
+    alternate storeys, and a braced, railed lookout gallery with its own eave round the top storey."""
+    x1, z1, x2, z2 = 22, 40, 30, 50
+    for x, z in cells(x1 - 1, z1 - 1, x2 + 1, z2 + 1):           # battered stone skirt
+        if (x in (x1 - 1, x2 + 1) or z in (z1 - 1, z2 + 1)) and not (z == z1 - 1 and 25 <= x <= 27):
+            d.set(x, 2, z, stone(x, 2, z))
+            d.set(x, 3, z, "cobblestone_slab[type=bottom,waterlogged=false]")
+    for f in range(2, n - 1, 2):                                # window boxes, alternating faces
+        Y = 2 + 5 * f
+        spots = ([(24, z1 - 1), (28, z1 - 1), (24, z2 + 1), (28, z2 + 1)] if f % 4 == 2 else
+                 [(x1 - 1, 42), (x1 - 1, 46), (x2 + 1, 42), (x2 + 1, 46)])
+        for i, (x, z) in enumerate(spots):
+            d.set(x, Y, z, slab("spruce", "top"))
+            d.set(x, Y + 1, z, ("potted_red_tulip", "potted_fern", "potted_blue_orchid", "potted_dandelion")[i])
+    Yt = 2 + 5 * (n - 1)
+    top = Yt + 4
+    for x, z in cells(x1 - 2, z1 - 2, x2 + 2, z2 + 2):           # gallery deck, railing, eave
+        if x1 - 2 <= x <= x1 - 1 or x2 + 1 <= x <= x2 + 2 or z1 - 2 <= z <= z1 - 1 or z2 + 1 <= z <= z2 + 2:
+            d.set(x, Yt - 1, z, "dark_oak_planks")
+            if x in (x1 - 2, x2 + 2) or z in (z1 - 2, z2 + 2):
+                d.set(x, Yt, z, fence("spruce"))
+                d.set(x, top - 1, z, "dark_prismarine_slab[type=bottom,waterlogged=false]")
+    for x, z in ((x1 - 2, z1 - 2), (x2 + 2, z1 - 2), (x1 - 2, z2 + 2), (x2 + 2, z2 + 2)):
+        for y in range(Yt, top - 1):
+            d.set(x, y, z, log("spruce_log", "y"))
+    for z in (42, 45, 48):                                      # knee braces under the deck
+        d.set(x1 - 1, Yt - 2, z, stair("dark_oak", "east", "top"))
+        d.set(x2 + 1, Yt - 2, z, stair("dark_oak", "west", "top"))
+    for x in (24, 26, 28):
+        d.set(x, Yt - 2, z1 - 1, stair("dark_oak", "south", "top"))
+        d.set(x, Yt - 2, z2 + 1, stair("dark_oak", "north", "top"))
+    d.door(26, Yt, z1, "north", "dark_oak")
+    d.set(x1 - 2, Yt + 1, z1 - 2, lantern(False))
+    d.set(x2 + 2, Yt + 1, z2 + 2, lantern(False))
+    d.set(24, Yt, z1 - 2, "bell[attachment=floor,facing=north,powered=false]")
+
+
+def chalet_ca(d):
+    """Alpine character for the Cascadia south chalet: covered entrance porch, carved balconies on alternate
+    storeys (south deep and long, north shorter), a top-storey gable balcony, each opened by a door."""
+    for x, z in cells(40, 33, 56, 35):                          # entrance porch
+        d.set(x, 1, z, "spruce_planks")
+        d.set(x, 6, z, slab("dark_oak"))
+    for x in (40, 44, 52, 56):
+        for y in range(2, 6):
+            d.set(x, y, 33, log("spruce_log", "y"))
+    d.chair(42, 2, 35, "south", "spruce", sit=False)
+    d.chair(54, 2, 35, "south", "spruce", sit=False)
+    d.set(46, 5, 34, lantern())
+    d.set(50, 5, 34, lantern())
+    for f, (xa, xb), side in ((1, (40, 56), "s"), (3, (42, 54), "s"), (5, (44, 52), "s"),
+                              (2, (42, 54), "n"), (4, (44, 52), "n")):
+        Y = 2 + 5 * f
+        zs = (53, 54) if side == "s" else (35, 34)
+        for x in range(xa, xb + 1):
+            for z in zs:
+                d.set(x, Y - 1, z, "spruce_planks")
+            d.set(x, Y, zs[1], fence("spruce"))
+        for z in zs:
+            d.set(xa, Y, z, fence("spruce"))
+            d.set(xb, Y, z, fence("spruce"))
+        for x in range(xa, xb + 1, 4):
+            d.set(x, Y - 2, zs[0], stair("dark_oak", "north" if side == "s" else "south", "top"))
+        d.door(48, Y, 52 if side == "s" else 36, "south" if side == "s" else "north", "dark_oak")
+        d.set(xa + 1, Y, zs[0], "potted_red_tulip")
+        d.set(xb - 1, Y, zs[0], "potted_fern")
+        d.chair(xa + 2, Y, zs[0], "east", "spruce", sit=False)
+    Y = 2 + 5 * 6                                               # gable-end balcony at the top
+    for x, z in cells(59, 41, 60, 47):
+        d.set(x, Y - 1, z, "spruce_planks")
+        if x == 60 or z in (41, 47):
+            d.set(x, Y, z, fence("spruce"))
+    for z in (42, 46):
+        d.set(59, Y - 2, z, stair("dark_oak", "west", "top"))
+    d.door(58, Y, 44, "east", "dark_oak")
+    d.set(59, Y, 42, "potted_fern")
+    # cross-gable over the middle of the south front, breaking the long eave line
+    yb = 37
+    for x, z in cells(45, 48, 51, 52):
+        for y in (yb, yb + 1):
+            if x in (45, 51) or z == 52:
+                d.set(x, y, z, "glass_pane" if z == 52 and 47 <= x <= 49 else
+                      (log("spruce_log", "y") if x in (45, 51) and z == 52 else "spruce_planks"))
+            else:
+                d.set(x, y, z, AIR)
+    d.gable(45, 48, 51, 52, yb + 2, "z", "deepslate_tile_stairs", "deepslate_tile_slab", "spruce_planks")
+    d.set(48, yb + 3, 52, log("spruce_log", "y"))                # king post in the gable
+
+
 def grow_sky_ca(d, L):
     P = "Cascadia"
     regrid(d, 64, 64, 16, 0, 80)
@@ -6199,6 +6544,7 @@ def grow_sky_ca(d, L):
         nT = {4: 9, 5: 13}[L]
         lv += raise_building(d, P, (22, 40, 30, 50), 2, nT, CA_T_PLANS, ca_t_floors(nT), "dark_oak", "dark_oak",
                              roof="hip", doors=[(26, 40, "north")], st=CA_TOWER)
+        lookout_ca(d, nT)
         lv += raise_building(d, P, (2, 32, 16, 46), 2, 2, CA_B_PLANS, ["pool", "sauna"], "spruce", "spruce",
                              roof="gable", axis="x", doors=[(9, 32, "north")], st=CA_BATH)
         lv += raise_building(d, P, (2, 50, 16, 62), 2, 2, CA_N_PLANS, ["stable", "hayloft"], "spruce", "spruce",
@@ -6225,6 +6571,7 @@ def grow_sky_ca(d, L):
     if L >= 5:                                        # south chalet wing: dining room, suites lounge, library
         lv += raise_building(d, P, (38, 36, 58, 52), 2, 7, CA_S_PLANS, CA_S_FLOORS, "spruce", "dark_oak",
                              roof="gable", axis="x", doors=[(48, 36, "north")], st=CA_SOUTH)
+        chalet_ca(d)
         for x, z in ((34, 56), (20, 56), (44, 58), (58, 58)):
             tree(d, x, z, 2, "spruce_log", "spruce_leaves", 7)
     for x, z in grass:                               # meadow; trodden ground under eaves, decks and porches
