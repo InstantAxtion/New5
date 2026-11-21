@@ -2686,7 +2686,8 @@ def place_plan(d, rows, x0, y, z0, extra=()):
 
 
 def bld(d, x1, z1, x2, z2, n, door, plans, axis="x", roofkind="gable", tall=False, wall=None, glass=None,
-        extra=(), ext=(), sign=None, roofitems=(), chimney=True, dormer=True):
+        extra=(), ext=(), sign=None, roofitems=(), chimney=True, dormer=True, mwall=None, mroof=None, mlog=None,
+        keep_roof=False, win=3, lower=None, deck=None, parapet=None):
     """Draw one add-on building and lay its hand-drawn plans. n storeys (pitch 5; a tall single storey has 8-high
     walls). Stairs are fixed: flight k rises along the north interior row from the west (k even) or along the
     south row from the east (k odd). door = (side, offset from x1/z1). ext = [(dx, y, dz, block)] relative to
@@ -2695,32 +2696,44 @@ def bld(d, x1, z1, x2, z2, n, door, plans, axis="x", roofkind="gable", tall=Fals
     P = d.pack
     y0 = 2
     salt = f"m{x1},{z1}"
-    mwall = d.vary(["smooth_sandstone", "white_terracotta", "calcite", "yellow_terracotta", "bricks"], salt) \
-        if P == "Hearthwood" else d.vary(["white_concrete", "light_gray_concrete", "white_terracotta",
-                                          "quartz_block"], salt)
-    mroof = d.vary({"Hearthwood": ["dark_prismarine", "brick", "mud_brick", "granite"],
-                    "Cascadia": ["cobbled_deepslate", "dark_prismarine", "mangrove", "deepslate_tile"]}.get(P, ["x"]),
-                   salt)
-    mlog = d.vary(["stripped_spruce_log", "stripped_dark_oak_log", "spruce_log", "stripped_birch_log"], salt)
+    mwall = mwall or (d.vary(["smooth_sandstone", "white_terracotta", "calcite", "yellow_terracotta", "bricks"], salt)
+                      if P == "Hearthwood" else d.vary(["white_concrete", "light_gray_concrete", "white_terracotta",
+                                                        "quartz_block"], salt))
+    mroof = mroof or d.vary({"Hearthwood": ["dark_prismarine", "brick", "mud_brick", "granite"],
+                             "Cascadia": ["cobbled_deepslate", "dark_prismarine", "mangrove", "deepslate_tile"]}
+                            .get(P, ["x"]), salt)
+    mlog = mlog or d.vary(["stripped_spruce_log", "stripped_dark_oak_log", "spruce_log", "stripped_birch_log"], salt)
     H = 8 if tall else 4
     tops = []
     for k in range(n):
         yb = y0 + 5 * k
         yt = yb + H - 1
         if P == "Hearthwood":
-            hw_body(d, x1, z1, x2, z2, yb, yt, wall=wall or ("bricks" if k == 0 and n > 2 else mwall),
+            hw_body(d, x1, z1, x2, z2, yb, yt, wall=wall or ((lower or "bricks") if k == 0 and (n > 2 or lower)
+                                                            else mwall),
                     base="stone_bricks" if k == 0 else "dark_oak_planks", floor=S["floor"] if k == 0 else None,
                     ceiling=None if tall else "dark_oak_planks")
         elif P == "Cascadia":
             cas_body(d, x1, z1, x2, z2, yb, yt, floor=S["floor"] if k == 0 else None, footing=k == 0,
                      ceiling=None if tall else "spruce_planks", logm=mlog)
+            if wall and wall != "glass":
+                for x, z in perim(x1, z1, x2, z2):                 # river-rock / plank-sided storey
+                    if not (x in (x1, x2) and z in (z1, z2)):
+                        for yy in range(yb + 1, yt + 1):
+                            d.set(x, yy, z, wall)
+            if lower and k == 0:
+                for x, z in perim(x1, z1, x2, z2):
+                    if not (x in (x1, x2) and z in (z1, z2)):
+                        for yy in range(yb + 1, yt + 1):
+                            d.set(x, yy, z, lower)
             if wall == "glass":
                 for x, z in perim(x1, z1, x2, z2):
                     if not ((x - x1) % 3 == 0 and z in (z1, z2) or (z - z1) % 3 == 0 and x in (x1, x2)):
                         for yy in range(yb + 1, yt + 1):
                             d.set(x, yy, z, "glass")
         else:
-            neo_body(d, x1, z1, x2, z2, yb, yt, wall=wall or mwall, floor=S["floor"] if k == 0 else None,
+            neo_body(d, x1, z1, x2, z2, yb, yt, wall=(lower if lower and k == 0 else wall or mwall),
+                     floor=S["floor"] if k == 0 else None,
                      roof_=None)
             if not tall:
                 d.fill(x1, yb + 4, z1, x2, yb + 4, z2, "light_gray_concrete")
@@ -2743,7 +2756,7 @@ def bld(d, x1, z1, x2, z2, n, door, plans, axis="x", roofkind="gable", tall=Fals
                 if along % 4 != 0:
                     d.set(x, ya, z, glass or "glass_pane")
                     d.set(x, yb_, z, glass or "glass_pane")
-            elif along % 3 == 2 and (P != "Hearthwood" or "log" not in d.get(x, ya, z)):
+            elif along % win == win - 1 and (P != "Hearthwood" or "log" not in d.get(x, ya, z)):
                 d.window(x, ya, z, x, yb_, z, glass)
     # door + transom + path
     for yy in (y0, y0 + 1, y0 + 2):
@@ -2786,7 +2799,7 @@ def bld(d, x1, z1, x2, z2, n, door, plans, axis="x", roofkind="gable", tall=Fals
             return ytop + 1
         return glass_gable(d, x1, z1, x2, z2, ytop + 1, axis, S["wood"], "glass", 3, "glass_pane", oh=0)
     if P == "Neoterra" or roofkind == "flat":
-        d.flat(x1, z1, x2, z2, ytop + 1, "smooth_quartz", "white_concrete", "smooth_quartz_slab")
+        d.flat(x1, z1, x2, z2, ytop + 1, deck or "smooth_quartz", parapet or "white_concrete", "smooth_quartz_slab")
         for (ddx, ddz, blk) in roofitems:
             d.set(x1 + ddx, ytop + 2, z1 + ddz, blk)
         return ytop + 1
@@ -2795,10 +2808,15 @@ def bld(d, x1, z1, x2, z2, n, door, plans, axis="x", roofkind="gable", tall=Fals
         ridge = d.hip(x1, z1, x2, z2, ytop + 1, mroof + "_stairs", mroof + "_slab", 1)
         d.set((x1 + x2) // 2, ridge + 1, (z1 + z2) // 2, "lightning_rod[facing=up,powered=false,waterlogged=false]")
     else:
-        ridge = roof(d, x1, z1, x2, z2, ytop + 1, axis, mroof, mroof + "_slab", gwall)
+        ridge = roof(d, x1, z1, x2, z2, ytop + 1, axis, mroof, mroof + "_slab", gwall, keep=keep_roof)
         if dormer:
             dormers(d, x1, z1, x2, z2, ytop + 1, axis, gwall, mroof, glass)
-    if chimney:                                                    # stack on the outside of a gable end
+    if isinstance(chimney, tuple):                                 # stack at a hand-picked spot outside a wall
+        cx, cz = chimney
+        for yy in range(y0, ridge + 3):
+            d.set(cx, yy, cz, S["chim"])
+        d.set(cx, ridge + 3, cz, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+    elif chimney:                                                  # stack on the outside of a gable end
         if axis == "x":
             cx, cz, wx, wz, f = x2 + 1, (z1 + z2) // 2, x2, (z1 + z2) // 2, "west"
         else:
@@ -3038,1450 +3056,2456 @@ def GREEN(dxs, dz):
     return [(x, dz, "moss_block") for x in dxs] + [(x, dz - 1, "azalea") for x in dxs[::2]]
 
 
-# ============================================================================================ COOK add-ons
-@growth("cook", "Hearthwood")
-def _g_cook_hw(d, L):
-    if L >= 2:
-        SHED(d, 27, 2, ["KkYkhkYkK",
-                        "....l....",
-                        "..UAU.UVU",
-                        "....l....",
-                        "WWhk.kYkK"], ["Pantry"])
-    if L >= 3:
-        plans = [["       b.Zb",
-                  ".......l...",
-                  "omUuU..wR.p",
-                  "..wte..wTR.",
-                  "...s...wR.p",
-                  "......l....",
-                  "kYk.D.bb.Vc"],
-                 ["       NHND",
-                  ".......lf..",
-                  "Hf..rrr..fH",
-                  "N...rrr...N",
-                  "Hf..rrr..fH",
-                  "...l.......",
-                  "kD........."]]
-        if L >= 5:
-            plans.append(["HN.bb.bb.NH",
-                          "f....l....f",
-                          "..T.....T..",
-                          "..s.....s..",
-                          "...rrrrr...",
-                          ".k.........",
-                          "kD.        "])
-        HOUSE(d, 27, 12, plans, ["Staff", "House"])
-    if L >= 4:
-        SHED(d, 41, 3, ["kYkkk.kkk",
-                        "....l....",
-                        "..k.k.k.k",
-                        ".........",
-                        "pkkkk.kkp"], ["Brew", "House"])
-    if L >= 5:
-        SHED(d, 42, 23, ["uuu.WWW.u",
-                         "....l....",
-                         "..TTT.TTT",
-                         ".........",
-                         "WWW.p.uuu"], ["Laundry"])
-    if L >= 4:
-        HALL(d, 2, 30, ["bP.P.P.P.P.P.P.Pb",
-                        "........l........",
-                        ".nnnnnnn.nnnnnnn.",
-                        ".TTTTTTT.TTTTTTT.",
-                        ".sssssss.sssssss.",
-                        "....l.......l....",
-                        "rrrrrrrrrrrrrrrrr",
-                        "...TTTTTTTTTTT...",
-                        "p..sssssssssss..p"], ["Banquet", "Hall"])
-    if L >= 5:
-        HALL(d, 24, 30, ["p.b.b.b...b.b.b.p",
-                         ".................",
-                         ".wte..wte..wte...",
-                         "........l........",
-                         "..rrrrrrrrrrrrr..",
-                         "..rrrrrrRrrrrrr..",
-                         "........l........",
-                         ".wte..wte..wte.Z.",
-                         "p......UUU......p"], ["Garden", "Room"])
-        for x in (5, 14, 31, 40):                                    # orchard along the back of the site
-            tree(d, x, 45)
-        tree(d, 48, 34)
-        tree(d, 22, 47)
-        tree(d, 48, 46)
-        lamp_post(d, 10, 44)
-        lamp_post(d, 26, 44)
-        bench(d, 19, 44, "north", 3)
-        bench(d, 35, 44, "north", 3)
+# ============================================================================================ SITE PIECES
+# Each helper below draws ONE piece at the coordinates its caller passes; none of them looks for a place by itself.
+# The complexes further down list every building, window box, lamp, sign, cart and tree by hand.
+def put(d, items):
+    """Explicit exterior dressing: [(x, y, z, block), ...] at absolute coordinates."""
+    for x, y, z, b in items:
+        d.set(x, y, z, b)
 
 
-@growth("cook", "Cascadia")
-def _g_cook_cas(d, L):
-    if L >= 2:
-        SHED(d, 30, 2, ["hYkkh.kkY",
-                        ".........",
-                        "..k.l.kKk",
-                        ".........",
-                        "WhkYk.hWk"], ["Root", "Cellar"])
-    if L >= 3:
-        plans = [["       oUmu",
-                  ".......l...",
-                  "..nnn..p..b",
-                  "..TTT......",
-                  "..sss..wTe.",
-                  "....l......",
-                  "kYk.hW..kYk"],
-                 ["       HNH.",
-                  ".......f.f.",
-                  "Hf.......fH",
-                  "N..rrrrr..N",
-                  "Hf.......fH",
-                  "..l........",
-                  "kDk........"]]
-        if L >= 5:
-            plans.append(["HNH.bb.HNHD",
-                          "f.f.l..f.f.",
-                          "...........",
-                          "..T..T..T..",
-                          "..s..s..s..",
-                          "kk.........",
-                          "Yh.        "])
-        HOUSE(d, 30, 12, plans, ["Bunkhouse"])
-    if L >= 4:
-        SHED(d, 46, 2, ["Ykh.kYh.k",
-                        "....l....",
-                        "..h.h.h.h",
-                        ".........",
-                        "kkk.h.kkk"], ["Smoke", "House"])
-    if L >= 5:
-        SHED(d, 46, 12, ["uu.WW.uu.",
-                         "....l....",
-                         "..UUU.UUU",
-                         ".........",
-                         "WW..p..uu"], ["Wash", "House"])
-    if L >= 4:
-        HALL(d, 2, 24, ["kYk.oUmU..UoUm.kY",
-                        "........l........",
-                        ".nnnnnn...nnnnnn.",
-                        ".TTTTTT...TTTTTT.",
-                        ".ssssss...ssssss.",
-                        "........l........",
-                        ".nnnnnn...nnnnnn.",
-                        ".TTTTTT...TTTTTT.",
-                        ".ssssss...ssssss."], ["Mess", "Hall"])
-    if L >= 5:
-        HALL(d, 24, 24, ["h.h.h.k...k.h.h.h",
-                         ".................",
-                         "..rrrrrrrrrrrrr..",
-                         "..rrrrrrrrrrrrr..",
-                         "Z.rrrrrrlrrrrrr.L",
-                         "..rrrrrrrrrrrrr..",
-                         "..rrrrrrrrrrrrr..",
-                         ".................",
-                         "wte.wte.kYk.wte.p"], ["Dance", "Barn"])
-        for x in (6, 16, 30, 40):
-            spruce_tree(d, x, 40)
-        spruce_tree(d, 50, 30)
-        lamp_post(d, 11, 38)
-        lamp_post(d, 35, 38)
-        bench(d, 22, 38, "north", 3)
+def wbox(x, z, facing, pot, wood="spruce", y=2):
+    """One window box just outside a ground-floor window: a trapdoor sill with a potted flower on it."""
+    return [(x, y, z, td(wood, facing, "top")), (x, y + 1, z, "potted_" + pot)]
 
 
-@growth("cook", "Neoterra")
-def _g_cook_neo(d, L):
-    if L >= 2:
-        SHED(d, 23, 2, ["kkk.kkk.k",
-                        ".........",
-                        "..k.l.k.k",
-                        ".........",
-                        "KkK.KkK.K"], ["COLD", "STORE"])
-    if L >= 3:
-        plans = [["       bEbC",
-                  ".......l...",
-                  "..wTe..TT..",
-                  "..wTe..s...",
-                  "..wTe......",
-                  "....l....p.",
-                  "p.Z..kk..Vp"],
-                 ["       HNHD",
-                  ".......f.f.",
-                  "HfN......fH",
-                  "...rrrr....",
-                  "HfN......fH",
-                  "...l.......",
-                  "kD........."]]
-        if L >= 5:
-            plans.append(["Hf.bb.bb.fH",
-                          ".....l.....",
-                          "..TT...TT..",
-                          "..s.....s..",
-                          "...rrrrr...",
-                          "p..........",
-                          "Dk.        "])
-        HOUSE(d, 23, 12, plans, ["STAFF"], roofitems=SOLAR + GREEN([1, 3, 5, 7, 9, 11], 7))
-    if L >= 4:
-        SHED(d, 37, 2, ["KkK.kkk.K",
-                        "....l....",
-                        "..kKk.kKk",
-                        ".........",
-                        "p.k.k.k.p"], ["WINE"])
-    if L >= 5:
-        SHED(d, 38, 12, ["u.u.u.W.W",
-                         "....l....",
-                         "..UUUUU..",
-                         ".........",
-                         "p.WWW.uup"], ["LAUNDRY"])
-    if L >= 4:
-        HALL(d, 3, 21, ["pb.b.b.b.b.b.b.bp",
-                        ".................",
-                        ".nn..nn...nn..nn.",
-                        ".TT..TT...TT..TT.",
-                        ".ss..ss...ss..ss.",
-                        "........l........",
-                        ".nn..nn...nn..nn.",
-                        ".TT..TT...TT..TT.",
-                        ".ss..ss.p.ss..ss."], ["SKY", "DINING"],
-             roofitems=GREEN([2, 4, 6, 8, 10, 12, 14, 16], 9) + [(x, 3, "daylight_detector[inverted=false,power=0]")
-                                                                  for x in range(3, 15)])
-    if L >= 5:
-        HALL(d, 25, 25, ["b.b.b.b...b.b.b.b",
-                         ".................",
-                         "..wTe.......wTe..",
-                         "..wTe...l...wTe..",
-                         ".................",
-                         "....TTTTTTTTT....",
-                         "....s...C...s....",
-                         ".................",
-                         "p.kk..Z...Z..kk.p"], ["ORBIT", "HOTEL"],
-             roofitems=SOLAR + GREEN([9, 11, 13, 15], 8))
-        for x in (6, 16, 30, 40):
-            tree(d, x, 39, "birch")
-        tree(d, 46, 28, "birch")
-        tree(d, 25, 41, "birch")
-        tree(d, 46, 40, "birch")
-        lamp_post(d, 11, 37)
-        lamp_post(d, 35, 37)
-        bench(d, 21, 37, "north", 3)
+def torch(x, y, z, facing):
+    return [(x, y, z, f"wall_torch[facing={facing}]")]
 
 
-def garden(d, gz, trees=(6, 16, 30, 40), extra_trees=(), lamps=(11, 35), benches=(20, 36)):
-    """The L5 garden strip along the back of the site: hand-placed trees, lamp posts and benches."""
-    kind = {"Hearthwood": "oak", "Cascadia": "spruce", "Neoterra": "birch"}[d.pack]
-    for x, z in [(x, gz) for x in trees] + list(extra_trees):
-        if kind == "spruce":
-            spruce_tree(d, x, z)
-        else:
-            tree(d, x, z, kind)
-    for x in lamps:
-        lamp_post(d, x, gz - 1)
-    for x in benches:
-        bench(d, x, gz - 1, "north", 3)
+def label(d, x, y, z, facing, lines, wood=None, color=None):
+    """The building's name board at one spot beside its door."""
+    P = d.pack
+    d.sign(x, y, z, facing, lines, wood or STY[P]["wood"], glow=P == "Neoterra",
+           color=color or ("cyan" if P == "Neoterra" else "black"))
 
 
-# ============================================================================================ COOKERY add-ons
-@growth("cookery", "Hearthwood")
-def _g_cookery_hw(d, L):
-    if L >= 2:
-        SHED(d, 25, 2, ["hYkKkhYkK",
-                        "....l....",
-                        "..hh.YkY.",
-                        "....l....",
-                        "kKkYhkKkh"], ["Larder"])
-    if L >= 3:
-        plans = [["       uUuU",
-                  ".......l...",
-                  "uUu..wte..p",
-                  "...........",
-                  "UoU..wte..k",
-                  "....l......",
-                  "kKk.hh.YkKk"],
-                 ["       HNH.",
-                  ".......f.f.",
-                  "Hf..T....fH",
-                  "N...s.....N",
-                  "Hf.rrr...fH",
-                  "...l.......",
-                  "kD........."]]
-        if L >= 5:
-            plans.append(["bbE..C.TT.D",
-                          ".....l..s..",
-                          "...........",
-                          "..wTe...Hf.",
-                          "..wTe......",
-                          "pk.........",
-                          "kD.        "])
-        HOUSE(d, 25, 12, plans, ["Scullery"])
-    if L >= 4:
-        HALL(d, 2, 24, ["oUoUmUu..UuUoUoUm",
-                        "........l........",
-                        "..UUUUU...UUUUU..",
-                        "..UAUVU...UAUVU..",
-                        ".................",
-                        "kK.....l.....kKk.",
-                        ".................",
-                        "..nnnn....nnnn...",
-                        "..TTTT....TTTT..."], ["Great", "Kitchen"])
-        SHED(d, 40, 2, ["kkkkk.kkk",
-                        "....l....",
-                        "..YkY.KkK",
-                        ".........",
-                        "hhh.k.hhh"], ["Stores"])
-    if L >= 5:
-        HALL(d, 24, 24, ["b.p.b.p...p.b.p.b",
-                         ".................",
-                         ".nnnnnnnnnnnnnnn.",
-                         ".TTTTTTTTTTTTTTT.",
-                         ".sssssssssssssss.",
-                         "........l........",
-                         "..wte.......wte..",
-                         "..wte...Z...wte..",
-                         "p...............p"], ["Servants'", "Hall"])
-        SHED(d, 41, 12, ["uuUUoUUuu",
-                         "....l....",
-                         "..UUU.UUU",
-                         ".........",
-                         "kKk.p.kKk"], ["Bake", "House"])
-        garden(d, 39, extra_trees=((47, 29), (22, 41), (48, 41)))
+def cart(d, x, z, along, load, wood="spruce"):
+    """Hand cart whose bed starts at (x, z): 3 long along `along`, a load on it, wheels at the ends, a shaft."""
+    dx, dz = (1, 0) if along == "x" else (0, 1)
+    sx, sz = (0, 1) if along == "x" else (1, 0)
+    for i in range(3):
+        d.set(x + dx * i, 2, z + dz * i, sl(wood, "top"))
+        d.set(x + dx * i, 3, z + dz * i, load)
+    for i in (0, 2):
+        for s, f in ((-1, "north" if along == "x" else "west"), (1, "south" if along == "x" else "east")):
+            d.set(x + dx * i + sx * s, 2, z + dz * i + sz * s, td("dark_oak", f, "bottom", True))
+    d.set(x + dx * 3, 2, z + dz * 3, f"{wood}_fence")
 
 
-@growth("cookery", "Cascadia")
-def _g_cookery_cas(d, L):
-    if L >= 2:
-        SHED(d, 24, 3, ["YhkKhkYkh",
-                        "....l....",
-                        "..k.h.kYk",
-                        ".........",
-                        "hkKkYhkKh"], ["Larder"])
-    if L >= 3:
-        plans = [["       oUmU",
-                  ".......l...",
-                  "UuU..nnn..h",
-                  ".....TTT...",
-                  "kk...sss..k",
-                  "....l......",
-                  "YhkWW.kYhkK"],
-                 ["       H.H.",
-                  ".......f.f.",
-                  "Hf.....N.fH",
-                  "....rrr....",
-                  "Hf.....N.fH",
-                  "...l.......",
-                  "kDk........"]]
-        if L >= 5:
-            plans.append(["HfN.bb.NfH.",
-                          ".....l.....",
-                          "...........",
-                          ".T..T..T...",
-                          ".s..s..s...",
-                          "kh.........",
-                          "Yk.        "])
-        HOUSE(d, 24, 13, plans, ["Camp", "Kitchen"])
-    if L >= 4:
-        HALL(d, 2, 26, ["omUuUoUm..UoUmkYk",
-                        "........l........",
-                        "..nnnnnnn........",
-                        "..TTTTTTT...hh.k.",
-                        "..sssssss........",
-                        "........l........",
-                        "..nnnnnnn...wte..",
-                        "..TTTTTTT...wte..",
-                        "..sssssss.......p"], ["Cook", "Shack"])
-        SHED(d, 39, 3, ["hYh.kKk.h",
-                        "....l....",
-                        "..kkk.YkY",
-                        ".........",
-                        "KkK.h.kkk"], ["Supply"])
-    if L >= 5:
-        HALL(d, 24, 26, ["k.h.k.h...h.k.h.k",
-                         ".................",
-                         "..wte..wte..wte..",
-                         "........l........",
-                         "..wte..wte..wte..",
-                         ".................",
-                         "..rrrrrrrrrrrrr..",
-                         "........Z........",
-                         "bb.b.b.....b.b.bb"], ["Dining", "Lodge"])
-        SHED(d, 40, 14, ["uu.UUU.uu",
-                         "....l....",
-                         "..UoU.UmU",
-                         ".........",
-                         "hkh.p.hkh"], ["Smoke", "Room"])
-        garden(d, 41, extra_trees=((47, 31), (22, 43), (48, 43)), benches=(20, 36))
+def pile(d, x1, z1, x2, z2, block, peak=None):
+    """A heap of loose material over the given rectangle, optionally a second course on the cells in `peak`."""
+    d.fill(x1, 2, z1, x2, 2, z2, block)
+    for x, z in peak or ():
+        d.set(x, 3, z, block)
 
 
-@growth("cookery", "Neoterra")
-def _g_cookery_neo(d, L):
-    if L >= 2:
-        SHED(d, 28, 2, ["KKk.kKK.k",
-                        "....l....",
-                        "..kkk.kkk",
-                        ".........",
-                        "kKk.kKk.K"], ["DRY", "STORE"])
-    if L >= 3:
-        plans = [["       UoUm",
-                  ".......l...",
-                  "UUU..UUU...",
-                  "...........",
-                  "UuU..UAU..k",
-                  "....l......",
-                  "kkk.p..kKk."],
-                 ["       bbCE",
-                  ".......l...",
-                  "TT.TT.TT...",
-                  "s..s..s....",
-                  "...........",
-                  "p..l.......",
-                  "kD........."]]
-        if L >= 5:
-            plans.append(["HfN.bbb.NfH",
-                          "....l......",
-                          "..wTe......",
-                          "..wTe..Hf..",
-                          "...........",
-                          "p..........",
-                          "kD.        "])
-        HOUSE(d, 28, 11, plans, ["PREP"], roofitems=SOLAR + GREEN([1, 3, 5, 7, 9, 11], 7))
-    if L >= 4:
-        HALL(d, 2, 18, ["UoUoUmUu..UuUoUoU",
-                        "........l........",
-                        "..UUUU.....UUUU..",
-                        "..UAUU.....UUVU..",
-                        ".................",
-                        "kKkKk..l.....kKkK",
-                        ".................",
-                        "..UUUUUUUUUUUUU..",
-                        "..s...s...s...s.."], ["PRODUCTION"],
-             roofitems=[(x, 3, "daylight_detector[inverted=false,power=0]") for x in range(3, 16)])
-        SHED(d, 42, 2, ["kKk.KkK.k",
-                        "....l....",
-                        "..KkK.kKk",
-                        ".........",
-                        "k.kKk.k.p"], ["DRY", "GOODS"])
-    if L >= 5:
-        HALL(d, 24, 22, ["p.b.b.b...b.b.b.p",
-                         ".................",
-                         ".nn.nn.nn.nn.nn..",
-                         ".TT.TT.TT.TT.TT..",
-                         ".ss.ss.ss.ss.ss..",
-                         "........l........",
-                         "..UUUUU...UUUUU..",
-                         "..UAUVU...UAUVU..",
-                         "p...............p"], ["STAFF", "CANTEEN"], roofitems=SOLAR + GREEN([9, 11, 13, 15], 8))
-        SHED(d, 43, 11, ["UUoUUmUUu",
-                         "....l....",
-                         "..UUUUU..",
-                         ".........",
-                         "kKk.p.kKk"], ["PASTRY"])
-        garden(d, 36, extra_trees=((48, 23), (22, 38), (48, 38)))
+def stall(d, x, z, facing, wood, colors, goods):
+    """Market stall 3 wide starting at (x, z): counter (top slabs) with goods, posts at the back, wool canopy.
+    `facing` = the side the customers stand on (north/south: stall runs along x; east/west: along z)."""
+    along_x = facing in ("north", "south")
+    dx, dz = (1, 0) if along_x else (0, 1)
+    bx, bz = (0, -D4[facing][1]) if along_x else (-D4[facing][0], 0)
+    for i in range(3):
+        cx, cz = x + dx * i, z + dz * i
+        d.set(cx, 2, cz, sl(wood, "top"))
+        d.set(cx, 3, cz, goods[i % len(goods)])
+        d.set(cx + bx, 5, cz + bz, colors[i % len(colors)])
+        d.set(cx, 5, cz, colors[(i + 1) % len(colors)])
+    for i in (0, 2):
+        for y in (2, 3, 4):
+            d.set(x + dx * i + bx, y, z + dz * i + bz, f"{wood}_fence")
 
 
-# ============================================================================================ BAKER add-ons
+def well(d, x, z, stone, roofm, post):
+    """Village well centred on (x, z): stone ring, water, two posts, a little roof and a bucket chain."""
+    for a in (-1, 0, 1):
+        for b in (-1, 0, 1):
+            d.set(x + a, 1, z + b, stone)
+            if a or b:
+                d.set(x + a, 2, z + b, stone)
+    d.set(x, 1, z, "water")
+    d.set(x, 0, z, stone)
+    for a in (-1, 1):
+        for y in (3, 4):
+            d.set(x + a, y, z, post)
+    for a in (-1, 0, 1):
+        d.set(x + a, 5, z - 1, st(roofm, "south"))
+        d.set(x + a, 5, z + 1, st(roofm, "north"))
+        d.set(x + a, 5, z, sl(roofm))
+    d.set(x, 4, z, "chain[axis=y,waterlogged=false]")
+
+
+def picnic(d, x, z, wood, n=2):
+    """Outdoor table `n` long along x starting at (x, z) with a bench on each long side (decor seating)."""
+    for i in range(n):
+        d.table(x + i, 2, z, wood, "slab")
+        d.chair(x + i, 2, z - 1, "north", wood, sit=False)
+        d.chair(x + i, 2, z + 1, "south", wood, sit=False)
+
+
+def firepit(d, x, z, ring="cobblestone_slab"):
+    d.set(x, 1, z, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+    for a, b in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+        d.set(x + a, 1, z + b, ring.replace("_slab", "") if "slab" in ring else ring)
+
+
+def woodpile(d, x1, x2, z, h=2, roofm="spruce"):
+    """Stacked firewood against a wall along x (logs lying along z) with a slab lid."""
+    for x in range(x1, x2 + 1):
+        for y in range(2, 2 + h):
+            d.set(x, y, z, lg("oak_log", "z"))
+        d.set(x, 2 + h, z, sl(roofm))
+
+
+def hoist(d, x, z, y, out, bale="hay_block[axis=y]"):
+    """Sack hoist: beam pushed out from the gable at (x, y, z) two cells toward `out`, chain and a bale on it."""
+    ox, oz = D4[out]
+    for i in (1, 2):
+        d.set(x + ox * i, y, z + oz * i, lg("stripped_spruce_log", "x" if ox else "z"))
+    for yy in range(y - 2, y):
+        d.set(x + ox * 2, yy, z + oz * 2, "chain[axis=y,waterlogged=false]")
+    d.set(x + ox * 2, y - 3, z + oz * 2, bale)
+
+
+def porch_lean(d, x1, x2, zf, zw, y, roofm, post, posts, gap=(), floor=None):
+    """Lean-to porch along a north- or south-facing wall: front row zf, wall row zw (rows between are under
+    it). Posts at the listed x, railing along the front except the `gap` cells, roof at y sloping out."""
+    s = 1 if zw > zf else -1
+    front = "south" if s > 0 else "north"
+    for x in range(x1, x2 + 1):
+        for z in range(min(zf, zw - s), max(zf, zw - s) + 1):
+            if floor:
+                d.set(x, 1, z, floor)
+            d.set(x, y, z, sl(roofm, "top") if z != zf else st(roofm, front))
+        if x in posts:
+            for yy in range(2, y):
+                d.set(x, yy, zf, lg(post) if post.endswith(("_log", "_wood")) else post)
+        elif x not in gap:
+            d.set(x, 2, zf, f"{STY[d.pack]['wood']}_fence")
+
+
+def porch_lean_z(d, z1, z2, xf, xw, y, roofm, post, posts, gap=(), floor=None):
+    """As porch_lean, along an east- or west-facing wall (front column xf, wall column xw)."""
+    s = 1 if xw > xf else -1
+    front = "east" if s > 0 else "west"
+    for z in range(z1, z2 + 1):
+        for x in range(min(xf, xw - s), max(xf, xw - s) + 1):
+            if floor:
+                d.set(x, 1, z, floor)
+            d.set(x, y, z, sl(roofm, "top") if x != xf else st(roofm, front))
+        if z in posts:
+            for yy in range(2, y):
+                d.set(xf, yy, z, lg(post) if post.endswith(("_log", "_wood")) else post)
+        elif z not in gap:
+            d.set(xf, 2, z, f"{STY[d.pack]['wood']}_fence")
+
+
+def pavilion(d, x1, z1, x2, z2, h, posts, axis, roofm, post, floor=None, end=None):
+    """Open-sided shed: posts at the listed (x, z), a beam ring at the top, gable roof. Returns ridge y."""
+    for x, z in posts:
+        for y in range(2, 2 + h):
+            d.set(x, y, z, lg(post) if post.endswith(("_log", "_wood")) else post)
+    for x, z in perim(x1, z1, x2, z2):
+        d.set(x, 2 + h, z, lg("stripped_spruce_log" if d.pack != "Hearthwood" else "stripped_dark_oak_log",
+                              "x" if z in (z1, z2) else "z"))
+    if floor:
+        d.fill(x1, 1, z1, x2, 1, z2, floor)
+    return roof(d, x1, z1, x2, z2, 3 + h, axis, roofm, roofm + "_slab", end)
+
+
+def canopy(d, x1, z1, x2, z2, y, posts, slab="smooth_stone_slab", post="light_gray_concrete", y0=2):
+    """Flat canopy / pergola: a slab deck at y on slim columns (standing from y0) at the listed (x, z)."""
+    for x, z in posts:
+        for yy in range(y0, y):
+            d.set(x, yy, z, post)
+    d.fill(x1, y, z1, x2, y, z2, f"{slab}[type=bottom,waterlogged=false]")
+
+
+def stack(d, x, z, top, mat, y0=2):
+    """One free-standing chimney stack at (x, z) from y0 up to `top`, a smoking campfire cap on it."""
+    for y in range(y0, top):
+        d.set(x, y, z, mat)
+    d.set(x, top, z, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+
+
+def bed_row(d, cells, flower_i=0):
+    """Flower / herb bed: grass with a plant on each of the listed (x, z) cells."""
+    for i, (x, z) in enumerate(cells):
+        d.set(x, 1, z, "grass_block[snowy=false]")
+        d.set(x, 2, z, flower(d, i + flower_i))
+
+
+# ============================================================================================ BAKER complexes
+# Bakery round a market square.
+# Hearthwood "market-square bakery": a little flour store and sack cart (L2), the baker's narrow three-storey
+#   house, gable to the street (L3), a three-storey granary with a sack hoist on its gable (L4), a long tea-room
+#   range with a striped awning and terrace tables, market stalls and a well on the square (L5).
+# Cascadia "trail-town bakery": a tall mill shed with the millstone (L2), the baker's porch cabin (L3), a long
+#   granary with a hay hoist (L4), a café with a deep plank porch, wool-canopied stalls and a well (L5).
+# Neoterra "boulangerie lab": a banded flour silo (L2), a two-storey patisserie lab with a canopy (L3), the
+#   baker's four-storey loft tower with an accent fin (L4), a long glass café with a canopy and a rooftop sign,
+#   kiosks round a planted plaza (L5).
 @growth("baker", "Hearthwood")
 def _g_baker_hw(d, L):
-    if L >= 2:
-        SHED(d, 27, 2, ["WWWkYkWWW",
-                        "....l....",
-                        "..WhW.WhW",
-                        ".........",
-                        "hhWkWkhhW"], ["Flour", "Store"])
-    if L >= 3:
-        plans = [["       bpbZ",
-                  ".......l...",
-                  "oUuUA..wR..",
-                  "..wte..wT..",
-                  "...s...wR.p",
-                  "....l......",
-                  "kYk.DVc.bbp"],
-                 ["       NHD.",
-                  ".......lf..",
-                  "Hf..T....p.",
-                  "N...s......",
-                  "..rrrrr....",
-                  "...l.......",
-                  "kV........."]]
-        if L >= 5:
-            plans.append(["Hf.b..b.fHN",
-                          ".....l.....",
-                          "..T......p.",
-                          "..s........",
-                          "...rrrr....",
-                          ".k.........",
-                          "kD.        "])
-        HOUSE(d, 27, 12, plans, ["Baker's", "House"])
-    if L >= 4:
-        HALL(d, 2, 25, ["1o1o1o1..1o1o1o1W",
-                        "........l........",
-                        "..UUUUU...UUUUU..",
-                        "..UAUVU...UVUAU..",
-                        ".................",
-                        "WW.....l.......WW",
-                        "hW.............Wh",
-                        "..kYkYk...kYkYk..",
-                        "u...............x"], ["Bake", "Hall"], extra=["bricks"])
-        SHED(d, 42, 2, ["hhh.WWW.h",
-                        "....l....",
-                        "..hWh.WhW",
-                        ".........",
-                        "WkW.h.WkW"], ["Mill", "Loft"])
-    if L >= 5:
-        HALL(d, 24, 25, ["VAVAV.b...b.VAVAV",
-                         ".................",
-                         ".wte..wte..wte...",
-                         "........l........",
-                         ".wte..wte..wte...",
-                         ".................",
-                         ".wte..wte..wte...",
-                         "........l........",
-                         "p..UUUUUUUUUUU..p"], ["Pastry", "Cafe"])
-        SHED(d, 42, 12, ["AVAVAVAVA",
-                         "....l....",
-                         "..UUU.UUU",
-                         ".........",
-                         "kYk.p.kYk"], ["Cake", "Shop"])
-        garden(d, 39, trees=(5, 14, 30, 40), extra_trees=((48, 28), (22, 42), (48, 42)), lamps=(10, 26),
-               benches=(19, 35))
+    if L >= 2:                                                       # flour store + sack cart
+        bld(d, 27, 4, 33, 10, 1, ("west", 3), [["WkWkW",
+                                                 ".....",
+                                                 "..l.h",
+                                                 ".....",
+                                                 "kWhWk"]], "z", chimney=False, dormer=False,
+            mwall="smooth_sandstone", mroof="mud_brick")
+        cart(d, 28, 13, "x", "white_wool", "dark_oak")
+        put(d, torch(26, 4, 6, "west"))
+        label(d, 26, 3, 9, "west", ["Flour"])
+    if L >= 3:                                                       # baker's narrow three-storey house
+        bld(d, 36, 3, 44, 11, 3, ("north", 7), [[".     .",
+                                                 ".......",
+                                                 "o..wTe.",
+                                                 "U..wTe.",
+                                                 "u......",
+                                                 "...l..p",
+                                                 "kYk.D.b"],
+                                                ["       ",
+                                                 "Hf...fH",
+                                                 "N.....N",
+                                                 ".......",
+                                                 "..wT...",
+                                                 "D.rrr..",
+                                                 ".     ."],
+                                                ["HN...NH",
+                                                 "f.....f",
+                                                 ".......",
+                                                 "..l....",
+                                                 "wTe....",
+                                                 "D.....D",
+                                                 "       "]], "z", chimney=(40, 12), dormer=True,
+            mwall="calcite", mroof="brick", lower="bricks")
+        put(d, wbox(38, 2, "north", "red_tulip", "crimson") + torch(42, 4, 2, "north")
+            + [(41, 7, 2, "red_wall_banner[facing=north]")])
+        label(d, 44, 3, 2, "north", ["Baker's", "House"], color="red")
+    if L >= 4:                                                       # granary with a sack hoist
+        bld(d, 44, 14, 52, 26, 3, ("west", 6), [[".     .",
+                                                  ".......",
+                                                  "WhW.WhW",
+                                                  ".......",
+                                                  "kKk.kKk",
+                                                  ".......",
+                                                  "hWh.hWh",
+                                                  ".......",
+                                                  "kYk.kYk",
+                                                  ".......",
+                                                  "WWh.hWW"],
+                                                 ["       ",
+                                                  ".......",
+                                                  "hhh.hhh",
+                                                  ".......",
+                                                  "WWW.WWW",
+                                                  "...l...",
+                                                  "hWh.hWh",
+                                                  ".......",
+                                                  "KkK.KkK",
+                                                  ".......",
+                                                  ".     ."],
+                                                 ["kYk.kYk",
+                                                  ".......",
+                                                  "WhW.WhW",
+                                                  ".......",
+                                                  "hhh.hhh",
+                                                  "...l...",
+                                                  "WWW.WWW",
+                                                  ".......",
+                                                  "kKk.kKk",
+                                                  ".......",
+                                                  "       "]], "z", chimney=False, dormer=False,
+            mwall="stone_bricks", mroof="dark_prismarine", win=4)
+        hoist(d, 48, 14, 19, "north", "white_wool")
+        put(d, [(48, 17, 14, td("spruce", "north", "bottom", True))] + torch(43, 4, 19, "west"))
+        label(d, 43, 3, 22, "west", ["Granary"])
+    if L >= 5:                                                       # tea-room range with awning
+        bld(d, 4, 30, 26, 36, 2, ("north", 11), [[".     ...........APAp",
+                                                   ".....................",
+                                                   ".wTe.wTe.wTe.wTe.wTe.",
+                                                   "....l.........l......",
+                                                   "UUUUoUUU...l...kYk.ZE"],
+                                                  ["       ...b.b.b.....p",
+                                                   ".....................",
+                                                   "..wte..wte..wte..wte.",
+                                                   "....l.........l......",
+                                                   "p.D...D.....D...D...p"]], "x", chimney=(27, 33), dormer=True,
+            mwall="white_terracotta", mroof="brick")
+        awning(d, 5, 25, 29, 5, ("red_wool", "white_wool"), "north")
+        label(d, 17, 3, 29, "north", ["Tea", "Room"], color="red")
+        put(d, torch(14, 3, 29, "north"))
+        for x in (6, 10, 19, 23):                                    # terrace tables
+            picnic(d, x, 25, "oak", 2)
+        stall(d, 28, 17, "south", "spruce", ("red_wool", "white_wool"), ("hay_block[axis=x]", "cake[bites=0]", "hay_block[axis=x]"))
+        stall(d, 28, 25, "north", "spruce", ("yellow_wool", "white_wool"), ("honey_block", "hay_block[axis=x]", "decorated_pot[cracked=false,facing=north,waterlogged=false]"))
+        stall(d, 38, 25, "north", "spruce", ("blue_wool", "white_wool"), ("melon", "pumpkin", "hay_block[axis=y]"))
+        well(d, 35, 20, "stone_bricks", "dark_oak", "dark_oak_fence")
+        for x, z in ((8, 40), (20, 41), (32, 40), (46, 38), (51, 41), (39, 42), (51, 31)):
+            tree(d, x, z)
+        lamp_post(d, 26, 13)
+        lamp_post(d, 42, 28)
+        bench(d, 30, 22, "east", 2)
 
 
 @growth("baker", "Cascadia")
 def _g_baker_cas(d, L):
-    if L >= 2:
-        SHED(d, 26, 2, ["WhWkWhWkW",
-                        "....l....",
-                        "..hWh.kYk",
-                        ".........",
-                        "WWkhh.WWk"], ["Flour", "Shed"])
-        spruce_tree(d, 24, 25)
-        lamp_post(d, 24, 11)
-    if L >= 3:
-        plans = [["       oUmu",
-                  ".......l...",
-                  "UAU..nnn..p",
-                  "...h.TTT...",
-                  "kk...sss..k",
-                  "....l......",
-                  "YhD.bb.VcWk"],
-                 ["       NHN.",
-                  ".......lf..",
-                  "Hf.......fH",
-                  "N..rrr....N",
-                  "...........",
-                  "...l.......",
-                  "kDh........"]]
-        if L >= 5:
-            plans.append(["bHf....fHbb",
-                          ".....l.....",
-                          "..T..T.....",
-                          "..s..s.....",
-                          "...rrrr....",
-                          ".k.........",
-                          "Dh.        "])
-        HOUSE(d, 26, 12, plans, ["Baker's", "Cabin"])
-    if L >= 4:
-        HALL(d, 2, 28, ["1o1o1o1..1o1o1o1h",
-                        "........l........",
-                        "..TTTTTTT.TTTTT..",
-                        "..TAVATVT.TATVT..",
-                        ".................",
-                        "hW.....l.......Wh",
-                        "W...............W",
-                        "..kYkhk...khkYk..",
-                        "u...............x"], ["Bake", "House"], extra=["cobblestone"])
-        SHED(d, 41, 2, ["WWh.hWW.k",
-                        "....l....",
-                        "..kWk.hWh",
-                        ".........",
-                        "hhh.W.kYk"], ["Grain"])
-    if L >= 5:
-        HALL(d, 24, 28, ["k.h.k.b...b.k.h.k",
-                         ".................",
-                         ".nnn..nnn..nnn...",
-                         ".TTT..TTT..TTT...",
-                         ".sss..sss..sss...",
-                         "........l........",
-                         "..wte.......wte..",
-                         ".................",
-                         "p.AVA.UUUUU.AVA.p"], ["Cafe"])
-        SHED(d, 41, 12, ["AVA.AVA.A",
-                         "....l....",
-                         "..TTT.TTT",
-                         ".........",
-                         "kYk.p.kYk"], ["Pie", "Shop"])
-        garden(d, 42, extra_trees=((47, 31), (22, 45), (48, 45)))
+    if L >= 2:                                                       # tall mill shed with the millstone
+        bld(d, 26, 3, 34, 11, 1, ("west", 4), [["WkWhWkW",
+                                                 ".......",
+                                                 "h.....h",
+                                                 "...g...",
+                                                 "W..l..W",
+                                                 ".......",
+                                                 "kWkhkWk"]], "z", tall=True, chimney=False, dormer=False,
+            mlog="stripped_spruce_log", mroof="mangrove", lower="cobblestone")
+        put(d, torch(25, 4, 6, "west") + [(25, 2, 4, "hay_block[axis=y]"), (25, 2, 10, "white_wool")])
+        label(d, 25, 3, 9, "west", ["Mill"])
+    if L >= 3:                                                       # baker's porch cabin
+        bld(d, 37, 3, 45, 13, 2, ("west", 5), [[".     .",
+                                                 ".......",
+                                                 "o..wTe.",
+                                                 "U..wTe.",
+                                                 ".......",
+                                                 "...l..p",
+                                                 "D......",
+                                                 ".......",
+                                                 "kYk.bbp"],
+                                                ["       ",
+                                                 "Hf...fH",
+                                                 "N.....N",
+                                                 ".......",
+                                                 "..rrr..",
+                                                 "...l...",
+                                                 "Hf...fH",
+                                                 "N.....N",
+                                                 "D.....D"]], "z", chimney=(46, 8), dormer=False,
+            mlog="stripped_spruce_log", mroof="dark_oak")
+        porch_lean_z(d, 5, 11, 35, 37, 6, "spruce", "spruce_log", (5, 11), gap=(7, 8, 9), floor="spruce_planks")
+        put(d, torch(36, 4, 7, "west"))
+        label(d, 36, 3, 10, "west", ["Baker"])
+    if L >= 4:                                                       # long granary with hay hoist
+        bld(d, 26, 16, 34, 30, 3, ("west", 7), [[".     .",
+                                                  ".......",
+                                                  "WhW.WhW",
+                                                  ".......",
+                                                  "kKk.kKk",
+                                                  ".......",
+                                                  ".......",
+                                                  "hWh.hWh",
+                                                  ".......",
+                                                  "kYk.kYk",
+                                                  ".......",
+                                                  "...l...",
+                                                  "WWh.hWW"],
+                                                 ["       ",
+                                                  ".......",
+                                                  "hhh.hhh",
+                                                  ".......",
+                                                  "WWW.WWW",
+                                                  "...l...",
+                                                  ".......",
+                                                  "hWh.hWh",
+                                                  ".......",
+                                                  "KkK.KkK",
+                                                  ".......",
+                                                  ".......",
+                                                  ".     ."],
+                                                 ["kYk.kYk",
+                                                  ".......",
+                                                  "WhW.WhW",
+                                                  ".......",
+                                                  "hhh.hhh",
+                                                  "...l...",
+                                                  ".......",
+                                                  "WWW.WWW",
+                                                  ".......",
+                                                  "kKk.kKk",
+                                                  ".......",
+                                                  ".......",
+                                                  "       "]], "z", chimney=False, dormer=False,
+            mlog="stripped_dark_oak_log", mroof="cobbled_deepslate", wall="spruce_planks", win=4)
+        hoist(d, 30, 16, 19, "north")
+        put(d, torch(25, 4, 22, "west"))
+        label(d, 25, 3, 25, "west", ["Granary"])
+    if L >= 5:                                                       # cafe with a deep plank porch
+        bld(d, 3, 30, 23, 37, 1, ("north", 10), [["pA.A.....l.....A.Ap",
+                                                   "...................",
+                                                   ".wTe..wTe...wTe...o",
+                                                   "...................",
+                                                   "..l....nnnnnn...l..",
+                                                   "kYk.UUUUUUUUUU.hWhZ"]], "x", chimney=False, dormer=False,
+            mlog="stripped_birch_log", mroof="mangrove")
+        porch_lean(d, 3, 23, 27, 30, 6, "spruce", "spruce_log", (3, 8, 18, 23), gap=(12, 13, 14),
+                   floor="spruce_planks")
+        put(d, torch(12, 4, 29, "north") + torch(14, 4, 29, "north"))
+        label(d, 16, 3, 29, "north", ["Cafe"])
+        for x in (5, 19):
+            d.table(x, 2, 28, "spruce", "slab")
+            d.chair(x - 1, 2, 28, "west", "spruce", sit=False)
+            d.chair(x + 1, 2, 28, "east", "spruce", sit=False)
+        stall(d, 38, 18, "south", "spruce", ("red_wool", "white_wool"), ("hay_block[axis=x]", "hay_block[axis=x]", "cake[bites=0]"))
+        stall(d, 44, 18, "south", "spruce", ("green_wool", "white_wool"), ("pumpkin", "melon", "pumpkin"))
+        stall(d, 40, 26, "north", "spruce", ("yellow_wool", "brown_wool"), ("hay_block[axis=y]", "hay_block[axis=x]", "decorated_pot[cracked=false,facing=north,waterlogged=false]"))
+        well(d, 47, 28, "cobblestone", "spruce", "spruce_fence")
+        bld(d, 44, 34, 52, 42, 2, ("west", 4), [[".     .",                 # rooms over the square
+                                                  ".......",
+                                                  "Hf...fH",
+                                                  ".....N.",
+                                                  "Hf.....",
+                                                  "...wTe.",
+                                                  "k.D.D.k"],
+                                                 ["       ",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  "Hf...fH",
+                                                  ".......",
+                                                  "..l....",
+                                                  "D.....D"]], "x", roofkind="hip", chimney=False, dormer=False,
+            mlog="spruce_log", mroof="dark_prismarine", lower="cobblestone")
+        put(d, torch(43, 4, 37, "west"))
+        label(d, 43, 3, 40, "west", ["Rooms"])
+        cart(d, 38, 34, "z", "hay_block[axis=y]")
+        for x, z in ((38, 43), (27, 40), (6, 42), (51, 22), (51, 13)):
+            spruce_tree(d, x, z)
+        lamp_post(d, 36, 15)
+        lamp_post(d, 36, 30)
 
 
 @growth("baker", "Neoterra")
 def _g_baker_neo(d, L):
-    if L >= 2:
-        SHED(d, 26, 2, ["WWkWWkWWk",
-                        "....l....",
-                        "..WkW.WkW",
-                        ".........",
-                        "kWWkWWkWW"], ["FLOUR"])
-    if L >= 3:
-        plans = [["       UoUm",
-                  ".......l...",
-                  "UAUVU..UUU.",
-                  "...........",
-                  "..UAU..wte.",
-                  "....l......",
-                  "kkk.p..kKk."],
-                 ["       bECb",
-                  ".......l...",
-                  "TT.TT......",
-                  "s..s.......",
-                  "....rrrr...",
-                  "p..l.......",
-                  "kD........."]]
-        if L >= 5:
-            plans.append(["HfN.bb..NfH",
-                          "....l......",
-                          "..T.....T..",
-                          "..s.....s..",
-                          "...rrrrr...",
-                          "p.........p",
-                          "kD.        "])
-        HOUSE(d, 26, 12, plans, ["PATISSERIE"], roofitems=SOLAR + GREEN([1, 3, 5, 7, 9, 11], 7))
-    if L >= 4:
-        HALL(d, 2, 15, ["1o1o1o1..1o1o1o1W",
-                        "........l........",
-                        "UUUU.......UUUU..",
-                        "UAUV.......VUAU..",
-                        ".....kKkKk.......",
-                        "........l........",
-                        "..UUUUUUUUUUUUU..",
-                        "..s.s.s.s.s.s.s..",
-                        "kKk...........kKk"], ["BAKE", "LAB"], extra=["polished_andesite"],
-             roofitems=[(x, 3, "daylight_detector[inverted=false,power=0]") for x in range(3, 16)])
-        SHED(d, 40, 2, ["kWWk.kWWk",
-                        "....l....",
-                        "..WWk.kWW",
-                        ".........",
-                        "WkW.p.WkW"], ["GRAIN"])
+    if L >= 2:                                                       # banded flour silo
+        silo(d, 28, 6, 2, 12, "white_concrete", "cyan_concrete")
+        for y in range(2, 14):
+            d.set(28, y, 2, "ladder[facing=north,waterlogged=false]")
+        put(d, [(26, 2, 10, "hopper[enabled=true,facing=down]"), (26, 3, 10, "smooth_stone_slab[type=bottom,"
+                                                                                 "waterlogged=false]")])
+        label(d, 30, 3, 2, "north", ["FLOUR"])
+    if L >= 3:                                                       # two-storey patisserie lab
+        bld(d, 3, 15, 21, 23, 2, ("north", 9), [[".     ....p..AVA.",
+                                                  ".................",
+                                                  "UUoUU..wTe..wTe.p",
+                                                  ".................",
+                                                  ".UUUU....l...AAA.",
+                                                  ".................",
+                                                  "kKk.x.mo.Z...kYkp"],
+                                                 ["       ...bEb...p",
+                                                  ".................",
+                                                  "Hf.....wTe.....fH",
+                                                  "N...............N",
+                                                  "Hf....rrrrr....fH",
+                                                  "........l........",
+                                                  "D.wT.D.....D.Te.D"]], mwall="white_terracotta",
+            roofitems=GREEN([1, 3, 5, 7, 9, 11, 13, 15], 7))
+        canopy(d, 9, 12, 15, 14, 6, [(9, 12), (15, 12)])
+        planter(d, 8, 14, 2)
+        planter(d, 16, 14, 2)
+        label(d, 14, 3, 14, "north", ["PATISSERIE"])
+    if L >= 4:                                                       # baker's four-storey loft tower
+        bld(d, 26, 14, 34, 22, 4, ("west", 4), [[".     .",
+                                                  ".......",
+                                                  "UoUu..b",
+                                                  "......b",
+                                                  "..wTe..",
+                                                  "..wTe..",
+                                                  "p.....p"],
+                                                 ["       ",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  ".......",
+                                                  "..rrr..",
+                                                  "D......",
+                                                  ".     ."],
+                                                 [".     .",
+                                                  ".......",
+                                                  "bb..E..",
+                                                  ".......",
+                                                  "wT...Te",
+                                                  ".......",
+                                                  "       "],
+                                                 ["       ",
+                                                  ".......",
+                                                  "HN..bb.",
+                                                  "f......",
+                                                  "..wTe..",
+                                                  "...l...",
+                                                  "D.....D"]], mwall="white_concrete", lower="glass",
+            roofitems=GREEN([1, 3, 5], 5))
+        put(d, [(35, y, 18, "cyan_terracotta") for y in range(2, 23)]
+            + [(25, 5, z, "smooth_stone_slab[type=bottom,waterlogged=false]") for z in (17, 18, 19)])
+        label(d, 25, 3, 20, "west", ["LOFT"])
+    if L >= 5:                                                       # long glass cafe
+        bld(d, 38, 3, 48, 30, 1, ("west", 13), [["pAPA.APAp",
+                                                  ".........",
+                                                  ".wTe...wU",
+                                                  ".......wU",
+                                                  ".wTe...wU",
+                                                  ".......wU",
+                                                  ".wTe...wU",
+                                                  "....l....",
+                                                  ".........",
+                                                  "..nnn....",
+                                                  "..TTT...p",
+                                                  "..sss....",
+                                                  ".........",
+                                                  "....l....",
+                                                  "..nnn....",
+                                                  "..TTT...p",
+                                                  "..sss....",
+                                                  ".........",
+                                                  ".wTe.wTe.",
+                                                  ".........",
+                                                  ".wTe.wTe.",
+                                                  "....l....",
+                                                  ".........",
+                                                  "UUUoUUu..",
+                                                  ".........",
+                                                  "kYk.Z.AAp"]], tall=True, wall="glass",
+            roofitems=GREEN([2, 4, 6, 8], 26) + GREEN([2, 4, 6, 8], 3))
+        canopy(d, 35, 8, 37, 24, 6, [(35, 8), (35, 12), (35, 20), (35, 24)])
+        billboard(d, 40, 46, 16, 12, ["LUMEN", "CAFE"])
+        stall(d, 26, 28, "north", "birch", ("yellow_concrete", "white_concrete"), ("hay_block[axis=x]", "cake[bites=0]", "decorated_pot[cracked=false,facing=north,waterlogged=false]"))
+        stall(d, 31, 28, "north", "birch", ("white_concrete", "yellow_concrete"), ("hay_block[axis=x]", "honey_block", "hay_block[axis=x]"))
+        for x, z in ((25, 38), (33, 40), (50, 36), (42, 40), (6, 36), (14, 40)):
+            tree(d, x, z, "birch")
+        for x in (24, 28, 32):
+            planter(d, x, 33, 2)
+        bench(d, 27, 35, "north", 3)
+        lamp_post(d, 23, 26, 4)
+        lamp_post(d, 36, 32, 4)
+
+
+# ============================================================================================ CONCRETE MIXER complexes
+# Industrial yards round the mixing basin.
+# Hearthwood "lime & mortar works": walled aggregate bays (L2), a hipped two-storey works office (L3), a tall
+#   mason's shed (L4), a five-storey flat-topped batching tower with a hopper and a conveyor gantry down to the
+#   basin, plus a barrow yard (L5).
+# Cascadia "cascade aggregate": a powder shed (L2), the porch office (L3), a tall repair shop (L4), a five-storey
+#   gabled hopper tower with a plank chute, gravel heaps and an ore cart (L5).
+# Neoterra "NEOCRETE": a banded powder silo and bays (L2), a two-storey glass HQ (L3), a two-storey materials lab
+#   (L4), a six-storey batch tower, a row of silos and a conveyor bridge (L5).
+CMX = ["white_concrete_powder", "light_gray_concrete_powder", "gray_concrete_powder", "sand", "gravel"]
+
+
+def bays(d, x1, z, n, w, wall, mats):
+    """A row of n open-fronted material bays starting at x1 (each w wide inside), back wall at z, side walls
+    2 high running 3 toward the street (z-3), each bay heaped with its material."""
+    x = x1
+    for i in range(n + 1):
+        for zz in range(z - 3, z + 1):
+            for y in (2, 3):
+                d.set(x + i * (w + 1), y, zz, wall)
+    for i in range(n):
+        a = x1 + 1 + i * (w + 1)
+        for xx in range(a, a + w):
+            for y in (2, 3):
+                d.set(xx, y, z, wall)
+        pile(d, a, z - 2, a + w - 1, z - 1, mats[i % len(mats)], [(a + w // 2, z - 1)])
+
+
+def gantry(d, x1, x2, z, y, post, deck):
+    """Conveyor gantry along x at height y from x1 to x2: a slab deck on posts every 3 cells."""
+    for x in range(min(x1, x2), max(x1, x2) + 1):
+        d.set(x, y, z, f"{deck}[type=bottom,waterlogged=false]")
+        if (x - x1) % 3 == 0:
+            for yy in range(2, y):
+                d.set(x, yy, z, post)
+
+
+@growth("concretemixer", "Hearthwood")
+def _g_conc_hw(d, L):
+    if L >= 2:                                                       # walled aggregate bays
+        bays(d, 27, 8, 3, 2, "cobblestone", ["sand", "gravel", "white_concrete_powder"])
+        put(d, [(37, 2, 3, "barrel[facing=up,open=false]"), (37, 2, 4, "barrel[facing=up,open=false]"),
+                (37, 3, 3, "white_concrete_powder")])
+    if L >= 3:                                                       # hipped works office
+        bld(d, 40, 3, 48, 11, 2, ("west", 4), [[".     .",
+                                                 ".......",
+                                                 "b.TTT.C",
+                                                 ".......",
+                                                 "...s...",
+                                                 "wT...Ep",
+                                                 "kYk.k.D"],
+                                                ["       ",
+                                                 "Hf...fH",
+                                                 "N.....N",
+                                                 ".......",
+                                                 "Hf...fH",
+                                                 "N..l..N",
+                                                 "D.....D"]], "x", roofkind="hip", chimney=(49, 7), dormer=False,
+            mwall="calcite", mroof="brick", lower="stone_bricks")
+        put(d, torch(39, 4, 6, "west") + wbox(39, 5, "west", "poppy", "oak") + wbox(39, 11, "west", "dandelion", "oak"))
+        label(d, 39, 3, 9, "west", ["Works", "Office"])
+    if L >= 4:                                                       # tall mason's shed
+        bld(d, 3, 26, 23, 32, 1, ("north", 10), [["qqq.zgz..l..aga.qqq",
+                                                   "...................",
+                                                   "..UUUU.......UUUU..",
+                                                   "..s..s.......s..s..",
+                                                   "k1k.k2k.x.Y.k3k.k4k"]], "x", tall=True, chimney=False,
+            dormer=False, mwall="stone_bricks", mroof="mud_brick", extra=CMX)
+        put(d, torch(12, 4, 25, "north") + torch(14, 4, 25, "north"))
+        label(d, 16, 3, 25, "north", ["Mason's", "Shed"])
+        cart(d, 6, 36, "x", "gravel", "oak")
+    if L >= 5:                                                       # batching tower with hopper + gantry
+        bld(d, 28, 15, 36, 23, 5, ("west", 4), [[".     .",
+                                                  ".......",
+                                                  "1k2.3k4",
+                                                  ".......",
+                                                  "....l..",
+                                                  ".......",
+                                                  "kYk.kKk"],
+                                                 ["       ",
+                                                  ".......",
+                                                  "1111.22",
+                                                  ".......",
+                                                  "3333.44",
+                                                  ".......",
+                                                  ".     ."],
+                                                 [".     .",
+                                                  ".......",
+                                                  "kKk.kYk",
+                                                  ".......",
+                                                  "5555.55",
+                                                  ".......",
+                                                  "       "],
+                                                 ["       ",
+                                                  ".......",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  "...l...",
+                                                  "D......",
+                                                  ".     ."],
+                                                 ["bE...C.",
+                                                  ".......",
+                                                  ".......",
+                                                  "..wTe..",
+                                                  "...l...",
+                                                  "k.....k",
+                                                  "       "]], "x", roofkind="flat", chimney=False, dormer=False,
+            mwall="stone_bricks", mroof="brick", lower="cobblestone", extra=CMX, deck="stone_bricks",
+            parapet="cobblestone_wall",
+            roofitems=[(3, 3, "hopper[enabled=true,facing=down]"), (4, 3, "hopper[enabled=true,facing=down]"),
+                       (3, 4, "hopper[enabled=true,facing=down]"), (4, 4, "hopper[enabled=true,facing=down]"),
+                       (6, 6, "lightning_rod[facing=up,powered=false,waterlogged=false]")])
+        gantry(d, 24, 27, 18, 7, "oak_fence", "smooth_stone_slab")
+        put(d, torch(27, 4, 18, "west"))
+        label(d, 27, 3, 21, "west", ["Batching", "Tower"])
+        bays(d, 38, 32, 4, 3, "stone_bricks", ["gravel", "sand", "cobblestone", "light_gray_concrete_powder"])
+        for x, z in ((8, 40), (20, 41), (50, 16), (50, 40)):
+            tree(d, x, z)
+        cart(d, 30, 27, "x", "white_concrete_powder", "oak")
+        lamp_post(d, 26, 13)
+        lamp_post(d, 37, 26)
+
+
+@growth("concretemixer", "Cascadia")
+def _g_conc_cas(d, L):
+    if L >= 2:                                                       # powder shed
+        bld(d, 24, 3, 30, 9, 1, ("west", 3), [["1k2k3",
+                                                ".....",
+                                                "...k4",
+                                                "..l..",
+                                                "4k5k1"]], "z", chimney=False, dormer=False,
+            mlog="stripped_spruce_log", mroof="dark_prismarine", lower="cobblestone", extra=CMX)
+        put(d, torch(23, 4, 5, "west"))
+        label(d, 23, 3, 8, "west", ["Powder"])
+    if L >= 3:                                                       # porch office
+        bld(d, 24, 13, 32, 21, 2, ("west", 4), [[".     .",
+                                                  ".......",
+                                                  "E..wTe.",
+                                                  ".......",
+                                                  "..TTT..",
+                                                  "..s.s..",
+                                                  "kYk.C.b"],
+                                                 ["       ",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  "Hf...fH",
+                                                  ".......",
+                                                  "D.l...D",
+                                                  "k.....k"]], "z", chimney=(28, 22), dormer=False,
+            mlog="stripped_dark_oak_log", mroof="mangrove")
+        porch_lean_z(d, 14, 20, 22, 24, 6, "spruce", "spruce_log", (14, 20), gap=(16, 17, 18))
+        put(d, torch(23, 4, 16, "west"))
+        label(d, 23, 3, 19, "west", ["Office"])
+    if L >= 4:                                                       # tall repair shop
+        bld(d, 3, 28, 23, 34, 1, ("north", 10), [["aga.z.z...l...q.q.q",
+                                                   "...................",
+                                                   "..UUUU...h...UUUU..",
+                                                   "..s..s.........s..s",
+                                                   "k1k.k2k.YkY.k3k.k4k"]], "x", tall=True, chimney=(24, 31),
+            dormer=False, mlog="spruce_log", mroof="cobbled_deepslate", lower="cobblestone", extra=CMX)
+        put(d, torch(12, 4, 27, "north") + torch(14, 4, 27, "north"))
+        label(d, 16, 3, 27, "north", ["Repair", "Shop"])
+    if L >= 5:                                                       # gabled hopper tower + chute
+        bld(d, 37, 3, 45, 11, 5, ("west", 4), [[".     .",
+                                                 ".......",
+                                                 "1k1.2k2",
+                                                 ".......",
+                                                 "3k3.l..",
+                                                 ".......",
+                                                 "kYk.kYk"],
+                                                ["       ",
+                                                 ".......",
+                                                 "Hf...fH",
+                                                 "N.....N",
+                                                 "...l...",
+                                                 "D......",
+                                                 ".     ."],
+                                                [".     .",
+                                                 ".......",
+                                                 "4444.55",
+                                                 ".......",
+                                                 "1111.22",
+                                                 ".......",
+                                                 "       "],
+                                                ["       ",
+                                                 ".......",
+                                                 "kKk.kYk",
+                                                 ".......",
+                                                 "3333.44",
+                                                 ".......",
+                                                 ".     ."],
+                                                ["E.b...C",
+                                                 ".......",
+                                                 "..wTe..",
+                                                 ".......",
+                                                 "...l...",
+                                                 "k.....k",
+                                                 "       "]], "z", chimney=False, dormer=False,
+            mlog="stripped_dark_oak_log", mroof="dark_prismarine", lower="cobblestone", extra=CMX)
+        for i in range(8):                                           # plank chute stepping down to the yard
+            x, y = 46 + i // 2, 16 - i
+            if d.bp.inside(x, y, 7):
+                d.set(x, y, 7, st("spruce", "west"))
+        for y in range(2, 9):
+            d.set(49, y, 7, lg("spruce_log"))
+        put(d, torch(36, 4, 6, "west"))
+        label(d, 36, 3, 9, "west", ["Hopper", "Tower"])
+        pile(d, 48, 9, 51, 12, "gravel", [(49, 10), (50, 10), (49, 11), (50, 11)])
+        pile(d, 40, 15, 44, 17, "sand", [(41, 16), (42, 16), (43, 16)])
+        cart(d, 36, 22, "z", "cobblestone")
+        for x, z in ((8, 41), (20, 40), (32, 42), (50, 30), (44, 42)):
+            spruce_tree(d, x, z)
+        lamp_post(d, 34, 13)
+        lamp_post(d, 34, 25)
+
+
+@growth("concretemixer", "Neoterra")
+def _g_conc_neo(d, L):
+    if L >= 2:                                                       # banded powder silo + bays
+        silo(d, 24, 7, 2, 10, "white_concrete", "cyan_concrete")
+        for y in range(2, 12):
+            d.set(24, y, 3, "ladder[facing=north,waterlogged=false]")
+        bays(d, 27, 9, 2, 3, "light_gray_concrete", ["white_concrete_powder", "gray_concrete_powder"])
+    if L >= 3:                                                       # two-storey glass HQ
+        bld(d, 38, 3, 48, 11, 2, ("west", 6), [[".     .bE",
+                                                 ".........",
+                                                 "..TTT...C",
+                                                 "...s.....",
+                                                 ".wTe.wTe.",
+                                                 ".........",
+                                                 "kYk.x.kYk"],
+                                                ["       HN",
+                                                 ".......f.",
+                                                 "Hf.......",
+                                                 "N...wTe..",
+                                                 ".........",
+                                                 "Hf.l....p",
+                                                 "N.....D.D"]], mwall="light_gray_concrete", lower="glass",
+            roofitems=SOLAR + [(x, 6, "daylight_detector[inverted=false,power=0]") for x in (2, 3, 4, 6, 7, 8)])
+        put(d, [(37, 5, z, "smooth_stone_slab[type=bottom,waterlogged=false]") for z in (8, 9, 10)])
+        label(d, 37, 3, 11, "west", ["NEOCRETE", "HQ"])
+    if L >= 4:                                                       # two-storey materials lab
+        bld(d, 3, 25, 23, 31, 2, ("north", 10), [[".     ...l.........",
+                                                   "...................",
+                                                   "q.q.UUUU...UUUU.x.z",
+                                                   "....s..s...s..s....",
+                                                   "k1k.k2k.E.C.k3k.k4k"],
+                                                  ["       ..b.b.b.b...",
+                                                   "...................",
+                                                   "Hf..wTe.....wTe..fH",
+                                                   "N.................N",
+                                                   "Hf....D.l.D......fH"]], mwall="white_concrete", extra=CMX,
+            roofitems=GREEN([1, 3, 5, 7, 9, 11, 13, 15, 17], 5))
+        canopy(d, 10, 22, 16, 24, 6, [(10, 22), (16, 22)])
+        label(d, 15, 3, 24, "north", ["MATERIALS", "LAB"])
+    if L >= 5:                                                       # six-storey batch tower, silos, bridge
+        bld(d, 26, 14, 34, 22, 6, ("west", 4), [[".     .",
+                                                  ".......",
+                                                  "1k2.3k4",
+                                                  ".......",
+                                                  "....l..",
+                                                  ".......",
+                                                  "kYk.kKk"],
+                                                 ["       ",
+                                                  ".......",
+                                                  "E.b.b.C",
+                                                  ".......",
+                                                  "wT...Te",
+                                                  ".......",
+                                                  ".     ."],
+                                                 [".     .",
+                                                  ".......",
+                                                  "1111.22",
+                                                  ".......",
+                                                  "3333.44",
+                                                  ".......",
+                                                  "       "],
+                                                 ["       ",
+                                                  ".......",
+                                                  "kKk.kYk",
+                                                  ".......",
+                                                  "5555.55",
+                                                  ".......",
+                                                  ".     ."],
+                                                 [".     .",
+                                                  ".......",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  "...l...",
+                                                  "D.....D",
+                                                  "       "],
+                                                 ["       ",
+                                                  ".......",
+                                                  "bE...C.",
+                                                  ".......",
+                                                  "..wTe..",
+                                                  "...l...",
+                                                  "k.....k"]], mwall="light_gray_concrete", lower="glass", extra=CMX)
+        put(d, [(30, y, 13, "cyan_terracotta") for y in range(2, 33)])
+        billboard(d, 27, 33, 18, 33, ["NEOCRETE"])
+        label(d, 25, 3, 20, "west", ["BATCH"])
+        for cx in (40, 46):                                           # silo row beside the tower
+            silo(d, cx, 18, 2, 14, "white_concrete", "cyan_concrete")
+        silo(d, 46, 26, 2, 10, "white_concrete", "cyan_concrete")
+        gantry(d, 35, 37, 18, 12, "light_gray_concrete", "smooth_stone_slab")
+        for x, z in ((8, 38), (18, 40), (50, 10), (50, 20)):
+            tree(d, x, z, "birch")
+        lamp_post(d, 24, 26, 4)
+        lamp_post(d, 36, 24, 4)
+
+
+# ============================================================================================ COOK complexes
+# Restaurant: a street range of service buildings, a banquet / mess hall, and guest rooms.
+# Hearthwood "coaching restaurant": pantry + staff house in a street range east of the inn (L2/L3), a tall
+#   gable-to-court banquet hall (L4) that becomes an L with a garden-room wing, plus a four-storey hipped guest
+#   tower and an orchard terrace (L5).
+# Cascadia "logging-camp cookhouse": a sod-roofed river-rock root cellar (L2), a long two-storey bunkhouse
+#   (L3), a wide mess hall with a deep front porch (L4), a three-storey hipped lodge and a stone smokehouse
+#   round a fire-pit yard (L5).
+# Neoterra "sky restaurant": cold-store box (L2), staff block with a green roof (L3), a glass dining pavilion
+#   with roof terrace (L4), a five-storey hotel tower with a rooftop sign and a fountain plaza (L5).
+@growth("cook", "Hearthwood")
+def _g_cook_hw(d, L):
+    if L >= 2:                                                       # pantry on the street
+        bld(d, 27, 3, 35, 9, 1, ("north", 4), [["Yk...kK",
+                                                 ".......",
+                                                 "W.UAU.W",
+                                                 "...l...",
+                                                 "kKk.hWk"]], "x", chimney=False, dormer=False,
+            mwall="smooth_sandstone", mroof="brick")
+        put(d, wbox(29, 2, "north", "red_tulip", "crimson") + torch(30, 4, 2, "north"))
+        label(d, 32, 3, 2, "north", ["Pantry"])
+    if L >= 3:                                                       # staff house closing the street range
+        bld(d, 38, 3, 50, 11, 2, ("north", 9), [[".     ....b",
+                                                  "o.........b",
+                                                  "m..wte.....",
+                                                  "U..wte..l..",
+                                                  "u..........",
+                                                  "......wTe..",
+                                                  "kYk...p..Dp"],
+                                                 ["       HNH.",
+                                                  ".......f.f.",
+                                                  "Hf.......fH",
+                                                  "N..rrrr...N",
+                                                  "Hf.......fH",
+                                                  "...l.......",
+                                                  "kD.....D..k"]], "x", chimney=(51, 7), dormer=True,
+            mwall="white_terracotta", mroof="granite")
+        put(d, wbox(40, 2, "north", "poppy", "crimson") + wbox(43, 2, "north", "oxeye_daisy", "crimson")
+            + torch(48, 4, 2, "north"))
+        label(d, 45, 3, 2, "north", ["Staff", "House"])
+    if L >= 4:                                                       # banquet hall, gable end to the court
+        bld(d, 38, 15, 50, 37, 1, ("west", 11), [["PcP.bZb.PcP",
+                                                   "...........",
+                                                   "...n...n...",
+                                                   "..wte.wte..",
+                                                   "..wte.wte..",
+                                                   "..wte.wte..",
+                                                   "..wtelwte..",
+                                                   "..wte.wte..",
+                                                   "..wte.wte..",
+                                                   "..wte.wte..",
+                                                   "..wte.wte..",
+                                                   "..wtelwte..",
+                                                   "..wte.wte..",
+                                                   "...s...s...",
+                                                   "...........",
+                                                   "...........",
+                                                   "..l.....l..",
+                                                   "..TTTTTTT..",
+                                                   "..sssssss..",
+                                                   "...........",
+                                                   "pAPA...APAp"]], "z", tall=True, chimney=(44, 38),
+            dormer=False, mwall="calcite", mroof="dark_prismarine", lower="bricks")
+        put(d, torch(37, 4, 25, "west") + torch(37, 4, 27, "west")
+            + [(37, 7, 21, "red_wall_banner[facing=west]"), (37, 7, 31, "red_wall_banner[facing=west]")])
+        label(d, 37, 3, 28, "west", ["Banquet", "Hall"])
+    if L >= 5:                                                       # garden-room wing makes the hall an L
+        bld(d, 26, 29, 38, 37, 1, ("north", 6), [["pV.......Vp",
+                                                   "...........",
+                                                   ".wte...wte.",
+                                                   ".wte.l.wte.",
+                                                   "...........",
+                                                   "...TTTTT...",
+                                                   "Z..psssp..b"]], "x", tall=True, chimney=False, dormer=False,
+            mwall="smooth_sandstone", mroof="dark_prismarine", keep_roof=True)
+        put(d, wbox(28, 28, "north", "pink_tulip", "crimson") + wbox(36, 28, "north", "cornflower", "crimson")
+            + torch(31, 4, 28, "north") + torch(33, 4, 28, "north"))
+        label(d, 34, 3, 28, "north", ["Garden", "Room"])
+        bld(d, 26, 14, 34, 22, 4, ("west", 4), [[".     .",              # guest tower
+                                                  ".......",
+                                                  "..T...p",
+                                                  "..Te...",
+                                                  "..T....",
+                                                  "wTe...p",
+                                                  "p.kYk.b"],
+                                                 ["       ",
+                                                  "Hf.l...",
+                                                  "N......",
+                                                  "Hf..wT.",
+                                                  ".......",
+                                                  "D.rrr..",
+                                                  ".     ."],
+                                                 [".     .",
+                                                  ".......",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  "...l...",
+                                                  "D.wT..D",
+                                                  "       "],
+                                                 ["       ",
+                                                  ".......",
+                                                  "H....bb",
+                                                  "f......",
+                                                  "N.wTe..",
+                                                  "...l...",
+                                                  "D.p.p.D"]], "x", roofkind="hip", chimney=False, dormer=False,
+            mwall="calcite", mroof="brick", lower="bricks")
+        put(d, torch(25, 4, 17, "west") + torch(25, 4, 19, "west"))
+        label(d, 25, 3, 20, "west", ["Guest", "Rooms"])
+        for x, z in ((6, 45), (16, 47), (46, 44), (52, 30)):         # orchard and shade trees
+            tree(d, x, z)
+        for x in (27, 32):                                           # terrace tables before the garden room
+            picnic(d, x, 42, "oak", 2)
+        d.fill(25, 1, 40, 37, 1, 44, "stone_bricks")
+        canopy(d, 25, 40, 37, 44, 6, [(25, 40), (31, 40), (37, 40), (25, 44), (31, 44), (37, 44)],
+               "oak_slab", "oak_fence")                                # vine pergola over the terrace
+        for x in (26, 28, 30, 32, 34, 36):
+            d.set(x, 5, 40, "vine[east=false,north=true,south=false,up=false,west=false]")
+        well(d, 30, 26, "stone_bricks", "dark_oak", "dark_oak_fence")
+        lamp_post(d, 24, 40)
+        lamp_post(d, 38, 40)
+        bench(d, 9, 40, "north", 3)
+        bench(d, 18, 42, "north", 3)
+
+
+@growth("cook", "Cascadia")
+def _g_cook_cas(d, L):
+    if L >= 2:                                                       # sod-roofed river-rock root cellar
+        bld(d, 30, 4, 36, 12, 1, ("west", 4), [["kYhKk",
+                                                 ".....",
+                                                 "Y...K",
+                                                 ".....",
+                                                 "W.l.k",
+                                                 ".....",
+                                                 "kKhYk"]], "z", chimney=False, dormer=False,
+            wall="cobblestone", mroof="mossy_cobblestone", mlog="spruce_log")
+        put(d, torch(29, 4, 7, "west") + [(29, 2, 5, "barrel[facing=up,open=false]"), (29, 2, 11, "hay_block[axis=y]")])
+        label(d, 29, 3, 10, "west", ["Root", "Cellar"])
+    if L >= 3:                                                       # long two-storey bunkhouse
+        bld(d, 3, 24, 23, 30, 2, ("north", 14), [[".     .........kYhk",
+                                                   "...................",
+                                                   "o..wte..wte..wte..p",
+                                                   "m......l.......l...",
+                                                   "UuU.kK.Z.....D.D.kY"],
+                                                  ["       H.H.H.H.H.H.",
+                                                   ".......f.f.f.f.f.f.",
+                                                   "...................",
+                                                   "Hf.....l.....l...fH",
+                                                   "N.k.kD.D.kD.D.k...N"]], "x", chimney=(2, 27), dormer=False,
+            mlog="spruce_log", mroof="mangrove")
+        put(d, [(x, 5, z, sl("spruce", "top")) for x in (16, 17, 18) for z in (22, 23)]
+            + [(x, y, 22, "spruce_fence") for x in (16, 18) for y in (2, 3, 4)] + torch(16, 4, 23, "north"))
+        label(d, 19, 3, 23, "north", ["Bunkhouse"])
+    if L >= 4:                                                       # mess hall with a deep front porch
+        bld(d, 38, 24, 56, 36, 1, ("north", 9), [["kYk.......omoUuUk",
+                                                   ".................",
+                                                   ".nnnn..nnn..nnnn.",
+                                                   ".TTTT..TTT..TTTT.",
+                                                   ".ssss..sss..ssss.",
+                                                   "........l........",
+                                                   ".nnnn..nnn..nnnn.",
+                                                   ".TTTT..TTT..TTTT.",
+                                                   ".ssss..sss..ssss.",
+                                                   ".................",
+                                                   "b.Z.h.kYk.kYk.h.b"]], "x", tall=True, chimney=(57, 30),
+            dormer=False, mlog="stripped_spruce_log", mroof="dark_prismarine")
+        porch_lean(d, 39, 55, 21, 24, 6, "spruce", "spruce_log", (39, 43, 51, 55), gap=(46, 47, 48),
+                   floor="spruce_planks")
+        put(d, torch(46, 4, 23, "north") + torch(48, 4, 23, "north") + [(41, 2, 22, "barrel[facing=up,open=false]"),
+                                                                         (53, 2, 22, "hay_block[axis=y]")])
+        label(d, 50, 3, 23, "north", ["Mess", "Hall"])
+        pavilion(d, 28, 26, 34, 30, 3, [(28, 26), (34, 26), (28, 30), (34, 30), (31, 30)], "x", "spruce",
+                 "spruce_log")                                         # open wood shed
+        woodpile(d, 29, 33, 29, 2, "spruce")
+        woodpile(d, 29, 33, 28, 2, "spruce")
+        cart(d, 30, 34, "x", "oak_log[axis=x]")
     if L >= 5:
-        HALL(d, 24, 24, ["p.b.b.b...b.b.b.p",
-                         ".................",
-                         "..wTe..wTe..wTe..",
-                         "........l........",
-                         "..wTe..wTe..wTe..",
-                         ".................",
-                         "..rrrrrrrrrrrrr..",
-                         ".................",
-                         "p..UAUVUAUVUAU..p"], ["LUMEN", "CAFE"], roofitems=SOLAR + GREEN([9, 11, 13, 15], 8))
-        SHED(d, 41, 12, ["AVAVA.AVA",
-                         "....l....",
-                         "..UUU.UUU",
-                         ".........",
-                         "p.kKk.k.p"], ["CAKE", "BAR"])
-        garden(d, 38, extra_trees=((48, 27), (22, 40), (48, 40)))
+        bld(d, 40, 4, 50, 14, 3, ("west", 5), [[".     ..b",               # three-storey lodge
+                                                 "........b",
+                                                 "..wTe....",
+                                                 ".........",
+                                                 ".......Z.",
+                                                 "..wTe....",
+                                                 "....l....",
+                                                 "........p",
+                                                 "kYk.D.kYk"],
+                                                ["       ..",
+                                                 "Hf.....fH",
+                                                 "N.......N",
+                                                 "Hf.....fH",
+                                                 "...l.....",
+                                                 "D.......D",
+                                                 ".........",
+                                                 ".........",
+                                                 "...     ."],
+                                                ["HNH...HNH",
+                                                 "f.f...f.f",
+                                                 ".........",
+                                                 "Hf.....fH",
+                                                 "N...l...N",
+                                                 "Hf.....fH",
+                                                 ".........",
+                                                 "D.......D",
+                                                 "         "]], "x", roofkind="hip", chimney=(51, 9), dormer=False,
+            mlog="stripped_dark_oak_log", mroof="mangrove", lower="cobblestone")
+        porch_lean_z(d, 6, 12, 38, 40, 6, "spruce", "spruce_log", (6, 12), gap=(8, 9, 10), floor="spruce_planks")
+        put(d, torch(39, 4, 8, "west") + torch(39, 4, 10, "west"))
+        label(d, 39, 3, 11, "west", ["Lodge"])
+        bld(d, 30, 38, 36, 44, 1, ("north", 3), [["k...k",                   # stone smokehouse
+                                                   ".....",
+                                                   "Y.h.Y",
+                                                   ".....",
+                                                   "kWhWk"]], "x", roofkind="hip", chimney=(37, 41), dormer=False,
+            wall="mossy_cobblestone", mroof="deepslate_tile", mlog="spruce_log")
+        put(d, torch(32, 4, 37, "north"))
+        label(d, 34, 3, 37, "north", ["Smoke", "House"])
+        firepit(d, 16, 40)
+        for x, z in ((10, 38), (19, 43)):
+            picnic(d, x, z, "spruce", 2)
+        woodpile(d, 24, 28, 44)
+        bld(d, 42, 39, 50, 45, 1, ("north", 4), [["uUu..WW",              # wash house
+                                                   ".......",
+                                                   "W.....h",
+                                                   "...l...",
+                                                   "uUu.kWk"]], "x", chimney=False, dormer=False,
+            mlog="stripped_birch_log", mroof="dark_prismarine")
+        put(d, torch(45, 4, 38, "north"))
+        label(d, 47, 3, 38, "north", ["Wash", "House"])
+        for x, z in ((4, 44), (26, 36), (38, 45), (54, 44)):
+            spruce_tree(d, x, z)
+        lamp_post(d, 22, 36)
+        lamp_post(d, 40, 40)
 
 
-# ============================================================================================ FLORIST add-ons
+@growth("cook", "Neoterra")
+def _g_cook_neo(d, L):
+    if L >= 2:                                                       # cold store
+        bld(d, 23, 3, 31, 9, 1, ("west", 3), [["kKk.kKk",
+                                                ".......",
+                                                ".......",
+                                                "..l....",
+                                                "KkK.KkK"]], mwall="light_gray_concrete")
+        planter(d, 22, 4, 2)
+        planter(d, 22, 8, 2)
+        label(d, 22, 3, 5, "west", ["COLD", "STORE"])
+    if L >= 3:                                                       # staff block with green roof
+        bld(d, 34, 3, 44, 11, 2, ("west", 5), [[".     .bE",
+                                                 ".........",
+                                                 "..wTe.wTe",
+                                                 "..wTe.wTe",
+                                                 ".........",
+                                                 "....l....",
+                                                 "kk.UoUuZp"],
+                                                ["       HN",
+                                                 ".......f.",
+                                                 "Hf.....fH",
+                                                 "N.......N",
+                                                 "Hf..l..fH",
+                                                 ".........",
+                                                 "D.wT.Te.D"]],
+            mwall="white_terracotta", roofitems=SOLAR + GREEN([1, 3, 5, 7, 9], 7))
+        put(d, [(33, 5, z, "smooth_stone_slab[type=bottom,waterlogged=false]") for z in (7, 8, 9)])
+        planter(d, 33, 5, 2)
+        planter(d, 33, 11, 2)
+        label(d, 33, 3, 10, "west", ["STAFF"])
+    if L >= 4:                                                       # glass dining pavilion, roof terrace
+        bld(d, 23, 19, 41, 31, 1, ("north", 9), [["pb.b.........b.bp",
+                                                   ".................",
+                                                   "p..nn.......nn..p",
+                                                   "...TT...l...TT...",
+                                                   ".wTe..wTe.wTe..p.",
+                                                   ".................",
+                                                   "...nnn.....nnn...",
+                                                   "...TTT..l..TTT...",
+                                                   "...sss.....sss...",
+                                                   ".....nnnnnn......",
+                                                   "p.UUUUuUUUUU.Z..p"]], tall=True, wall="glass",
+            roofitems=GREEN([2, 4, 6, 8, 10, 12, 14, 16], 11) + [(x, 2, "white_stained_glass_pane") for x in
+                                                                   range(1, 18)])
+        canopy(d, 25, 21, 39, 28, 15, [(25, 21), (32, 21), (39, 21), (25, 28), (32, 28), (39, 28)],    # roof pergola
+               "birch_slab", "birch_fence", 12)
+        canopy(d, 23, 12, 31, 15, 5, [(23, 12), (31, 12), (23, 15), (31, 15)])     # street cafe terrace
+        for x in (25, 29):
+            d.table(x, 2, 13, "birch", "slab")
+            d.chair(x - 1, 2, 13, "west", "birch", sit=False)
+            d.chair(x + 1, 2, 13, "east", "birch", sit=False)
+        for x in (24, 27, 30):
+            planter(d, x, 16, 2, "potted_bamboo" if x == 27 else "flowering_azalea")
+        for x in (28, 35):                                          # roof terrace tables under the pergola
+            d.table(x, 12, 24, "birch", "slab")
+            d.chair(x - 1, 12, 24, "west", "birch", sit=False)
+            d.chair(x + 1, 12, 24, "east", "birch", sit=False)
+        planter(d, 30, 18, 2)
+        planter(d, 34, 18, 2)
+        label(d, 32, 8, 18, "north", ["SKY", "DINING"])
+    if L >= 5:
+        bld(d, 39, 33, 47, 41, 6, ("west", 4), [[".     .",              # hotel tower
+                                                  ".......",
+                                                  "..T...p",
+                                                  "..Te...",
+                                                  "..T....",
+                                                  "wTe...p",
+                                                  "p.....b"],
+                                                 ["       ",
+                                                  "Hf.....",
+                                                  "N...wT.",
+                                                  "Hf.....",
+                                                  ".......",
+                                                  "D.p.p..",
+                                                  ".     ."],
+                                                 [".     .",
+                                                  ".......",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  "...l...",
+                                                  "D.wT..D",
+                                                  "       "],
+                                                 ["       ",
+                                                  ".......",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  "..wTe..",
+                                                  ".......",
+                                                  ".     ."],
+                                                 [".     .",
+                                                  ".......",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  "..wTe..",
+                                                  "D.....D",
+                                                  "       "],
+                                                 ["       ",
+                                                  ".....HN",
+                                                  "bb...f.",
+                                                  ".......",
+                                                  "wTe.l..",
+                                                  "..rrr..",
+                                                  "D.p.p.D"]], mwall="light_gray_concrete", lower="glass")
+        billboard(d, 40, 46, 37, 33, ["ORBIT", "HOTEL"])
+        put(d, [(38, 5, z, "smooth_stone_slab[type=bottom,waterlogged=false]") for z in (36, 37, 38)])
+        label(d, 38, 3, 35, "west", ["HOTEL"])
+        d.fill(29, 1, 35, 31, 1, 37, "water")                         # fountain plaza
+        for x, z in perim(28, 34, 32, 38):
+            d.set(x, 2, z, "smooth_stone_slab[type=bottom,waterlogged=false]")
+        for x, z in ((24, 33), (24, 41), (36, 41)):
+            tree(d, x, z, "birch")
+        bench(d, 27, 40, "north", 3)
+        bench(d, 31, 40, "north", 3)
+        for x, z in ((22, 31), (36, 32)):
+            lamp_post(d, x, z, 4)
+
+
+# ============================================================================================ COOKERY complexes
+# Kitchen: a service courtyard of larder, scullery, stores and the servants' quarters.
+# Hearthwood "manor kitchen court": stone larder (L2), a low scullery & brewhouse range with two stacks closing
+#   the court to the south (L3), a three-storey gabled servants' hall with a tall stack (L4), a long two-storey
+#   stores range with a sack hoist and a bake house with an oven chimney, well and herb beds (L5).
+# Cascadia "camp commissary": hipped stone smokehouse (L2), tall camp kitchen (L3), a two-storey supply barn
+#   with a hay hoist (L4), an open cookout pavilion over a grill and the cooks' three-storey quarters (L5).
+# Neoterra "food lab": long dry-store bar (L2), a glazed prep kitchen hall (L3), a three-storey test-lab block
+#   with solar roof (L4), a staff canteen with a roof garden and a planted court (L5).
+@growth("cookery", "Hearthwood")
+def _g_cookery_hw(d, L):
+    if L >= 2:                                                       # stone larder
+        bld(d, 24, 3, 30, 11, 1, ("west", 4), [["kYKYk",
+                                                 ".....",
+                                                 "h...W",
+                                                 ".....",
+                                                 "Y.l.K",
+                                                 ".....",
+                                                 "kKhYk"]], "z", chimney=False, dormer=False,
+            wall="stone_bricks", mroof="mud_brick")
+        put(d, torch(23, 4, 6, "west"))
+        label(d, 23, 3, 9, "west", ["Larder"])
+    if L >= 3:                                                       # scullery & brewhouse range
+        bld(d, 2, 28, 20, 34, 1, ("north", 9), [["uUuUu...l...kYkhk",
+                                                  ".................",
+                                                  "..UUU..wte..k.k..",
+                                                  "..s.s........l...",
+                                                  "kKk.h.WW.p.kYk.kY"]], "x", chimney=(6, 35), dormer=True,
+            mwall="white_terracotta", mroof="dark_prismarine")
+        stack(d, 16, 35, 12, "bricks")
+        put(d, wbox(4, 27, "north", "red_tulip", "warped") + wbox(7, 27, "north", "cornflower", "warped")
+            + wbox(16, 27, "north", "oxeye_daisy", "warped") + torch(10, 4, 27, "north") + torch(12, 4, 27, "north"))
+        label(d, 13, 3, 27, "north", ["Scullery"])
+    if L >= 4:                                                       # servants' hall, three storeys, gable z
+        bld(d, 33, 3, 41, 13, 3, ("west", 5), [[".     .",
+                                                 ".......",
+                                                 "o..n..b",
+                                                 "U.wTe.b",
+                                                 "..wTe..",
+                                                 "...s...",
+                                                 "u......",
+                                                 "......p",
+                                                 "kYk.D.k"],
+                                                ["       ",
+                                                 "Hf...fH",
+                                                 "N.....N",
+                                                 "Hf...fH",
+                                                 ".......",
+                                                 "..rrr..",
+                                                 "D.....D",
+                                                 ".......",
+                                                 ".     ."],
+                                                ["       ",
+                                                 ".......",
+                                                 "bb...H.",
+                                                 ".....f.",
+                                                 "wTe....",
+                                                 "...l...",
+                                                 ".......",
+                                                 "D.T.T.D",
+                                                 "k.....k"]], "z", chimney=(37, 14), dormer=True,
+            mwall="calcite", mroof="brick", lower="stone_bricks")
+        put(d, torch(32, 4, 7, "west") + wbox(32, 5, "west", "pink_tulip", "warped")
+            + wbox(32, 11, "west", "poppy", "warped"))
+        label(d, 32, 3, 10, "west", ["Servants'", "Hall"])
+    if L >= 5:
+        bld(d, 24, 15, 32, 35, 2, ("west", 10), [[".     .",                # stores range
+                                                   ".......",
+                                                   "kYk.kYk",
+                                                   ".......",
+                                                   "KkK.KkK",
+                                                   ".......",
+                                                   "hWh.hWh",
+                                                   ".......",
+                                                   "kKk.kKk",
+                                                   ".......",
+                                                   "...l...",
+                                                   "YkY.YkY",
+                                                   ".......",
+                                                   "kkk.kkk",
+                                                   ".......",
+                                                   "WhW.WhW",
+                                                   ".......",
+                                                   ".......",
+                                                   "kKk.kYk"],
+                                                  ["       ",
+                                                   "Hf...fH",
+                                                   "N.....N",
+                                                   "Hf...fH",
+                                                   ".......",
+                                                   "D..l..D",
+                                                   "Hf...fH",
+                                                   "N.....N",
+                                                   "Hf...fH",
+                                                   ".......",
+                                                   "..wTe..",
+                                                   ".......",
+                                                   "Hf...fH",
+                                                   "N.....N",
+                                                   "Hf...fH",
+                                                   "...l...",
+                                                   "D.....D",
+                                                   ".......",
+                                                   "kD...Dk"]], "z", chimney=False, dormer=True,
+            mwall="smooth_sandstone", mroof="mud_brick")
+        hoist(d, 28, 15, 14, "north", "white_wool")
+        put(d, torch(23, 4, 24, "west") + torch(23, 4, 26, "west"))
+        label(d, 23, 3, 28, "west", ["Stores"])
+        bld(d, 36, 17, 46, 25, 1, ("north", 5), [["kW.....Wk",               # bake house
+                                                   ".........",
+                                                   "UAU.l.UAU",
+                                                   ".........",
+                                                   "o.......o",
+                                                   ".........",
+                                                   "o.o.W.o.o"]], "x", chimney=(47, 21), dormer=False,
+            mwall="bricks", mroof="granite")
+        put(d, wbox(38, 16, "north", "lily_of_the_valley", "warped") + wbox(44, 16, "north", "red_tulip", "warped")
+            + torch(40, 4, 16, "north"))
+        label(d, 42, 3, 16, "north", ["Bake", "House"])
+        well(d, 12, 24, "stone_bricks", "spruce", "spruce_fence")
+        bed_row(d, [(x, z) for z in (38, 40) for x in range(4, 19)], 2)     # herb garden behind the scullery
+        woodpile(d, 21, 23, 33, 2, "spruce")
+        for x, z in ((40, 33), (49, 40), (28, 40)):
+            tree(d, x, z)
+        lamp_post(d, 22, 22)
+        bench(d, 6, 22, "south", 3)
+
+
+@growth("cookery", "Cascadia")
+def _g_cookery_cas(d, L):
+    if L >= 2:                                                       # hipped stone smokehouse
+        bld(d, 24, 4, 30, 10, 1, ("west", 3), [["kYhYk",
+                                                 ".....",
+                                                 "....W",
+                                                 "..l..",
+                                                 "kKhKk"]], "x", roofkind="hip", chimney=(31, 7), dormer=False,
+            wall="cobblestone", mroof="deepslate_tile", mlog="spruce_log")
+        put(d, torch(23, 4, 6, "west"))
+        label(d, 23, 3, 8, "west", ["Smoke", "House"])
+    if L >= 3:                                                       # tall camp kitchen
+        bld(d, 24, 14, 42, 20, 1, ("west", 3), [["omoUuUomo.kYk.hWh",
+                                                  ".................",
+                                                  "...UUUU...UUUU...",
+                                                  ".................",
+                                                  "kYk.kYk.l.kKk.hWh"]], "x", tall=True, chimney=(32, 13),
+            dormer=False, mlog="stripped_spruce_log", mroof="cobbled_deepslate", lower="cobblestone")
+        porch_lean(d, 25, 41, 23, 20, 6, "spruce", "spruce_log", (25, 29, 33, 37, 41), floor="spruce_planks")
+        put(d, torch(23, 4, 16, "west") + torch(23, 4, 18, "west"))
+        label(d, 23, 3, 15, "west", ["Camp", "Kitchen"])
+    if L >= 4:                                                       # supply barn with hay hoist
+        bld(d, 2, 26, 20, 34, 2, ("north", 9), [[".     ......kYkYk",
+                                                  ".................",
+                                                  "kKk.kKk...kKk.kKk",
+                                                  ".................",
+                                                  "hhh.YYY...YkY.hhh",
+                                                  ".................",
+                                                  "kYk.kYk.l.kYk.kYk"],
+                                                 ["       ..H.H.H.H.",
+                                                  ".........f.f.f.f.",
+                                                  ".................",
+                                                  "Hf.....l.......fH",
+                                                  "N...............N",
+                                                  "Hf....kYk......fH",
+                                                  "D.D.....l.....D.D"]], "x", chimney=False, dormer=False,
+            mlog="stripped_dark_oak_log", mroof="mangrove", wall="birch_planks", lower="cobblestone")
+        hoist(d, 20, 30, 13, "east")
+        put(d, torch(10, 4, 25, "north") + torch(12, 4, 25, "north"))
+        label(d, 14, 3, 25, "north", ["Supply", "Barn"])
+    if L >= 5:
+        pavilion(d, 24, 27, 36, 35, 4, [(24, 27), (30, 27), (36, 27), (24, 35), (30, 35), (36, 35)], "x",
+                 "spruce", "spruce_log")                               # open cookout shelter
+        firepit(d, 30, 31)
+        for x, z in ((25, 29), (32, 29), (25, 33), (32, 33)):
+            picnic(d, x, z, "spruce", 2)
+        put(d, [(26, 2, 31, "smoker[facing=east,lit=true]"), (34, 2, 31, "furnace[facing=west,lit=true]")])
+        bld(d, 44, 4, 52, 12, 3, ("south", 4), [[".     .",              # cooks' quarters
+                                                  ".......",
+                                                  "o.wTe.b",
+                                                  "U.wTe.b",
+                                                  "u.....p",
+                                                  ".......",
+                                                  "kY...Yk"],
+                                                 ["       ",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  "Hf...fH",
+                                                  "...l...",
+                                                  "D......",
+                                                  ".     ."],
+                                                 ["Hf...fH",
+                                                  "N.....N",
+                                                  ".......",
+                                                  "..wTe..",
+                                                  "...l...",
+                                                  "D.....D",
+                                                  "       "]], "x", chimney=(43, 8), dormer=False,
+            mlog="spruce_log", mroof="dark_prismarine", lower="mossy_cobblestone")
+        put(d, torch(47, 4, 13, "south"))
+        label(d, 49, 3, 13, "south", ["Cooks'", "Quarters"])
+        woodpile(d, 38, 42, 21, 2)
+        for x, z in ((4, 40), (14, 42), (44, 40), (51, 30), (40, 42)):
+            spruce_tree(d, x, z)
+        lamp_post(d, 22, 24)
+        lamp_post(d, 42, 25)
+
+
+@growth("cookery", "Neoterra")
+def _g_cookery_neo(d, L):
+    if L >= 2:                                                       # long dry-store bar
+        bld(d, 28, 3, 40, 7, 1, ("west", 2), [["kKk.kKk.kKk",
+                                               "...........",
+                                               "KkK.KkK.KkK"]], mwall="light_gray_concrete")
+        planter(d, 27, 3, 2)
+        planter(d, 27, 7, 2)
+        label(d, 27, 3, 4, "west", ["DRY", "STORE"])
+    if L >= 3:                                                       # glazed prep kitchen hall
+        bld(d, 3, 18, 21, 26, 1, ("north", 9), [["UoUmUu..l...uUoUm",
+                                                  ".................",
+                                                  ".UUUU.......UUUU.",
+                                                  ".s..s.......s..s.",
+                                                  ".................",
+                                                  ".................",
+                                                  "kKk.x.p...p.E.kKk"]], tall=True, mwall="white_concrete",
+            roofitems=[(x, z, "daylight_detector[inverted=false,power=0]") for x in range(2, 17, 2)
+                       for z in (2, 3, 5, 6)])
+        canopy(d, 9, 15, 15, 17, 6, [(9, 15), (15, 15)])
+        label(d, 14, 3, 17, "north", ["PREP"])
+        planter(d, 8, 17, 2)
+    if L >= 4:                                                       # three-storey test lab
+        bld(d, 40, 3, 48, 13, 3, ("west", 5), [[".     .",
+                                                 ".......",
+                                                 "UoU.UmU",
+                                                 ".......",
+                                                 "...l...",
+                                                 ".wTTe..",
+                                                 ".......",
+                                                 ".......",
+                                                 "kKp.pKk"],
+                                                ["       ",
+                                                 ".......",
+                                                 "E.b.b.C",
+                                                 ".......",
+                                                 "wT...Te",
+                                                 ".......",
+                                                 "..l....",
+                                                 ".......",
+                                                 ".     ."],
+                                                ["Hf...fH",
+                                                 "N.....N",
+                                                 ".......",
+                                                 "Hf...fH",
+                                                 "N.....N",
+                                                 "...l...",
+                                                 "D.wTe.D",
+                                                 ".......",
+                                                 "       "]], mwall="white_terracotta", lower="glass",
+            roofitems=SOLAR + [(x, 7, "daylight_detector[inverted=false,power=0]") for x in (2, 3, 4)])
+        put(d, [(39, 5, z, "smooth_stone_slab[type=bottom,waterlogged=false]") for z in (7, 8, 9)]
+            + [(44, y, 2, "cyan_terracotta") for y in range(2, 17)])
+        label(d, 39, 3, 10, "west", ["TEST", "LAB"])
+    if L >= 5:
+        bld(d, 26, 18, 44, 30, 1, ("north", 9), [["p.b.b...l...b.b.p",          # staff canteen
+                                                   ".................",
+                                                   ".wTe.wTe...wTe.p.",
+                                                   ".................",
+                                                   "..nnnn.....nnnn..",
+                                                   "..TTTT.....TTTT..",
+                                                   "..ssss.....ssss..",
+                                                   "........l........",
+                                                   "..nnnn.....nnnn..",
+                                                   "..TTTT.....TTTT..",
+                                                   "p.UUUUUuUUUUUU..p"]], tall=True, wall="glass",
+            roofitems=GREEN([2, 4, 6, 8, 10, 12, 14, 16], 11) + GREEN([2, 4, 6, 8, 10, 12, 14, 16], 3))
+        label(d, 35, 8, 17, "north", ["STAFF", "CANTEEN"])
+        d.box(31, 12, 22, 39, 14, 26, "glass")                         # rooftop herb glasshouse
+        d.fill(31, 15, 22, 39, 15, 26, "light_gray_stained_glass")
+        for x, z in perim(31, 22, 39, 26):
+            if (x - 31) % 4 == 0 and z in (22, 26) or x in (31, 39):
+                for y in (12, 13, 14):
+                    d.set(x, y, z, "light_gray_concrete")
+        for x in range(32, 39):
+            for z in (23, 25):
+                d.set(x, 11, z, "grass_block[snowy=false]")
+                d.set(x, 12, z, "fern" if x % 2 else "sweet_berry_bush[age=3]")
+        canopy(d, 32, 14, 38, 17, 6, [(32, 14), (38, 14)])
+        for x in (4, 8, 12, 16, 20):                                  # planted court
+            planter(d, x, 30, 2, "flowering_azalea" if x % 8 else "potted_bamboo")
+        for x, z in ((4, 36), (14, 36), (24, 37), (48, 22), (48, 34), (52, 9), (52, 28)):
+            tree(d, x, z, "birch")
+        bench(d, 8, 34, "north", 3)
+        bench(d, 16, 34, "north", 3)
+        lamp_post(d, 23, 33, 4)
+        lamp_post(d, 47, 28, 4)
+
+
+# ============================================================================================ DYER complexes
+# Dyeworks: vats, weaving, drying and selling cloth.
+# Hearthwood "Madder & Woad": an open timber vat shed with fired vats (L2), a long low weavers' range with
+#   dormers and a row of looms (L3), a four-storey hipped drying tower whose slatted top storey is hung with
+#   coloured cloths (L4), a tall cloth hall and a yard of drying lines and vats (L5).
+# Cascadia "Riverbend Woollens": a fleece shed (L2), a tall loom house (L3), a gabled drying tower with a slatted
+#   loft (L4), a two-storey fulling mill and drying frames hung with hanks of wool (L5).
+# Neoterra "CHROMA": yarn store (L2), a two-storey studio (L3), a five-storey colour tower with rainbow fins
+#   (L4), a glass cloth hall with banner rails on its roof (L5).
+def slats(d, x1, z1, x2, z2, ys, mat):
+    """Louvred drying storey: the wall cells between the corner posts at the given heights become slats."""
+    for x, z in perim(x1, z1, x2, z2):
+        if not (x in (x1, x2) and z in (z1, z2)):
+            for y in ys:
+                d.set(x, y, z, mat)
+
+
+@growth("dyer", "Hearthwood")
+def _g_dyer_hw(d, L):
+    if L >= 2:                                                       # open vat shed
+        pavilion(d, 27, 3, 37, 11, 4, [(27, 3), (32, 3), (37, 3), (27, 11), (32, 11), (37, 11), (27, 7),
+                                       (37, 7)], "x", "dark_prismarine", "dark_oak_log", floor="stone_bricks")
+        vats(d, [(29, 5), (31, 5), (33, 5), (35, 5), (29, 9), (31, 9), (33, 9), (35, 9)], 2, 0)
+        put(d, [(28, 2, 7, "red_wool"), (29, 2, 7, "yellow_wool"), (36, 2, 7, "blue_wool"),
+                (34, 2, 7, "barrel[facing=up,open=false]")])
+        label(d, 32, 4, 2, "north", ["Vat", "Shed"], color="blue")
+    if L >= 3:                                                       # long weavers' range with dormers
+        bld(d, 3, 24, 27, 30, 1, ("north", 12), [["M.M.M.M.........M.M.M.M",
+                                                   "s.s.s.s.........s.s.s.s",
+                                                   ".......................",
+                                                   "WKW.YkY...l.....WKW.YkY",
+                                                   "b.b.p......E.....p.b.b."]], "x", chimney=(2, 27), dormer=True,
+            mwall="light_blue_terracotta", mroof="dark_prismarine", win=3)
+        put(d, wbox(5, 23, "north", "cornflower", "spruce") + wbox(8, 23, "north", "allium", "spruce")
+            + wbox(20, 23, "north", "blue_orchid", "spruce") + wbox(23, 23, "north", "cornflower", "spruce")
+            + torch(14, 4, 23, "north"))
+        label(d, 17, 3, 23, "north", ["Weavers"], color="blue")
+    if L >= 4:                                                       # four-storey drying tower
+        bld(d, 40, 3, 48, 11, 4, ("west", 4), [[".     .",
+                                                 ".......",
+                                                 "WKW.WKW",
+                                                 ".......",
+                                                 "uu.l.uu",
+                                                 ".......",
+                                                 "kYk.kYk"],
+                                                ["       ",
+                                                 ".......",
+                                                 "WWW.WWW",
+                                                 ".......",
+                                                 "KkK.KkK",
+                                                 ".......",
+                                                 ".     ."],
+                                                [".     .",
+                                                 ".......",
+                                                 "WhW.WhW",
+                                                 ".......",
+                                                 "kYk.kYk",
+                                                 ".......",
+                                                 "       "],
+                                                ["       ",
+                                                 ".......",
+                                                 ".......",
+                                                 "...l...",
+                                                 ".......",
+                                                 ".......",
+                                                 "......."]], "x", roofkind="hip", chimney=False, dormer=False,
+            mwall="calcite", mroof="dark_prismarine", lower="bricks")
+        slats(d, 40, 3, 48, 11, (18, 19), "dark_oak_fence")
+        for i, x in enumerate((42, 44, 46)):                          # cloths hung out of the loft
+            put(d, [(x, 19, 2, f"{dy(d, i)}_wall_banner[facing=north]"),
+                    (x, 19, 12, f"{dy(d, i + 2)}_wall_banner[facing=south]")])
+        for i, z in enumerate((5, 7, 9)):
+            put(d, [(49, 19, z, f"{dy(d, i + 1)}_wall_banner[facing=east]")])
+        put(d, torch(39, 4, 6, "west"))
+        label(d, 39, 3, 9, "west", ["Drying", "Loft"], color="blue")
+    if L >= 5:                                                       # cloth hall + drying yard
+        bld(d, 31, 15, 51, 25, 1, ("north", 10), [["b.bWKW...l...WKWb.b",
+                                                   "...................",
+                                                   ".TTTTT.......TTTTT.",
+                                                   "..s.s.........s.s..",
+                                                   "........l..........",
+                                                   "M.M.M.........M.M.M",
+                                                   "...................",
+                                                   "WWW.YkY.....YkY.WWW",
+                                                   "pE....kYk.kYk....Ep"]], "x", tall=True, chimney=False,
+            dormer=False, mwall="white_terracotta", mroof="brick", lower="bricks")
+        put(d, torch(40, 4, 14, "north") + torch(42, 4, 14, "north")
+            + [(x, 7, 14, f"{dy(d, i)}_wall_banner[facing=north]") for i, x in enumerate((33, 36, 46, 49))])
+        label(d, 44, 3, 14, "north", ["Cloth", "Hall"], color="blue")
+        for k, z in enumerate((30, 34, 38)):                         # drying lines
+            drying_line(d, 30, 50, z, 5, "stripped_dark_oak_log", "dark_oak_log", k)
+        vats(d, [(x, 42) for x in range(31, 50, 3)], 2, 0)
+        for x, z in ((6, 38), (16, 40), (24, 36)):
+            tree(d, x, z)
+        lamp_post(d, 28, 28)
+        bench(d, 10, 33, "north", 3)
+
+
+@growth("dyer", "Cascadia")
+def _g_dyer_cas(d, L):
+    if L >= 2:                                                       # fleece shed
+        bld(d, 25, 3, 31, 11, 1, ("west", 4), [["WkWkW",
+                                                 ".....",
+                                                 "W...h",
+                                                 ".....",
+                                                 "K.l.W",
+                                                 ".....",
+                                                 "kWhWk"]], "z", chimney=False, dormer=False,
+            mlog="stripped_spruce_log", mroof="deepslate_tile")
+        put(d, torch(24, 4, 6, "west") + [(24, 2, 4, "white_wool"), (24, 2, 10, "hay_block[axis=y]")])
+        label(d, 24, 3, 9, "west", ["Fleece"])
+    if L >= 3:                                                       # tall loom house
+        bld(d, 25, 15, 45, 21, 1, ("west", 3), [["M.M.M.M.M.M.M.M.M.M",
+                                                 "s.s.s.s.s.s.s.s.s.s",
+                                                 "...................",
+                                                 "...l.....l.....l...",
+                                                 "WKWYkY.kYk.WKW.hWhp"]], "x", tall=True, chimney=False,
+            dormer=False, mlog="stripped_spruce_log", mroof="cobbled_deepslate", lower="cobblestone")
+        put(d, torch(24, 4, 17, "west") + torch(24, 4, 19, "west"))
+        label(d, 24, 3, 16, "west", ["Loom", "House"])
+    if L >= 4:                                                       # gabled drying tower with slatted loft
+        bld(d, 35, 3, 43, 11, 4, ("west", 4), [[".     .",
+                                                 ".......",
+                                                 "WKW.WKW",
+                                                 ".......",
+                                                 "uu.l.uu",
+                                                 ".......",
+                                                 "kYk.kYk"],
+                                                ["       ",
+                                                 ".......",
+                                                 "hhh.WWW",
+                                                 ".......",
+                                                 "KkK.KkK",
+                                                 ".......",
+                                                 ".     ."],
+                                                [".     .",
+                                                 ".......",
+                                                 "WhW.WhW",
+                                                 ".......",
+                                                 "kYk.kYk",
+                                                 ".......",
+                                                 "       "],
+                                                ["       ",
+                                                 ".......",
+                                                 ".......",
+                                                 "...l...",
+                                                 ".......",
+                                                 ".......",
+                                                 "......."]], "z", chimney=False, dormer=False,
+            mlog="spruce_log", mroof="mangrove", lower="cobblestone")
+        slats(d, 35, 3, 43, 11, (18, 19), "spruce_fence")
+        for i, x in enumerate((37, 39, 41)):
+            put(d, [(x, 19, 2, f"{dy(d, i)}_wall_banner[facing=north]"),
+                    (x, 19, 12, f"{dy(d, i + 3)}_wall_banner[facing=south]")])
+        put(d, torch(34, 4, 6, "west"))
+        label(d, 34, 3, 9, "west", ["Drying", "Tower"])
+    if L >= 5:                                                       # two-storey fulling mill
+        bld(d, 25, 25, 37, 39, 2, ("north", 9), [[".     ....b",
+                                                   "...........",
+                                                   "uu.uu...x..",
+                                                   "...........",
+                                                   "M.M.M...M.M",
+                                                   "...........",
+                                                   "WKW.l..WKW.",
+                                                   "...........",
+                                                   "YkY.....YkY",
+                                                   "...........",
+                                                   "hWh.....hWh",
+                                                   "...........",
+                                                   "kYk.p.p.kYk"],
+                                                  ["       ....",
+                                                   "...........",
+                                                   "Hf.......fH",
+                                                   "N.........N",
+                                                   "Hf..wTe..fH",
+                                                   "...........",
+                                                   "WWW.l...WWW",
+                                                   "...........",
+                                                   "KkK.....KkK",
+                                                   "...........",
+                                                   "hhh.....hhh",
+                                                   "...........",
+                                                   "D.D..b..D.D"]], "z", chimney=(31, 40), dormer=False,
+            mlog="stripped_spruce_log", mroof="deepslate_tile", lower="mossy_cobblestone")
+        put(d, torch(33, 4, 24, "north") + torch(35, 4, 24, "north"))
+        label(d, 36, 3, 24, "north", ["Mill"])
+        for k, x in enumerate((42, 46, 50)):                         # drying frames with hanks of wool
+            for z in (16, 30):
+                for y in (2, 3, 4, 5):
+                    d.set(x, y, z, lg("spruce_log"))
+            for z in range(17, 30):
+                d.set(x, 5, z, lg("stripped_spruce_log", "z"))
+                if z % 2 == 1:
+                    d.set(x, 4, z, f"{dy(d, z + k)}_wool")
+        vats(d, [(41, 36), (44, 36), (47, 36), (50, 36)], 2, 0)
+        for x, z in ((8, 34), (14, 44), (44, 44), (51, 10)):
+            spruce_tree(d, x, z)
+        lamp_post(d, 23, 23)
+        lamp_post(d, 40, 40)
+
+
+@growth("dyer", "Neoterra")
+def _g_dyer_neo(d, L):
+    if L >= 2:                                                       # yarn store
+        bld(d, 25, 4, 33, 10, 1, ("west", 3), [["kKk.MWM",
+                                                 ".......",
+                                                 ".......",
+                                                 "..l....",
+                                                 "KWK.KWK"]], mwall="white_concrete")
+        planter(d, 24, 5, 2)
+        planter(d, 24, 9, 2)
+        label(d, 24, 3, 8, "west", ["YARN"])
+    if L >= 3:                                                       # two-storey studio
+        bld(d, 3, 17, 23, 23, 2, ("north", 10), [[".     .............",
+                                                   "...................",
+                                                   "M.M.M..wTe.wTe..M.M",
+                                                   "........l..........",
+                                                   "uuu.WKW.x.E.WKW.kYk"],
+                                                  ["       ..b.b.b.b...",
+                                                   "...................",
+                                                   "Hf..wTe.....wTe..fH",
+                                                   "N.................N",
+                                                   "Hf..D.D..l..D.D..fH"]], mwall="white_terracotta",
+            roofitems=GREEN([1, 3, 5, 7, 9, 11, 13, 15, 17], 5))
+        canopy(d, 11, 14, 17, 16, 6, [(11, 14), (17, 14)])
+        label(d, 15, 3, 16, "north", ["STUDIO"])
+    if L >= 4:                                                       # colour tower with rainbow fins
+        bld(d, 37, 4, 45, 12, 4, ("west", 4), [[".     .",
+                                                 ".......",
+                                                 "MWM.MWM",
+                                                 ".......",
+                                                 "uu.l.uu",
+                                                 ".......",
+                                                 "kYk.kYk"],
+                                                ["       ",
+                                                 ".......",
+                                                 "WKW.WKW",
+                                                 ".......",
+                                                 "E.b.b.C",
+                                                 ".......",
+                                                 ".     ."],
+                                                [".     .",
+                                                 ".......",
+                                                 "Hf...fH",
+                                                 "N.....N",
+                                                 "..wTe..",
+                                                 "D.....D",
+                                                 "       "],
+                                                ["       ",
+                                                 ".......",
+                                                 "bb...HN",
+                                                 ".....f.",
+                                                 "wTe.l..",
+                                                 "..rrr..",
+                                                 "D.....D"]], mwall="white_concrete", lower="glass")
+        for x, c in ((38, "magenta"), (40, "cyan"), (42, "lime"), (44, "yellow")):
+            put(d, [(x, y, 3, f"{c}_concrete") for y in range(2, 23)])
+        label(d, 36, 3, 6, "west", ["COLOUR", "LAB"])
+    if L >= 5:                                                       # glass cloth hall with roof banner rails
+        bld(d, 27, 16, 47, 26, 1, ("north", 10), [["pM.M.M...l...M.M.Mp",
+                                                   "...................",
+                                                   ".WKW.WKW.....WKW.p.",
+                                                   "...................",
+                                                   "..TTTTT.....TTTTT..",
+                                                   "...s.s.......s.s...",
+                                                   "........l..........",
+                                                   "uuu.uuu.....uuu.uuu",
+                                                   "kYk.E.p.....p.C.kYk"]], tall=True, wall="glass")
+        for z in (19, 23):                                           # banner rails on the roof deck
+            for x in (29, 45):
+                for y in (12, 13, 14):
+                    d.set(x, y, z, "light_gray_concrete")
+            for i, x in enumerate(range(30, 45)):
+                d.set(x, 14, z, "stripped_birch_log[axis=x]")
+                d.set(x, 14, z - 1, f"{dy(d, i)}_wall_banner[facing=north]")
+                d.set(x, 14, z + 1, f"{dy(d, i + 3)}_wall_banner[facing=south]")
+        label(d, 37, 8, 15, "north", ["CHROMA", "TEXTILES"])
+        for x in range(28, 47, 3):
+            planter(d, x, 28, 2)
+        bld(d, 3, 28, 13, 34, 1, ("north", 5), [["MWM.....b",              # showroom
+                                                  ".........",
+                                                  "..TTTTT..",
+                                                  "...s.s...",
+                                                  "WKW.p.WKW"]], mwall="white_concrete", lower="glass",
+            roofitems=GREEN([1, 3, 5, 7, 9], 3))
+        canopy(d, 6, 26, 10, 27, 6, [(6, 26), (10, 26)])
+        label(d, 10, 3, 27, "north", ["SHOWROOM"])
+        for x, z in ((18, 38), (6, 40), (51, 20), (51, 34), (30, 38), (42, 38)):
+            tree(d, x, z, "birch")
+        bench(d, 8, 26, "north", 3)
+        bench(d, 16, 26, "north", 3)
+        lamp_post(d, 25, 14, 4)
+        lamp_post(d, 49, 28, 4)
+
+
+# ============================================================================================ FLORIST complexes
+# Glasshouse estates.
+# Hearthwood "walled flower garden": potting shed and cold frames (L2), a long Victorian glasshouse (L3), a
+#   two-storey seed shop on the street (L4), a big palm house with tea tables, the florist's hipped house, a
+#   rose arbour and cottage beds (L5).
+# Cascadia "fireweed nursery": a tool shed and raised beds (L2), a long hoop house (L3), the seed store with a
+#   porch (L4), a glazed nursery house, the gardener's porch cabin, rain barrels and a wheelbarrow (L5).
+# Neoterra "bloom campus": seed kiosk (L2), a planted glass biodome (L3), a two-storey bloom shop (L4), a
+#   five-storey vertical-farm tower with a lime accent fin, planter plaza and benches (L5).
 FLX = ["flowering_azalea", "azalea"]
 
 
 @growth("florist", "Hearthwood")
 def _g_florist_hw(d, L):
-    if L >= 2:
-        SHED(d, 25, 2, ["VTVTV.kWh",
-                        "....l....",
-                        "..UUU.UVU",
-                        ".........",
-                        "pkp.Wk.pk"], ["Potting", "Shed"])
-    if L >= 3:
-        plans = [["       VPVP",
-                  ".......l...",
-                  "VVV..TTTT..",
-                  "...........",
-                  "p.T...s....",
-                  "....l......",
-                  "kpkpk.VVVVp"],
-                 ["       NHD.",
-                  ".......lf..",
-                  "Hf..T....p.",
-                  "N...s......",
-                  "...rrrr....",
-                  "p..l.......",
-                  "kD........."]]
-        if L >= 5:
-            plans.append(["Hf.bb.p.fHp",
-                          ".....l.....",
-                          "..T........",
-                          "..s........",
-                          "...rrrr....",
-                          "p..........",
-                          "kD.        "])
-        HOUSE(d, 25, 12, plans, ["Seed", "Shop"])
-    if L >= 4:
-        HALL(d, 2, 23, ["GGGGGGGG.GGGGGGGG",
-                        ".................",
-                        "GG.GGGGGGGGGGG.GG",
-                        "GG.GGGGGGGGGGG.GG",
-                        ".................",
-                        "GG.GGGGGGGGGGG.GG",
-                        "GG.GGGGGGGGGGG.GG",
-                        ".................",
-                        "uUVUVU.....UVUVUp"], ["Glass", "House"], **GLASSHOUSE)
-        SHED(d, 41, 2, ["12.12.VVV",
-                        "....l....",
-                        "..UVU.UVU",
-                        ".........",
-                        "kWk.p.k12"], ["Wreaths"], extra=FLX)
-    if L >= 5:
-        HALL(d, 24, 24, ["GGGGGGGG.GGGGGGGG",
-                         ".................",
-                         "GG..1.......1..GG",
-                         "GG.............GG",
-                         "....2...L...2....",
-                         "GG.............GG",
-                         "GG..1.......1..GG",
-                         ".................",
-                         "GGGG.wtewte.GGGGG"], ["Palm", "House"], extra=FLX, **GLASSHOUSE)
-        SHED(d, 41, 13, ["VPVPVPVPV",
-                         "....l....",
-                         "..TTT.TTT",
-                         ".........",
-                         "p1p.k.p1p"], ["Flower", "Market"], extra=FLX)
-        garden(d, 39, extra_trees=((48, 28), (22, 41), (48, 41)))
+    if L >= 2:                                                       # potting shed + cold frames
+        bld(d, 25, 3, 31, 9, 1, ("west", 3), [["VPVkW",
+                                                ".....",
+                                                "...UV",
+                                                "..l..",
+                                                "kpWpk"]], "x", chimney=False, dormer=False,
+            mwall="white_terracotta", mroof="mud_brick")
+        bed_row(d, [(x, 11) for x in range(25, 32)], 1)
+        for x, z in perim(24, 10, 32, 13):                            # picket fence round the cold frames
+            if (x, z) != (28, 13):
+                d.set(x, 2, z, "oak_fence")
+        put(d, [(28, 2, 13, "oak_fence_gate[facing=south,in_wall=false,open=false,powered=false]"),
+                (32, 2, 4, "composter[level=4]"), (32, 2, 5, "barrel[facing=up,open=false]")])
+        put(d, [(x, 2, 12, td("spruce", "north", "bottom", True)) for x in range(25, 32)]
+            + torch(24, 4, 5, "west"))
+        label(d, 24, 3, 8, "west", ["Potting", "Shed"])
+    if L >= 3:                                                       # long Victorian glasshouse
+        bld(d, 25, 14, 45, 22, 1, ("west", 4), [["GGGGGGGG...GGGGGGGG",
+                                                 "...................",
+                                                 "GG.GGGGGG.GGGGGG.GG",
+                                                 "...l.......l.......",
+                                                 "GG.GGGGGG.GGGGGG.GG",
+                                                 "...................",
+                                                 "uUVUVU.....UVUVU.kp"]], "x", tall=True, wall="glass",
+            roofkind="glass", chimney=False, dormer=False)
+        label(d, 24, 3, 20, "west", ["Glass", "House"])
+    if L >= 4:                                                       # two-storey seed shop on the street
+        bld(d, 37, 2, 47, 10, 3, ("north", 8), [[".     V.V",
+                                                  ".........",
+                                                  "P......UV",
+                                                  "V..TTT..P",
+                                                  "...s.....",
+                                                  ".........",
+                                                  "kWk.l.kVk"],
+                                                 ["       HN",
+                                                  ".......f.",
+                                                  "Hf.......",
+                                                  "N...wTe..",
+                                                  ".........",
+                                                  "..rrr...p",
+                                                  "kD.     ."],
+                                                 ["Hf.....fH",
+                                                  "N.......N",
+                                                  ".........",
+                                                  "..wTe....",
+                                                  "....l....",
+                                                  "D.......D",
+                                                  "         "]], "x", chimney=(48, 6), dormer=True,
+            mwall="smooth_sandstone", mroof="dark_prismarine")
+        put(d, wbox(39, 1, "north", "pink_tulip", "warped") + wbox(42, 1, "north", "cornflower", "warped")
+            + torch(46, 4, 1, "north"))
+        label(d, 44, 3, 1, "north", ["Seed", "Shop"], color="green")
+        flower_stall(d, 37, 40, 12, 2, "oak")
+    if L >= 5:                                                       # palm house, glazed, gable to the garden
+        bld(d, 30, 25, 44, 41, 1, ("north", 7), [["GGGGG...GGGGG",
+                                                  ".............",
+                                                  "GG..1...1..GG",
+                                                  "GG.........GG",
+                                                  "....2.L.2....",
+                                                  "GG.........GG",
+                                                  "GG..1...1..GG",
+                                                  ".............",
+                                                  "..wte...wte..",
+                                                  ".............",
+                                                  "GG..1...1..GG",
+                                                  "GG.........GG",
+                                                  "....2...2....",
+                                                  ".............",
+                                                  "uUVUV...VUVUp"]], "z", tall=True, wall="glass", roofkind="glass",
+            chimney=False, dormer=False, extra=FLX)
+        label(d, 35, 3, 24, "north", ["Palm", "House"])
+        bld(d, 3, 24, 13, 34, 2, ("north", 8), [[".     ..b",               # florist's house
+                                                  ".........",
+                                                  "o..wTe..b",
+                                                  "U..wTe...",
+                                                  "u........",
+                                                  "...l....p",
+                                                  ".........",
+                                                  "..rrrr...",
+                                                  "kD.....Dk"],
+                                                 ["       ..",
+                                                  "Hf.....fH",
+                                                  "N.......N",
+                                                  ".........",
+                                                  "...l.....",
+                                                  "Hf.......",
+                                                  "N....wTe.",
+                                                  ".........",
+                                                  "D.bb.p..D"]], "x", roofkind="hip", chimney=(14, 29), dormer=False,
+            mwall="white_terracotta", mroof="brick", lower="bricks")
+        put(d, wbox(5, 23, "north", "red_tulip", "warped") + wbox(8, 23, "north", "lily_of_the_valley", "warped")
+            + torch(10, 4, 23, "north"))
+        label(d, 12, 3, 23, "north", ["Florist's", "House"])
+        for x in (19, 21, 23, 25):                                    # rose arbour on the garden path
+            for y in (2, 3, 4):
+                d.set(x, y, 27, "oak_fence")
+                d.set(x, y, 31, "oak_fence")
+            for z in range(27, 32):
+                d.set(x, 5, z, "oak_leaves[distance=1,persistent=true,waterlogged=false]")
+        bed_row(d, [(x, z) for z in (37, 38) for x in range(4, 26)], 3)
+        bed_row(d, [(x, z) for x in (47, 48) for z in range(26, 41)], 0)
+        for x, z in ((8, 41), (22, 41), (50, 14), (50, 22)):
+            tree(d, x, z)
+        lamp_post(d, 17, 26)
+        lamp_post(d, 28, 24)
+        bench(d, 20, 35, "north", 3)
 
 
 @growth("florist", "Cascadia")
 def _g_florist_cas(d, L):
-    if L >= 2:
-        SHED(d, 26, 2, ["gkhkV.kWk",
-                        "....l....",
-                        "..UUU.UVU",
-                        ".........",
-                        "kWkh.kpkh"], ["Tool", "Shed"])
-    if L >= 3:
-        plans = [["       kWkW",
-                  ".......l...",
-                  "VVVV.TTT..p",
-                  "......s....",
-                  "k..........",
-                  "....l......",
-                  "pkVVV.kWk.p"],
-                 ["       HNbb",
-                  ".......f.l.",
-                  "Hf........p",
-                  "N..T.......",
-                  "...s.rrr...",
-                  "...l.......",
-                  "kD........."]]
-        if L >= 5:
-            plans.append(["bHf.p..fHbN",
-                          ".....l.....",
-                          "..T..T.....",
-                          "..s..s.....",
-                          "....rrr....",
-                          ".k.........",
-                          "Dp.        "])
-        HOUSE(d, 26, 12, plans, ["Seed", "Store"])
-    if L >= 4:
-        HALL(d, 2, 25, ["GGGGGGGG.GGGGGGGG",
-                        ".................",
-                        "GGGGGGG...GGGGGGG",
-                        "GGGGGGG...GGGGGGG",
-                        ".................",
-                        "GGGGGGG...GGGGGGG",
-                        "GGGGGGG...GGGGGGG",
-                        ".................",
-                        "kWkUVUVU...UVUVhk"], ["Hoop", "House"], **GLASSHOUSE)
-        SHED(d, 41, 2, ["1.2.1.VVV",
-                        "....l....",
-                        "..UVU.UVU",
-                        ".........",
-                        "kWk.h.k12"], ["Bulbs"], extra=FLX)
-    if L >= 5:
-        HALL(d, 24, 25, ["GGGGGGGG.GGGGGGGG",
-                         ".................",
-                         "UVUVUVU...UVUVUVU",
-                         ".................",
-                         "GGGGG.......GGGGG",
-                         "GGGGG...L...GGGGG",
-                         "GGGGG.......GGGGG",
-                         ".................",
-                         "kh.wtewte...UVUVU"], ["Nursery"], **GLASSHOUSE)
-        SHED(d, 41, 13, ["VVV.VVV.h",
-                         "....l....",
-                         "..TTT.TTT",
-                         ".........",
-                         "k1k.p.k2k"], ["Stall"], extra=FLX)
-        garden(d, 40, extra_trees=((48, 29), (22, 42), (48, 42)))
+    if L >= 2:                                                       # tool shed + raised beds
+        bld(d, 26, 3, 32, 10, 1, ("west", 3), [["gkhkV",
+                                                ".....",
+                                                "....W",
+                                                "..l..",
+                                                ".....",
+                                                "kWkVk"]], "z", chimney=False, dormer=False,
+            mlog="stripped_spruce_log", mroof="dark_prismarine")
+        bed_row(d, [(x, 12) for x in range(26, 33)], 0)
+        put(d, [(x, 2, 13, "spruce_slab[type=bottom,waterlogged=false]") for x in range(26, 33)]
+            + torch(25, 4, 5, "west"))
+        label(d, 25, 3, 8, "west", ["Tool", "Shed"])
+    if L >= 3:                                                       # long hoop house
+        bld(d, 26, 15, 34, 35, 1, ("north", 4), [["GG...GG",
+                                                  ".......",
+                                                  "GGG.GGG",
+                                                  "GGG.GGG",
+                                                  ".......",
+                                                  "GGG.GGG",
+                                                  "GGG.GGG",
+                                                  "...l...",
+                                                  "GGG.GGG",
+                                                  "GGG.GGG",
+                                                  ".......",
+                                                  "GGG.GGG",
+                                                  "GGG.GGG",
+                                                  "...l...",
+                                                  "GGG.GGG",
+                                                  "GGG.GGG",
+                                                  ".......",
+                                                  ".......",
+                                                  "kWkhkWk"]], "z", tall=True, wall="glass", roofkind="glass",
+            chimney=False, dormer=False, mlog="stripped_spruce_log")
+        label(d, 28, 3, 14, "north", ["Hoop", "House"])
+    if L >= 4:                                                       # seed store with porch
+        bld(d, 38, 3, 46, 13, 3, ("west", 5), [[".     .",
+                                                 ".......",
+                                                 "V.....V",
+                                                 "P.TTT.P",
+                                                 "...s...",
+                                                 ".......",
+                                                 "kWk.kWk",
+                                                 ".......",
+                                                 "kVk.hWk"],
+                                                ["       ",
+                                                 "Hf...fH",
+                                                 "N.....N",
+                                                 ".......",
+                                                 "...l...",
+                                                 "D.....D",
+                                                 "..wTe..",
+                                                 ".......",
+                                                 ".     ."],
+                                                ["Hf...fH",
+                                                 "N.....N",
+                                                 ".......",
+                                                 "..wTe..",
+                                                 "...l...",
+                                                 "D.....D",
+                                                 ".......",
+                                                 "k.....k",
+                                                 "       "]], "z", chimney=(42, 14), dormer=False,
+            mlog="spruce_log", mroof="mangrove", wall="birch_planks")
+        porch_lean_z(d, 5, 11, 36, 38, 6, "spruce", "spruce_log", (5, 11), gap=(7, 8, 9), floor="spruce_planks")
+        put(d, torch(37, 4, 7, "west"))
+        label(d, 37, 3, 10, "west", ["Seed", "Store"])
+    if L >= 5:                                                       # glazed nursery house
+        bld(d, 38, 17, 48, 37, 1, ("west", 10), [["GGGG.GGGG",
+                                                   ".........",
+                                                   "GG.GGG.GG",
+                                                   "GG.GGG.GG",
+                                                   ".........",
+                                                   "GG.GGG.GG",
+                                                   "GG.GGG.GG",
+                                                   ".........",
+                                                   "....l....",
+                                                   ".........",
+                                                   "GG.GGG.GG",
+                                                   "GG.GGG.GG",
+                                                   ".........",
+                                                   "GG.GGG.GG",
+                                                   "GG.GGG.GG",
+                                                   ".........",
+                                                   "UVUV.VUVU",
+                                                   ".........",
+                                                   "kWk.p.kWk"]], "z", tall=True, wall="glass", roofkind="glass",
+            chimney=False, dormer=False, mlog="stripped_spruce_log")
+        label(d, 37, 3, 25, "west", ["Nursery"])
+        bld(d, 3, 26, 15, 34, 1, ("north", 6), [["kV...l...Vb",                # gardener's porch cabin
+                                                  "...........",
+                                                  "Hf..wTe..fH",
+                                                  "N.........N",
+                                                  "....rrr....",
+                                                  "o..........",
+                                                  "U.u.D.D.kWk"]], "x", chimney=(2, 30), dormer=False,
+            mlog="stripped_spruce_log", mroof="cobbled_deepslate")
+        porch_lean(d, 3, 15, 23, 26, 6, "spruce", "spruce_log", (3, 7, 11, 15), gap=(8, 9, 10),
+                   floor="spruce_planks")
+        label(d, 11, 3, 25, "north", ["Gardener"])
+        bed_row(d, [(x, z) for z in (38, 40, 42) for x in range(4, 22)], 1)
+        put(d, [(24, 2, 25, "barrel[facing=up,open=false]"), (24, 3, 25, "water_cauldron[level=3]"),
+                (36, 2, 15, "barrel[facing=up,open=false]")])
+        cart(d, 18, 30, "z", "coarse_dirt")
+        for x, z in ((50, 10), (51, 42), (30, 41), (20, 13)):
+            spruce_tree(d, x, z)
+        lamp_post(d, 24, 13)
+        lamp_post(d, 36, 40)
 
 
 @growth("florist", "Neoterra")
 def _g_florist_neo(d, L):
-    if L >= 2:
-        SHED(d, 24, 3, ["PVPVP.kkk",
-                        "....l....",
-                        "..UUU.UUU",
-                        ".........",
-                        "pVpVp.kKp"], ["SEEDS"])
-    if L >= 3:
-        plans = [["       VVVV",
-                  ".......l...",
-                  "UVUVU..TTT.",
-                  ".......s...",
-                  "p..........",
-                  "....l......",
-                  "VpVpV.kkp.p"],
-                 ["       bbCE",
-                  ".......l...",
-                  "TTT..TTT...",
-                  "s....s.....",
-                  "...........",
-                  "p..l.......",
-                  "kD........."]]
-        if L >= 5:
-            plans.append(["Hf.p.p.p.fH",
-                          "....l......",
-                          "..wTe......",
-                          "..wTe......",
-                          "...........",
-                          "p..........",
-                          "kD.        "])
-        HOUSE(d, 24, 13, plans, ["BLOOM", "SHOP"], roofitems=SOLAR + GREEN([1, 3, 5, 7, 9, 11], 7))
-    if L >= 4:
-        HALL(d, 2, 22, ["GGGGGGGG.GGGGGGGG",
-                        ".................",
-                        ".GGG.GGG.GGG.GGG.",
-                        ".GGG.GGG.GGG.GGG.",
-                        ".................",
-                        ".GGG.GGG.GGG.GGG.",
-                        ".GGG.GGG.GGG.GGG.",
-                        ".................",
-                        "pUVUVUVU.UVUVUVUp"], ["PAVILION"], **GLASSHOUSE)
-        SHED(d, 39, 3, ["1.1.1.VVV",
-                        "....l....",
-                        "..UVU.UVU",
-                        ".........",
-                        "k.k.p.k.2"], ["LAB"], extra=FLX)
-    if L >= 5:
-        HALL(d, 24, 25, ["GGGGGGGG.GGGGGGGG",
-                         ".................",
-                         "GG...1.....1...GG",
-                         "GG.............GG",
-                         "...wTe.....wTe...",
-                         "GG.............GG",
-                         "GG...1.....1...GG",
-                         ".................",
-                         "GGGGGGGGGGGGGGGGG"], ["ATRIUM"], extra=FLX, **GLASSHOUSE)
-        SHED(d, 40, 14, ["VVVV.VVVV",
-                         "....l....",
-                         "..TTTTT..",
-                         ".........",
-                         "p.1.k.1.p"], ["STALL"], extra=FLX)
-        garden(d, 39, extra_trees=((48, 29), (22, 41), (48, 41)))
+    if L >= 2:                                                       # seed kiosk
+        bld(d, 24, 4, 30, 10, 1, ("west", 3), [["VPVPV",
+                                                ".....",
+                                                "...UV",
+                                                "..l..",
+                                                "kVkVk"]], mwall="white_concrete", lower="glass")
+        planter(d, 23, 5, 2)
+        planter(d, 23, 9, 2)
+        label(d, 23, 3, 8, "west", ["SEEDS"])
+    if L >= 3:                                                       # planted glass biodome
+        bld(d, 24, 14, 42, 24, 1, ("west", 5), [["GGGGGGGG.GGGGGGGG",
+                                                 ".................",
+                                                 "GG.GGGG...GGGG.GG",
+                                                 "GG.GGGG...GGGG.GG",
+                                                 "........l........",
+                                                 "GG.GGGG...GGGG.GG",
+                                                 "GG.GGGG...GGGG.GG",
+                                                 ".................",
+                                                 "pUVUVUVU.UVUVUVUp"]], tall=True, wall="glass", roofkind="glass")
+        label(d, 23, 3, 21, "west", ["BIODOME"])
+    if L >= 4:                                                       # two-storey bloom shop
+        bld(d, 36, 3, 46, 10, 3, ("west", 3), [[".     .VV",
+                                                 ".........",
+                                                 "...TTT..P",
+                                                 "....s...V",
+                                                 ".........",
+                                                 "kVk.p.kVk"],
+                                                ["       HN",
+                                                 ".......f.",
+                                                 "Hf.......",
+                                                 "N...wTe..",
+                                                 ".........",
+                                                 "D..     ."],
+                                                ["Hf.....fH",
+                                                 "N.......N",
+                                                 "..wTe....",
+                                                 "....l....",
+                                                 "D.bb....D",
+                                                 "         "]], mwall="white_terracotta", lower="glass",
+            roofitems=GREEN([1, 3, 5, 7, 9], 6))
+        canopy(d, 33, 4, 35, 8, 6, [(33, 4), (33, 8)])
+        label(d, 35, 3, 4, "west", ["BLOOM", "SHOP"])
+    if L >= 5:                                                       # vertical-farm tower
+        bld(d, 3, 23, 11, 31, 5, ("east", 4), [[".     .",
+                                                 ".......",
+                                                 "GG...GG",
+                                                 "GG.l...",
+                                                 ".......",
+                                                 "......p",
+                                                 "kVk.UVU"],
+                                                ["       ",
+                                                 "GGG.GGG",
+                                                 "GGG.GGG",
+                                                 ".......",
+                                                 "GGG.GGG",
+                                                 "GGG....",
+                                                 ".     ."],
+                                                [".     .",
+                                                 ".......",
+                                                 "GGG.GGG",
+                                                 "GGG.GGG",
+                                                 ".......",
+                                                 "GGG.GGG",
+                                                 "       "],
+                                                ["       ",
+                                                 "GGG.GGG",
+                                                 "GGG.GGG",
+                                                 "...l...",
+                                                 "GGG.GGG",
+                                                 "GGG....",
+                                                 ".     ."],
+                                                ["HN...bb",
+                                                 "f......",
+                                                 ".......",
+                                                 "wTe....",
+                                                 "...l...",
+                                                 "D.rrr..",
+                                                 "       "]], mwall="white_concrete", lower="glass",
+            roofitems=GREEN([1, 3, 5, 7], 7) + GREEN([1, 3, 5, 7], 3))
+        put(d, [(7, y, 22, "cyan_terracotta") for y in range(2, 28)])
+        label(d, 12, 3, 25, "east", ["VERTICAL", "FARM"])
+        for x in range(15, 24, 2):                                    # planter plaza
+            planter(d, x, 28, 2)
+            planter(d, x, 34, 2, "potted_bamboo")
+        bed_row(d, [(x, z) for z in (38, 39) for x in range(14, 40)], 2)
+        for x, z in ((46, 30), (46, 40), (32, 31), (4, 38)):
+            tree(d, x, z, "birch")
+        bench(d, 17, 31, "north", 3)
+        bench(d, 25, 31, "north", 3)
+        lamp_post(d, 14, 25, 4)
+        lamp_post(d, 34, 27, 4)
 
 
-# ============================================================================================ DYER add-ons
-@growth("dyer", "Hearthwood")
-def _g_dyer_hw(d, L):
-    X = ["red_wool", "yellow_wool", "blue_wool", "brown_wool"]
-    if L >= 2:
-        SHED(d, 28, 2, ["1234k4321",
-                        "....l....",
-                        "..1k2.3k4",
-                        ".........",
-                        "k1k2.3k4k"], ["Wool", "Store"], extra=X)
-    if L >= 3:
-        plans = [["       bbEb",
-                  ".......l...",
-                  "1.2.3.4...C",
-                  "...........",
-                  "TTT.....wR.",
-                  ".s..l...wR.",
-                  "kKk.MDkK..p"],
-                 ["       NHD.",
-                  ".......lf..",
-                  "Hf...T...p.",
-                  "N....s.....",
-                  "..rrrr.....",
-                  "...l.......",
-                  "kD........."]]
-        if L >= 5:
-            plans.append(["bHf.12..fHN",
-                          ".....l.....",
-                          "...M.......",
-                          "...........",
-                          "..rrrrr....",
-                          ".k.........",
-                          "DK.        "])
-        HOUSE(d, 28, 12, plans, ["Counting", "House"], extra=X)
-    if L >= 4:
-        HALL(d, 2, 24, ["MM.M.MM...MM.M.MM",
-                        ".................",
-                        "..u.u.u...u.u.u..",
-                        ".................",
-                        "..u.u.u.l.u.u.u..",
-                        ".................",
-                        "1.2.3.4...1.2.3.4",
-                        ".................",
-                        "kKkK.xT...TT.kKkK"], ["Dye", "Hall"], extra=X)
-        SHED(d, 43, 2, ["4321.1234",
-                        "....l....",
-                        "..kKk.kKk",
-                        ".........",
-                        "1k2.p.3k4"], ["Bales"], extra=X)
-    if L >= 5:
-        HALL(d, 24, 24, ["12341234...432143",
-                         ".................",
-                         "..TTT..TTT..TTT..",
-                         ".................",
-                         "..TTT..TTT..TTT..",
-                         "........l........",
-                         "..rrrrrrrrrrrrr..",
-                         ".................",
-                         "bbE.MM.....MM.Ebb"], ["Cloth", "Hall"], extra=X)
-        SHED(d, 44, 12, ["MM.M.M.MM",
-                         "....l....",
-                         "..s.s.s..",
-                         ".........",
-                         "1k2.p.3k4"], ["Weavers"], extra=X)
-        garden(d, 39, extra_trees=((49, 28), (22, 41), (49, 41)))
-
-
-@growth("dyer", "Cascadia")
-def _g_dyer_cas(d, L):
-    X = ["brown_wool", "green_wool", "red_wool", "black_wool"]
-    if L >= 2:
-        SHED(d, 26, 2, ["121343k21",
-                        "....l....",
-                        "..k12.k34",
-                        ".........",
-                        "4321k1234"], ["Wool", "Shed"], extra=X)
-    if L >= 3:
-        plans = [["       MMxM",
-                  ".......l...",
-                  "1.2.3......",
-                  "...........",
-                  "TTT.....wT.",
-                  ".s..l...w..",
-                  "kKkM.hDk.Kp"],
-                 ["       HNH.",
-                  ".......f.f.",
-                  "Hf.......fH",
-                  "N...rrr...N",
-                  "...........",
-                  "...l.......",
-                  "kDk........"]]
-        if L >= 5:
-            plans.append(["HfN.MM..NfH",
-                          "....l......",
-                          "..T..T.....",
-                          "..s..s.....",
-                          "...rrrr....",
-                          ".h.........",
-                          "Dk.        "])
-        HOUSE(d, 26, 12, plans, ["Loom", "House"], extra=X)
-    if L >= 4:
-        HALL(d, 6, 30, ["uuu.uuu...uuu.uuu",
-                        ".................",
-                        "1.2.3.4...1.2.3.4",
-                        ".................",
-                        "..MM....l....MM..",
-                        ".................",
-                        "kKk.kYk...kYk.kKk",
-                        ".................",
-                        "uu.TTT.....TTT.uu"], ["Dye", "Shed"], extra=X)
-        SHED(d, 41, 2, ["1234.4321",
-                        "....l....",
-                        "..kKk.kYk",
-                        ".........",
-                        "k12.p.34k"], ["Bales"], extra=X)
-    if L >= 5:
-        HALL(d, 27, 24, ["MxM.MxM...MxM.MxM",
-                         "s.s.s.s...s.s.s.s",
-                         ".................",
-                         "12341234.43214321",
-                         ".................",
-                         "........l........",
-                         "kKkYkKk...kKkYkKk",
-                         ".................",
-                         "h..TTT.....TTT..h"], ["Mill"], extra=X)
-        SHED(d, 41, 12, ["MM.M.M.MM",
-                         "....l....",
-                         "..s.s.s..",
-                         ".........",
-                         "k1k.h.k2k"], ["Spinners"], extra=X)
-        garden(d, 45, trees=(8, 18, 32, 42), extra_trees=((50, 38), (24, 47), (50, 47)), lamps=(13, 37),
-               benches=(22, 38))
-
-
-@growth("dyer", "Neoterra")
-def _g_dyer_neo(d, L):
-    X = ["magenta_wool", "cyan_wool", "lime_wool", "pink_wool"]
-    if L >= 2:
-        SHED(d, 25, 3, ["1234.4321",
-                        "....l....",
-                        "..1k2.3k4",
-                        ".........",
-                        "k12k.k34k"], ["YARN"], extra=X)
-    if L >= 3:
-        plans = [["       MMbb",
-                  ".......l...",
-                  "TTTT..1234.",
-                  "..ss.......",
-                  "......TTT..",
-                  "....l..ss..",
-                  "kk.p..Mkk.p"],
-                 ["       bECb",
-                  ".......l...",
-                  "TT..TT.....",
-                  "s...s......",
-                  "...........",
-                  "p..l.......",
-                  "kD........."]]
-        if L >= 5:
-            plans.append(["Hf.1234..fH",
-                          "....l......",
-                          "..wTe......",
-                          "..wTe......",
-                          "...........",
-                          "p..........",
-                          "kD.        "])
-        HOUSE(d, 25, 13, plans, ["STUDIO"], extra=X, roofitems=SOLAR + GREEN([1, 3, 5, 7, 9, 11], 7))
-    if L >= 4:
-        HALL(d, 3, 17, ["1234123...3214321",
-                        ".................",
-                        ".u.u.u.u.u.u.u.u.",
-                        ".................",
-                        ".u.u.u.u.u.u.u.u.",
-                        "........l........",
-                        "MM.MM.MM...MM.MM.",
-                        ".................",
-                        "kK.TTTTT.TTTTT.Kk"], ["VAT", "LAB"], extra=X,
-             roofitems=[(x, 3, "daylight_detector[inverted=false,power=0]") for x in range(3, 16)])
-        SHED(d, 40, 3, ["4321.1234",
-                        "....l....",
-                        "..kKk.kKk",
-                        ".........",
-                        "1k2.p.3k4"], ["BALES"], extra=X)
-    if L >= 5:
-        HALL(d, 25, 25, ["1.2.3.4...4.3.2.1",
-                         ".................",
-                         "..TTT..TTT..TTT..",
-                         ".................",
-                         "..TTT..TTT..TTT..",
-                         "........l........",
-                         "..rrrrrrrrrrrrr..",
-                         ".................",
-                         "pbE.MM.....MM.Ebp"], ["CHROMA", "SHOP"], extra=X, roofitems=SOLAR + GREEN([9, 11, 13, 15], 8))
-        SHED(d, 40, 14, ["M.M.M.M.M",
-                         "....l....",
-                         "..s.s.s..",
-                         ".........",
-                         "1k2.p.3k4"], ["KNIT"], extra=X)
-        garden(d, 39, extra_trees=((49, 29), (22, 41), (49, 41)))
-
-
-# ============================================================================================ GLASSBLOWER add-ons
+# ============================================================================================ GLASSBLOWER complexes
+# Glassworks: sand bins, a shop range glazed in coloured glass, a cutting / kiln wing and the master's house.
+# Hearthwood "the glass cone": open sand & cullet bins (L2), a street shop range with stained-glass windows
+#   and a striped awning (L3), a two-storey cutting room running back from the street (L4) that a south
+#   engraving wing turns into an L, and the master's four-storey hipped tower (L5).
+# Cascadia "ember glassworks": a sand shed with heaps (L2), a porch gallery (L3), a two-storey kiln shed with a
+#   river-rock stack (L4), the master's four-storey lodge and a long annealing shed with three stacks (L5).
+# Neoterra "PRISM": silica store and hopper (L2), a two-storey stained-glass gallery (L3), a kiln lab with
+#   extraction stacks (L4), a six-storey prism tower clad in coloured glass and a glass sculpture plaza (L5).
 def GBX(d):
-    sl_ = sl(STY[d.pack]["wood2"], "top")
-    return [glass_c(d, 0), glass_c(d, 1), glass_c(d, 2), glass_c(d, 3), "sand",
-            (sl_, glass_c(d, 0)), (sl_, glass_c(d, 1)), (sl_, glass_c(d, 2)), (sl_, glass_c(d, 3))]
+    s = sl(STY[d.pack]["wood2"], "top")
+    return [glass_c(d, 0), glass_c(d, 1), glass_c(d, 2), glass_c(d, 3), (s, glass_c(d, 0)), (s, glass_c(d, 1)),
+            (s, glass_c(d, 2)), (s, glass_c(d, 3)), (s, glass_c(d, 4))]
 
 
 @growth("glassblower", "Hearthwood")
 def _g_glass_hw(d, L):
     X = GBX(d)
-    if L >= 2:
-        SHED(d, 24, 2, ["555k.1234",
-                        "....l....",
-                        "..5k5.1k2",
-                        ".........",
-                        "k1234k555"], ["Sand &", "Cullet"], extra=X)
-    if L >= 3:
-        plans = [["       6789",
-                  ".......l...",
-                  "6789..6789.",
-                  "...........",
-                  "..TTT...wR.",
-                  "...s....R.p",
-                  "k1k2.kx..3p"],
-                 ["       zgaF",
-                  ".......l...",
-                  "UUUU..UUU..",
-                  "s.s...s.s..",
-                  "...........",
-                  "...l.......",
-                  "5k........."]]
-        if L >= 5:
-            plans.append(["HfN.67..NfH",
-                          "....l......",
-                          "..T..T.....",
-                          "..s..s.....",
-                          "...rrrr....",
-                          ".k.........",
-                          "Dk.        "])
-        HOUSE(d, 24, 12, plans, ["Glass", "Shop"], extra=X, glass=glass_c(d, 1, True))
-    if L >= 4:
-        HALL(d, 2, 22, ["o1o.o2o...o3o.o4o",
-                        ".................",
-                        "..UUU..UUU..UUU..",
-                        "..s.s..s.s..s.s..",
-                        "........l........",
-                        ".................",
-                        "5.5..kYk...kYk.55",
-                        ".................",
-                        "6789.qa...xg.6789"], ["Hot", "Shop"], extra=X)
-        SHED(d, 40, 2, ["1234.4321",
-                        "....l....",
-                        "..6.7.8.9",
-                        ".........",
-                        "k5k.p.k5k"], ["Cullet"], extra=X)
+    if L >= 2:                                                       # open sand & cullet bins
+        pavilion(d, 3, 22, 13, 28, 3, [(3, 22), (8, 22), (13, 22), (3, 28), (8, 28), (13, 28)], "x", "spruce",
+                 "spruce_log", floor="stone_bricks")
+        for x in (3, 13):
+            for z in range(23, 28):
+                d.set(x, 2, z, "stone_brick_wall")
+        pile(d, 4, 25, 6, 27, "sand", [(5, 26)])
+        pile(d, 10, 25, 12, 27, "red_sand", [(11, 26)])
+        put(d, [(7, 2, 27, "gravel"), (9, 2, 27, "barrel[facing=up,open=false]"), (9, 3, 27, glass_c(d, 0)),
+                (7, 2, 26, "barrel[facing=up,open=false]")])
+        label(d, 8, 4, 21, "north", ["Sand &", "Cullet"])
+    if L >= 3:                                                       # street shop with stained-glass windows
+        bld(d, 24, 3, 44, 9, 1, ("north", 10), [["567.567..l..765.765",
+                                                  "...................",
+                                                  ".TTT....1.2....TTT.",
+                                                  "..s......l......s..",
+                                                  "kYk.5.6.7.8.9.E.x.p"]], "x", chimney=False, dormer=True,
+            mwall="smooth_sandstone", mroof="dark_prismarine", glass=glass_c(d, 1, True), extra=X)
+        awning(d, 25, 43, 2, 5, ("blue_wool", "white_wool"), "north")
+        put(d, torch(33, 3, 2, "north"))
+        label(d, 36, 3, 2, "north", ["Glass", "Shop"], color="blue")
+    if L >= 4:                                                       # cutting room running back from the street
+        bld(d, 36, 12, 44, 28, 2, ("west", 8), [[".     .",
+                                                  ".......",
+                                                  "qUq.qUq",
+                                                  ".......",
+                                                  "z.....g",
+                                                  "U.....U",
+                                                  "q.....q",
+                                                  "...l...",
+                                                  ".......",
+                                                  "x.....z",
+                                                  "U.....U",
+                                                  ".......",
+                                                  "kYk.kYk",
+                                                  ".......",
+                                                  "1.2.3.4"],
+                                                 ["       ",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  ".......",
+                                                  "..wTe..",
+                                                  ".......",
+                                                  "D.....D",
+                                                  ".......",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  ".......",
+                                                  "...l...",
+                                                  "bb...bb",
+                                                  ".......",
+                                                  "kD...Dk"]], "z", chimney=(40, 29), dormer=True,
+            mwall="calcite", mroof="brick", lower="stone_bricks", extra=X)
+        put(d, torch(35, 4, 19, "west") + torch(35, 4, 21, "west"))
+        label(d, 35, 3, 23, "west", ["Cutting", "Room"])
     if L >= 5:
-        HALL(d, 24, 24, ["6789.678..9876.67",
-                         ".................",
-                         "..6.7..8.9..6.7..",
-                         ".................",
-                         "..8.9...l..6.7...",
-                         ".................",
-                         "..6.7..8.9..6.7..",
-                         ".................",
-                         "p.bb.E.....E.bb.p"], ["Gallery"], extra=X, glass=glass_c(d, 2, True))
-        SHED(d, 40, 12, ["zgaq.UUUU",
-                         "....l....",
-                         "..UUU.UUU",
-                         "..s.s.s.s",
-                         "k5k.p.k5k"], ["Cutting", "Room"], extra=X)
-        garden(d, 38, extra_trees=((48, 27), (22, 40), (48, 40)))
+        bld(d, 24, 22, 36, 30, 1, ("north", 6), [["12.3.....4p",                # engraving wing (makes the L)
+                                                   "...........",
+                                                   "qUq.....qUq",
+                                                   "...........",
+                                                   "x.UUUUU...z",
+                                                   "...sss.....",
+                                                   "kYk.E.p.kYk"]], "x", tall=True, chimney=False, dormer=False,
+            mwall="smooth_sandstone", mroof="brick", keep_roof=True, glass=glass_c(d, 2, True), extra=X)
+        label(d, 32, 3, 21, "north", ["Engraving"])
+        put(d, torch(29, 4, 21, "north"))
+        bld(d, 12, 30, 22, 40, 4, ("north", 8), [[".     ..b",                 # master's tower
+                                                   ".........",
+                                                   "567...765",
+                                                   ".........",
+                                                   "..wTe....",
+                                                   "..wTe...p",
+                                                   ".........",
+                                                   "....l....",
+                                                   "kYk.E.x.p"],
+                                                  ["       ..",
+                                                   "Hf.....fH",
+                                                   "N.......N",
+                                                   ".........",
+                                                   "...l.....",
+                                                   "D.wT..bbD",
+                                                   ".........",
+                                                   ".........",
+                                                   "...     ."],
+                                                  [".     ...",
+                                                   ".........",
+                                                   "Hf.....fH",
+                                                   "N.......N",
+                                                   "....l....",
+                                                   "D..wTe..D",
+                                                   ".........",
+                                                   ".........",
+                                                   "         "],
+                                                  ["       ..",
+                                                   ".........",
+                                                   "H....bbb.",
+                                                   "f........",
+                                                   "N..wTe...",
+                                                   "....l....",
+                                                   ".........",
+                                                   "567...765",
+                                                   "D.......D"]], "x", roofkind="hip", chimney=(23, 35), dormer=False,
+            mwall="calcite", mroof="dark_prismarine", lower="bricks", glass=glass_c(d, 3, True), extra=X)
+        put(d, torch(19, 4, 29, "north") + wbox(14, 29, "north", "red_tulip", "crimson")
+            + wbox(17, 29, "north", "cornflower", "crimson"))
+        label(d, 21, 3, 29, "north", ["Master's", "House"])
+        pile(d, 46, 32, 49, 34, "sand", [(47, 33), (48, 33)])
+        for x, z in ((4, 34), (6, 41), (30, 39), (48, 40), (50, 14)):
+            tree(d, x, z)
+        lamp_post(d, 23, 12)
+        lamp_post(d, 34, 33)
 
 
 @growth("glassblower", "Cascadia")
 def _g_glass_cas(d, L):
     X = GBX(d)
-    if L >= 2:
-        SHED(d, 26, 2, ["5555k1234",
-                        "....l....",
-                        "..55k.k12",
-                        ".........",
-                        "k34k55555"], ["Sand", "Shed"], extra=X)
-    if L >= 3:
-        plans = [["       6789",
-                  ".......l...",
-                  "6789...TT..",
-                  "...........",
-                  "..UUU..wR..",
-                  "..s.s..wR.p",
-                  "k12k.kx34.p"],
-                 ["       zgaF",
-                  ".......l...",
-                  "UUU..UUUU..",
-                  "s.s..s..s..",
-                  "...........",
-                  "5..l.......",
-                  "k5........."]]
-        if L >= 5:
-            plans.append(["bHf.67..fHb",
-                          ".....l.....",
-                          "..T..T.....",
-                          "..s..s.....",
-                          "....rrr....",
-                          ".k.........",
-                          "D5.        "])
-        HOUSE(d, 26, 12, plans, ["Gallery"], extra=X, glass=glass_c(d, 0, True))
-    if L >= 4:
-        HALL(d, 2, 19, ["o5o.o5o...o5o.o5o",
-                        ".................",
-                        "..UUU..UUU..UUU..",
-                        "..s.s..s.s..s.s..",
-                        "........l........",
-                        ".................",
-                        "kYk.555...555.kYk",
-                        ".................",
-                        "6789.qa...xg.6789"], ["Kiln", "Shed"], extra=X)
-        SHED(d, 41, 2, ["4321.1234",
-                        "....l....",
-                        "..k5k.k5k",
-                        ".........",
-                        "6789.6789"], ["Cullet"], extra=X)
+    if L >= 2:                                                       # sand shed with heaps
+        pavilion(d, 26, 3, 34, 9, 3, [(26, 3), (30, 3), (34, 3), (26, 9), (30, 9), (34, 9)], "z", "spruce",
+                 "spruce_log")
+        for z in range(4, 9):
+            d.set(26, 2, z, "cobblestone_wall")
+        pile(d, 27, 4, 29, 8, "sand", [(28, 5), (28, 6), (28, 7)])
+        pile(d, 31, 6, 33, 8, "gravel", [(32, 7)])
+        put(d, [(31, 2, 4, "barrel[facing=up,open=false]"), (32, 2, 4, "barrel[facing=up,open=false]"),
+                (33, 2, 4, "red_sand"), (35, 2, 5, "oak_log[axis=y]"), (35, 2, 6, "oak_log[axis=y]")])
+        label(d, 30, 4, 2, "north", ["Sand", "Shed"])
+        woodpile(d, 27, 33, 11, 2)                                      # furnace wood
+        cart(d, 48, 13, "x", "sand")
+    if L >= 3:                                                       # porch gallery
+        bld(d, 3, 19, 23, 25, 1, ("north", 10), [["56.78....l....87.65",
+                                                   "...................",
+                                                   "..1..2..3...3..2..1",
+                                                   "...................",
+                                                   "kYk.TTT.wTe.TTT.kYk"]], "x", chimney=False, dormer=False,
+            mlog="stripped_spruce_log", mroof="mangrove", glass=glass_c(d, 0, True), extra=X)
+        porch_lean(d, 3, 23, 17, 19, 6, "spruce", "spruce_log", (3, 8, 18, 23), gap=(12, 13, 14),
+                   floor="spruce_planks")
+        put(d, torch(12, 4, 18, "north"))
+        label(d, 15, 3, 18, "north", ["Gallery"])
+    if L >= 4:                                                       # kiln shed with river-rock stack
+        bld(d, 27, 13, 35, 29, 2, ("west", 8), [[".     .",
+                                                  ".......",
+                                                  "o.o.o.o",
+                                                  ".......",
+                                                  "UUU.UUU",
+                                                  ".......",
+                                                  "kYk.kYk",
+                                                  "...l...",
+                                                  ".......",
+                                                  "o.....o",
+                                                  "U.....U",
+                                                  ".......",
+                                                  "hWh.567",
+                                                  ".......",
+                                                  "kYk.kYk"],
+                                                 ["       ",
+                                                  ".......",
+                                                  "kYk.kYk",
+                                                  ".......",
+                                                  "hhh.hhh",
+                                                  ".......",
+                                                  "kKk.kKk",
+                                                  "...l...",
+                                                  ".......",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  "Hf...fH",
+                                                  ".......",
+                                                  "D.....D",
+                                                  "......."]], "z", chimney=(36, 17), dormer=False,
+            mlog="spruce_log", mroof="cobbled_deepslate", lower="cobblestone", extra=X)
+        stack(d, 36, 24, 17, "mossy_cobblestone")
+        put(d, torch(26, 4, 20, "west") + torch(26, 4, 22, "west"))
+        label(d, 26, 3, 24, "west", ["Kiln", "Shed"])
     if L >= 5:
-        HALL(d, 24, 24, ["6789.678..9876.67",
-                         ".................",
-                         "..TTT..TTT..TTT..",
-                         ".................",
-                         "........l........",
-                         "..wte.......wte..",
-                         ".................",
-                         "..rrrrrrrrrrrrr..",
-                         "p.bb.E.....E.bb.p"], ["Showroom"], extra=X)
-        SHED(d, 41, 12, ["zga.UUUUq",
-                         "....l....",
-                         "..UUU.UUU",
-                         "..s.s.s.s",
-                         "k5k.p.k5k"], ["Grinding"], extra=X)
-        garden(d, 38, extra_trees=((48, 27), (22, 40), (48, 40)))
+        bld(d, 42, 30, 50, 38, 4, ("west", 4), [[".     .",                  # master's lodge
+                                                 ".......",
+                                                 "o..wTe.",
+                                                 "...wTe.",
+                                                 "U......",
+                                                 "....l.p",
+                                                 "kYk.D.b"],
+                                                ["       ",
+                                                 "Hf...fH",
+                                                 "N.....N",
+                                                 ".......",
+                                                 "..rrr..",
+                                                 "D......",
+                                                 ".     ."],
+                                                [".     .",
+                                                 ".......",
+                                                 "567.765",
+                                                 ".......",
+                                                 "wT...Te",
+                                                 ".......",
+                                                 "       "],
+                                                ["       ",
+                                                 ".......",
+                                                 "Hf...bb",
+                                                 "N......",
+                                                 "..wTe..",
+                                                 "...l...",
+                                                 "D.....D"]], "x", roofkind="hip", chimney=(51, 34), dormer=False,
+            mlog="stripped_spruce_log", mroof="dark_prismarine", lower="cobblestone", glass=glass_c(d, 2, True),
+            extra=X)
+        put(d, torch(41, 4, 33, "west"))
+        label(d, 41, 3, 36, "west", ["Master"])
+        bld(d, 38, 18, 50, 26, 1, ("north", 6), [["o.o.o...o.o",                  # annealing shed
+                                                   "...........",
+                                                   "UUU.....UUU",
+                                                   "...........",
+                                                   "567..l..765",
+                                                   "...........",
+                                                   "kYk.hWh.kYk"]], "x", chimney=False, dormer=False,
+            mlog="spruce_log", mroof="mangrove", wall="cobblestone", extra=X)
+        for x in (40, 44, 48):
+            stack(d, x, 27, 14, "cobblestone")
+        put(d, torch(43, 4, 17, "north"))
+        label(d, 46, 3, 17, "north", ["Annealing"])
+        cart(d, 14, 30, "x", "sand")
+        for x, z in ((6, 33), (20, 38), (32, 40), (51, 12), (14, 40), (44, 6)):
+            spruce_tree(d, x, z)
+        lamp_post(d, 25, 11)
+        lamp_post(d, 37, 15)
 
 
 @growth("glassblower", "Neoterra")
 def _g_glass_neo(d, L):
     X = GBX(d)
-    if L >= 2:
-        SHED(d, 22, 3, ["5555.5555",
-                        "....l....",
-                        "..k5k.k5k",
-                        ".........",
-                        "1234k4321"], ["SILICA"], extra=X)
-    if L >= 3:
-        plans = [["       6789",
-                  ".......l...",
-                  "67..89..67.",
-                  "...........",
-                  "..UUU......",
-                  "..s.s..l..p",
-                  "k1k2.k3k4.p"],
-                 ["       zgaq",
-                  ".......l...",
-                  "UUUU...UUU.",
-                  "s..s...s.s.",
-                  "...........",
-                  "p..l.......",
-                  "kD........."]]
-        if L >= 5:
-            plans.append(["Hf..6789.fH",
-                          "....l......",
-                          "..wTe......",
-                          "..wTe......",
-                          "...........",
-                          "p..........",
-                          "kD.        "])
-        HOUSE(d, 22, 13, plans, ["GALLERY"], extra=X, glass=glass_c(d, 0, True),
-              roofitems=SOLAR + GREEN([1, 3, 5, 7, 9, 11], 7))
-    if L >= 4:
-        HALL(d, 2, 19, ["o1o.o2o...o3o.o4o",
-                        ".................",
-                        "..UUUU.....UUUU..",
-                        "..s..s.....s..s..",
-                        "........l........",
-                        ".................",
-                        ".5.5.kKk...kKk.5.",
-                        ".................",
-                        "6789.qa...xq.6789"], ["KILN", "LAB"], extra=X,
-             roofitems=[(x, 3, "daylight_detector[inverted=false,power=0]") for x in range(3, 16)])
-        SHED(d, 37, 3, ["1234.4321",
-                        "....l....",
-                        "..6.7.8.9",
-                        ".........",
-                        "k5k.p.k5k"], ["CULLET"], extra=X)
-    if L >= 5:
-        HALL(d, 24, 25, ["6789.678..9876.67",
-                         ".................",
-                         "..6.7..8.9..6.7..",
-                         ".................",
-                         "..8.9...l..6.7...",
-                         ".................",
-                         "..rrrrrrrrrrrrr..",
-                         ".................",
-                         "pbE..wte.wte..Ebp"], ["PRISM"], extra=X, glass=glass_c(d, 3, True),
-             roofitems=SOLAR + GREEN([9, 11, 13, 15], 8))
-        SHED(d, 37, 14, ["zgaq.UUUU",
-                         "....l....",
-                         "..UUUUU..",
-                         "..s.s.s..",
-                         "k5k.p.k5k"], ["CUT", "LAB"], extra=X)
-        garden(d, 39, extra_trees=((48, 29), (22, 41), (48, 41)))
-
-
-# ============================================================================================ CONCRETE add-ons
-CMX = ["white_concrete_powder", "light_gray_concrete_powder", "gray_concrete_powder", "sand", "gravel"]
-
-
-@growth("concretemixer", "Hearthwood")
-def _g_conc_hw(d, L):
-    if L >= 2:
-        SHED(d, 27, 2, ["11223k455",
-                        "....l....",
-                        "..1k2.3k4",
-                        ".........",
-                        "5544k3211"], ["Lime", "Store"], extra=CMX)
-    if L >= 3:
-        plans = [["       bbEC",
-                  ".......l...",
-                  "TTT..TTT...",
-                  "..s..s.....",
-                  "........wR.",
-                  "....l...wR.",
-                  "k1k2.kK..pp"],
-                 ["       HNH.",
-                  ".......f.f.",
-                  "Hf.......fH",
-                  "N..rrrr...N",
-                  "...........",
-                  "...l.......",
-                  "kDk........"]]
-        if L >= 5:
-            plans.append(["HfN.bb..NfH",
-                          "....l......",
-                          "..T..T.....",
-                          "..s..s.....",
-                          "...rrrr....",
-                          ".k.........",
-                          "D1.        "])
-        HOUSE(d, 27, 12, plans, ["Works", "Office"], extra=CMX)
-    if L >= 4:
-        HALL(d, 2, 25, ["qqq.zgz...aga.qqq",
-                        ".................",
-                        "..UUUU.....UUUU..",
-                        "..s..s.....s..s..",
-                        "........l........",
-                        ".................",
-                        "111.222...333.444",
-                        ".................",
-                        "55k.kYk...kKk.k55"], ["Mason's", "Shed"], extra=CMX)
-        SHED(d, 42, 2, ["5555.4444",
-                        "....l....",
-                        "..1k1.2k2",
-                        ".........",
-                        "k33.p.33k"], ["Aggregate"], extra=CMX)
-    if L >= 5:
-        HALL(d, 24, 25, ["1111111..22222222",
-                         ".................",
-                         "333.444.....555.k",
-                         ".................",
-                         "..uu.uu..l.uu.uu.",
-                         ".................",
-                         "kKk.kYk.....kKk.k",
-                         ".................",
-                         "x.TTT.......TTT.p"], ["Batching", "Shed"], extra=CMX)
-        SHED(d, 42, 12, ["qqq.zgz.a",
-                         "....l....",
-                         "..UUU.UUU",
-                         "..s.s.s.s",
-                         "k1k.p.k2k"], ["Tool", "Shop"], extra=CMX)
-        garden(d, 39, extra_trees=((49, 29), (22, 41), (49, 41)))
-
-
-@growth("concretemixer", "Cascadia")
-def _g_conc_cas(d, L):
-    if L >= 2:
-        SHED(d, 24, 2, ["12341k432",
-                        "....l....",
-                        "..55k.k11",
-                        ".........",
-                        "k4433k221"], ["Powder", "Shed"], extra=CMX)
-    if L >= 3:
-        plans = [["       bbEC",
-                  ".......l...",
-                  "TTT...TTT..",
-                  "..s....s...",
-                  "...........",
-                  "....l..wR..",
-                  "kYk1.kK..hp"],
-                 ["       H.H.",
-                  ".......f.f.",
-                  "Hf...T...fH",
-                  "N....s....N",
-                  "..rrrrr....",
-                  "...l.......",
-                  "kDk........"]]
-        if L >= 5:
-            plans.append(["bHf....fHbk",
-                          ".....l.....",
-                          "..T..T.....",
-                          "..s..s.....",
-                          "...rrrr....",
-                          ".h.........",
-                          "Dk.        "])
-        HOUSE(d, 24, 12, plans, ["Office"], extra=CMX)
-    if L >= 4:
-        HALL(d, 2, 28, ["aga.zqz...gaz.qqq",
-                        ".................",
-                        "..UUUU.....UUUU..",
-                        "..s..s.....s..s..",
-                        "........l........",
-                        ".................",
-                        "555.444...333.222",
-                        ".................",
-                        "kYk.kKk...kYk.k11"], ["Repair", "Shop"], extra=CMX)
-        SHED(d, 40, 2, ["5555.4444",
-                        "....l....",
-                        "..1k1.2k2",
-                        ".........",
-                        "kYk.h.kYk"], ["Gravel"], extra=CMX)
-    if L >= 5:
-        HALL(d, 24, 26, ["5555555..44444444",
-                         ".................",
-                         "1111.2222...3333.",
-                         ".................",
-                         "..uu.uu..l.uu.uu.",
-                         ".................",
-                         "kYk.kKk.....kYk.k",
-                         ".................",
-                         "h.TTT.......TTT.p"], ["Aggregate", "Barn"], extra=CMX)
-        SHED(d, 40, 13, ["aga.zqz.k",
-                         "....l....",
-                         "..UUU.UUU",
-                         "..s.s.s.s",
-                         "k1k.h.k2k"], ["Smithy"], extra=CMX)
-        garden(d, 41, extra_trees=((49, 31), (22, 43), (49, 43)))
-
-
-@growth("concretemixer", "Neoterra")
-def _g_conc_neo(d, L):
-    if L >= 2:
-        SHED(d, 22, 2, ["1111.2222",
-                        "....l....",
-                        "..3k3.4k4",
-                        ".........",
-                        "k5555.kKk"], ["POWDER"], extra=CMX)
-    if L >= 3:
-        plans = [["       bECb",
-                  ".......l...",
-                  "TTT..TTT...",
-                  "..s..s.....",
-                  "...........",
-                  "p...l......",
-                  "kk.Z..kK..p"],
-                 ["       bECC",
-                  ".......l...",
-                  "UUUUUUU....",
-                  "s.s.s.s....",
-                  "...........",
-                  "p..l.......",
-                  "kD........."]]
-        if L >= 5:
-            plans.append(["Hf.p.12..fH",
-                          "....l......",
-                          "..T...T....",
-                          "..s...s....",
-                          "..rrrrr....",
-                          "p..........",
-                          "kD.        "])
-        HOUSE(d, 22, 12, plans, ["NEOCRETE", "HQ"], extra=CMX, roofitems=SOLAR + GREEN([1, 3, 5, 7, 9, 11], 7))
-    if L >= 4:
-        HALL(d, 2, 25, ["uu.uu.uu..uu.uu.u",
-                        ".................",
-                        "..UUUU.....UUUU..",
-                        "..s..s.....s..s..",
-                        "........l........",
-                        ".................",
-                        "111.222...333.444",
-                        ".................",
-                        "55k.kKk...kKk.k55"], ["MIX", "LAB"], extra=CMX,
-             roofitems=[(x, 3, "daylight_detector[inverted=false,power=0]") for x in range(3, 16)])
-        SHED(d, 37, 2, ["5555.4444",
-                        "....l....",
-                        "..1k1.2k2",
-                        ".........",
-                        "k33.p.33k"], ["AGGREGATE"], extra=CMX)
-    if L >= 5:
-        HALL(d, 24, 25, ["1111111..22222222",
-                         ".................",
-                         "3333.4444...5555.",
-                         ".................",
-                         "..k.k.k..l.k.k.k.",
-                         ".................",
-                         "kKk.kKk.....kKk.k",
-                         ".................",
-                         "C.TTT.......TTT.p"], ["LOGISTICS"], extra=CMX, roofitems=SOLAR + GREEN([9, 11, 13, 15], 8))
-        SHED(d, 37, 13, ["qqq.zga.k",
-                         "....l....",
-                         "..UUUUU..",
-                         "..s.s.s..",
-                         "k1k.p.k2k"], ["WORKSHOP"], extra=CMX)
-        garden(d, 39, extra_trees=((49, 29), (22, 41), (49, 41)))
-
-
+    if L >= 2:                                                       # silica store + hopper
+        bld(d, 22, 3, 30, 9, 1, ("west", 3), [["k1k1k.k",
+                                                ".......",
+                                                ".......",
+                                                "..l....",
+                                                "k1k.k1k"]], mwall="light_gray_concrete", extra=["sand"])
+        put(d, [(26, 10, 6, "hopper[enabled=true,facing=down]")] + [(26, y, 10, "light_gray_concrete")
+                                                                       for y in range(2, 6)]
+            + [(26, 6, 10, "hopper[enabled=true,facing=down]")])
+        label(d, 21, 3, 5, "west", ["SILICA"])
+    if L >= 3:                                                       # two-storey stained-glass gallery
+        bld(d, 33, 3, 43, 11, 2, ("west", 6), [[".     .56",
+                                                 ".........",
+                                                 "1...2...3",
+                                                 ".........",
+                                                 "..TTT...4",
+                                                 "...s.....",
+                                                 "567...765"],
+                                                ["       HN",
+                                                 ".......f.",
+                                                 "..wTe....",
+                                                 ".........",
+                                                 "Hf......p",
+                                                 "N...l....",
+                                                 "D.bb...bD"]], mwall="white_concrete", lower="glass",
+            glass=glass_c(d, 0, True), extra=X, roofitems=GREEN([1, 3, 5, 7, 9], 7))
+        put(d, [(x, 7, 2, glass_c(d, i)) for i, x in enumerate(range(34, 43))])
+        label(d, 32, 3, 8, "west", ["GALLERY"])
+    if L >= 4:                                                       # kiln lab with extraction stacks
+        bld(d, 3, 19, 21, 25, 2, ("north", 9), [[".     ..l........",
+                                                  ".................",
+                                                  "o.o.o...UUU...o.o",
+                                                  ".................",
+                                                  "kYk.567.x.765.kYk"],
+                                                 ["       ..E.C.b.b.",
+                                                  ".................",
+                                                  "wT...Te.....wT...",
+                                                  ".................",
+                                                  "Hf....l......D.fH"]], mwall="white_concrete", extra=X)
+        for x in (5, 11, 17):
+            stack(d, x, 26, 16, "light_gray_concrete")
+        canopy(d, 9, 16, 15, 18, 6, [(9, 16), (15, 16)])
+        label(d, 14, 3, 18, "north", ["KILN", "LAB"])
+    if L >= 5:                                                       # six-storey prism tower
+        bld(d, 25, 14, 33, 22, 6, ("west", 4), [[".     .",
+                                                  ".......",
+                                                  "1.....2",
+                                                  ".......",
+                                                  "..TTT..",
+                                                  "...s...",
+                                                  "567.765"],
+                                                 ["       ",
+                                                  ".......",
+                                                  "E.b.b.C",
+                                                  ".......",
+                                                  "wT...Te",
+                                                  ".......",
+                                                  ".     ."],
+                                                 [".     .",
+                                                  ".......",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  "...l...",
+                                                  "D.wTe.D",
+                                                  "       "],
+                                                 ["       ",
+                                                  ".......",
+                                                  "Hf...fH",
+                                                  "N.....N",
+                                                  "...l...",
+                                                  "D......",
+                                                  ".     ."],
+                                                 [".     .",
+                                                  ".......",
+                                                  "1.2.3.4",
+                                                  ".......",
+                                                  "..wTe..",
+                                                  ".......",
+                                                  "       "],
+                                                 ["       ",
+                                                  ".....HN",
+                                                  "bb...f.",
+                                                  ".......",
+                                                  "wTe.l..",
+                                                  "..rrr..",
+                                                  "D.....D"]], mwall="white_concrete", glass=glass_c(d, 1, True),
+            extra=X)
+        billboard(d, 26, 32, 18, 33, ["PRISM"])
+        label(d, 24, 3, 20, "west", ["PRISM"])
+        for i, (x, z) in enumerate(((40, 30), (44, 34), (40, 38))):     # glass sculpture plaza
+            for y in range(2, 6 + i):
+                d.set(x, y, z, glass_c(d, i + y))
+            d.set(x, 1, z, "smooth_quartz")
+        for x, z in ((48, 22), (48, 40), (30, 38), (6, 34), (16, 38)):
+            tree(d, x, z, "birch")
+        bench(d, 36, 32, "east", 3)
+        planter(d, 36, 28, 2)
+        planter(d, 46, 28, 2)
+        lamp_post(d, 23, 25, 4)
+        lamp_post(d, 36, 26, 4)
 # ============================================================================================ TAVERN add-ons
 @growth("tavern", "Hearthwood")
 def _g_tavern_hw(d, L):
