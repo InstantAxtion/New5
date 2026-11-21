@@ -16,11 +16,16 @@ repositories {
 neoForge {
     version = project.neo_version
     mods { neoterra { sourceSet sourceSets.main } }
-    runs { server { server(); programArgument '--nogui'; systemProperty 'neoterra.selftest', 'true' } }
+    runs {
+        server { server(); programArgument '--nogui'; systemProperty 'neoterra.selftest', 'true' }
+        // gradle runFarmtest [-Pfarm=sugarcane]: builds and runs every Farmworks farm, checks its output
+        farmtest { server(); programArgument '--nogui'; systemProperty 'neoterra.farmtest', 'true'
+                   systemProperty 'neoterra.farmtest.only', (project.findProperty('farm') ?: '').toString() }
+    }
 }
 
 // the self-test needs a fresh world: huts left over from an earlier run would capture the new ones
-tasks.matching { it.name == 'runServer' }.configureEach { doFirst { delete "$projectDir/run/world" } }
+tasks.matching { it.name == 'runServer' || it.name == 'runFarmtest' }.configureEach { doFirst { delete "$projectDir/run/world" } }
 
 dependencies {
     implementation("com.ldtteam:minecolonies:${minecolonies_version}") { transitive = true }

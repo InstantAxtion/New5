@@ -140,6 +140,7 @@ public class NeoterraTrade
         modBus.addListener(this::onCreativeTabs);
         NeoForge.EVENT_BUS.register(new ColonyBoosts());
         SelfTest.register();
+        FarmTest.register();
     }
 
     public static ResourceLocation id(final String path)
