@@ -1096,21 +1096,26 @@ def core_rg_hearthwood(rel, L):
     d.hut(15, 2, 10, "east")
     d.set(17, 2, 10, "barrel[facing=up,open=false]")
     d.set(16, 5, 11, lantern(True))
-    # interior: hay mows in the bays, grain bins, sacks
-    for x in range(BX1 + 1, BX2):
-        if 14 <= x <= 18:
-            continue
-        for z in range(BZ1 + 1, BZ2):
-            if z in (BZ1 + 2, BZ2 - 2) and d.get(x, 2, z).startswith("minecraft:dark_oak_log"):
+    # interior (hand-placed): stepped hay mows against the back wall of each side bay, grain bins (barrels) along
+    # the front wall, sacks of threshed grain beside the threshing floor, winnowing corner
+    for xa, xb in ((BX1 + 1, 12), (20, BX2 - 1)):
+        for x in range(xa, xb + 1):
+            if d.get(x, 2, BZ2 - 2).startswith("minecraft:dark_oak_log"):
                 continue
-            far = min(abs(x - 16), 99)
-            if z >= BZ2 - 3 and far > 3:
-                h = 1 + ((x + z) % 3 == 0) + (z == BZ2 - 1)
+            for z, h in ((BZ2 - 1, 3), (BZ2 - 2, 2), (BZ2 - 3, 1)):
                 for y in range(2, 2 + h):
                     d.set(x, y, z, "hay_block[axis=x]")
-            elif z == BZ1 + 1 and far > 3 and x % 3 == 0:
-                d.set(x, 2, z, "barrel[facing=up,open=false]")
-                d.set(x, 3, z, "barrel[facing=up,open=false]") if x % 2 else None
+    bins = [BX1 + 2, BX1 + 3, BX2 - 3, BX2 - 2] + ([BX1 + 7, BX1 + 8, BX2 - 8, BX2 - 7] if L >= 2 else [])
+    for x in bins:
+        d.set(x, 2, BZ1 + 1, "barrel[facing=up,open=false]")
+        d.set(x, 3, BZ1 + 1, "barrel[facing=north,open=false]" if x % 2 else "composter[level=8]")
+    for x, z in ((13, 16), (13, 17), (19, 16), (19, 17), (19, 18)):
+        d.set(x, 2, z, "white_wool")
+    d.set(13, 3, 16, "white_wool")
+    d.set(19, 2, 19, "composter[level=6]")                 # grain measure
+    d.set(13, 2, 19, "grindstone[face=floor,facing=east]")
+    d.set(13, 2, 20, "dark_oak_fence")
+    d.set(13, 3, 20, "dark_oak_pressure_plate[powered=false]")
     for x in (13, 19):
         if BX1 < x < BX2:
             d.set(x, 7, (BZ1 + BZ2) // 2, lantern(True))
@@ -1889,84 +1894,304 @@ def place_item(d, kind, x, y, z, face, S):
     return True
 
 
-FURNISH = {
-    "store": ["barrels", "sacks", "barrel", "hay", "sacks", "barrels", "pot"],
-    "granary": ["sacks", "hay", "barrels", "sacks", "barrel", "hay"],
-    "office": ["shelf", "lectern", "books", "cartography_table", "shelf", "counter"],
-    "home": ["bed", "nightstand", "shelf", "plant", "bed", "keg"],
-    "inn": ["keg", "keg", "counter", "smoker", "barrel", "counter", "bench", "bench"],
-    "kitchen": ["furnace", "smoker", "cauldron", "counter", "barrel", "crafting_table"],
-    "shop": ["counter", "counter", "barrels", "shelf", "counter", "sacks"],
-    "lab": ["brewing", "counter", "shelf", "cauldron", "brewing", "lectern"],
-    "chapel": ["bench", "bench", "plant", "books"],
-    "mill": ["grindstone", "sacks", "barrels", "stonecutter", "sacks", "hay"],
-    "workshop": ["crafting_table", "anvil", "grindstone", "barrel", "smithing_table", "barrels"],
-}
+class Room:
+    """Hand layout helper for one storey of a building(): local frame u (along the door wall, from the hearth
+    side toward the ladder side via A()/O()) and v (depth from the door row). Cells that must stay clear (door
+    approach, ladder, hearth front) are refused."""
+
+    def __init__(self, d, fr, yb, S, ground):
+        self.d, self.fr, self.yb, self.S = d, fr, yb, S
+        W, D = fr["Wd"], fr["Dd"]
+        self.W, self.D = W, D
+        res = set()
+        if ground:
+            res |= {(fr["du"], 0), (fr["du"], 1)}
+            if fr["hearth"]:
+                hu, hv = fr["hearth"]
+                res |= {(hu, hv), (hu, hv - 1), (hu, hv + 1), (hu + fr["sa"], hv)}
+        if fr["n"] > 1:
+            res |= {(fr["ul"], D - 1), (fr["ul"], D - 2), (fr["ul"] - fr["sa"], D - 2)}
+        self.res = res
+
+    def A(self, k):
+        return self.fr["ua"] + self.fr["sa"] * k
+
+    def O(self, k):
+        return self.fr["ul"] - self.fr["sa"] * k
+
+    @property
+    def fa(self):                                          # facing into the room from the main side wall
+        return "u+" if self.fr["sa"] == 1 else "u-"
+
+    @property
+    def fo(self):
+        return "u-" if self.fr["sa"] == 1 else "u+"
+
+    def ok(self, u, v):
+        if not (0 <= u < self.W and 0 <= v < self.D) or (u, v) in self.res:
+            return False
+        x, z = self.fr["to_w"](u, v)
+        return self.d.air(x, self.yb, z) and self.d.air(x, self.yb + 1, z)
+
+    def open_next(self, u, v):
+        for nu, nv in ((u + 1, v), (u - 1, v), (u, v + 1), (u, v - 1)):
+            if 0 <= nu < self.W and 0 <= nv < self.D:
+                x, z = self.fr["to_w"](nu, nv)
+                if self.d.air(x, self.yb, z) and self.d.air(x, self.yb + 1, z):
+                    return True
+        return False
+
+    def put(self, u, v, item, face):
+        fu, fv = {"front": (0, -1), "back": (0, 1), "u+": (1, 0), "u-": (-1, 0)}[face]
+        if not self.ok(u, v):
+            return False
+        if 0 <= u + fu < self.W and 0 <= v + fv < self.D:
+            fx, fz = self.fr["to_w"](u + fu, v + fv)
+            if not self.d.air(fx, self.yb, fz):
+                return False
+        elif not self.open_next(u, v):
+            return False
+        x, z = self.fr["to_w"](u, v)
+        if item == "bed":
+            fu, fv = {"front": (0, -1), "back": (0, 1), "u+": (1, 0), "u-": (-1, 0)}[face]
+            if not self.ok(u + fu, v + fv):
+                return False
+        return place_item(self.d, item, x, self.yb, z, self.fr["ldir"][face], self.S)
+
+    def chair(self, u, v, back):
+        if not self.ok(u, v):
+            return
+        x, z = self.fr["to_w"](u, v)
+        self.d.set(x, self.yb, z, stair(f"{self.S['wood']}_stairs", self.fr["ldir"][back]))
+
+    def table(self, u, v, top=None):
+        if not self.ok(u, v):
+            return
+        x, z = self.fr["to_w"](u, v)
+        self.d.set(x, self.yb, z, f"{self.S['wood']}_fence")
+        self.d.set(x, self.yb + 1, z, top or f"{self.S['wood']}_pressure_plate[powered=false]")
+
+    def rug(self, u1, v1, u2, v2):
+        for u in range(min(u1, u2), max(u1, u2) + 1):
+            for v in range(min(v1, v2), max(v1, v2) + 1):
+                if 0 <= u < self.W and 0 <= v < self.D:
+                    x, z = self.fr["to_w"](u, v)
+                    if self.d.air(x, self.yb, z):
+                        edge = u in (u1, u2) or v in (v1, v2)
+                        self.d.set(x, self.yb, z, self.S["rug"][0 if edge else 1])
+
+    def lamp(self, u, v):
+        x, z = self.fr["to_w"](u, v)
+        top = self.yb + 3
+        if not self.d.air(x, top, z):
+            return
+        yy = top + 1
+        while self.d.bp.inside(x, yy, z) and self.d.air(x, yy, z) and yy < top + 6:
+            yy += 1
+        for y in range(top + 1, yy):
+            self.d.set(x, y, z, "chain[axis=y,waterlogged=false]")
+        self.d.set(x, top, z, lantern(True))
+
+    def wall_banner(self, u, v, face, color):
+        x, z = self.fr["to_w"](u, v)
+        if self.d.air(x, self.yb + 2, z):
+            self.d.set(x, self.yb + 2, z, f"{color}_wall_banner[facing={self.fr['ldir'][face]}]")
 
 
-def furnish(d, x1, z1, x2, z2, yb, kind, free, S, ceiling=None):
-    """Furnish the room inside walls x1..x2 / z1..z2 at floor level yb: items along the walls (only cells next to the
-    free middle, so all stay reachable), decor in the corners, a rug and a table set in the middle, a hanging light."""
-    ix1, ix2, iz1, iz2 = x1 + 1, x2 - 1, z1 + 1, z2 - 1
-    items = FURNISH[kind]
-    k = 0
-    slots = []
-    for x in range(ix1 + 1, ix2):
-        slots.append((x, iz1, "south"))
-    for z in range(iz1 + 1, iz2):
-        slots.append((ix2, z, "west"))
-    for x in range(ix2 - 1, ix1, -1):
-        slots.append((x, iz2, "north"))
-    for z in range(iz2 - 1, iz1, -1):
-        slots.append((ix1, z, "east"))
-    for x, z, face in slots:
-        if (x, z) in free or not d.air(x, yb, z) or not d.air(x, yb + 1, z):
-            continue
-        # the wall behind must be solid (no window / door)
-        dx, dz = DIRS[OPPD[face]]
-        if d.air(x + dx, yb, z + dz) or "door" in d.get(x + dx, yb, z + dz):
-            continue
-        it = items[k % len(items)]
-        k += 1
-        if it == "bed":
-            fx, fz = DIRS[face]
-            if (x + fx, z + fz) in free or not (ix1 + 2 <= x + fx <= ix2 - 2 and iz1 + 2 <= z + fz <= iz2 - 2):
-                it = "nightstand"
-        if place_item(d, it, x, yb, z, face, S) and k % 3 == 0 and d.air(x, yb + 2, z) and d.pack != "Neoterra":
-            col = ("red", "green", "blue", "yellow")[k % 4]
-            d.set(x, yb + 2, z, f"{col}_wall_banner[facing={face}]") if it not in ("shelf",) else None
-    for x, z in ((ix1, iz1), (ix2, iz1), (ix1, iz2), (ix2, iz2)):
-        if (x, z) in free or not d.air(x, yb, z):
-            continue
-        place_item(d, ("plant", "pot", "sacks", "plant")[(x + z) % 4] if kind not in ("home", "office") else
-                   ("plant", "shelf")[(x + z) % 2], x, yb, z, "south", S)
-    # middle: rug, table set, hanging light
-    cx1, cx2, cz1, cz2 = ix1 + 1, ix2 - 1, iz1 + 1, iz2 - 1
-    if cx2 >= cx1 and cz2 >= cz1:
-        if kind in ("home", "office", "inn", "lab", "chapel", "shop"):
-            for x in range(cx1, cx2 + 1):
-                for z in range(cz1, cz2 + 1):
-                    if d.air(x, yb, z) and (x, z) not in free:
-                        d.set(x, yb, z, S["rug"][0] if x in (cx1, cx2) or z in (cz1, cz2) else S["rug"][1])
-        mx, mz = (cx1 + cx2) // 2, (cz1 + cz2) // 2
-        if cx2 - cx1 >= 2 and cz2 - cz1 >= 2 and kind in ("home", "office", "inn", "lab", "kitchen", "shop"):
-            if (mx, mz) not in free and (d.air(mx, yb, mz) or "carpet" in d.get(mx, yb, mz)):
-                d.set(mx, yb, mz, f"{S['wood']}_fence")
-                d.set(mx, yb + 1, mz, f"{S['wood']}_pressure_plate[powered=false]" if kind != "office" else
-                      "candle[candles=2,lit=false,waterlogged=false]")
-                for f in ("east", "west"):
-                    ddx, _ = DIRS[f]
-                    if (mx + ddx, mz) not in free and (d.air(mx + ddx, yb, mz) or "carpet" in d.get(mx + ddx, yb, mz)):
-                        d.set(mx + ddx, yb, mz, stair(f"{S['wood']}_stairs", f))
-        top = ceiling if ceiling else yb + 3
-        lx, lz = (cx1 + cx2) // 2, (cz1 + cz2) // 2
-        if d.air(lx, top, lz):
-            yy = top + 1
-            while d.bp.inside(lx, yy, lz) and d.air(lx, yy, lz) and yy < top + 6:
-                yy += 1
-            for y in range(top + 1, yy):
-                d.set(lx, y, lz, "chain[axis=y,waterlogged=false]")
-            d.set(lx, top, lz, "sea_lantern" if d.pack == "Neoterra" and yy == top + 1 else lantern(True))
+# ---- one layout per room use: fixed places relative to the walls, door, hearth and ladder
+def _back(r):                                          # the "u" side the main wall is on
+    return "u-" if r.fr["sa"] == 1 else "u+"
+
+
+def lay_home(r, ground):
+    """Bedroom: beds with their heads on the back wall and nightstands between them, a two-high wardrobe on the
+    main wall, a writing desk with chair on the ladder side, a reading corner (two armchairs and a side table) by
+    the front wall, a rug in the middle and a light over it."""
+    D, W = r.D, r.W
+    for k in range(0, W - 2, 2):
+        r.put(r.A(k), D - 1, "bed", "front")
+        r.put(r.A(k + 1), D - 1, "nightstand", "front")
+    r.put(r.A(0), 1, "shelf", r.fa)
+    r.put(r.A(0), 2, "shelf", r.fa) if D >= 6 else None
+    r.put(r.O(0), 2, "counter", r.fo)
+    r.chair(r.O(1), 2, _back(r))
+    r.put(r.O(0), 1, "barrel", r.fo)
+    r.put(r.O(0), 0, "plant", "back")
+    r.put(r.A(0), 0, "plant", "back")
+    r.chair(r.A(1), 0, "front")
+    if r.ok(r.A(2), 0):
+        x, z = r.fr["to_w"](r.A(2), 0)
+        r.d.set(x, r.yb, z, f"{r.S['counter']}[type=top,waterlogged=false]")
+        r.d.set(x, r.yb + 1, z, "candle[candles=2,lit=false,waterlogged=false]")
+    r.chair(r.A(3), 0, "front")
+    r.rug(W // 2 - 1, D // 2 - 1, W // 2 + 1, D // 2)
+    r.wall_banner(r.A(1), D - 1, "front", "red" if r.d.pack == "Hearthwood" else "green")
+    r.lamp(W // 2, D // 2)
+    if W >= 9:
+        r.lamp(r.A(1), D - 3)
+
+
+def lay_kitchen(r, ground):
+    """Kitchen: cooking range along the back wall (smoker, oven, worktop, sink, larder barrels), pantry on the
+    ladder side, a dining table with chairs on both long sides in the middle, the hearth on the main side."""
+    D, W = r.D, r.W
+    run = ("smoker", "furnace", "counter", "cauldron", "counter", "barrel", "counter", "barrels", "counter")
+    for k in range(W):
+        r.put(r.A(k), D - 1, run[k % len(run)], "front")
+    r.put(r.O(0), 1, "barrels", r.fo)
+    r.put(r.O(0), 2, "sacks", r.fo)
+    r.put(r.A(0), 0, "pot", "back")
+    hv = D // 2
+    n = max(1, min(3, W - 6))
+    for i in range(n):
+        tu = r.A(3 + i)
+        r.table(tu, hv, "candle[candles=3,lit=false,waterlogged=false]" if i == 0 else None)
+        r.chair(tu, hv - 1, "front")
+        r.chair(tu, hv + 1, "back")
+    r.lamp(r.A(3), hv)
+    r.lamp(r.A(1), D - 2)
+
+
+def lay_inn(r, ground):
+    """Taproom: kegs and a smoker on the back wall, a settle facing the fire, a bar counter with stools on the
+    ladder side, tables for four along the front."""
+    D, W = r.D, r.W
+    for k, it in enumerate(("keg", "keg", "barrel", "smoker", "keg", "keg", "barrel", "keg", "keg")):
+        r.put(r.A(k), D - 1, it, "front")
+    hv = D // 2
+    for dv in (0, -1):
+        if r.ok(r.A(2), hv + dv):
+            x, z = r.fr["to_w"](r.A(2), hv + dv)
+            r.d.set(x, r.yb, z, stair(f"{r.S['wood']}_stairs", r.fr["ldir"][r.fo]))
+    for v in range(1, min(4, D - 2)):
+        r.put(r.O(1), v, "counter", r.fa)
+        r.chair(r.O(2), v, _back(r))
+    for tu in range(r.A(4), r.O(3) + (1 if r.fr["sa"] == 1 else -1), 3 * r.fr["sa"]):
+        r.table(tu, 1)
+        r.chair(tu, 0, "front")
+        r.chair(tu, 2, "back")
+    r.put(r.A(0), 0, "plant", "back")
+    r.lamp(W // 2, hv)
+    r.lamp(r.O(1), 2)
+
+
+def lay_office(r, ground):
+    """Office: bookcases along the back wall with the head clerk's desk in front of them, rows of desks (desk +
+    chair) across the room, lectern, records and map table on the ladder side, an armchair by the fire."""
+    D, W = r.D, r.W
+    for k in range(W - 2):
+        r.put(r.A(k), D - 1, "shelf" if k % 2 == 0 else "books", "front")
+    r.put(r.A(1), D - 2, "counter", "front")
+    r.chair(r.A(1), D - 3, "front") if D >= 7 else None
+    r.put(r.O(0), 1, "lectern", r.fo)
+    r.put(r.O(0), 2, "books", r.fo)
+    r.put(r.O(0), 0, "cartography_table", "back")
+    r.put(r.A(0), 0, "plant", "back")
+    if r.fr["hearth"] and ground:
+        r.chair(r.A(2), D // 2, "u+" if r.fr["sa"] == 1 else "u-")
+    else:
+        r.put(r.A(0), 1, "books", r.fa)
+        r.put(r.A(0), 2, "plant", r.fa)
+    if D >= 7:
+        for k in range(3, W - 2, 3):
+            r.put(r.A(k), D // 2, "counter", "front")
+            r.chair(r.A(k), D // 2 - 1, "front")
+    r.rug(r.A(1), 1, r.A(2), D - 4)
+    r.lamp(W // 2, D // 2)
+    if W >= 9:
+        r.lamp(r.A(1), 2)
+        r.lamp(r.O(2), D - 3)
+
+
+def lay_shop(r, ground):
+    """Shop: sales counter across the room (gap at the door aisle), stock shelves and barrels on the back wall,
+    sacks and a display barrel by the entrance."""
+    D = r.D
+    if D >= 5:
+        for u in range(r.W):
+            if u != r.fr["du"]:
+                r.put(u, 2, "counter", "front")
+    for k, it in enumerate(("shelf", "barrels", "shelf", "sacks", "shelf", "barrels", "shelf")):
+        r.put(r.A(k), D - 1, it, "front")
+    r.put(r.A(0), 0, "barrel", "back")
+    r.put(r.O(0), 0, "sacks", "back")
+    r.put(r.A(0), 1, "pot", r.fa)
+    r.lamp(r.W // 2, 1)
+    r.lamp(r.W // 2, D - 2)
+
+
+def lay_store(r, ground, granary=False):
+    """Storehouse: shelving bays down both side walls (barrels stacked, sacks), bulk goods on the back wall,
+    clear aisle in the middle."""
+    D = r.D
+    side = ("sacks", "hay", "sacks", "barrels", "hay", "sacks", "hay") if granary else \
+        ("barrels", "sacks", "barrels", "barrel", "barrels", "sacks", "barrels")
+    for v in range(1, D):
+        r.put(r.A(0), v, side[v % len(side)], r.fa)
+    for v in range(1, D - 2):
+        r.put(r.O(0), v, side[(v + 3) % len(side)], r.fo)
+    for k in range(1, r.W - 2):
+        r.put(r.A(k), D - 1, ("hay", "sacks", "barrels")[k % 3] if granary else ("barrels", "sacks", "pot")[k % 3],
+              "front")
+    r.put(r.A(0), 0, "pot", "back")
+    r.lamp(r.W // 2, D // 2)
+
+
+def lay_lab(r, ground):
+    """Laboratory: bench run with brewing stands and a sink on the main side, island benches down the middle,
+    reference shelves and lectern on the ladder side, more shelving on the back wall."""
+    D, W = r.D, r.W
+    for v, it in zip(range(1, D - 1), ("brewing", "counter", "cauldron", "brewing", "counter", "brewing")):
+        r.put(r.A(0), v, it, r.fa)
+    if D >= 5:
+        for k in range(2, W - 2, 3):
+            r.put(r.A(k), D // 2, "brewing", "front")
+            r.put(r.A(k + 1), D // 2, "counter", "front")
+    r.put(r.O(0), 1, "shelf", r.fo)
+    r.put(r.O(0), 2, "lectern", r.fo)
+    for k in range(1, W - 2):
+        r.put(r.A(k), D - 1, ("shelf", "crafting_table", "shelf", "cauldron")[k % 4], "front")
+    r.put(r.O(0), 0, "plant", "back")
+    r.lamp(r.A(2), 1)
+    r.lamp(W // 2, D - 2)
+
+
+def lay_mill(r, ground):
+    """Mill floor: the millstone (grindstone) and stonecutter in the middle, sacks of flour on the main side,
+    grain (hay) on the back wall, barrels on the ladder side."""
+    D = r.D
+    r.put(r.A(2), D // 2, "grindstone", "front")
+    r.put(r.A(3), D // 2, "stonecutter", "front")
+    for v in range(1, D):
+        r.put(r.A(0), v, "sacks" if v % 2 else "hay", r.fa)
+    for k in range(1, r.W - 2):
+        r.put(r.A(k), D - 1, "hay" if k % 2 else "sacks", "front")
+    for v in range(1, D - 2):
+        r.put(r.O(0), v, "barrels" if v % 2 else "barrel", r.fo)
+    r.lamp(r.W // 2, 1)
+
+
+def lay_workshop(r, ground):
+    """Workshop: workbench, smithing table and grindstone along the main wall, anvil in front, stock barrels on
+    the ladder side, timber and sacks on the back wall."""
+    D = r.D
+    for v, it in zip(range(1, D - 1), ("crafting_table", "smithing_table", "grindstone", "crafting_table")):
+        r.put(r.A(0), v, it, r.fa)
+    r.put(r.A(2), 2, "anvil", "front")
+    for v in range(1, D - 2):
+        r.put(r.O(0), v, "barrels", r.fo)
+    for k in range(1, r.W - 2):
+        r.put(r.A(k), D - 1, ("hay", "barrels", "sacks")[k % 3], "front")
+    r.lamp(r.W // 2, D // 2)
+
+
+LAYOUTS = {"home": lay_home, "kitchen": lay_kitchen, "inn": lay_inn, "office": lay_office, "shop": lay_shop,
+           "store": lay_store, "granary": lambda r, g: lay_store(r, g, True), "lab": lay_lab, "mill": lay_mill,
+           "workshop": lay_workshop}
+
+
+def room_layout(d, frame, yb, kind, S, ground):
+    LAYOUTS[kind](Room(d, frame, yb, S, ground), ground)
 
 
 def building(d, x1, z1, x2, z2, kinds, door="south", doorpos=None, y0=2, roof="gable", axis=None, name=None,
@@ -1992,24 +2217,36 @@ def building(d, x1, z1, x2, z2, kinds, door="south", doorpos=None, y0=2, roof="g
         dx_ = x1 if door == "west" else x2
         dcell, inside = (dx_, dpz), (dx_ + (1 if door == "west" else -1), dpz)
         outside = (dx_ + (-1 if door == "west" else 1), dpz)
-    # ladder corner: farthest interior corner from the door
-    corners = [(x1 + 1, z1 + 1), (x2 - 1, z1 + 1), (x1 + 1, z2 - 1), (x2 - 1, z2 - 1)]
-    lad = max(corners, key=lambda c: abs(c[0] - inside[0]) + abs(c[1] - inside[1]))
-    lface = "east" if lad[0] == x1 + 1 else "west"
-    lapp = (lad[0], lad[1] + (1 if lad[1] == z1 + 1 else -1))
-    ldx = 1 if lad[0] == x1 + 1 else -1
-    ldz = 1 if lad[1] == z1 + 1 else -1
-    lmore = {(lad[0] + ldx, lad[1]), (lad[0] + ldx, lad[1] + ldz), (lad[0] + 2 * ldx, lad[1] + ldz)}
+    # local room frame: u along the front (door) wall, v = depth from the front row inward
+    ix1, ix2, iz1, iz2 = x1 + 1, x2 - 1, z1 + 1, z2 - 1
+    if door == "north":
+        Wd, Dd = ix2 - ix1 + 1, iz2 - iz1 + 1
+        to_w = lambda u, v: (ix1 + u, iz1 + v)
+        ldir = {"u+": "east", "u-": "west", "back": "south", "front": "north"}
+    elif door == "south":
+        Wd, Dd = ix2 - ix1 + 1, iz2 - iz1 + 1
+        to_w = lambda u, v: (ix2 - u, iz2 - v)
+        ldir = {"u+": "west", "u-": "east", "back": "north", "front": "south"}
+    elif door == "west":
+        Wd, Dd = iz2 - iz1 + 1, ix2 - ix1 + 1
+        to_w = lambda u, v: (ix1 + v, iz2 - u)
+        ldir = {"u+": "north", "u-": "south", "back": "east", "front": "west"}
+    else:
+        Wd, Dd = iz2 - iz1 + 1, ix2 - ix1 + 1
+        to_w = lambda u, v: (ix2 - v, iz1 + u)
+        ldir = {"u+": "south", "u-": "north", "back": "west", "front": "east"}
+    du = next(u for u in range(Wd) if to_w(u, 0) == inside)
+    ul = Wd - 1 if du < Wd / 2 else 0                      # ladder in the back corner away from the door
+    sa = 1 if ul == Wd - 1 else -1                         # direction from the main (hearth) side toward the ladder
+    ua = 0 if ul == Wd - 1 else Wd - 1                     # main furniture side
+    lad = to_w(ul, Dd - 1)
+    lface = ldir["front"]
+    hearth = None
     chim = None
-    if chimney and S["chim"] and kinds[0] in ("home", "inn", "kitchen", "office"):
-        if axis == "x":
-            e = x2 if door == "west" else x1 if door == "east" else (x1 if lad[0] != x1 + 1 else x2)
-            chim = (e, (z1 + z2) // 2)
-        else:
-            e = z2 if door == "north" else z1 if door == "south" else (z1 if lad[1] != z1 + 1 else z2)
-            chim = ((x1 + x2) // 2, e)
-        if abs(chim[0] - dcell[0]) + abs(chim[1] - dcell[1]) <= 2:
-            chim = None
+    if chimney and S["chim"] and kinds[0] in ("home", "inn", "kitchen", "office") and Dd >= 5:
+        hearth = (ua, Dd // 2)
+        chim = to_w(ua - sa, Dd // 2)
+    frame = dict(Wd=Wd, Dd=Dd, to_w=to_w, ldir=ldir, du=du, ul=ul, ua=ua, sa=sa, hearth=hearth, n=len(kinds))
     pending = []
     for s, kind in enumerate(kinds):
         yb = y0 + s * SH
@@ -2053,7 +2290,7 @@ def building(d, x1, z1, x2, z2, kinds, door="south", doorpos=None, y0=2, roof="g
         def wins(cells, out):
             ox, oz = DIRS[out]
             for i, (x, z) in enumerate(cells):
-                if i < 1 or i > len(cells) - 2:
+                if i < 1 or i > len(cells) - 2 or (x, z) == chim:
                     continue
                 if pk == "Neoterra":
                     if i % 4 == 0:
@@ -2083,27 +2320,18 @@ def building(d, x1, z1, x2, z2, kinds, door="south", doorpos=None, y0=2, roof="g
         wins([(x, z2) for x in range(x1, x2 + 1)], "south")
         wins([(x1, z) for z in range(z1, z2 + 1)], "west")
         wins([(x2, z) for z in range(z1, z2 + 1)], "east")
-        free = {inside, lad, lapp} | (lmore if n > 1 else set())
-        if s > 0:
-            pass
-        if chim:
-            cx, cz = chim
-            ix = cx + (1 if cx == x1 else -1 if cx == x2 else 0)
-            iz = cz + (1 if cz == z1 else -1 if cz == z2 else 0)
-            free.add((ix, iz))
-            if s == 0:
-                d.set(ix, yb, iz, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
-                d.set(ix, yb + 1, iz, S["chim"])
-                d.set(ix, yb + 2, iz, S["chim"])
-                d.set(ix, yb + 3, iz, S["chim"])
-                # mantel ends
-                for ex, ez in (((ix - 1, iz), (ix + 1, iz)) if cz in (z1, z2) else ((ix, iz - 1), (ix, iz + 1))):
-                    if d.air(ex, yb, ez) and (ex, ez) not in free:
-                        d.set(ex, yb, ez, S["chim"])
-                        d.set(ex, yb + 1, ez, f"{S['chimcap']}[type=bottom,waterlogged=false]")
-                        free.add((ex, ez))
+        if hearth and s == 0:
+            hx, hz = to_w(*hearth)
+            d.set(hx, yb, hz, f"campfire[facing={ldir['u+' if sa == 1 else 'u-']},lit=true,signal_fire=false,waterlogged=false]")
+            for y in range(yb + 1, yb + 4):
+                d.set(hx, y, hz, S["chim"])
+            for dv in (-1, 1):                              # mantel / hearth cheeks
+                ex, ez = to_w(hearth[0], hearth[1] + dv)
+                d.set(ex, yb, ez, S["chim"])
+                d.set(ex, yb + 1, ez, f"{S['chimcap']}[type=bottom,waterlogged=false]")
         if kind == "home" and not beds_ok:
             kind = "office"
+        free = None
         pending.append((yb, kind, free))
     top = y0 + n * SH - 1                                  # roof level
     # ladders between storeys
@@ -2150,7 +2378,7 @@ def building(d, x1, z1, x2, z2, kinds, door="south", doorpos=None, y0=2, roof="g
                     d.set(x, top + 1, z, "moss_block")
                     d.set(x, top + 2, z, "azalea")
         for yb, kind, free in pending:
-            furnish(d, x1, z1, x2, z2, yb, kind, free, S)
+            room_layout(d, frame, yb, kind, S, ground=(yb == y0))
         return top + 2
     ridge = d.gable(x1, z1, x2, z2, top, axis, S["roofst"], S["roofsl"], S["end"], overhang=1)
     if pk == "Hearthwood":                                 # framed gable ends
@@ -2167,7 +2395,7 @@ def building(d, x1, z1, x2, z2, kinds, door="south", doorpos=None, y0=2, roof="g
                 d.set(cx, y, cz, S["chim"])
         d.set(cx, ridge + 2, cz, f"{S['chimcap']}[type=bottom,waterlogged=false]")
     for yb, kind, free in pending:
-        furnish(d, x1, z1, x2, z2, yb, kind, free, S)
+        room_layout(d, frame, yb, kind, S, ground=(yb == y0))
     return ridge
 
 
@@ -2360,7 +2588,8 @@ def gb_cascadia(rel, L):
         for x in (47, 52, 54, 59):
             for y in range(2, 6):
                 d.set(x, y, 24, "spruce_log[axis=y]")
-        for x, z in ((1, 2), (13, 2), (58, 2), (59, 37), (47, 37)):
+        building(d, 2, 1, 9, 7, ["workshop"], door="west", name=["Smithy"], chimney=False, pal=0)
+        for x, z in ((13, 2), (58, 2), (59, 37), (47, 37)):
             tree(d, x, z, h=7, log="spruce_log", leaves="spruce_leaves", r=2)
         for x in (13, 47):
             lamppost(d, x, 23, post="spruce_fence")
@@ -2477,7 +2706,7 @@ def rg_hearthwood(rel, L):
                     d.set(x, 2, z, ("wheat[age=7]", "carrots[age=7]", "potatoes[age=7]", "beetroots[age=3]")[(x // 4) % 4])
         for x in (16, 44):
             tree(d, x, 39, h=4, leaves="oak_leaves", r=1)
-        building(d, 49, 40, 58, 47, ["kitchen", "home"], door="west", name=["Alms", "House"], pal=10)
+        building(d, 49, 40, 58, 47, ["kitchen", "home", "home"], door="west", name=["Alms", "House"], pal=10)
     connect_walls(d)
     return d
 
@@ -2526,7 +2755,7 @@ def rg_cascadia(rel, L):
 
 def rg_neoterra(rel, L):
     OX = 14
-    big = Design("Neoterra", rel, (61, 26, 55), gy=1, paving="grass_block[snowy=false]")
+    big = Design("Neoterra", rel, (61, 32, 55), gy=1, paving="grass_block[snowy=false]")
     small = core_rg_neoterra(rel, L)
     paste(big, small, OX, 0)
     d = big
@@ -2548,7 +2777,8 @@ def rg_neoterra(rel, L):
             d.set(7, 1, z, "smooth_stone")
             d.set(53, 1, z, "smooth_stone")
     if L >= 5:                                             # visitor centre tower and park
-        building(d, 22, 40, 38, 50, ["shop", "office", "office", "office"], door="west", name=["VISITOR", "CENTRE"], pal=7)
+        building(d, 22, 40, 38, 50, ["shop", "office", "office", "office", "office"], door="west",
+                 name=["VISITOR", "CENTRE"], pal=7)
         for z in range(30, 52):
             d.set(20, 1, z, "smooth_stone")
         for x, z in ((1, 18), (59, 18), (1, 50), (59, 50), (44, 52)):
@@ -2558,3 +2788,51 @@ def rg_neoterra(rel, L):
             d.set(x, 3, 47, "sea_lantern")
     connect_walls(d)
     return d
+
+
+# ----------------------------------------------------------------------------------------------- material tiers
+EARLY_SWAP = {"smooth_quartz_slab": "smooth_stone_slab", "smooth_quartz_stairs": "polished_diorite_stairs",
+              "smooth_quartz": "smooth_stone", "quartz_block": "calcite", "quartz_pillar": "white_concrete",
+              "quartz_bricks": "calcite", "polished_blackstone": "polished_deepslate",
+              "prismarine_bricks": "cyan_terracotta", "polished_blackstone_wall": "polished_deepslate_wall"}
+
+
+def early_materials(d, L):
+    """Levels 1-3 build with common stone / concrete; quartz, blackstone and prismarine stay for levels 4-5.
+    Sea lanterns become glowstone on L1-2 (L3 keeps a few as accents)."""
+    if L >= 4:
+        return d
+    bp = d.bp
+    for x, y, z, st in list(bp.blocks()):
+        if st == AIR:
+            continue
+        name, _, props = st.partition("[")
+        n = name.split(":")[-1]
+        new = EARLY_SWAP.get(n)
+        if new is None and n == "sea_lantern" and L <= 2:
+            new = "glowstone"
+        if new is None:
+            continue
+        if n == "quartz_pillar":
+            props = ""
+        bp.grid[y][z][x] = f"minecraft:{new}" + (f"[{props}" if props else "")
+    return d
+
+
+_gbn, _rgn, _gbwn, _rgwn = gb_neoterra, rg_neoterra, gbw_neoterra, rgw_neoterra
+
+
+def gb_neoterra(rel, L):
+    return early_materials(_gbn(rel, L), L)
+
+
+def rg_neoterra(rel, L):
+    return early_materials(_rgn(rel, L), L)
+
+
+def gbw_neoterra(rel, L):
+    return early_materials(_gbwn(rel, L), L)
+
+
+def rgw_neoterra(rel, L):
+    return early_materials(_rgwn(rel, L), L)

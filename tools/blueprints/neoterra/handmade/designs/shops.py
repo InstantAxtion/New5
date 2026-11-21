@@ -2915,6 +2915,7 @@ def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, 
                (dx - ox - px, dz - oz - pz)}
     opts = [(iz1, ix1 + 1, 1), (iz2, ix2 - 1, -1), (iz1, ix2 - 1, -1), (iz2, ix1 + 1, 1)]
     first = next(o for o in opts if not ({(o[1] + o[2] * i, o[0]) for i in range(-1, 6)} & door_in))
+    srows = {k: set() for k in range(n)}
     for k in range(n - 1):
         yb = tops[k]
         if k % 2 == 0:
@@ -2923,6 +2924,8 @@ def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, 
             rowz = iz2 if first[0] == iz1 else iz1
             sx0, step = (ix2 - 1, -1) if first[2] == 1 else (ix1 + 1, 1)
         cells = _stair_flight(d, sx0, rowz, yb, step, mat, fill)
+        srows[k].add(rowz)
+        srows[k + 1].add(rowz)
         keep_by[k] |= cells
         keep_by[k + 1] |= cells
         inner = 1 if rowz == iz1 else -1
@@ -2930,7 +2933,15 @@ def building(d, x1, z1, x2, z2, rooms, door, axis="x", sign=None, chimney=True, 
             keep_by[k].add((c[0], rowz + inner))
             keep_by[k + 1].add((c[0], rowz + inner))
     for k, kind in enumerate(rooms):
-        furnish(d, kind, ix1, iz1, ix2, iz2, tops[k], keep_by[k], extra)
+        b1 = iz1 + 2 if iz1 in srows[k] else iz1
+        b2 = iz2 - 2 if iz2 in srows[k] else iz2
+        if kind == "greenhouse":
+            furnish(d, kind, ix1, iz1, ix2, iz2, tops[k], keep_by[k])
+        else:
+            kp = set(keep_by[k])
+            for bb in ((b1,) if b1 != iz1 else ()) + ((b2,) if b2 != iz2 else ()):
+                kp |= {(ix1, bb), (ix2, bb)}                  # gaps that join the room to the stair hall
+            room_layout(d, kind, ix1, b1, ix2, b2, tops[k], kp, extra if k == 0 else ())
     if not hasattr(d, "_doors"):
         d._doors, d._later = [], []
     d._doors.append((dx + ox, dz + oz))
@@ -2990,6 +3001,8 @@ def grow(d, L, base):
     yard(d, {1: 1, 2: 2, 3: 4, 4: 6, 5: 10}[L])
     decorate(d)
     reskin(d)
+    if L <= 3:
+        plain(d)
 
 
 def _open(d, x1, z1, x2, z2, y1=2, y2=9):
@@ -3389,7 +3402,7 @@ GROW = {
     ("glassblower", "Cascadia"): [
         (2, B(26, 3, 34, 9, ["store"], ("west", 3), "z", sign=["Sand", "Shed"], **SP["glassblower2"])),
         (3, B(3, 19, 23, 25, ["shop", "workshop"], ("north", 10), "x", sign=["Gallery"], **SP["glassblower3"])),
-        (4, B(27, 13, 35, 29, ["workshop", "store"], ("west", 8), "z", sign=["Kiln", "Shed"], **SP["glassblower4"])),
+        (4, B(27, 13, 35, 29, ["workshop", "store", "bedroom"], ("west", 8), "z", sign=["Kiln", "Shed"], **SP["glassblower4"])),
         (5, B(38, 3, 46, 21, ["shop", "office", "living", "bedroom"], ("west", 8), "z", sign=["Lodge"], **SP["glassblower5"])),
     ],
     ("glassblower", "Neoterra"): [
@@ -3558,6 +3571,171 @@ def reskin(d):
             bp.set(x, y, z, new, bp.tile_entities.get((x, y, z)))
 
 
+# ============================================================================================ ROOM LAYOUTS
+# Hand-laid room plans for the add-on buildings. Every piece has a fixed position relative to the room's corners
+# (a1,b1 = north-west, a2,b2 = south-east of the usable floor, i.e. without the stair rows); a piece is only
+# skipped where the cell is not free (door approach, stairs).
+def room_layout(d, kind, a1, b1, a2, b2, y, keep, extra=()):
+    S = STY[d.pack]
+    P = d.pack
+    w, w2 = S["wood"], S["wood2"]
+    W, D = a2 - a1 + 1, b2 - b1 + 1
+    pot = "decorated_pot[cracked=false,facing=north,waterlogged=false]"
+    cand = "candle[candles=3,lit=false,waterlogged=false]"
+    chisel = lambda f: (f"chiseled_bookshelf[facing={f},slot_0_occupied=true,slot_1_occupied=true,"   # noqa: E731
+                        f"slot_2_occupied=false,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
+
+    def free(x, z, h=2):
+        return a1 <= x <= a2 and b1 <= z <= b2 and (x, z) not in keep and all(d.air(x, y + i, z) for i in range(h))
+
+    def put(x, z, block, top=None, dy=0):
+        if free(x, z):
+            d.set(x, y + dy, z, block)
+            if top:
+                d.set(x, y + 1, z, top)
+            return True
+        return False
+
+    def chair(x, z, back):
+        if free(x, z):
+            d.chair(x, y, z, back, w, sit=False)
+
+    def table(x, z):
+        if free(x, z):
+            d.table(x, y, z, w, "post")
+
+    def bed(x, z, facing):
+        fx, fz = D4[OPP[facing]]
+        if free(x, z) and free(x + fx, z + fz):
+            d.bed(x, y, z, facing, S["bed"])
+            d.placed["beds"] -= 1
+
+    def rug(x1, z1, x2, z2):
+        for x in range(max(x1, a1), min(x2, a2) + 1):
+            for z in range(max(z1, b1), min(z2, b2) + 1):
+                if (x, z) not in keep and d.air(x, y, z):
+                    d.set(x, y, z, S["rug"][0] if x in (x1, x2) or z in (z1, z2) else S["rug"][1])
+
+    def lamp(x, z):
+        if d.air(x, y + 3, z) and not d.air(x, y + 4, z):
+            d.set(x, y + 3, z, lant())
+
+    cx, cz = (a1 + a2) // 2, (b1 + b2) // 2
+    for i, e in enumerate(extra):                                  # trade goods first: east wall
+        put(a2, b1 + 1 + 2 * i, e[6:] if e.startswith("block:") else "barrel[facing=west,open=false]")
+    if kind == "living":
+        # sofa against the south wall facing a low table, armchair opposite, bookcases and plants in corners
+        for x in (cx - 1, cx, cx + 1):
+            chair(x, b2, "south")
+        put(cx - 2, b2, sl(w2, "top"), cand)
+        put(cx + 2, b2, S["plant"])
+        for x in (cx - 1, cx, cx + 1):
+            put(x, b2 - 2, sl(w, "top"), "flower_pot" if x == cx else None)
+        chair(cx, b2 - 4 if D >= 5 else b1, "north")
+        put(a1, b1, chisel("south"), chisel("south"))
+        put(a1 + 1, b1, chisel("south"), chisel("south"))
+        put(a2, b1, S["plant"])
+        put(a2 - 1, b1, "note_block[instrument=harp,note=0,powered=false]")
+        lamp(cx, b2 - 2)
+    elif kind == "bedroom":
+        bed(a1, b1, "north")
+        put(a1 + 1, b1, sl(w2, "top"), cand)
+        bed(a2, b1, "north")
+        put(a2 - 1, b1, sl(w2, "top"), "flower_pot")
+        put(a1 + 2, b2, "barrel[facing=north,open=false]", w + "_planks")
+        put(a1 + 3, b2, chisel("north"), chisel("north"))
+        put(a2 - 2, b2, "barrel[facing=north,open=false]")
+        put(a2 - 3, b2, sl(w, "top"), "lantern[hanging=false,waterlogged=false]")
+        if W >= 7:
+            put(cx, b1, sl(w, "top"), cand)
+            chair(cx, b1 + 1, "south")
+        rug(cx - 1, b1 + 1, cx + 1, b2 - 1)
+        lamp(cx, cz)
+    elif kind == "dorm":
+        for i, x in enumerate(range(a1, a2 + 1, 2)):
+            bed(x, b1, "north")
+            if D >= 5:
+                bed(x, b2, "south")
+            put(x + 1, b1, "barrel[facing=north,open=false]" if i % 2 else sl(w2, "top"), None if i % 2 else cand)
+        lamp(cx, cz)
+        lamp(a1 + 1, cz)
+    elif kind == "office":
+        for x in (a1 + 1, a1 + 2):
+            put(x, b1 + 1, sl(w, "top"))
+        if "slab" in d.get(a1 + 1, y, b1 + 1):
+            d.set(a1 + 1, y + 1, b1 + 1, cand)
+        chair(a1 + 1, b1 + 2, "south")
+        put(a2, b1, f"lectern[facing=west,has_book=true,powered=false]")
+        put(a2, b2, "cartography_table")
+        put(a1, b2, chisel("north"), chisel("north"))
+        put(a1 + 1, b2, chisel("north"), chisel("north"))
+        put(a2 - 1, b2, S["plant"])
+        put(a1, b1, S["plant"])
+        rug(a1 + 3, b1 + 1, a2 - 1, b2 - 1)
+        lamp(cx, cz)
+    elif kind == "store":
+        # shelving bays: rows of crates along x with an aisle between, sacks and bales on the crates
+        rows = [b1] + ([b1 + 3] if D >= 7 else []) + ([b2] if D >= 3 else [])
+        for r in sorted(set(rows)):
+            for x in range(a1, a2 + 1):
+                if (x - a1) % 4 == 3:
+                    continue
+                if put(x, r, "barrel[facing=up,open=false]"):
+                    if (x + r) % 3 == 0:
+                        d.set(x, y + 1, r, "white_wool")
+                    elif (x + r) % 3 == 1:
+                        d.set(x, y + 1, r, "hay_block[axis=y]")
+        lamp(cx, b1 + 1)
+        lamp(cx, b2 - 1)
+    elif kind == "workshop":
+        # bench run along the north wall with a stool, tools at the south wall
+        for x in range(a1, min(a2, a1 + 4) + 1):
+            put(x, b1, sl(w2, "top"), "flower_pot" if x == a1 else cand if x == a1 + 3 else None)
+        chair(a1 + 1, b1 + 1, "south")
+        chair(a1 + 3, b1 + 1, "south")
+        put(a2, b1, "fletching_table")
+        put(a1, b2, "smithing_table")
+        put(a1 + 2, b2, "grindstone[face=floor,facing=north]")
+        put(a2, b2, "anvil[facing=east]")
+        put(a2 - 2, b2, "barrel[facing=up,open=false]")
+        lamp(a1 + 2, b1 + 1)
+        lamp(cx, cz)
+    elif kind == "dining":
+        # one long table down the middle with chairs both sides, a sideboard on the north wall
+        for x in range(a1 + 1, a2):
+            put(x, cz, sl(w, "top"), cand if (x - a1) % 3 == 1 else None)
+            chair(x, cz - 1, "north")
+            chair(x, cz + 1, "south")
+        for x in range(a1 + 1, a2, 2):
+            if D >= 5:
+                put(x, b1, sl(w2, "top"), pot)
+        put(a1, b2, S["plant"])
+        put(a2, b2, S["plant"])
+        lamp(a1 + 2, cz)
+        lamp(a2 - 2, cz)
+    elif kind == "kitchen":
+        # counter run with stove, sink and oven on the north wall, a small dining set to the south
+        line = ["furnace[facing=south,lit=true]", sl("smooth_stone", "top"), "water_cauldron[level=3]",
+                sl("smooth_stone", "top"), "smoker[facing=south,lit=false]", sl("smooth_stone", "top")]
+        for i, b in enumerate(line):
+            put(a1 + i, b1, b, "flower_pot" if i == 3 else None)
+        table(cx, b2 - 1 if D >= 4 else b2)
+        chair(cx - 1, b2 - 1 if D >= 4 else b2, "west")
+        chair(cx + 1, b2 - 1 if D >= 4 else b2, "east")
+        put(a2, b2, "barrel[facing=up,open=false]", "melon")
+        put(a2, b1, "hay_block[axis=y]")
+        lamp(a1 + 2, b1 + 1)
+    elif kind == "shop":
+        # wall shelves behind a counter, customers' side towards the door
+        for x in range(a1, a2 + 1):
+            put(x, b1, sl(w2, "top"), pot if x % 2 else S["plant"])
+        for x in range(a1 + 1, a2 - 1):
+            put(x, b1 + 2, sl(w, "top"), cand if x == a1 + 2 else None)
+        put(a2, b2, S["plant"])
+        put(a1, b2, "barrel[facing=up,open=false]")
+        lamp(cx, b1 + 1)
+
+
 # ============================================================================================ DECOR PASS
 LIGHTS = ("lantern", "torch", "sea_lantern", "froglight", "glowstone", "end_rod", "campfire", "shroomlight",
           "candle")
@@ -3653,35 +3831,38 @@ def decorate(d):
                         and all(_name(d, x + a, y, z + b) == "air" for a, b in D4.values()):
                     d.set(x, y + 1, z, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
                 break
-    # rooms: ceiling lamps where dark, pots/plants against walls
-    pots = ["decorated_pot[cracked=false,facing=north,waterlogged=false]", S["plant"],
-            f"candle[candles=3,lit=false,waterlogged=false]"]
-    k = 0
-    for y in range(2, H - 3):
-        floor_cells = [(x, z) for x in range(1, bp.sx - 1) for z in range(1, bp.sz - 1)
-                       if bp.get(x, y, z) == AIR and bp.get(x, y + 1, z) == AIR and (x, z) not in out[y]
-                       and bp.get(x, y - 1, z) != AIR and "stairs" not in bp.get(x, y - 1, z)]
-        for (x, z) in floor_cells:
-            if (x + 2 * z) % 4 == 0 and x % 4 == 1:                  # lamp grid
-                c = next((cy for cy in range(y + 2, min(y + 7, bp.sy)) if bp.get(x, cy, z) != AIR), None)
-                if c and 3 <= c - y <= 4 and "stairs" not in bp.get(x, c, z) and "slab" not in bp.get(x, c, z) \
-                        and not near(x, c - 1, z, LIGHTS, 2) and bp.get(x, c - 1, z) == AIR:
-                    d.set(x, c - 1, z, lant())
-        for (x, z) in floor_cells:
-            if bp.get(x, y, z) != AIR:
-                continue
-            walls = [s for s, (dx, dz) in D4.items() if bp.get(x + dx, y, z + dz) not in (AIR,)
-                     and "pane" not in bp.get(x + dx, y, z + dz) and "door" not in bp.get(x + dx, y, z + dz)]
-            if len(walls) != 1:
-                continue
-            others = [(x + dx, z + dz) for s, (dx, dz) in D4.items() if s != walls[0]]
-            if not all(bp.get(a, y, b) == AIR and bp.get(a, y + 1, b) == AIR for a, b in others):
-                continue
-            if near(x, y, z, NOGO, 2) or (x * 3 + z * 5 + y) % 7:
-                continue
-            k += 1
-            if k % 3 == 2:
-                d.set(x, y, z, sl(S["wood2"], "top"))
-                d.set(x, y + 1, z, pots[k % len(pots)])
-            else:
-                d.set(x, y, z, pots[k % len(pots)])
+
+
+
+# ============================================================================================ MATERIAL TIERS
+# Levels 1-3 are built from common materials; the premium ones (quartz, copper, prismarine, sea lanterns, end
+# rods, froglights, blackstone...) appear from level 4 when the complex is upgraded.
+PLAIN = [("smooth_quartz_stairs", "polished_diorite_stairs"), ("quartz_stairs", "polished_diorite_stairs"),
+         ("smooth_quartz_slab", "smooth_stone_slab"), ("quartz_slab", "smooth_stone_slab"),
+         ("smooth_quartz", "smooth_stone"), ("quartz_block", "calcite"), ("quartz_pillar", "calcite"),
+         ("chiseled_quartz_block", "calcite"), ("quartz_bricks", "calcite"),
+         ("dark_prismarine_stairs", "deepslate_tile_stairs"), ("dark_prismarine_slab", "deepslate_tile_slab"),
+         ("dark_prismarine", "deepslate_tiles"), ("prismarine_bricks", "stone_bricks"), ("prismarine", "stone_bricks"),
+         ("cut_copper_stairs", "stone_brick_stairs"), ("cut_copper_slab", "smooth_stone_slab"),
+         ("cut_copper", "smooth_stone"), ("sea_lantern", "glowstone"), ("pearlescent_froglight", "glowstone"),
+         ("polished_blackstone_bricks", "polished_deepslate"), ("polished_blackstone", "polished_deepslate"),
+         ("blackstone", "cobbled_deepslate"), ("iron_block", "smooth_stone"), ("shroomlight", "glowstone")]
+FULLB = ("glowstone", "smooth_stone", "calcite", "deepslate_tiles", "stone_bricks", "polished_deepslate",
+         "cobbled_deepslate")
+
+
+def plain(d):
+    from blueprint import parse_state, format_state
+    bp = d.bp
+    for x, y, z, stt in list(bp.blocks()):
+        name, props = parse_state(stt)
+        n = name.split(":")[1]
+        if n == "end_rod":
+            bp.set(x, y, z, "minecraft:" + ("lantern[hanging=true,waterlogged=false]" if props.get("facing") == "down"
+                                            else "lantern[hanging=false,waterlogged=false]"), None)
+            continue
+        for a, b in PLAIN:
+            if n == a:
+                bp.set(x, y, z, format_state("minecraft:" + b, {} if b in FULLB else props),
+                       bp.tile_entities.get((x, y, z)))
+                break

@@ -2591,87 +2591,214 @@ def token(d, tok, x, y, z, f, i, base):
         d.set(x, y, z, names.get(tok, tok))
 
 
+class Lay:
+    """Hand layout helper for one room: fixed positions relative to the room's walls (east wall x2, back wall z2,
+    street side z1); a piece is simply left out where the stair well, the door aisle or a wall is."""
+
+    def __init__(self, d, rm):
+        self.d = d
+        self.x1, self.z1, self.x2, self.z2, self.y, res, keep = rm
+        self.res = list(res)
+        self.keep = set(keep) | {(x, z + 1) for x, z in keep}
+        self.W = self.x2 - self.x1 + 1
+        self.D = self.z2 - self.z1 + 1
+        self.zc = (self.z1 + self.z2) // 2
+        self.wood = WOOD[d.pack]
+        self.shelf = f"{self.wood}_slab[type=top,waterlogged=false]"
+
+    def ok(self, x, z):
+        d, y = self.d, self.y
+        return (self.x1 <= x <= self.x2 and self.z1 <= z <= self.z2
+                and not any(a <= x <= b and c <= z <= e for a, c, b, e in self.res) and (x, z) not in self.keep
+                and d.air(x, y, z) and d.air(x, y + 1, z) and not d.air(x, y - 1, z))
+
+    def put(self, x, z, block, top=None):
+        if not self.ok(x, z):
+            return False
+        self.d.set(x, self.y, z, block)
+        if top:
+            self.d.set(x, self.y + 1, z, top)
+        return True
+
+    def tok(self, x, z, tok, facing, i, base):
+        if self.ok(x, z):
+            token(self.d, tok, x, self.y, z, facing, i, base)
+
+    def light(self, x, z):
+        if self.d.bp.inside(x, self.y + 3, z) and self.d.air(x, self.y + 3, z) and self.d.air(x, self.y + 2, z):
+            hang(self.d, x, self.y + 3, z)
+
+    def rug(self, xa, za, xb, zb):
+        c = RUGS[self.d.pack]
+        for x in range(xa, xb + 1):
+            for z in range(za, zb + 1):
+                if self.ok(x, z):
+                    self.d.set(x, self.y, z, c[0] if x in (xa, xb) or z in (za, zb) else c[1])
+
+
+def lay_workshop(L, tools, base):
+    """Bench run along the back wall with the trade's tools at their stations, tool racks and a hook board on the
+    east wall, a work table with stools in the middle."""
+    seq = [tools[0], "bench_pot", tools[1 % len(tools)], "bench_candle", tools[2 % len(tools)], "bench", "craft"]
+    for i in range(min(L.W - 2, len(seq))):
+        x = L.x2 - i
+        t = seq[i]
+        if t == "bench_pot":
+            L.put(x, L.z2, L.shelf, "flower_pot")
+        elif t == "bench_candle":
+            L.put(x, L.z2, L.shelf, "candle[candles=3,lit=false,waterlogged=false]")
+        elif t == "bench":
+            L.put(x, L.z2, L.shelf)
+        else:
+            L.tok(x, L.z2, t, "north", i, base)
+    side = ["rack2", "barrel", "rack2", "keg", "plant"]
+    for i, z in enumerate(range(L.z2 - 1, L.z1, -1)):
+        if i >= len(side):
+            break
+        L.tok(L.x2, z, side[i], "west", i, base)
+        if L.d.air(L.x2, L.y + 2, z) and not L.d.air(L.x2, L.y + 1, z):
+            L.d.set(L.x2, L.y + 2, z, "tripwire_hook[attached=false,facing=west,powered=false]") \
+                if not L.d.air(L.x2 + 1, L.y + 2, z) else None
+    if L.W >= 9 and L.D >= 7:
+        for x in range(L.x2 - 5, L.x2 - 2):
+            L.put(x, L.zc, L.shelf, "candle[candles=2,lit=false,waterlogged=false]" if x == L.x2 - 4 else
+                  "flower_pot" if x == L.x2 - 5 else None)
+        if L.ok(L.x2 - 4, L.zc + 1):
+            L.d.chair(L.x2 - 4, L.y, L.zc + 1, "south", L.wood, sit=False)
+        if L.ok(L.x2 - 5, L.zc - 1):
+            L.d.chair(L.x2 - 5, L.y, L.zc - 1, "north", L.wood, sit=False)
+    L.light(L.x2 - 4, L.zc)
+    L.light(L.x1 + L.W // 3, L.zc)
+
+
+def lay_store(L, base):
+    """Shelving bays along the back wall (posts between bays), crates along the east wall, a double-sided shelf
+    run down the middle and a packing bench by the door."""
+    stock = STOCK[base]
+    for i, x in enumerate(range(L.x2, L.x1, -1)):
+        if i % 4 == 3:
+            L.put(x, L.z2, MAT[L.d.pack]["fence"], "lantern[hanging=false,waterlogged=false]")
+        elif L.ok(x, L.z2):
+            L.d.rack(x, L.y, L.z2, "north")
+            L.d.rack(x, L.y + 1, L.z2, "north")
+    for i, z in enumerate(range(L.z1 + 1, L.z2 - 1)):
+        if i % 3 == 2:
+            L.tok(L.x2, z, "chest", "west", i, base)
+        else:
+            if L.ok(L.x2, z):
+                L.d.keg(L.x2, L.y, z, "west")
+                L.d.set(L.x2, L.y + 1, z, stock[i % len(stock)])
+    if L.D >= 9:
+        za = L.z1 + 3
+        for x in range(L.x1 + 4, L.x2 - 2):
+            if L.ok(x, za) and L.ok(x, za + 1):
+                L.d.rack(x, L.y, za, "north")
+                L.d.rack(x, L.y + 1, za, "north")
+                L.d.rack(x, L.y, za + 1, "south")
+                L.d.rack(x, L.y + 1, za + 1, "south")
+    L.put(L.x1 + L.W // 2 + 2, L.z1 + 1, L.shelf, "candle[candles=1,lit=false,waterlogged=false]")
+    L.put(L.x1 + L.W // 2 + 3, L.z1 + 1, "barrel[facing=up,open=false]")
+    L.light(L.x1 + L.W // 2, L.z2 - 2)
+
+
+RACK_STATE_N = "minecolonies:blockminecoloniesrack[facing=north,variant=blockrackemptysingle]"
+
+
+def lay_office(L, base, library=False):
+    """Bookcase wall at the back with a lectern, a desk facing the door with chair and visitor chair, map table,
+    rug under the desk, filing barrels and plants."""
+    case = ["book", "bshelf", "lectern", "bshelf", "book", "bshelf", "book"]
+    n = L.W - 1 if library else 5
+    for i in range(min(n, L.W - 1)):
+        x = L.x2 - i
+        t = case[i % len(case)] if not (library and i % len(case) == 2 and i > 2) else "book"
+        if t == "bshelf":
+            L.put(x, L.z2, "bookshelf", "bookshelf")
+        else:
+            L.tok(x, L.z2, t, "north", i, base)
+    dx = L.x2 - 3
+    dz = L.z1 + 3
+    for ox in ((0, -6) if L.W >= 13 else (0,)):
+        if L.put(dx + ox, dz, L.shelf, "candle[candles=1,lit=false,waterlogged=false]"):
+            L.put(dx + ox + 1, dz, L.shelf, "flower_pot")
+            if L.ok(dx + ox + 1, dz + 1):
+                L.d.chair(dx + ox + 1, L.y, dz + 1, "south", L.wood, sit=False)
+            if L.ok(dx + ox, dz - 1):
+                L.d.chair(dx + ox, L.y, dz - 1, "north", L.wood, sit=False)
+    L.tok(L.x2 - 1, dz, "carto", "north", 0, base)
+    L.tok(L.x2, L.z1 + 1, "plant", "west", 0, base)
+    for i, z in enumerate(range(dz + 2, L.z2 - 1)):
+        if i < 3:
+            L.tok(L.x2, z, "barrel", "west", i, base)
+    if library and L.D >= 7:
+        for x in range(L.x2 - 5, L.x2 - 2):
+            if L.ok(x, L.z2 - 2):
+                L.d.table(x, L.y, L.z2 - 2, L.wood)
+        L.put(L.x2 - 6, L.z2 - 2, f"{L.wood}_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]")
+    L.rug(L.x2 - 4, dz - 1, L.x2 - 1, dz + 2)
+    L.light(dx, dz)
+    L.light(L.x2 - 2, L.z2 - 2)
+
+
+def lay_shop(L, base):
+    """Sales counter across the room with the till at the end, display shelves and crates behind it, a bench and
+    plants on the customers' side."""
+    stock = STOCK[base]
+    cz = L.z1 + 3
+    for i, x in enumerate(range(L.x2 - 1, L.x2 - 7, -1)):
+        L.put(x, cz, L.shelf, POTS[i % 4] if i % 2 else None)
+    disp = ["rack", "stock", "rack", "barrel", "stock", "rack"]
+    for i, x in enumerate(range(L.x2, L.x2 - len(disp), -1)):
+        L.tok(x, L.z2, disp[i], "north", i, base)
+    L.tok(L.x2, L.z2 - 2, "keg", "west", 1, base)
+    L.tok(L.x2, cz + 1, "barrel", "west", 0, base)
+    L.tok(L.x2, L.z1 + 1, "plant", "west", 0, base)
+    bx = L.x2 - 8
+    if L.ok(bx, L.z1 + 1) and L.ok(bx - 1, L.z1 + 1):
+        bench(L.d, bx, L.z1 + 1, "south") if False else None
+        L.d.chair(bx, L.y, L.z1 + 1, "north", L.wood, sit=False)
+        L.d.chair(bx - 1, L.y, L.z1 + 1, "north", L.wood, sit=False)
+    L.rug(L.x2 - 7, L.z1 + 1, L.x2 - 2, cz - 1)
+    L.light(L.x2 - 3, cz)
+
+
 def room(d, rm, ring, centre=None, base="blacksmith", rug=False, lights=True, extra_res=()):
+    """Fit out a room with the hand layout that matches its use (the ring list only names the room's tools)."""
     if rm is None:
         return
-    fx1, fz1, fx2, fz2, y, reserved, keep = rm
-    reserved = list(reserved) + list(extra_res)
-    P = d.pack
-    wood = WOOD[P]
-    shelf = f"{wood}_slab[type=top,waterlogged=false]"
-
-    def inres(x, z):
-        return any(a <= x <= b and c <= z <= e for a, c, b, e in reserved) or (x, z) in keep
-
-    def free(x, z):
-        return (fx1 <= x <= fx2 and fz1 <= z <= fz2 and not inres(x, z) and d.air(x, y, z)
-                and d.air(x, y + 1, z) and not d.air(x, y - 1, z))
-
-    def inward(x, z):
-        return "south" if z == fz1 else "north" if z == fz2 else "east" if x == fx1 else "west"
-
-    cells = sorted(perim(fx1, fz1, fx2, fz2), key=lambda c: (c[1], c[0]))
-    i = 0
-    for x, z in cells:
-        if not free(x, z):
-            continue
-        if x in (fx1, fx2) and z in (fz1, fz2):
-            d.set(x, y, z, POTS[0] if (x + z) % 2 else POTS[2])
-            continue
-        tok = ring[i % len(ring)]
-        i += 1
-        if tok:
-            token(d, tok, x, y, z, inward(x, z), i, base)
-    cx1, cz1, cx2, cz2 = fx1 + 2, fz1 + 2, fx2 - 2, fz2 - 2
+    L = Lay(d, rm)
+    tools = [t for t in ring if t in ("anvil", "grind", "smith", "cutter", "furnace", "blast", "craft", "cauldron",
+                                      "piston", "observer", "dispenser", "trough", "sieve", "lamp")]
+    if callable(centre):
+        centre(d, rm, L.ok)
     if centre == "aisles":
-        for z in range(cz1, cz2 + 1, 3):
-            for x in range(cx1, cx2 + 1):
-                if free(x, z) and free(x, z - 1) and free(x, z + 1):
-                    if (x - cx1) % 4 == 3:
-                        d.keg(x, y, z, "east")
-                    else:
-                        d.rack(x, y, z, "north")
-                        d.rack(x, y + 1, z, "south")
-    elif centre == "island":
-        zc = (fz1 + fz2) // 2
-        for x in range(cx1 + 1, cx2):
-            if free(x, zc) and free(x, zc - 1) and free(x, zc + 1):
-                d.set(x, y, zc, shelf)
-                if x % 2:
-                    d.set(x, y + 1, zc, POTS[(x // 2) % 4])
-        for x in range(cx1 + 1, cx2, 3):
-            if free(x, zc + 1) and free(x, zc + 2):
-                d.chair(x, y, zc + 1, "south", wood, sit=False)
+        lay_store(L, base)
     elif centre == "desks":
-        for z in range(cz1, cz2 + 1, 4):
-            for x in range(cx1 + 1, cx2, 5):
-                cs = [(x + a, z + b) for a in (-1, 0, 1, 2) for b in (-1, 0, 1)]
-                if all(free(a, b) for a, b in cs):
-                    d.rug(x - 1, z - 1, x + 2, z + 1, y, RUGS[P])
-                    d.set(x, y, z, shelf)
-                    d.set(x + 1, y, z, shelf)
-                    d.set(x, y + 1, z, "candle[candles=1,lit=false,waterlogged=false]")
-                    d.chair(x, y, z + 1, "south", wood, sit=False)
-                    d.chair(x + 1, y, z - 1, "north", wood, sit=False)
-    elif centre == "dining":
-        for z in range(cz1, cz2 + 1, 4):
-            for x in range(cx1, cx2 - 1, 5):
-                cs = [(x + a, z + b) for a in (-1, 0, 1, 2) for b in (-1, 0, 1)]
-                if all(free(a, b) for a, b in cs):
-                    d.dining(x, y, z, 2, "x", wood, ("n", "s"), sit=True, kind="post")
-    elif callable(centre):
-        centre(d, rm, free)
-    if rug:
-        c = RUGS[P]
-        for x in range(fx1 + 1, fx2):
-            for z in range(fz1 + 1, fz2):
-                if free(x, z):
-                    d.set(x, y, z, c[0] if x in (fx1 + 1, fx2 - 1) or z in (fz1 + 1, fz2 - 1) else c[1])
-    if lights:
-        for x in range(fx1 + 2, fx2 - 1, 4):
-            for z in range(fz1 + 2, fz2 - 1, 4):
-                if d.air(x, y + 3, z) and d.air(x, y + 2, z) and not inres(x, z):
-                    hang(d, x, y + 3, z)
+        lay_office(L, base, library=ring.count("book") >= 3)
+    elif callable(centre) and "stock" in ring:
+        lay_shop(L, base)
+    else:
+        lay_workshop(L, tools or ["craft", "grind", "pot"], base)
+    reach_fix(d, rm, base)
+
+
+TARGETS = ("rack", "barrel", "furnace", "smoker", "anvil", "grindstone", "smithing", "stonecutter", "crafting",
+           "lectern", "cartography", "loom", "chest", "brewing", "bed")
+
+
+def reach_fix(d, rm, base):
+    """Hand layouts in odd-shaped rooms can box a work block in; swap any such block for plain stock."""
+    x1, z1, x2, z2, y = rm[:5]
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            if not any(k in d.get(x, y, z) for k in TARGETS):
+                continue
+            if any(d.air(x + a, y, z + b) and d.air(x + a, y + 1, z + b) and not d.air(x + a, y - 1, z + b)
+                   for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                continue
+            d.set(x, y, z, STOCK[base][0])
+            if any(k in d.get(x, y + 1, z) for k in TARGETS):
+                d.set(x, y + 1, z, STOCK[base][1])
 
 
 def open_shed(d, x1, z1, x2, z2, h=4, axis="x", back=None, step=4, floor=None, sides=()):
@@ -2873,7 +3000,8 @@ def bs_ironworks(d, sl):
     """Ironworks forge hall: a tall three-storey hall with a row of forges along the back wall (a chimney for each
     through the roof), drop hammers and quench tanks; pattern loft and bar store on the floors above."""
     x1, z1, x2, z2, s, ax = sl
-    info = hall(d, x1, z1, x2, z2, 3, ax, "IRONWORKS")
+    info = hall(d, x1, z1, x2, z2, 4, ax, "IRONWORKS")
+    room(d, info["rooms"][3], ["book", "book", "book"], "desks", "blacksmith")
     g = info["rooms"][0]
     fx1, fz1, fx2, fz2, y = g[:5]
     frame = {"Hearthwood": "bricks", "Cascadia": "cobblestone", "Neoterra": "polished_blackstone_bricks"}[d.pack]
@@ -2969,8 +3097,9 @@ def sm_foundry(d, sl):
     """Foundry hall: three storeys - moulding floor with furnaces and sand, pattern shop, metal store - and a
     tall stack at the corner."""
     x1, z1, x2, z2, s, ax = sl
-    info = hall(d, x1, z1, x2, z2, 3, ax, "FOUNDRY")
-    g, m, u = info["rooms"]
+    info = hall(d, x1, z1, x2, z2, 4, ax, "FOUNDRY")
+    g, m, u, top_floor = info["rooms"]
+    room(d, top_floor, ["rack2", "keg", "stock"], "aisles", "smeltery")
     room(d, g, ["furnace", "pot", "furnace", "cauldron", "rack"], "island", "smeltery")
     room(d, m, ["craft", "pot", "book", "carto", "lectern"], "desks", "smeltery", rug=True)
     room(d, u, ["rack2", "keg", "stock"], "aisles", "smeltery")
@@ -3058,8 +3187,9 @@ def ss_works(d, sl):
     """Pottery works: three storeys - throwing room with wheels, glazing room with tubs, finished-ware store -
     with a kiln chimney stack rising through the roof."""
     x1, z1, x2, z2, s, ax = sl
-    info = hall(d, x1, z1, x2, z2, 3, ax, "POTTERY WORKS")
-    g, m, u = info["rooms"]
+    info = hall(d, x1, z1, x2, z2, 4, ax, "POTTERY WORKS")
+    g, m, u, top_floor = info["rooms"]
+    room(d, top_floor, ["rack2", "keg", "stock"], "aisles", "stonesmeltery")
     room(d, g, ["furnace", "pot", "craft", "trough", "rack"], "island", "stonesmeltery")
     room(d, m, ["trough", "pot", "cauldron", "pot", "rack"], "desks", "stonesmeltery", rug=True)
     room(d, u, ["rack2", "pot", "stock"], "aisles", "stonesmeltery")
@@ -3120,8 +3250,9 @@ def mc_engineshed(d, sl):
 def mc_machinehall(d, sl):
     """Machine hall: three storeys - erecting floor under an overhead crane gantry, fitting shop, drawing office."""
     x1, z1, x2, z2, s, ax = sl
-    info = hall(d, x1, z1, x2, z2, 3, ax, "MACHINE HALL")
-    g, m, u = info["rooms"]
+    info = hall(d, x1, z1, x2, z2, 4, ax, "MACHINE HALL")
+    g, m, u, top_floor = info["rooms"]
+    room(d, top_floor, ["rack2", "keg", "stock"], "aisles", "mechanic")
     fx1, fz1, fx2, fz2, y = g[:5]
     for x in range(fx1 + 4, fx2):
         d.set(x, y + 3, (fz1 + fz2) // 2, "iron_bars" if d.air(x, y + 3, (fz1 + fz2) // 2) else
@@ -3175,7 +3306,8 @@ def sn_showroom(d, sl):
     """Monument showroom: two storeys behind a columned portico; plinths with urns, obelisks and headstones."""
     x1, z1, x2, z2, s, ax = sl
     pz = 2 if (z2 - z1) >= 11 else 1
-    info = hall(d, x1, z1 + pz, x2, z2, 2, ax, "MONUMENTS")
+    info = hall(d, x1, z1 + pz, x2, z2, 3, ax, "MONUMENTS")
+    room(d, info["rooms"][2], ["book", "book", "book"], "desks", "stonemason")
     pil = {"Hearthwood": "quartz_pillar[axis=y]", "Cascadia": "polished_andesite",
            "Neoterra": "quartz_pillar[axis=y]"}[d.pack]
     for x in range(x1, x2 + 1, 3):
@@ -3185,7 +3317,7 @@ def sn_showroom(d, sl):
         d.set(x, 6, z1, "smooth_quartz_slab[type=bottom,waterlogged=false]")
         if pz == 2:
             d.set(x, 6, z1 + 1, "smooth_quartz_slab[type=bottom,waterlogged=false]")
-    g, u = info["rooms"]
+    g, u = info["rooms"][:2]
 
     def monuments(d_, rm, free):
         fx1, fz1, fx2, fz2, y = rm[:5]
@@ -3209,8 +3341,9 @@ def sn_showroom(d, sl):
 def sn_lodge(d, sl):
     """Masons' lodge hall: three storeys - carving hall, tracing floor with drawing desks, pattern library."""
     x1, z1, x2, z2, s, ax = sl
-    info = hall(d, x1, z1, x2, z2, 3, ax, "MASONS' LODGE")
-    g, m, u = info["rooms"]
+    info = hall(d, x1, z1, x2, z2, 4, ax, "MASONS' LODGE")
+    g, m, u, top_floor = info["rooms"]
+    room(d, top_floor, ["rack2", "keg", "stock"], "aisles", "stonemason")
     room(d, g, ["cutter", "pot", "grind", "stock", "rack"], "island", "stonemason")
     room(d, m, ["carto", "pot", "lectern", "plant"], "desks", "stonemason", rug=True)
     room(d, u, ["book", "book", "pot", "book"], "desks", "stonemason", rug=True)
@@ -3333,8 +3466,9 @@ def cr_screenhouse(d, sl):
 def cr_plant(d, sl):
     """Crushing plant: three stepped storeys - primary crushers, grading floor, bagging & sack store."""
     x1, z1, x2, z2, s, ax = sl
-    info = hall(d, x1, z1, x2, z2, 3, ax, "CRUSHING PLANT")
-    g, m, u = info["rooms"]
+    info = hall(d, x1, z1, x2, z2, 4, ax, "CRUSHING PLANT")
+    g, m, u, top_floor = info["rooms"]
+    room(d, top_floor, ["rack2", "keg", "stock"], "aisles", "crusher")
 
     def crushers(d_, rm, free):
         fx1, fz1, fx2, fz2, y = rm[:5]
@@ -3422,8 +3556,9 @@ def sf_drying(d, sl):
 def sf_screen(d, sl):
     """Screening house: three storeys of screen decks (iron trapdoor screens over hoppers) and a sample office."""
     x1, z1, x2, z2, s, ax = sl
-    info = hall(d, x1, z1, x2, z2, 3, ax, "SCREENING")
-    g, m, u = info["rooms"]
+    info = hall(d, x1, z1, x2, z2, 4, ax, "SCREENING")
+    g, m, u, top_floor = info["rooms"]
+    room(d, top_floor, ["rack2", "keg", "stock"], "aisles", "sifter")
 
     def screens(d_, rm, free):
         fx1, fz1, fx2, fz2, y = rm[:5]
@@ -3669,6 +3804,44 @@ def boundary(d, L):
             d.set(x, 3, z, top if i % 12 not in (4, 7) else "lantern[hanging=false,waterlogged=false]")
 
 
+DOWNGRADE = {   # premium -> everyday material, used on levels 1-3 (L4-5 keep the premium finish)
+    "smooth_quartz_stairs": "polished_diorite_stairs", "smooth_quartz_slab": "smooth_stone_slab",
+    "smooth_quartz": "smooth_stone", "quartz_block": "calcite", "quartz_pillar": "calcite",
+    "quartz_slab": "diorite_slab", "quartz_stairs": "diorite_stairs", "sea_lantern": "glowstone",
+    "polished_blackstone_bricks": "deepslate_bricks", "polished_blackstone_brick_stairs": "deepslate_brick_stairs",
+    "polished_blackstone_brick_slab": "deepslate_brick_slab", "polished_blackstone_brick_wall": "deepslate_brick_wall",
+    "polished_blackstone_wall": "polished_deepslate_wall", "polished_blackstone_slab": "polished_deepslate_slab",
+    "polished_blackstone": "polished_deepslate", "blackstone": "cobbled_deepslate",
+    "dark_prismarine_stairs": "deepslate_tile_stairs", "dark_prismarine_slab": "deepslate_tile_slab",
+    "dark_prismarine": "deepslate_tiles", "cut_copper_slab": "smooth_stone_slab",
+}
+DOWNGRADE2 = {"iron_block": "polished_andesite", "redstone_lamp": "glowstone", "end_rod": "lightning_rod",
+              "white_glazed_terracotta": "white_terracotta", "cyan_glazed_terracotta": "cyan_terracotta"}
+
+
+def remap(d, table):
+    m = {"minecraft:" + a: "minecraft:" + b for a, b in table.items()}
+    for layer in d.bp.grid:
+        for row in layer:
+            for x, s_ in enumerate(row):
+                if s_ == AIR:
+                    continue
+                name, _, props = s_.partition("[")
+                new = m.get(name)
+                if new:
+                    ok = props and new.endswith(PROPS_OK + ("_wall",)) and name.endswith(PROPS_OK + ("_wall",))
+                    row[x] = new + ("[" + props if ok else "")
+
+
+def premium_cap(d, L):
+    import hm as _hm
+    if L not in _hm.PREMIUM_CAP:
+        return
+    remap(d, DOWNGRADE)
+    if _hm.premium_share(d.bp, d.gy) > _hm.PREMIUM_CAP[L] * 0.85:
+        remap(d, DOWNGRADE2)
+
+
 def complex_(base, fns):
     t = TYPES.index(base)
 
@@ -3684,8 +3857,8 @@ def complex_(base, fns):
         street(d, L)
         boundary(d, L)
         landscape(d, L)
-        core_rugs(d, regions)
         apply_palette(d, t, regions)
+        premium_cap(d, L)
         import walkcheck
         before = len(walkcheck.analyse(d.bp)[1])
         for phase in (lambda: dress(d, accent_wood(d, t)), lambda: shrubs(d), lambda: eaves(d, accent_wood(d, t))):

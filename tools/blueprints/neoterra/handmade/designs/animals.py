@@ -2972,9 +2972,8 @@ def shed_fit(d, pack, kind, x1, z1, w):
              "rabbit": ("barrel[facing=up,open=false]", "pumpkin", "melon"),
              "bees": ("beehive[facing=north,honey_level=0]", "honeycomb_block", "barrel[facing=up,open=false]"),
              "horse": ("hay_block[axis=y]", "barrel[facing=up,open=false]", "brown_wool")}[kind]
-    for i, x in enumerate(range(x2 - 2, x2)):
-        for j, z in enumerate((z2 - 1, z2 - 2)):
-            d.set(x, 2, z, goods[(i + j) % 3])
+    for i, x in enumerate(range(x2 - 3, x2)):                       # one bay of goods against the back wall
+        d.set(x, 2, z2 - 1, goods[i % 3])
     if d.air(x1 + 2, 4, z1 - 1):
         d.sign(x1 + 2, 4, z1 - 1, "north", label, M["wood"])
 
@@ -3044,6 +3043,39 @@ def recolor(d, mapping):
                     row[x] = "minecraft:" + mapping[n] + ("[" + rest if rest else "")
 
 
+PREMIUM_DOWN = {
+    "smooth_quartz": "smooth_stone", "smooth_quartz_slab": "smooth_stone_slab",
+    "smooth_quartz_stairs": "polished_diorite_stairs", "quartz_block": "calcite", "quartz_pillar": "calcite",
+    "quartz_slab": "smooth_stone_slab", "quartz_stairs": "polished_diorite_stairs",
+    "sea_lantern": "glowstone", "iron_block": "smooth_stone",
+    "dark_prismarine": "deepslate_tiles", "dark_prismarine_stairs": "deepslate_tile_stairs",
+    "dark_prismarine_slab": "deepslate_tile_slab",
+    "polished_blackstone": "polished_deepslate", "polished_blackstone_bricks": "deepslate_bricks",
+    "polished_blackstone_stairs": "polished_deepslate_stairs", "polished_blackstone_slab": "polished_deepslate_slab",
+}
+
+
+def downgrade(d):
+    """Levels 1-3: premium materials become their everyday counterparts (concrete / smooth stone decks, tile
+    roofs, lanterns and chains); levels 4-5 keep the quartz, prismarine and sea-lantern upgrade."""
+    bp = d.bp
+    for y in range(bp.sy):
+        for z in range(bp.sz):
+            row = bp.grid[y][z]
+            for x in range(bp.sx):
+                b = row[x]
+                if b == AIR:
+                    continue
+                name, _, rest = b.partition("[")
+                n = name.split(":")[-1]
+                if n == "end_rod":
+                    ax = "y" if ("facing=up" in rest or "facing=down" in rest) else \
+                        "x" if ("east" in rest or "west" in rest) else "z"
+                    row[x] = f"minecraft:chain[axis={ax},waterlogged=false]"
+                elif n in PREMIUM_DOWN:
+                    row[x] = "minecraft:" + PREMIUM_DOWN[n] + ("[" + rest if rest else "")
+
+
 def street_front(d, pack, paving):
     """Street edge (z = 1): flower beds, hedges / rails, benches and lamp posts, kept clear of every path."""
     M = MAT[pack]
@@ -3075,135 +3107,131 @@ def street_front(d, pack, paving):
 
 
 # ------------------------------------------------------------------------------------------- assembly
-# ------------------------------------------------------------------------------------------- core fit-out
-FIT = {
-    "poultry": (("hay_block[axis=y]", "barrel[facing=up,open=false]", "composter[level=5]", "white_wool"),
-                ("turtle_egg[eggs=4,hatch=0]", "candle[candles=2,lit=false,waterlogged=false]", "potted_dandelion")),
-    "cattle": (("barrel[facing=up,open=false]", "cauldron", "hay_block[axis=y]", "white_wool"),
-               ("cake[bites=0]", "candle[candles=3,lit=false,waterlogged=false]", "potted_red_tulip")),
-    "sheep": (("white_wool", "light_gray_wool", "barrel[facing=up,open=false]", "brown_wool"),
-              ("decorated_pot[cracked=false,facing=north,waterlogged=false]", "white_carpet", "potted_azure_bluet")),
-    "pig": (("barrel[facing=up,open=false]", "composter[level=7]", "pumpkin", "hay_block[axis=y]"),
-            ("potted_brown_mushroom", "candle[candles=2,lit=false,waterlogged=false]", "decorated_pot[cracked=false,"
-                                                                                       "facing=north,waterlogged=false]")),
-    "rabbit": (("barrel[facing=up,open=false]", "hay_block[axis=y]", "pumpkin", "composter[level=4]"),
-               ("potted_dandelion", "candle[candles=1,lit=false,waterlogged=false]", "potted_fern")),
-    "bees": (("barrel[facing=up,open=false]", "honeycomb_block", "beehive[facing=north,honey_level=0]",
-              "honey_block"), ("candle[candles=4,lit=false,waterlogged=false]", "honey_block", "potted_allium")),
-    "horse": (("hay_block[axis=y]", "barrel[facing=up,open=false]", "SADDLE", "brown_wool"),
-              ("lantern[hanging=false,waterlogged=false]", "candle[candles=2,lit=false,waterlogged=false]",
-               "potted_oxeye_daisy")),
-}
-_TARGETS = ("bed", "blockhut", "rack", "crafting_table", "furnace", "smoker", "barrel", "anvil", "loom",
-            "grindstone", "lectern", "ladder", "stairs", "door", "gate", "composter", "cauldron", "chest")
+# ------------------------------------------------------------------------------------------- core rooms
+def _st(w, f):
+    return f"{w}_stairs[facing={f},half=bottom,shape=straight,waterlogged=false]"
 
 
-def fit_core(d, pack, kind):
-    """Furnish the hut's room by hand-picked trade clutter along its walls (feed bins, sacks, churns, tack),
-    wall shelves with goods above, a rug and a lantern on a chain. Every placement keeps the room connected
-    and every work block, door, ladder and stair reachable."""
-    if d.hut_pos is None:
-        return
-    hx, hy, hz = d.hut_pos
-    y = hy
-    bp = d.bp
+def _top(w):
+    return f"{w}_slab[type=top,waterlogged=false]"
 
-    def free(x, z):
-        return bp.inside(x, y, z) and d.air(x, y, z) and d.air(x, y + 1, z) and not d.air(x, y - 1, z)
-    cands0 = sorted(((hx + dx, hz + dz) for dx in range(-3, 4) for dz in range(-3, 4) if free(hx + dx, hz + dz)),
-                    key=lambda c: abs(c[0] - hx) + abs(c[1] - hz))
-    room = set()
-    for c0 in cands0:
-        room, todo = {c0}, [c0]
-        while todo and len(room) <= 260:
-            x, z = todo.pop()
-            for dx, dz in D4.values():
-                n = (x + dx, z + dz)
-                if n not in room and free(*n):
-                    room.add(n)
-                    todo.append(n)
-        if len(room) <= 260:
-            break
-    else:
-        return
-    if len(room) < 6:
-        return
 
-    def nm(x, yy, z):
-        return d.get(x, yy, z).split("[")[0].split(":")[-1]
-    targets = set()
-    for x, z in room:
-        for dx, dz in D4.values():
-            for yy in (y, y + 1, y - 1):
-                n = nm(x + dx, yy, z + dz)
-                if n != "air" and any(k in n for k in _TARGETS):
-                    targets.add((x + dx, yy, z + dz))
-    targets.add(d.hut_pos)
+HOOK = "tripwire_hook[attached=false,facing={},powered=false]"
+EGGS = "turtle_egg[eggs=4,hatch=0]"
+CANDLE = "candle[candles=3,lit=false,waterlogged=false]"
+LANT = "lantern[hanging=false,waterlogged=false]"
+POT = "decorated_pot[cracked=false,facing=north,waterlogged=false]"
 
-    def ok(blocked):
-        cells = room - blocked
-        if not cells:
-            return False
-        seed = next(iter(cells))
-        seen, st_ = {seed}, [seed]
-        while st_:
-            x, z = st_.pop()
-            for dx, dz in D4.values():
-                n = (x + dx, z + dz)
-                if n in cells and n not in seen:
-                    seen.add(n)
-                    st_.append(n)
-        if len(seen) != len(cells):
-            return False
-        return all(any((tx + dx, tz + dz) in cells for dx, dz in D4.values()) for tx, _ty, tz in targets)
 
-    def wallish(x, z):
-        return any(not d.air(x + dx, y, z + dz) and not d.air(x + dx, y + 1, z + dz) and
-                   (x + dx, z + dz) not in room for dx, dz in D4.values())
-
-    def near(x, z, keys):
-        return any(any(k in nm(x + dx, yy, z + dz) for k in keys) for dx in (-1, 0, 1) for dz in (-1, 0, 1)
-                   for yy in (y, y + 1, y + 2))
-    floor_items, shelf_items = FIT[kind]
-    wood = MAT[pack]["wood"]
-    cands = sorted(c for c in room if wallish(*c) and not near(*c, ("door", "gate", "ladder", "stairs")))
-    blocked, i = set(), 0
-    for c in cands:
-        if len(blocked) >= max(2, len(room) // 5):
-            break
-        if ok(blocked | {c}):
-            blocked.add(c)
-            it = floor_items[i % len(floor_items)]
-            i += 1
-            x, z = c
-            if it == "SADDLE":
-                d.set(x, y, z, f"{wood}_fence")
-                d.set(x, y + 1, z, "brown_carpet")
-            else:
-                d.set(x, y, z, it)
-    # wall shelves above head height on the other wall cells
-    k = 0
-    for x, z in cands:
-        if (x, z) in blocked or not d.air(x, y + 2, z) or near(x, z, ("ladder", "stairs", "door")):
-            continue
-        if k % 2 == 0:
-            d.set(x, y + 2, z, slab(f"{wood}_slab", "top"))
-            if d.air(x, y + 3, z):
-                d.set(x, y + 3, z, shelf_items[(k // 2) % len(shelf_items)])
-        k += 1
-    # rug and a lantern on a chain in the middle of the room
-    free_cells = sorted(room - blocked)
-    cx = sum(x for x, _ in free_cells) // len(free_cells)
-    cz = sum(z for _, z in free_cells) // len(free_cells)
-    rug = {"Hearthwood": "red_carpet", "Cascadia": "brown_carpet", "Neoterra": "light_gray_carpet"}[pack]
-    for x in range(cx - 1, cx + 2):
-        for z in range(cz - 1, cz + 1):
-            if (x, z) in room and (x, z) not in blocked and d.air(x, y, z):
-                d.set(x, y, z, rug)
-    top = next((yy for yy in range(y + 2, min(d.sy, y + 12)) if not d.air(cx, yy, cz)), None)
-    if top and top - 1 >= y + 3 and all(d.air(cx, yy, cz) for yy in range(y + 2, top)):
-        hang(d, cx, top - 1, cz, max(y + 2, top - 2) if top - 1 > y + 2 else y + 2,
-             "soul_lantern" if pack == "Neoterra" else "lantern")
+def core_rooms(d, pack, kind, L):
+    """Hand-placed furniture for the core buildings' rooms (work rooms, stores, lofts), per type and pack.
+    Each entry: (x, y, z, block, from-level, extra condition). Cells must be free (they are by design; the
+    check only guards the shorter early-level buildings)."""
+    E = []
+    if (pack, kind) == ("Hearthwood", "poultry"):
+        E = [(5, 2, 4, "barrel[facing=up,open=false]"), (5, 2, 5, "white_wool"),              # feed bins + sack
+             (9, 2, 4, _top("dark_oak")), (10, 2, 4, _top("dark_oak")),                      # egg table
+             (9, 3, 4, EGGS), (10, 3, 4, CANDLE),
+             (4, 4, 5, _top("dark_oak")), (4, 5, 5, "potted_dandelion"),                     # wall shelves
+             (4, 4, 7, _top("dark_oak")), (4, 5, 7, EGGS),
+             (8, 4, 4, HOOK.format("south")), (5, 4, 8, HOOK.format("north"))]
+    elif (pack, kind) == ("Cascadia", "poultry"):
+        E = [(5, 2, 5, "barrel[facing=up,open=false]"), (7, 2, 5, "white_wool"),
+             (6, 2, 12, _top("spruce")), (7, 2, 12, _top("spruce")), (6, 3, 12, EGGS), (7, 3, 12, CANDLE),
+             (8, 4, 7, _top("spruce")), (8, 5, 7, "potted_fern"), (8, 4, 9, _top("spruce")), (8, 5, 9, EGGS),
+             (6, 6, 12, LANT)]
+    elif (pack, kind) == ("Neoterra", "poultry"):
+        E = [(3, 2, 15, "barrel[facing=up,open=false]"), (3, 2, 16, "composter[level=5]"),
+             (5, 2, 12, _top("smooth_stone")), (6, 2, 12, _top("smooth_stone")), (5, 3, 12, EGGS),
+             (6, 3, 12, "potted_bamboo"), (6, 2, 13, _st("birch", "south")),
+             (9, 2, 17, "potted_bamboo"), (11, 2, 17, "barrel[facing=up,open=false]")]
+    elif (pack, kind) == ("Hearthwood", "cattle"):
+        x2 = 13 if L < 3 else 19
+        E = [(4, 2, 6, "cauldron"), (5, 4, 4, _top("dark_oak")), (5, 5, 4, CANDLE),
+             (6, 4, 4, _top("dark_oak")), (6, 5, 4, POT), (x2 - 1, 2, 6, "barrel[facing=up,open=false]"),
+             (11, 4, 4, _top("dark_oak")), (11, 5, 4, "potted_red_tulip"),
+             (x2 - 2, 7, 9, "barrel[facing=up,open=false]"), (5, 7, 9, LANT), (x2 - 3, 7, 9, "white_wool")]
+    elif (pack, kind) == ("Cascadia", "cattle"):
+        E = [(5, 2, 6, "cauldron"), (11, 2, 4, "cauldron"), (6, 2, 6, _st("spruce", "west")),
+             (9, 7, 5, "barrel[facing=up,open=false]"), (11, 7, 5, "barrel[facing=up,open=false]"),
+             (10, 7, 12, LANT), (8, 7, 8, _st("spruce", "west")), (8, 7, 9, _top("spruce")),
+             (8, 8, 9, CANDLE)]
+    elif (pack, kind) == ("Neoterra", "cattle"):
+        E = [(4, 2, 3, "light_gray_concrete"), (4, 3, 3, "brewing_stand[has_bottle_0=true,has_bottle_1=true,"
+                                                         "has_bottle_2=false]"),
+             (5, 2, 7, "barrel[facing=up,open=false]"), (6, 2, 7, "barrel[facing=up,open=false]"),
+             (7, 2, 7, "potted_bamboo"), (5, 2, 5, _st("birch", "west")), (6, 2, 5, _top("smooth_stone")),
+             (6, 3, 5, "potted_azure_bluet")]
+    elif (pack, kind) == ("Hearthwood", "sheep"):
+        z2 = 11 if L < 3 else 15
+        E = [(4, 2, z2 - 4, "white_wool"), (4, 2, z2 - 3, "light_gray_wool"), (4, 2, z2 - 2, "barrel[facing=up,"
+                                                                                           "open=false]"),
+             (4, 4, 9, _top("dark_oak")), (4, 5, 9, "potted_cornflower"), (4, 4, 10, _top("dark_oak")),
+             (4, 5, 10, CANDLE), (7, 2, z2 - 3, _top("oak")), (7, 2, z2 - 2, _top("oak")),
+             (7, 3, z2 - 3, "white_carpet"), (7, 3, z2 - 2, "light_gray_carpet"), (6, 2, z2 - 2, _st("oak", "west"))]
+    elif (pack, kind) == ("Cascadia", "sheep"):
+        E = [(7, 2, 11, _top("spruce")), (8, 2, 11, _top("spruce")), (7, 3, 11, "white_carpet"),
+             (8, 3, 11, "white_carpet"), (9, 2, 11, _st("spruce", "east")),
+             (6, 4, 10, _top("spruce")), (6, 5, 10, POT), (10, 4, 10, _top("spruce")), (10, 5, 10, CANDLE),
+             (11, 2, 12, "barrel[facing=up,open=false]")]
+    elif (pack, kind) == ("Neoterra", "sheep"):
+        E = [(8, 2, 5, "light_gray_concrete"), (9, 2, 5, "light_gray_concrete"), (8, 3, 5, "white_carpet"),
+             (9, 3, 5, "cyan_carpet"), (8, 2, 6, _st("birch", "south")), (10, 2, 3, "potted_bamboo"),
+             (6, 2, 3, "barrel[facing=up,open=false]")]
+    elif (pack, kind) == ("Hearthwood", "pig"):
+        E = [(7, 2, 8, "cauldron"), (6, 2, 6, "dark_oak_fence"), (6, 3, 6, "dark_oak_pressure_plate[powered=false]"),
+             (6, 2, 7, _st("dark_oak", "south")), (8, 4, 7, _top("dark_oak")), (8, 5, 7, POT),
+             (5, 4, 4, _top("dark_oak")), (5, 5, 4, CANDLE)]
+    elif (pack, kind) == ("Cascadia", "pig"):
+        E = [(8, 2, 4, "barrel[facing=up,open=false]"), (6, 2, 10, "cauldron"), (5, 2, 9, _st("spruce", "west")),
+             (6, 4, 5, _top("spruce")), (6, 5, 5, CANDLE)]
+    elif (pack, kind) == ("Neoterra", "pig"):
+        E = [(15, 2, 16, _top("smooth_stone")), (15, 3, 16, "potted_bamboo"), (16, 2, 16, _st("birch", "west")),
+             (15, 2, 17, "barrel[facing=up,open=false]"), (15, 2, 18, "composter[level=6]"),
+             (16, 2, 18, "potted_azure_bluet")]
+    elif (pack, kind) == ("Hearthwood", "rabbit"):
+        E = [(6, 2, 4, "barrel[facing=up,open=false]"), (5, 2, 8, "composter[level=5]"),
+             (8, 2, 6, "dark_oak_fence"), (8, 3, 6, "dark_oak_pressure_plate[powered=false]"),
+             (8, 2, 7, _st("dark_oak", "south")), (10, 4, 8, _top("dark_oak")), (10, 5, 8, "potted_dandelion"),
+             (5, 4, 4, _top("dark_oak")), (5, 5, 4, CANDLE)]
+    elif (pack, kind) == ("Cascadia", "rabbit"):
+        E = [(6, 2, 7, "spruce_fence"), (6, 3, 7, "spruce_pressure_plate[powered=false]"),
+             (7, 2, 7, _st("spruce", "east")), (7, 2, 5, "barrel[facing=up,open=false]"),
+             (8, 4, 6, _top("spruce")), (8, 5, 6, "potted_fern")]
+    elif (pack, kind) == ("Neoterra", "rabbit"):
+        E = [(10, 2, 17, _top("smooth_stone")), (11, 2, 17, _top("smooth_stone")), (10, 3, 17, "potted_bamboo"),
+             (11, 3, 17, CANDLE), (11, 2, 16, _st("birch", "north")), (12, 2, 17, "barrel[facing=up,open=false]")]
+    elif (pack, kind) == ("Hearthwood", "bees"):
+        E = [(8, 2, 5, "cauldron"), (8, 2, 6, "barrel[facing=up,open=false]"), (8, 4, 5, _top("oak")),
+             (8, 5, 5, "honey_block"), (8, 4, 6, _top("oak")), (8, 5, 6, CANDLE), (5, 2, 7, _st("oak", "south"))]
+    elif (pack, kind) == ("Cascadia", "bees"):
+        E = [(5, 2, 11, "barrel[facing=up,open=false]"), (10, 2, 11, "barrel[facing=up,open=false]"),
+             (6, 2, 9, _st("spruce", "east")), (5, 2, 9, "brown_carpet"), (5, 2, 8, "brown_carpet"),
+             (9, 4, 7, _top("spruce")), (9, 5, 7, "honey_block")]
+    elif (pack, kind) == ("Neoterra", "bees"):
+        E = [(5, 2, 7, _st("birch", "north")), (6, 2, 7, _st("birch", "north")), (4, 2, 5, "potted_bamboo"),
+             (7, 2, 4, "honeycomb_block"), (7, 3, 4, CANDLE)]
+    elif (pack, kind) == ("Hearthwood", "horse"):
+        nst = d.req["spots"]["stall"]
+        x2 = 3 + 6 + 3 * ((nst + 1) // 2)
+        E = [(4, 4, 8, HOOK.format("east")), (4, 4, 9, HOOK.format("east")), (4, 4, 10, HOOK.format("east")),
+             (4, 2, 10, _st("dark_oak", "west")), (4, 2, 11, _st("dark_oak", "west")),
+             (6, 2, 13, "barrel[facing=up,open=false]"), (7, 2, 13, "hay_block[axis=y]"),
+             (12, 7, 8, LANT), (x2 - 2, 7, 4, "barrel[facing=up,open=false]"), (x2 - 2, 7, 13, "barrel[facing=up,"
+                                                                                               "open=false]")]
+    elif (pack, kind) == ("Cascadia", "horse"):
+        E = [(6, 4, 4, HOOK.format("south")), (7, 4, 4, HOOK.format("south")), (7, 2, 4, _st("spruce", "north")),
+             (13, 2, 7, "barrel[facing=up,open=false]"), (10, 7, 20, LANT)]
+    elif (pack, kind) == ("Neoterra", "horse"):
+        E = [(7, 2, 5, _top("smooth_stone")), (8, 2, 5, _top("smooth_stone")), (8, 2, 4, _st("birch", "south")),
+             (7, 3, 5, "potted_bamboo"), (9, 2, 8, "potted_bamboo"), (5, 2, 6, "light_gray_carpet"),
+             (6, 2, 6, "light_gray_carpet"), (4, 7, 5, "potted_azure_bluet"), (9, 7, 5, "barrel[facing=up,"
+                                                                                       "open=false]")]
+    for x, y, z, b in E:
+        if d.bp.inside(x, y, z) and d.air(x, y, z) and not d.air(x, y - 1, z):
+            d.set(x, y, z, b)
+        elif d.bp.inside(x, y, z) and d.air(x, y, z) and ("hook" in b or y > 3):
+            d.set(x, y, z, b)
 
 
 _COUNTS = {}
@@ -3239,7 +3267,7 @@ def _grow(d, target, sizes, build):
 
 def farmstead(core, pack, rel, L, kind):
     d = core(rel, L)
-    fit_core(d, pack, kind)
+    core_rooms(d, pack, kind, L)
     ex, ez = d.ex, d.ez
     wood = {"Hearthwood": "dark_oak", "Cascadia": "spruce", "Neoterra": "birch"}[pack]
     lane = {"Hearthwood": "gravel", "Cascadia": "dirt_path", "Neoterra": "polished_andesite"}[pack]
@@ -3294,6 +3322,8 @@ def farmstead(core, pack, rel, L, kind):
         _grow(d, target, bs, lambda n: haybarn(d, pack, 2 if flip else ex - 2, ez + 2, n))
     street_front(d, pack, "smooth_stone" if pack == "Neoterra" else "grass_block")
     recolor(d, RECOLOR[(pack, kind)])
+    if L <= 3:
+        downgrade(d)
     if pack != "Neoterra":
         dress_windows(d, wood)
     return d

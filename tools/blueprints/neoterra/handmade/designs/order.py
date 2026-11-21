@@ -462,10 +462,25 @@ REMAP = {
 }
 
 
+# Levels 1-3 build with everyday materials; premium blocks (quartz, prismarine, sea lanterns, end rods, amethyst,
+# blackstone ...) stay small accents there and appear in bulk from level 4.
+ECONOMY = {
+    "smooth_quartz": "white_concrete", "smooth_quartz_slab": "smooth_stone_slab",
+    "smooth_quartz_stairs": "polished_diorite_stairs", "quartz_block": "calcite", "quartz_bricks": "calcite",
+    "quartz_pillar": "calcite", "quartz_slab": "smooth_stone_slab", "quartz_stairs": "polished_diorite_stairs",
+    "sea_lantern": "glowstone", "pearlescent_froglight": "glowstone", "verdant_froglight": "glowstone",
+    "dark_prismarine_stairs": "deepslate_tile_stairs", "dark_prismarine_slab": "deepslate_tile_slab",
+    "polished_blackstone": "polished_deepslate", "purpur_block": "magenta_terracotta",
+    "amethyst_block": "purple_concrete", "budding_amethyst": "amethyst_block", "iron_block": "light_gray_concrete",
+}
+
+
 def repaint(d):
-    m = REMAP.get((d.pack, d.req["base"]))
-    if not m:
-        return d
+    m = dict(REMAP.get((d.pack, d.req["base"]), {}))
+    if d.level <= 3:
+        m = {k: ECONOMY.get(v, v) for k, v in m.items()}
+        for k, v in ECONOMY.items():
+            m.setdefault(k, v)
     m = {"minecraft:" + k: "minecraft:" + v for k, v in m.items()}
     g = d.bp.grid
     for y in range(len(g)):
@@ -475,7 +490,11 @@ def repaint(d):
                 st = row[x]
                 n, _, rest = st.partition("[")
                 if n in m:
-                    row[x] = m[n] + ("[" + rest if rest else "")
+                    t = m[n]
+                    keep = rest and ("stairs" in t or "slab" in t or "log" in t or "door" in t or "trapdoor" in t)
+                    row[x] = t + ("[" + rest if keep else "")
+                elif n == "minecraft:end_rod" and d.level <= 3:
+                    row[x] = "minecraft:lantern[hanging=%s,waterlogged=false]" % ("true" if "facing=down" in st else "false")
     return d
 
 
@@ -553,84 +572,14 @@ def _blocky(n):
                                 "fletching", "crafting", "cartography", "chest", "trapdoor", "fence_gate"))
 
 
-def deco_ring(d, x1, z1, x2, z2, y, items, lights=True, rug="auto", every=1):
-    """Hand-picked decor for an existing room (inner cells x1..x2/z1..z2, walk layer y): `items` (a block, a
-    (lower, upper) pair or a callable f(d,x,y,z,facing)) go into free wall-side cells that keep an aisle in
-    front of them and stay clear of doors, stairs, ladders and work blocks; lanterns under the ceiling; an
-    optional rug on free floor in the middle."""
-    def solid_floor(x, z):
-        return d.get(x, y - 1, z) != AIR and "carpet" not in d.get(x, y - 1, z)
-
-    def clear(x, z):
-        return d.air(x, y, z) and d.air(x, y + 1, z) and solid_floor(x, z)
-
-    n = k = 0
-    for x in range(x1, x2 + 1):
-        for z in range(z1, z2 + 1):
-            if not (x in (x1, x2) or z in (z1, z2)) or not clear(x, z):
-                continue
-            side = "north" if z == z1 else "south" if z == z2 else "west" if x == x1 else "east"
-            face = OPP[side]
-            fx, fz = D4[face]
-            if not clear(x + fx, z + fz):
-                continue
-            bad = False
-            for dx in (-1, 0, 1):
-                for dz in (-1, 0, 1):
-                    for yy in (y - 1, y, y + 1):
-                        if _blocky(d.get(x + dx, yy, z + dz)) and (dx == 0 or dz == 0):
-                            bad = True
-                wx, wz = x + D4[side][0], z + D4[side][1]
-            wx, wz = x + D4[side][0], z + D4[side][1]
-            if "door" in d.get(wx, y, wz) or d.air(wx, y, wz) or d.air(wx, y + 1, wz):
-                bad = True                                            # only against a closed wall
-            for dx in (-1, 0, 1):
-                for dz in (-1, 0, 1):
-                    if d.air(x + dx, y - 1, z + dz) or "stairs" in d.get(x + dx, y - 1, z + dz) \
-                            or "ladder" in d.get(x + dx, y, z + dz):
-                        bad = True                                    # stair wells and landings stay clear
-            for sx, sz in ((x + 1, z), (x - 1, z), (x, z + 1), (x, z - 1)):
-                if "door" in d.get(sx, y, sz) or "door" in d.get(sx + D4[side][0], y, sz + D4[side][1]):
-                    bad = True
-            if bad:
-                continue
-            k += 1
-            if (k - 1) % every:
-                continue
-            it = items[n % len(items)]
-            n += 1
-            if it is None:
-                continue
-            if callable(it):
-                it(d, x, y, z, face)
-            elif isinstance(it, tuple):
-                d.set(x, y, z, it[0].replace("FACE", face))
-                if d.air(x, y + 1, z):
-                    d.set(x, y + 1, z, it[1].replace("FACE", face))
-            else:
-                d.set(x, y, z, it.replace("FACE", face))
-    if lights:
-        lamp = LANT if d.pack != "Neoterra" else "end_rod[facing=down]"
-        for x in range(x1 + 1, x2, 3):
-            for z in range(z1 + 1, z2, 3):
-                for h in (3, 4, 5):
-                    if d.air(x, y + h - 1, z) and d.get(x, y + h, z) != AIR and d.air(x, y, z) is not None:
-                        near = any("lantern" in d.get(x + a, y + h - 1, z + b) or "end_rod" in d.get(x + a, y + h - 1, z + b)
-                                   or "sea_lantern" in d.get(x + a, y + h, z + b)
-                                   for a in range(-2, 3) for b in range(-2, 3))
-                        if not near and h - 1 >= 2:
-                            d.set(x, y + h - 1, z, lamp)
-                        break
-    if rug == "auto":
-        rug = {"Hearthwood": ("red_carpet", "orange_carpet"), "Cascadia": ("green_carpet", "brown_carpet"),
-               "Neoterra": ("light_gray_carpet", "white_carpet")}[d.pack]
-    if rug:
-        for x in range(x1 + 1, x2):
-            for z in range(z1 + 1, z2):
-                if clear(x, z) and not any(_blocky(d.get(x + a, y, z + b)) and "door" in d.get(x + a, y, z + b)
-                                           for a in (-1, 0, 1) for b in (-1, 0, 1)):
-                    edge = x in (x1 + 1, x2 - 1) or z in (z1 + 1, z2 - 1)
-                    d.set(x, y, z, rug[0] if edge or len(rug) == 1 else rug[1])
+def put_all(d, y, items):
+    """Hand-placed furniture on walk layer y: (x, z, block[, block on top]) at fixed positions."""
+    for it in items:
+        x, z, b = it[:3]
+        if d.air(x, y, z) and d.get(x, y - 1, z) != AIR:
+            d.set(x, y, z, b)
+            if len(it) > 3 and d.air(x, y + 1, z):
+                d.set(x, y + 1, z, it[3])
 
 
 SLABTOP = lambda w: f"{w}_slab[type=top,waterlogged=false]"
@@ -685,234 +634,305 @@ def _wallside(d, x, z, ix1, iz1, ix2, iz2):
     return "east"
 
 
-def furnish(d, kind, ix1, iz1, ix2, iz2, y, res, wood, top=False, extra=None):
-    """Furnish the room ix1..ix2/iz1..iz2 (inner cells) on walk layer y for `kind`. Items go round the walls
-    (ring), the next ring stays an aisle, centre pieces sit in the middle. Cells in `res` stay free."""
-    P = d.pack
-    w, dp = ix2 - ix1 + 1, iz2 - iz1 + 1
+class Room:
+    """A room on walk layer y (inner cells W..E / N..S). Layout functions place furniture at fixed positions
+    relative to the walls; put() refuses cells that are reserved (doors, stairs), occupied or next to a door."""
 
-    def free(x, z, h=2):
-        return (x, z) not in res and all(d.air(x, y + k, z) for k in range(h)) and d.get(x, y - 1, z) != AIR
+    def __init__(self, d, W, N, E, S, y, res=(), wood=None, top=False):
+        self.d, self.W, self.N, self.E, self.S, self.y = d, W, N, E, S, y
+        self.res, self.wood, self.top = set(res), wood or _w(d), top
+        self.cx, self.cz = (W + E) // 2, (N + S) // 2
+        self.w, self.dp = E - W + 1, S - N + 1
 
-    def tall_ok(x, z, side):
-        ox, oz = D4[side]
-        return "glass" not in d.get(x + ox, y + 1, z + oz) and "door" not in d.get(x + ox, y, z + oz)
+    def ok(self, x, z, h=1, dy=0):
+        d, y = self.d, self.y + dy
+        if not (self.W <= x <= self.E and self.N <= z <= self.S) or (x, z) in self.res:
+            return False
+        if not all(d.air(x, y + k, z) for k in range(h)) or d.get(x, self.y - 1, z) == AIR:
+            return False
+        return not any("door" in d.get(x + a, self.y, z + b) or "door" in d.get(x + a, self.y + 1, z + b)
+                       for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1)))
 
-    ring = []
-    for x in range(ix1, ix2 + 1):
-        ring.append((x, iz1))
-    for z in range(iz1 + 1, iz2 + 1):
-        ring.append((ix2, z))
-    for x in range(ix2 - 1, ix1 - 1, -1):
-        ring.append((x, iz2))
-    for z in range(iz2 - 1, iz1, -1):
-        ring.append((ix1, z))
-    corners = {(ix1, iz1), (ix2, iz1), (ix1, iz2), (ix2, iz2)}
-    lamp = LANT if P != "Neoterra" else "sea_lantern"
-    seq = KINDS.get(kind, KINDS["store"])(d, wood)
-    n = 0
-    for (x, z) in ring:
-        side = _wallside(d, x, z, ix1, iz1, ix2, iz2)
-        if (x, z) in corners:
-            if free(x, z):
-                d.set(x, y, z, seq["corner"] if "corner" in seq else FLOWERS[(x + z) % 8].replace("potted_", "potted_") if False
-                      else seq.get("corner", "potted_fern" if P != "Neoterra" else "potted_bamboo"))
-            continue
-        if not free(x, z):
-            continue
-        item = seq["ring"][n % len(seq["ring"])]
-        n += 1
-        if item is None:
-            continue
-        item(d, x, y, z, OPP[side], tall_ok(x, z, side))
-    # centre
-    cx1, cz1, cx2, cz2 = ix1 + 2, iz1 + 2, ix2 - 2, iz2 - 2
-    if "centre" in seq and cx2 >= cx1 and cz2 >= cz1:
-        seq["centre"](d, cx1, cz1, cx2, cz2, y, free)
-    # lights
-    ly = y + 3
-    for x in range(ix1 + 1, ix2, 4):
-        for z in range(iz1 + 1, iz2, 4):
-            xx, zz = x + 1 if x + 1 <= ix2 else x, z + 1 if z + 1 <= iz2 else z
-            if (xx, zz) in res or not d.air(xx, ly, zz):
+    def put(self, x, z, block, dy=0):
+        if dy == 0 and not self.ok(x, z):
+            return False
+        if dy and (not self.d.air(x, self.y + dy, z) or (x, z) in self.res
+                   or self.d.air(x, self.y + dy - 1, z)):
+            return False
+        self.d.set(x, self.y + dy, z, block)
+        return True
+
+    def stack(self, x, z, lo, hi):
+        if self.put(x, z, lo):
+            self.put(x, z, hi, 1)
+
+    def glassy(self, x, z):
+        """Is the wall cell behind (x,z) a window at chest height?"""
+        for a, b in ((0, -1), (0, 1), (-1, 0), (1, 0)):
+            if not (self.W <= x + a <= self.E and self.N <= z + b <= self.S):
+                if "glass" in self.d.get(x + a, self.y + 1, z + b) or "glass" in self.d.get(x + a, self.y + 2, z + b):
+                    return True
+        return False
+
+    def shelf(self, x, z, h=3):
+        if self.ok(x, z, h):
+            for k in range(1 if self.glassy(x, z) else h):
+                self.d.bookshelf(x, self.y + k, z)
+
+    def chair(self, x, z, back):
+        if self.ok(x, z):
+            self.d.chair(x, self.y, z, back, self.wood, sit=False)
+
+    def table(self, x, z):
+        if self.ok(x, z, 2):
+            self.d.table(x, self.y, z, self.wood, "post")
+
+    def bed(self, x, z, facing):
+        fx, fz = D4[OPP[facing]]
+        if self.ok(x, z) and self.ok(x + fx, z + fz):
+            self.d.bed(x, self.y, z, facing)
+            return True
+        return False
+
+    def rug(self, x1, z1, x2, z2, colors=None):
+        c = colors or {"Hearthwood": ("red_carpet", "orange_carpet"), "Cascadia": ("green_carpet", "brown_carpet"),
+                       "Neoterra": ("light_gray_carpet", "white_carpet")}[self.d.pack]
+        for x in range(x1, x2 + 1):
+            for z in range(z1, z2 + 1):
+                if self.ok(x, z, 2):
+                    edge = x in (x1, x2) or z in (z1, z2)
+                    self.d.set(x, self.y, z, c[0] if edge else c[-1])
+
+    def lights(self, pts):
+        lamp = LANT if self.d.pack != "Neoterra" else "end_rod[facing=down]"
+        d, y = self.d, self.y
+        for x, z in pts:
+            if (x, z) in self.res or not (self.W <= x <= self.E and self.N <= z <= self.S):
                 continue
-            if d.get(xx, ly + 1, zz) != AIR:
-                d.set(xx, ly, zz, lamp if P != "Neoterra" else "end_rod[facing=down]")
-                if P == "Neoterra" and "concrete" in d.get(xx, ly + 1, zz):
-                    d.set(xx, ly + 1, zz, "pearlescent_froglight[axis=y]")
-                    d.set(xx, ly, zz, AIR)
-            elif top and d.get(xx, ly + 2, zz) != AIR and d.air(xx, ly + 1, zz):
-                d.set(xx, ly + 1, zz, "chain[axis=y,waterlogged=false]")
-                d.set(xx, ly, zz, lamp if P != "Neoterra" else "end_rod[facing=down]")
-            elif top and d.get(xx, ly + 1, zz) == AIR:
-                for k in range(1, 6):
-                    if d.bp.inside(xx, ly + k, zz) and d.get(xx, ly + k, zz) != AIR:
-                        for kk in range(1, k):
-                            d.set(xx, ly + kk, zz, "chain[axis=y,waterlogged=false]")
-                        d.set(xx, ly, zz, lamp if P != "Neoterra" else "end_rod[facing=down]")
-                        break
-    # rug in the aisle-free middle
-    rugc = {"Hearthwood": ("red_carpet", "orange_carpet"), "Cascadia": ("brown_carpet", "green_carpet"),
-            "Neoterra": ("light_gray_carpet", "cyan_carpet")}[P]
-    if seq.get("rug", True) and cx2 - cx1 >= 0 and cz2 - cz1 >= 0:
-        for x in range(cx1 - 1, cx2 + 2):
-            for z in range(cz1 - 1, cz2 + 2):
-                if (x, z) not in res and d.air(x, y, z) and d.get(x, y - 1, z) != AIR and \
-                        not any("_bed" in d.get(x + a, y, z + b) for a, b in ((0, 0),)):
-                    edge = x in (cx1 - 1, cx2 + 1) or z in (cz1 - 1, cz2 + 1)
-                    d.set(x, y, z, rugc[0] if edge else rugc[1])
+            for k in range(3, 9):
+                if not d.bp.inside(x, y + k, z):
+                    break
+                if d.get(x, y + k, z) != AIR:
+                    if k - 1 >= 3 and d.air(x, y + k - 1, z):
+                        for kk in range(3, k - 1):
+                            d.set(x, y + kk, z, "chain[axis=y,waterlogged=false]")
+                        d.set(x, y + k - 1, z, lamp)
+                    break
 
 
-# ring item makers: f(d, x, y, z, facing_into_room, tall_ok)
-def _slab_with(top):
-    def f(d, x, y, z, face, tall):
-        d.set(x, y, z, SL(_w(d), "top"))
-        t = top(face) if callable(top) else top
-        if t:
-            d.set(x, y + 1, z, t)
-    return f
+def _lay_bunks(r):
+    W, N, E, S = r.W, r.N, r.E, r.S
+    for x in range(W, E + 1, 2):                                  # beds along the north wall, nightstands between
+        if r.bed(x, N, "north") and x + 1 <= E:
+            r.stack(x + 1, N, SL(r.wood, "top"), "candle[candles=1,lit=false,waterlogged=false]")
+    if r.dp >= 5:
+        for x in range(E, W + 6, -2):                             # second row on the south wall, clear of the stair
+            if r.bed(x, S, "south") and x - 1 > W + 6:
+                r.put(x - 1, S, f"chest[facing=north,type=single,waterlogged=false]")
+    r.put(E, r.cz, CHISEL.replace("FACE", "west"))
+    r.put(W, N + 2 if r.dp > 4 else r.cz, "white_wool")
+    r.rug(W + 1, N + 2, E - 1, N + 2)
+    r.lights([(r.cx, N + 2), (W + 2, N + 2), (E - 2, N + 2)])
 
 
-def _w(d):
-    return {"Hearthwood": "dark_oak", "Cascadia": "spruce", "Neoterra": "birch"}[d.pack]
+def _lay_mess(r):
+    W, N, E, S, cz = r.W, r.N, r.E, r.S, (r.cz if r.dp >= 5 else r.N + 1)
+    for x in range(W + 2, E - 1):                                 # long refectory table, benches both sides
+        r.table(x, cz)
+        r.chair(x, cz - 1, "north")
+        r.chair(x, cz + 1, "south")
+    r.put(E - 1, N, "smoker[facing=south,lit=false]")              # serving counter in the north-east corner
+    r.stack(E - 2, N, SL(r.wood, "top"), POT.replace("FACE", "south"))
+    r.stack(E, N, KEG.replace("FACE", "west"), KEG.replace("FACE", "up"))
+    r.put(W, N, "barrel[facing=up,open=false]")
+    r.stack(W + 1, N, SL(r.wood, "top"), "potted_red_mushroom")
+    r.lights([(x, cz) for x in range(W + 2, E - 1, 4)])
 
 
-def _blk(b):
-    def f(d, x, y, z, face, tall):
-        d.set(x, y, z, b(face) if callable(b) else b)
-    return f
+def _lay_armoury(r):
+    W, N, E = r.W, r.N, r.E
+    for x in range(W + 1, min(W + 5, E - 2)):                    # spear rack with shields over it
+        _rack_weapons(r.d, x, r.y, N, "south", True) if r.ok(x, N, 3) else None
+    r.put(E, N, "grindstone[face=floor,facing=west]")
+    r.put(E, N + 1, "anvil[facing=north]")
+    r.put(E, N + 2, "smithing_table")
+    r.put(W, N, f"chest[facing=east,type=single,waterlogged=false]")
+    if r.ok(r.cx, r.cz + 1, 3):
+        dummy(r.d, r.cx, r.y, r.cz + 1, "north")
+    r.lights([(r.cx, N + 1), (r.cx - 3, r.cz), (r.cx + 3, r.cz)])
 
 
-def _stack(lo, hi):
-    def f(d, x, y, z, face, tall):
-        d.set(x, y, z, lo(face) if callable(lo) else lo)
-        if tall:
-            d.set(x, y + 1, z, hi(face) if callable(hi) else hi)
-    return f
+def _lay_office(r):
+    W, N, E, cx = r.W, r.N, r.E, r.cx
+    r.put(cx, N + 1, SL(r.wood, "top"))                           # desk with a chair, cabinets behind it
+    r.put(cx, N + 1, "candle[candles=2,lit=false,waterlogged=false]", 1)
+    r.chair(cx, N + 2, "south")
+    r.put(cx - 1, N, CHISEL.replace("FACE", "south"))
+    r.put(cx + 1, N, CHISEL.replace("FACE", "south"))
+    r.put(W, N, "cartography_table")
+    r.put(E, N, "potted_fern" if r.d.pack != "Neoterra" else "potted_bamboo")
+    if r.dp >= 6:                                                 # meeting corner
+        r.table(E - 1, N + 3)
+        r.chair(E - 1, N + 2, "north")
+        r.chair(E - 2, N + 3, "west")
+    r.rug(cx - 1, N + 1, cx + 1, N + 3)
+    r.lights([(cx, N + 2), (E - 1, N + 4)])
 
 
-def _shelf3(d, x, y, z, face, tall):
-    if tall:
-        d.bookshelf(x, y, z, 3)
-    else:
-        d.bookshelf(x, y, z, 1)
+def _lay_library(r):
+    W, N, E = r.W, r.N, r.E
+    for x in range(W, E + 1):                                     # stacks along the north wall
+        if abs(x - r.cx) > 1:
+            r.shelf(x, N)
+    for z in range(N + 1, min(N + 4, r.S - 2)):                   # and the east wall
+        r.shelf(E, z)
+    for x in (r.cx - 1, r.cx, r.cx + 1):                          # reading table
+        r.table(x, N + 3)
+        r.chair(x, N + 2, "north")
+        r.chair(x, N + 4, "south")
+    r.put(r.cx, N, "lectern[facing=south,has_book=false,powered=false]")
+    r.lights([(r.cx, N + 3), (W + 2, N + 2), (E - 2, N + 2)])
 
 
-def _chisel(face):
-    return (f"chiseled_bookshelf[facing={face},slot_0_occupied=true,slot_1_occupied=false,slot_2_occupied=true,"
-            f"slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
+def _lay_store(r):
+    W, N, E = r.W, r.N, r.E
+    for x in range(W, E + 1):                                     # shelving bay of crates along the north wall
+        if (x - W) % 3 != 2:
+            r.stack(x, N, KEG.replace("FACE", "south"), KEG.replace("FACE", "up"))
+        else:
+            r.stack(x, N, "brown_wool", "white_wool")
+    for z in range(N + 2, min(N + 5, r.S - 2)):                   # sacks and chests on the east wall
+        r.put(E, z, "brown_wool" if z % 2 else f"chest[facing=west,type=single,waterlogged=false]")
+    if r.d.pack != "Neoterra":
+        r.stack(W, N + 2, "hay_block[axis=y]", "hay_block[axis=x]")
+    r.lights([(r.cx, N + 2), (W + 2, N + 2), (E - 2, N + 2)])
+
+
+def _lay_lab(r):
+    W, N, E = r.W, r.N, r.E
+    for i, x in enumerate(range(W, E)):                           # bench along the north wall
+        top = "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]" if i % 3 == 1 else \
+            (POT.replace("FACE", "south") if i % 3 == 0 else FLOWERS[5])
+        r.stack(x, N, SL(r.wood if r.d.pack != "Neoterra" else "smooth_quartz", "top"), top)
+    r.put(E, N, "water_cauldron[level=2]")
+    r.put(E, N + 1, f"chest[facing=west,type=single,waterlogged=false]")
+    r.put(E, N + 2, CHISEL.replace("FACE", "west"))
+    for x in (r.cx - 1, r.cx, r.cx + 1):                          # island worktable
+        r.put(x, N + 3, SL(r.wood if r.d.pack != "Neoterra" else "smooth_quartz", "top"))
+    r.put(r.cx, N + 3, "candle[candles=3,lit=false,waterlogged=false]", 1)
+    r.lights([(r.cx, N + 2), (W + 2, N + 2), (E - 2, N + 2)])
+
+
+def _lay_workshop(r):
+    W, N, E = r.W, r.N, r.E
+    run = ["crafting_table", "smithing_table", "furnace[facing=south,lit=false]", "grindstone[face=floor,facing=south]",
+           "fletching_table", "stonecutter[facing=south]"]
+    for i, x in enumerate(range(W + 1, min(W + 1 + len(run), E))):
+        r.put(x, N, run[i])
+    r.stack(E, N, KEG.replace("FACE", "west"), "lantern[hanging=false,waterlogged=false]")
+    r.stack(E, N + 1, KEG.replace("FACE", "west"), KEG.replace("FACE", "up"))
+    for x in (r.cx, r.cx + 1):                                    # workbench in the middle
+        r.put(x, N + 3, SL(r.wood, "top"))
+    r.put(r.cx, N + 3, "lantern[hanging=false,waterlogged=false]", 1)
+    r.put(W, N, "chest[facing=east,type=single,waterlogged=false]")
+    r.lights([(r.cx, N + 2), (W + 2, N + 2), (E - 2, N + 2)])
+
+
+def _lay_lounge(r):
+    W, N, E, cx = r.W, r.N, r.E, r.cx
+    if r.d.pack == "Neoterra":                                    # media wall
+        r.put(cx, N, "black_concrete")
+        r.put(cx, N, "black_stained_glass_pane", 1)
+    else:                                                         # fireside: bricked hearth on the north wall
+        r.put(cx, N, "campfire[facing=south,lit=true,signal_fire=false,waterlogged=false]")
+        r.put(cx, N, "bricks", 1) if False else None
+    r.put(cx - 1, N, CHISEL.replace("FACE", "south"))
+    r.put(cx + 1, N, CHISEL.replace("FACE", "south"))
+    r.put(cx, N + 2, SL(r.wood, "top"))                           # low table, sofa facing the hearth
+    for x in (cx - 1, cx, cx + 1):
+        r.chair(x, N + 3, "south")
+    r.chair(cx - 2, N + 2, "west")
+    r.chair(cx + 2, N + 2, "east")
+    r.put(W, N, "potted_fern" if r.d.pack != "Neoterra" else "potted_bamboo")
+    r.put(E, N, "jukebox[has_record=false]")
+    r.rug(cx - 2, N + 1, cx + 2, N + 3)
+    r.lights([(cx, N + 2), (W + 2, N + 3), (E - 2, N + 3)])
+
+
+def _lay_kitchen(r):
+    W, N, E = r.W, r.N, r.E
+    run = ["smoker[facing=south,lit=false]", SL(r.wood, "top"), "water_cauldron[level=3]",
+           "furnace[facing=south,lit=false]", SL(r.wood, "top"), "barrel[facing=up,open=false]"]
+    for i, x in enumerate(range(W, min(W + len(run), E + 1))):
+        r.put(x, N, run[i])
+        if "slab" in run[i]:
+            r.put(x, N, POT.replace("FACE", "south") if i == 1 else "potted_red_mushroom", 1)
+    tz = N + 3
+    for x in (r.cx, r.cx + 1):                                    # dining table for four
+        r.table(x, tz)
+        r.chair(x, tz - 1, "north")
+        r.chair(x, tz + 1, "south")
+    r.put(E, N, KEG.replace("FACE", "west"))
+    r.lights([(r.cx, tz), (W + 2, N + 1)])
+
+
+def _lay_gym(r):
+    W, N, E = r.W, r.N, r.E
+    for x in range(W + 2, E - 1, 3):
+        if r.ok(x, r.cz, 3):
+            dummy(r.d, x, r.y, r.cz, "north")
+    r.stack(E, N + 1, "hay_block[axis=y]", "target[power=0]")
+    r.stack(E, N + 3, "hay_block[axis=y]", "target[power=0]")
+    for x in range(W + 1, min(W + 4, E)):
+        _rack_weapons(r.d, x, r.y, N, "south", True) if r.ok(x, N, 3) else None
+    r.put(E, N, "barrel[facing=up,open=false]")
+    r.rug(W + 1, r.cz + 2, E - 1, r.cz + 2, ("blue_carpet", "light_blue_carpet"))
+    r.lights([(x, r.cz - 1) for x in range(W + 2, E - 1, 4)])
+
+
+def _lay_chapel(r):
+    W, N, E, cx = r.W, r.N, r.E, r.cx
+    for x in (cx - 1, cx, cx + 1):                                # altar
+        r.put(x, N, "chiseled_stone_bricks" if r.d.pack != "Neoterra" else "smooth_quartz")
+    r.put(cx - 1, N, "candle[candles=3,lit=false,waterlogged=false]", 1)
+    r.put(cx + 1, N, "candle[candles=3,lit=false,waterlogged=false]", 1)
+    r.put(cx, N, "potted_white_tulip", 1)
+    for z in range(N + 2, r.S - 1, 2):                            # pews facing the altar, aisle down the middle
+        for x in range(W + 1, E):
+            if abs(x - cx) > 0:
+                r.chair(x, z, "south")
+    r.lights([(cx, N + 2), (cx, r.S - 2)])
+
+
+def _lay_greenhouse(r):
+    for z in range(r.N, r.S + 1, 2):
+        for x in range(r.W, r.E + 1):
+            if x != r.cx:
+                if r.put(x, z, "moss_block"):
+                    r.put(x, z, ["allium", "azure_bluet", "cornflower", "lily_of_the_valley", "fern"][(x + z) % 5], 1)
+    r.lights([(r.cx, r.cz)])
+
+
+LAYOUTS = {"bunks": _lay_bunks, "mess": _lay_mess, "armoury": _lay_armoury, "office": _lay_office,
+           "library": _lay_library, "store": _lay_store, "lab": _lay_lab, "workshop": _lay_workshop,
+           "lounge": _lay_lounge, "kitchen": _lay_kitchen, "gym": _lay_gym, "chapel": _lay_chapel,
+           "greenhouse": _lay_greenhouse}
+
+
+def furnish(d, kind, ix1, iz1, ix2, iz2, y, res, wood, top=False, extra=None):
+    """Lay a room out for its use (fixed arrangement per room kind)."""
+    LAYOUTS[kind](Room(d, ix1, iz1, ix2, iz2, y, res, wood, top))
 
 
 def _rack_weapons(d, x, y, z, face, tall):
     d.set(x, y, z, SL(_w(d), "top"))
     d.set(x, y + 1, z, ROD())
-    ox, oz = D4[OPP[face]]
     if tall and d.air(x, y + 2, z):
         d.set(x, y + 2, z, f"{['red', 'white', 'blue', 'green'][(x + z) % 4]}_wall_banner[facing={face}]")
 
 
-def _bed_single(d, x, y, z, face, tall):
-    fx, fz = D4[face]
-    if d.air(x + fx, y, z + fz) and d.get(x + fx, y - 1, z + fz) != AIR:
-        d.bed(x, y, z, OPP[face])
-
-
-def _chair_to(face_dir):
-    pass
-
-
-def _desk(d, x, y, z, face, tall):
-    d.set(x, y, z, SL(_w(d), "top"))
-    d.candle(x, y + 1, z, 1 + (x + z) % 3)
-    fx, fz = D4[face]
-    if d.air(x + fx, y, z + fz) and d.get(x + fx, y - 1, z + fz) != AIR:
-        pass
-
-
-def _pots(face):
-    return "decorated_pot[cracked=false,facing=%s,waterlogged=false]" % face
-
-
-def _keg(face):
-    return f"barrel[facing={face},open=false]"
-
-
-def _table_rows(chairs=True, top=None, along=None, step=2):
-    def c(d, cx1, cz1, cx2, cz2, y, free):
-        wood = _w(d)
-        long_x = (cx2 - cx1) >= (cz2 - cz1)
-        if long_x:
-            zc = (cz1 + cz2) // 2
-            for x in range(cx1, cx2 + 1):
-                if free(x, zc):
-                    d.table(x, y, zc, wood, "post") if top is None else d.set(x, y, zc, top)
-                    if chairs:
-                        for dz, back in ((-1, "north"), (1, "south")):
-                            if free(x, zc + dz) and (x - cx1) % step == 0:
-                                d.chair(x, y, zc + dz, back, wood, sit=False)
-        else:
-            xc = (cx1 + cx2) // 2
-            for z in range(cz1, cz2 + 1):
-                if free(xc, z):
-                    d.table(xc, y, z, wood, "post") if top is None else d.set(xc, y, z, top)
-                    if chairs:
-                        for dx, back in ((-1, "west"), (1, "east")):
-                            if free(xc + dx, z) and (z - cz1) % step == 0:
-                                d.chair(xc + dx, y, z, back, wood, sit=False)
-    return c
-
-
-def _dummies(d, cx1, cz1, cx2, cz2, y, free):
-    for x in range(cx1, cx2 + 1, 3):
-        for z in range(cz1, cz2 + 1, 3):
-            if free(x, z, 3):
-                dummy(d, x, y, z, "north")
-
-
-def _bunks(d, cx1, cz1, cx2, cz2, y, free):
-    pass
-
-
-KINDS = {
-    "bunks": lambda d, w: dict(ring=[_bed_single, _slab_with(lambda f: "candle[candles=1,lit=false,waterlogged=false]"),
-                                     _bed_single, _blk(lambda f: f"chest[facing={f},type=single,waterlogged=false]")],
-                               rug=True),
-    "mess": lambda d, w: dict(ring=[_blk(_keg), _stack(_keg, _keg), _slab_with(_pots), _blk("smoker[facing=north,lit=false]"),
-                                    _slab_with("potted_red_mushroom"), _blk(lambda f: f"barrel[facing=up,open=false]")],
-                              centre=_table_rows(True), rug=False),
-    "armoury": lambda d, w: dict(ring=[_rack_weapons, _rack_weapons, _blk(lambda f: f"grindstone[face=floor,facing={f}]"),
-                                       _rack_weapons, _blk(lambda f: f"chest[facing={f},type=single,waterlogged=false]"),
-                                       _blk("smithing_table")], centre=_dummies, rug=False),
-    "office": lambda d, w: dict(ring=[_desk, _blk(_chisel), _blk("cartography_table"), _slab_with(lambda f: FLOWERS[3]),
-                                      _blk(_chisel), _stack(_keg, "potted_fern")],
-                                centre=_table_rows(True, step=1)),
-    "library": lambda d, w: dict(ring=[_shelf3, _shelf3, _shelf3, _blk(_chisel)], centre=_table_rows(True)),
-    "store": lambda d, w: dict(ring=[_stack(_keg, _keg), _blk("brown_wool"), _stack(_keg, "white_wool"),
-                                     _blk(lambda f: f"chest[facing={f},type=single,waterlogged=false]"),
-                                     _stack("hay_block[axis=y]", _keg)], rug=False),
-    "lab": lambda d, w: dict(ring=[_slab_with("brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]"),
-                                   _slab_with(_pots), _blk("water_cauldron[level=2]"),
-                                   _slab_with(lambda f: FLOWERS[5]), _blk(_chisel)],
-                             centre=_table_rows(False)),
-    "workshop": lambda d, w: dict(ring=[_blk("crafting_table"), _blk(lambda f: f"furnace[facing={f},lit=false]"),
-                                        _stack(_keg, "lantern[hanging=false,waterlogged=false]"),
-                                        _blk("smithing_table"), _blk(lambda f: f"grindstone[face=floor,facing={f}]"),
-                                        _blk("fletching_table")], centre=_table_rows(False), rug=False),
-    "lounge": lambda d, w: dict(ring=[_blk(_chisel), _slab_with(lambda f: FLOWERS[0]), _shelf3,
-                                      _slab_with(_pots), _blk(lambda f: f"jukebox[has_record=false]")],
-                                centre=_table_rows(True, step=1)),
-    "kitchen": lambda d, w: dict(ring=[_blk(lambda f: f"smoker[facing={f},lit=false]"), _slab_with(_pots),
-                                       _blk("water_cauldron[level=3]"), _blk(lambda f: f"furnace[facing={f},lit=false]"),
-                                       _stack(_keg, _keg), _slab_with("potted_red_mushroom")],
-                                 centre=_table_rows(True)),
-    "gym": lambda d, w: dict(ring=[_rack_weapons, _stack("hay_block[axis=y]", "target[power=0]"),
-                                   _blk(lambda f: f"barrel[facing=up,open=false]")], centre=_dummies, rug=False),
-    "chapel": lambda d, w: dict(ring=[_slab_with("candle[candles=3,lit=false,waterlogged=false]"), None,
-                                      _slab_with(lambda f: FLOWERS[2])], centre=_table_rows(True)),
-    "greenhouse": lambda d, w: dict(ring=[_blk("moss_block"), _blk("flowering_azalea"), _blk("moss_block"),
-                                          _slab_with(lambda f: FLOWERS[1])], rug=False),
-    None: None,
-}
+def _w(d):
+    return {"Hearthwood": "dark_oak", "Cascadia": "spruce", "Neoterra": "birch"}[d.pack]
 
 
 # ---------------------------------------------------------------------------------------------- exterior kit
@@ -1051,10 +1071,8 @@ def gt_hearthwood(rel, L):
         d.set(6, 14, 7, "bell[attachment=ceiling,facing=north,powered=false]")
         d.chair(x1 + 1, 12, z1 + 1, "west", "dark_oak", sit=False)
     dress(d, x1, z1, x2, z2, 2, 14)
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, ["cartography_table", (SLABTOP("dark_oak"), POT), KEG,
-              (SLABTOP("dark_oak"), "candle[candles=3,lit=false,waterlogged=false]")])
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 7, [CHISEL, (SLABTOP("dark_oak"), "potted_red_tulip"), "white_wool",
-              (KEG, "lantern[hanging=false,waterlogged=false]")])
+    put_all(d, 2, [(7, 5, "cartography_table"), (4, 6, SL("dark_oak", "top"), POT.replace("FACE", "east")), (6, 9, KEG.replace("FACE", "north"), KEG.replace("FACE", "up"))])                      # guard room: map table, shelf, kegs
+    put_all(d, 7, [(7, 5, CHISEL.replace("FACE", "south")), (4, 9, SL("dark_oak", "top"), "lantern[hanging=false,waterlogged=false]"), (5, 9, SL("dark_oak", "top"), ROD())])  # bunk room
     # ---- L2+: guardroom with a mess (L3+ barracks storey above) east of the tower
     if L >= 2:
         d.set(x2, 2, 7, AIR)
@@ -1259,8 +1277,8 @@ def gt_cascadia(rel, L):
         d.set(mx, yc + 8, tz1 + 1, "red_wall_banner[facing=north]")
         d.set(tx2 + 1, yc + 1, tz1 + 2, "bell[attachment=floor,facing=east,powered=false]")
     dress(d, x1, z1, x2, z2, 2, 6)
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, [(SLABTOP("spruce"), "potted_fern"), KEG, CHISEL,
-              (SLABTOP("spruce"), POT), "chest[facing=FACE,type=single,waterlogged=false]"])
+    put_all(d, 2, [(3, 7, KEG.replace("FACE", "north"), KEG.replace("FACE", "up")), (8, 7, CHISEL.replace("FACE", "south")), (5, 7, SL("spruce", "top"), "potted_fern"),
+                   (3, 11, "chest[facing=east,type=single,waterlogged=false]"), (6, 11, SL("spruce", "top"), POT.replace("FACE", "north"))])
     # ---- growth: a ranger station complex
     if L >= 2:                                                    # equipment shed with a work porch
         building(d, 23, 4, 31, 10, nf=1, axis="z", doors=(("north", 27), ("west", 7)), kinds=["workshop"])
@@ -1419,9 +1437,11 @@ def gt_neoterra(rel, L):
                 if (x in (6, 10) and 9 <= z <= 13) or (z == 11 and 6 <= x <= 10):
                     d.set(x, yp + 4, z, "yellow_concrete")
         d.set(8, yp + 4, 11, "white_concrete")
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, [nt_sofa, "potted_bamboo", (SLABTOP("smooth_quartz"), "potted_azure_bluet"),
-              nt_screen])
-    deco_ring(d, 5, 8, 11, 14, yp + 1, ["potted_bamboo", nt_screen, (SLABTOP("smooth_quartz"), "potted_fern")])
+    put_all(d, 2, [(9, 4, "potted_bamboo"), (6, 8, ST("birch", "south")), (7, 8, ST("birch", "south")),
+                   (6, 7, SL("smooth_quartz", "top"), "potted_azure_bluet"), (12, 5, "potted_bamboo"), (12, 7, CHISEL.replace("FACE", "west"))])
+    d.sign(3, 4, 6, "east", ["", "GUARD", "DESK"], "birch", glow=True, color="cyan")
+    put_all(d, yp + 1, [(5, 14, "potted_bamboo"), (11, 11, "chest[facing=west,type=single,waterlogged=false]"), (11, 12, SL("smooth_quartz", "top"), "potted_fern"),
+                        (5, 11, SL("smooth_quartz", "top"), "potted_azure_bluet")])
     # ---- growth: a security campus
     if L >= 2:                                                    # vehicle bay / checkpoint
         building(d, 23, 3, 33, 10, nf=1, roof="flat", doors=(("north", 26), ("west", 7)), kinds=["workshop"])
@@ -1597,10 +1617,10 @@ def ar_hearthwood(rel, L):
             d.chair(23, 2, z, "east", "dark_oak", sit=False)
             d.chair(23, 2, z + 1, "east", "dark_oak", sit=False)
     dress(d, x1, z1, X2, z2, 2, 10)
-    deco_ring(d, x1 + 1, z1 + 1, X2 - 1, z2 - 1, 2, [(SLABTOP("dark_oak"), POT), KEG, CHISEL, ("hay_block[axis=y]", "target[power=0]"),
-              (SLABTOP("dark_oak"), "potted_red_tulip")])
-    deco_ring(d, x1 + 1, z1 + 1, X2 - 1, z2 - 1, 7, [(SLABTOP("dark_oak"), "candle[candles=2,lit=false,waterlogged=false]"),
-              "white_wool", CHISEL])
+    put_all(d, 2, [(5, 4, SL("dark_oak", "top"), POT.replace("FACE", "south")), (9, 4, KEG.replace("FACE", "north"), KEG.replace("FACE", "up")), (10, 4, CHISEL.replace("FACE", "south")),
+                   (10, 8, "hay_block[axis=y]", "target[power=0]")])  # shop: shelf, kegs, test butt
+    put_all(d, 7, [(12, 4, CHISEL.replace("FACE", "south")), (12, 8, SL("dark_oak", "top"), "candle[candles=2,lit=false,waterlogged=false]"), (4, 4, "chest[facing=south,type=single,waterlogged=false]"),
+                   (4, 8, SL("dark_oak", "top"), "lantern[hanging=false,waterlogged=false]")])
     # ---- growth: the bowyers' guild yard east of the range
     if L >= 2:                                                    # bowyer's workshop (L3: loft store above)
         building(d, 27, 3, 36, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 31), ("west", 6)),
@@ -1769,8 +1789,8 @@ def ar_cascadia(rel, L):
         for x, z in ((6, 21), (8, 21), (7, 22)):
             d.set(x, 2, z, LOG("stripped_spruce_log"))
     dress(d, x1, z1, x2, Z2, 2, 10)
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, Z2 - 1, 2, [(SLABTOP("spruce"), "potted_fern"), KEG, ("hay_block[axis=y]", "target[power=0]"),
-              CHISEL, (SLABTOP("spruce"), POT), "brown_wool"])
+    put_all(d, 2, [(3, 4, KEG.replace("FACE", "north"), KEG.replace("FACE", "up")), (8, 4, SL("spruce", "top"), "potted_fern"), (9, 8, CHISEL.replace("FACE", "west")),
+                   (9, 10, "hay_block[axis=y]", "target[power=0]"), (8, 12, SL("spruce", "top"), POT.replace("FACE", "north"))])
     # ---- growth: a hunting camp round the range
     if L >= 2:                                                    # outfitter's cabin (L3: loft with bunks)
         building(d, 33, 3, 42, 10, nf=1 if L == 2 else 2, axis="x", doors=(("north", 37), ("west", 7)),
@@ -1928,9 +1948,11 @@ def ar_neoterra(rel, L):
         for x in range(x1 + 3, x1 + 9, 2):
             d.chair(x, 13, z1 + 4, "south", "birch", sit=False)
         d.set(x1 + 10, 13, z1 + 4, "smooth_quartz_slab[type=top,waterlogged=false]")
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, [nt_sofa, "potted_bamboo", nt_screen, ("white_concrete", "target[power=0]"),
-              (SLABTOP("smooth_quartz"), "potted_allium")])
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 8, ["potted_bamboo", (SLABTOP("smooth_quartz"), "end_rod[facing=up]"), CHISEL])
+    put_all(d, 2, [(19, 3, "potted_bamboo"), (15, 4, ST("birch", "north")), (19, 4, KEG.replace("FACE", "north")), (18, 8, "white_concrete", "target[power=0]"),
+                   (19, 8, "white_concrete", "target[power=0]"), (10, 8, "potted_bamboo"), (4, 5, ST("birch", "west")),
+                   (4, 6, ST("birch", "west")), (5, 5, SL("smooth_quartz", "top"), "potted_azure_bluet")])
+    put_all(d, 8, [(8, 3, CHISEL.replace("FACE", "south")), (20, 3, "potted_bamboo"), (20, 8, SL("smooth_quartz", "top"), "lantern[hanging=false,waterlogged=false]"),
+                   (12, 8, "chest[facing=north,type=single,waterlogged=false]"), (16, 8, "chest[facing=north,type=single,waterlogged=false]"), (10, 3, SL("smooth_quartz", "top"), "candle[candles=2,lit=false,waterlogged=false]")])
     # ---- growth: an archery club campus east of the range
     if L >= 2:                                                    # pro shop / bowyer's workshop (L3: offices above)
         building(d, 25, 2, 37, 10, nf=2, roof="flat", doors=(("north", 28), ("west", 6)),
@@ -2129,10 +2151,8 @@ def ca_hearthwood(rel, L):
                 d.set(x, y, rz1, LOG("stripped_dark_oak_log"))
             d.banner(x, 6, rz1 - 1, "north", "red")
     dress(d, x1, z1, x2, Z2, 2, 12)
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, Z2 - 1, 2, [(SLABTOP("dark_oak"), POT), KEG, ("hay_block[axis=y]", "target[power=0]"),
-              (SLABTOP("dark_oak"), "potted_red_tulip")])
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, Z2 - 1, 7, [CHISEL, (SLABTOP("dark_oak"), "candle[candles=2,lit=false,waterlogged=false]"),
-              "white_wool"])
+    put_all(d, 2, [(9, 6, KEG.replace("FACE", "north"), KEG.replace("FACE", "up")), (9, 8, "hay_block[axis=y]", "target[power=0]"), (3, 11, "chest[facing=east,type=single,waterlogged=false]"), (8, 11, SL("dark_oak", "top"), POT.replace("FACE", "north"))])
+    put_all(d, 7, [(6, 3, CHISEL.replace("FACE", "south")), (3, 11, "chest[facing=east,type=single,waterlogged=false]"), (9, 11, KEG.replace("FACE", "north")), (3, 6, SL("dark_oak", "top"), ROD())])
     # ---- growth: a school of arms round the tiltyard
     if L >= 2:                                                    # stable for the tilting horses
         building(d, 31, 3, 40, 9, nf=1, axis="x", doors=(("north", 33), ("north", 38)), kinds=["store"])
@@ -2318,10 +2338,8 @@ def ca_cascadia(rel, L):
             d.banner(x1 + 1, 6, z, "east", "green")
             d.banner(x2 - 1, 6, z, "west", "green")
     dress(d, x1, z1, x2, Z2, 2, 12)
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z1 + 6, 2, [(SLABTOP("spruce"), POT), KEG, ("hay_block[axis=y]", "target[power=0]"),
-              CHISEL, "brown_wool"])
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z1 + 5, 7, [(SLABTOP("spruce"), "candle[candles=2,lit=false,waterlogged=false]"),
-              "chest[facing=FACE,type=single,waterlogged=false]"])
+    put_all(d, 2, [(6, 5, SL("spruce", "top"), POT.replace("FACE", "south")), (15, 5, KEG.replace("FACE", "north"), KEG.replace("FACE", "up")), (16, 5, "brown_wool"), (18, 9, "hay_block[axis=y]", "target[power=0]")])
+    put_all(d, 7, [(9, 5, SL("spruce", "top"), "candle[candles=2,lit=false,waterlogged=false]"), (18, 5, "chest[facing=west,type=single,waterlogged=false]"), (18, 7, KEG.replace("FACE", "north"), KEG.replace("FACE", "up"))])
     # ---- growth: a logging-camp athletic club round the fight barn
     if L >= 2:                                                    # fighters' bunkhouse
         building(d, 23, 4, 32, 11, nf=1, axis="x", doors=(("north", 27), ("west", 8)), chimney=(33, 8),
@@ -2494,9 +2512,13 @@ def ca_neoterra(rel, L):
     if L >= 4:                                                    # planters round the court edge
         for z in range(z1 + 5, z2, 3):
             d.set(x2 - 1, 8, z, "azalea")
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z1 + 4, 2, [nt_sofa, "potted_bamboo", nt_screen])
-    deco_ring(d, x1 + 1, z1 + 6, 10, z2 - 1, 2, [("iron_block", "target[power=0]"), "potted_bamboo", ("white_concrete", "end_rod[facing=up]")])
-    deco_ring(d, 12, z1 + 6, x2 - 1, z2 - 1, 2, [(SLABTOP("smooth_quartz"), "potted_fern"), CHISEL])
+    put_all(d, 2, [(4, 5, ST("birch", "west")), (4, 6, ST("birch", "west")), (5, 5, SL("smooth_quartz", "top"), "potted_bamboo"),
+                   (13, 4, "potted_bamboo")])
+    put_all(d, 2, [(4, 9, "barrel[facing=up,open=false]"), (9, 9, SL("birch", "top"), ROD()), (10, 18, "hay_block[axis=y]", "target[power=0]")])
+    put_all(d, 2, [(19, 11, CHISEL.replace("FACE", "west")), (19, 13, SL("smooth_quartz", "top"), "potted_bamboo"), (12, 12, SL("smooth_quartz", "top"), "candle[candles=2,lit=false,waterlogged=false]"),
+                   (12, 14, "chest[facing=east,type=single,waterlogged=false]")])
+    d.table(15, 2, 15, "birch") if d.air(15, 2, 15) else None
+    put_all(d, 2, [(15, 14, ST("birch", "north")), (15, 16, ST("birch", "south"))])
     # ---- growth: a sports campus round the rooftop arena
     if L >= 2:                                                    # locker rooms and physio
         building(d, 24, 3, 37, 11, nf=1, roof="flat", doors=(("north", 29), ("west", 7)), kinds=["store"])
@@ -2704,8 +2726,8 @@ def en_hearthwood(rel, L):
         d.set(9, 2, gz2 - 1, "stone_brick_stairs[facing=south,half=bottom,shape=straight,waterlogged=false]")
         d.set(gx1 + 1, 2, gz2 - 1, "oak_sapling[stage=0]") if False else None
     dress(d, x1, z1, x2, z2, 2, 10)
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, [(SLABTOP("dark_oak"), "candle[candles=3,lit=false,waterlogged=false]"),
-              (SLABTOP("dark_oak"), POT), "potted_allium"])
+    put_all(d, 2, [(4, 10, SL("dark_oak", "top"), "candle[candles=3,lit=false,waterlogged=false]"), (6, 4, SL("dark_oak", "top"), POT.replace("FACE", "south")), (11, 4, "potted_allium"),
+                   (4, 8, SL("dark_oak", "top"), "candle[candles=2,lit=false,waterlogged=false]")])
     # ---- growth: a small college of lore along the lane
     if L >= 3:                                                    # scriptorium with copyists' desks, archive above
         building(d, 26, 3, 34, 10, nf=2, axis="z", doors=(("north", 30), ("west", 7)), chimney=(35, 7),
@@ -2800,7 +2822,7 @@ def en_cascadia(rel, L):
             for x in range(x1, x2 + 1, 2):
                 d.set(x, 2, z, "spruce_fence")
     dress(d, x1, z1 + 1, x2, Z2, 2, 6)
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z1 + 3, 2, [(SLABTOP("spruce"), "potted_fern"), CHISEL, KEG])
+    put_all(d, 2, [(5, 4, SL("spruce", "top"), "potted_fern"), (11, 4, KEG.replace("FACE", "north"), "lantern[hanging=false,waterlogged=false]"), (4, 6, CHISEL.replace("FACE", "east")), (12, 6, CHISEL.replace("FACE", "west"))])
     # ---- growth: a mountain retreat of scholars
     if L >= 2:                                                    # scribe's cabin (L3: loft)
         building(d, 20, 3, 28, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 24), ("west", 6)),
@@ -2911,8 +2933,8 @@ def en_neoterra(rel, L):
                     d.set(x, 1, z, "moss_block")
                     if x % 3 == 0:
                         d.set(x, 2, z, "azalea")
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, ["potted_bamboo", (SLABTOP("smooth_quartz"), "amethyst_cluster[facing=up,waterlogged=false]"),
-              nt_sofa])
+    put_all(d, 2, [(5, 12, ST("birch", "west")), (5, 11, ST("birch", "west")), (5, 10, SL("smooth_quartz", "top"), "potted_azure_bluet"),
+                   (13, 9, CHISEL.replace("FACE", "west")), (11, 5, "potted_bamboo")])
     # ---- growth: an arcane institute round the tower
     if L >= 3:                                                    # library annex linked to the tower
         building(d, 17, 4, 29, 14, nf=2, roof="flat", doors=(("north", 23), ("west", 9)),
@@ -3105,8 +3127,8 @@ def al_hearthwood(rel, L):
         d.wall_torch(7, 4, z1 - 1, "north")
         d.wall_torch(9, 4, z1 - 1, "north")
     dress(d, x1, z1, x2, z2, 2, 10)
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, [(SLABTOP("dark_oak"), POT), (SLABTOP("dark_oak"), "potted_blue_orchid"),
-              KEG, (SLABTOP("dark_oak"), "potted_brown_mushroom")])
+    put_all(d, 2, [(10, 5, SL("dark_oak", "top"), POT.replace("FACE", "north")), (11, 6, KEG.replace("FACE", "north"), "potted_brown_mushroom"),
+                   (5, 6, SL("dark_oak", "top"), "potted_blue_orchid"), (6, 10, "brown_wool")])
     # ---- growth: an apothecaries' row with a physic garden
     if L >= 2:                                                    # still-house for distilling cordials
         building(d, 17, 4, 24, 11, nf=1, axis="z", doors=(("north", 20),), chimney=(25, 8), kinds=["lab"])
@@ -3228,8 +3250,8 @@ def al_cascadia(rel, L):
         d.set(X2, 2, 9, AIR)
         d.set(X2, 3, 9, AIR)
     dress(d, x1, z1, X2, z2, 2, 6)
-    deco_ring(d, x1 + 1, z1 + 1, X2 - 1, z2 - 1, 2, [(SLABTOP("spruce"), "potted_fern"), KEG, (SLABTOP("spruce"), POT),
-              "brown_wool"])
+    put_all(d, 2, [(9, 7, KEG.replace("FACE", "north"), KEG.replace("FACE", "up")), (10, 7, CHISEL.replace("FACE", "west")), (10, 9, "brown_wool"), (10, 10, SL("spruce", "top"), "potted_fern"),
+                   (5, 7, SL("spruce", "top"), POT.replace("FACE", "south"))])
     # ---- growth: a forest herb farm
     if L >= 2:                                                    # root cellar & seed store
         building(d, 3, 15, 10, 20, nf=1, axis="x", doors=(("north", 6),), kinds=["store"])
@@ -3336,7 +3358,8 @@ def al_neoterra(rel, L):
         ladder(d, X2 + 1, z2 - 2, 2, 7, "east")
         d.set(X2, 8, z2 - 2, AIR)
         d.set(X2, 9, z2 - 2, AIR)
-    deco_ring(d, x1 + 1, z1 + 1, X2 - 1, z2 - 1, 2, ["potted_bamboo", nt_screen, (SLABTOP("smooth_quartz"), "potted_allium")])
+    put_all(d, 2, [(10, 4, "potted_bamboo"), (4, 5, ST("birch", "north")), (5, 5, ST("birch", "north")),
+                   (9, 10, SL("smooth_quartz", "top"), "potted_allium")])
     # ---- growth: a pharmaceutical research campus
     if L >= 2:                                                    # glasshouse for medicinal plants
         gx1, gz1, gx2, gz2 = 20, 3, 28, 11
@@ -3516,8 +3539,8 @@ def gy_hearthwood(rel, L):
         d.chair(3, 2, 17, "east", "oak", sit=False)
         d.chair(21, 2, 17, "west", "oak", sit=False)
     dress(d, 8, 18, 16, 25, 2, 9)
-    deco_ring(d, cx1 + 1, cz1 + 1, cx2 - 1, cz2 - 1, 2, [(SLABTOP("oak"), "candle[candles=3,lit=false,waterlogged=false]"),
-              "potted_white_tulip", None])
+    put_all(d, 2, [(9, 19, SL("oak", "top"), "candle[candles=3,lit=false,waterlogged=false]"), (15, 19, SL("oak", "top"), "potted_white_tulip"),
+                   (15, 23, "lectern[facing=west,has_book=false,powered=false]")])
     # ---- growth: the parish beside the churchyard
     if L >= 2:                                                    # sexton's cottage (L3: second storey)
         building(d, 27, 3, 35, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 31),), chimney=(36, 6),
@@ -3633,8 +3656,8 @@ def gy_cascadia(rel, L):
         d.set(gx - 1, 2, z, "spruce_fence")
         d.set(gx - 1, 3, z, LANT_S)
     dress(d, x1, z1, x2, z2, 2, 6)
-    deco_ring(d, x1 + 1, z1 + 1, x2 - 1, z2 - 1, 2, [(SLABTOP("spruce"), "candle[candles=2,lit=false,waterlogged=false]"),
-              "potted_fern", None])
+    put_all(d, 2, [(4, 12, SL("spruce", "top"), "candle[candles=2,lit=false,waterlogged=false]"), (9, 12, SL("spruce", "top"), "potted_fern"),
+                   (9, 11, "lectern[facing=west,has_book=false,powered=false]")])
     # ---- growth: a mountain parish
     if L >= 2:                                                    # caretaker's cabin (L3: loft)
         building(d, 30, 3, 38, 9, nf=1 if L == 2 else 2, axis="x", doors=(("north", 34),), chimney=(39, 6),
@@ -3750,7 +3773,8 @@ def gy_neoterra(rel, L):
         d.set(9, 2, z, "white_concrete_powder") if False else None
         d.set(9, 2, z, "end_rod[facing=up]")
         d.set(13, 2, z, "end_rod[facing=up]")
-    deco_ring(d, px1 + 1, pz1 + 1, px2 - 1, pz2 - 1, 2, ["potted_lily_of_the_valley", None, "potted_white_tulip"])
+    put_all(d, 2, [(5, 17, "potted_bamboo"), (17, 17, "potted_bamboo"), (6, 21, "potted_white_tulip"),
+                   (16, 21, "potted_lily_of_the_valley")])
     # ---- growth: a memorial campus
     if L >= 2:                                                    # visitor centre and florist
         building(d, 26, 3, 35, 10, nf=1, roof="flat", doors=(("north", 30), ("west", 7)), kinds=["greenhouse"])
