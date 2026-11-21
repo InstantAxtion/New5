@@ -1151,7 +1151,7 @@ def nt_tower(d, L, leg):
     X = 35
     # F0 city lobby
     plan(d, Y0, X, 25, [
-        " p.......p.",
+        " .p......p.",
         " ..........",
         " ..<TT>....",            # city model
         " ..<TT>....",
@@ -1189,7 +1189,7 @@ def nt_tower(d, L, leg):
         "..^^^..... ",
         ".<TTT>.... ",            # breakout table
         "..vvv..... ",
-        "p........p ",
+        "p.......p. ",
     ], leg | {"c": "chest[facing=east,type=single,waterlogged=false]"}, w=11)
     pts(d, y + 1, [(38, 26), (43, 27), (37, 32), (42, 31)], "potted_bamboo")
     pts(d, y + 1, [(39, 37)], "end_rod[facing=up]")
@@ -1197,7 +1197,7 @@ def nt_tower(d, L, leg):
     # F2 records hall
     y = 12
     plan(d, y, X, 25, [
-        " BBBBBBBBB.",
+        " .BBBBBBBB.",
         " ..........",
         " .BBBBBBB..",
         " ..........",
@@ -1232,14 +1232,14 @@ def nt_tower(d, L, leg):
         "....vvv... ",
         ".......... ",
         "s......... ",
-        ".........p ",
+        ".......p.. ",
     ], leg, w=11)
     pts(d, y + 1, [(41, 28), (40, 35)], "potted_bamboo")
     hang(d, y, [(41, 29), (40, 35)], kind="sea_lantern")
     # F4 staff canteen
     y = 22
     plan(d, y, X, 25, [
-        " _M_u___c..",
+        " .M_u___c..",
         " ..........",
         " ..........",
         " .^^...^^..",
@@ -1256,7 +1256,7 @@ def nt_tower(d, L, leg):
         "vvv.....p. ",
     ], leg | {"M": "smoker[facing=south,lit=false]", "c": "chest[facing=south,type=single,waterlogged=false]"}, w=11)
     pts(d, y + 1, [(37, 29), (42, 33)], "potted_bamboo")
-    pts(d, y + 1, [(36, 25)], "cake[bites=0]")
+    pts(d, y + 1, [(38, 25)], "cake[bites=0]")
     hang(d, y, [(39, 29), (39, 33), (37, 37)], kind="sea_lantern")
     # F5 mayor's sky office and lounge
     y = 27
