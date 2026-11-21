@@ -1,11 +1,6 @@
 {
   "branch": "minecolonies:technology",
-  "costs": [
-    {
-      "count": 16,
-      "item": "minecraft:iron_ingot"
-    }
-  ],
+  "costs": [],
   "effects": [
     {
       "id": "neoterra:effects/craftingspeed",

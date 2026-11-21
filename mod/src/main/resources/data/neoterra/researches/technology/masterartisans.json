@@ -1,15 +1,6 @@
 {
   "branch": "minecolonies:technology",
-  "costs": [
-    {
-      "count": 8,
-      "item": "minecraft:gold_ingot"
-    },
-    {
-      "count": 16,
-      "item": "minecraft:book"
-    }
-  ],
+  "costs": [],
   "effects": [
     {
       "id": "neoterra:effects/craftingspeed",

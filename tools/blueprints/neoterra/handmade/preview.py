@@ -91,7 +91,7 @@ def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--"))
     out = Path(args[0])
-    packs = opts.get("packs", "Neoterra,Hearthwood,Cascadia").split(",")
+    packs_opt = opts.get("packs")
     levels = [int(v) for v in opts.get("levels", "1,2,3,4,5").split(",")]
     designs = hm.load_designs()
     ok = True
@@ -103,6 +103,7 @@ def main():
             continue
         rows = []
         growth_need = 1.5
+        packs = packs_opt.split(",") if packs_opt else list(hm.packs_for(base))
         for pack in packs:
             row = []
             counts = []
@@ -130,7 +131,7 @@ def main():
                 else:
                     bp_show = bp
                 probs = [] if req.get("child") else walkcheck.analyse(bp_show)[1]
-                if not req.get("child") and L in hm.PREMIUM_CAP:
+                if not req.get("child") and not req.get("nocap") and L in hm.PREMIUM_CAP:
                     share = hm.premium_share(bp_show, d.gy)
                     if share > hm.PREMIUM_CAP[L]:
                         print(f"{base} {pack} L{L}: PREMIUM TOO HIGH {share:.0%} > {hm.PREMIUM_CAP[L]:.0%} "

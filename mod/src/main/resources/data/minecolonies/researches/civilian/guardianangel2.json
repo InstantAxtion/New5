@@ -1,0 +1,13 @@
+{
+  "branch": "minecolonies:civilian",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/healthaddition",
+      "level": 6
+    }
+  ],
+  "icon": "minecolonies:textures/icons/research/hp6.png",
+  "parentResearch": "minecolonies:civilian/guardianangel",
+  "researchLevel": 6
+}

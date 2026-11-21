@@ -1,0 +1,20 @@
+{
+  "branch": "minecolonies:technology",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/moreoresmultiplier",
+      "level": 4
+    }
+  ],
+  "icon": "minecraft:lapis_block",
+  "parentResearch": "minecolonies:technology/richveins",
+  "requirements": [
+    {
+      "type": "minecolonies:building",
+      "building": "minecolonies:miner",
+      "level": 5
+    }
+  ],
+  "researchLevel": 5
+}

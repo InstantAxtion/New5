@@ -1,0 +1,13 @@
+{
+  "branch": "minecolonies:combat",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/fleeingspeedaddition",
+      "level": 4
+    }
+  ],
+  "icon": "minecraft:chicken",
+  "parentResearch": "minecolonies:combat/flee",
+  "researchLevel": 6
+}

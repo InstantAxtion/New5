@@ -59,6 +59,9 @@ type = "required"
 versionRange = "*"
 ordering = "AFTER"
 side = "BOTH"
+
+[[mixins]]
+config = "neoterra.mixins.json"
 '''
 
 PACK_MCMETA = '{"pack": {"description": "Neoterra style pack resources", "pack_format": 34}}\n'

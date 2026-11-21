@@ -1,0 +1,13 @@
+{
+  "branch": "minecolonies:technology",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/tooldurabilitymultiplier",
+      "level": 5
+    }
+  ],
+  "icon": "minecraft:diamond_pickaxe",
+  "parentResearch": "minecolonies:technology/steelbracing",
+  "researchLevel": 6
+}

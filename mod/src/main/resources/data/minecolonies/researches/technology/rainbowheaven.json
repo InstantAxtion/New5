@@ -1,0 +1,21 @@
+{
+  "branch": "minecolonies:technology",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/blockhutdyer",
+      "level": 1
+    }
+  ],
+  "icon": "minecolonies:blockhutcomposter",
+  "parentResearch": "minecolonies:technology/biodegradable",
+  "requirements": [
+    {
+      "type": "minecolonies:building",
+      "building": "minecolonies:composter",
+      "level": 3
+    }
+  ],
+  "researchLevel": 2,
+  "subtitle": "com.minecolonies.research.technology.rainbowheaven.subtitle"
+}

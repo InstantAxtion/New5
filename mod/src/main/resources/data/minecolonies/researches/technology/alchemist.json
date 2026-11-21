@@ -1,0 +1,14 @@
+{
+  "branch": "minecolonies:technology",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/blockhutalchemist",
+      "level": 1
+    }
+  ],
+  "icon": "minecolonies:blockhutalchemist",
+  "parentResearch": "minecolonies:technology/opennether",
+  "researchLevel": 3,
+  "subtitle": "com.minecolonies.research.technology.alchemist.subtitle"
+}

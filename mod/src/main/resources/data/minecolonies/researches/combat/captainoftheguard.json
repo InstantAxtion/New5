@@ -1,0 +1,13 @@
+{
+  "branch": "minecolonies:combat",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/blockattacksmultiplier",
+      "level": 4
+    }
+  ],
+  "icon": "minecraft:iron_block",
+  "parentResearch": "minecolonies:combat/captaintraining",
+  "researchLevel": 6
+}

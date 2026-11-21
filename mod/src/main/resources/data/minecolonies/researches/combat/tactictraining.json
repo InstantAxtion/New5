@@ -1,0 +1,20 @@
+{
+  "branch": "minecolonies:combat",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/blockhutbarracks",
+      "level": 1
+    }
+  ],
+  "icon": "minecolonies:blockhutbarrackstower",
+  "requirements": [
+    {
+      "type": "minecolonies:building",
+      "building": "minecolonies:guardtower",
+      "level": 3
+    }
+  ],
+  "researchLevel": 1,
+  "sortOrder": 2
+}

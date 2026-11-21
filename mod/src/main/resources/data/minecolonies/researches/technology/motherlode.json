@@ -1,0 +1,13 @@
+{
+  "branch": "minecolonies:technology",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/moreoresmultiplier",
+      "level": 5
+    }
+  ],
+  "icon": "minecraft:diamond_block",
+  "parentResearch": "minecolonies:technology/amazingveins",
+  "researchLevel": 6
+}

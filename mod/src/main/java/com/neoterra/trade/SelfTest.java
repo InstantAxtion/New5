@@ -227,7 +227,7 @@ final class SelfTest
                     finish(level, false);
                     return;
                 }
-                finish(level, checkBlueprints(level) && checkResearch());
+                finish(level, checkBlueprints(level) & checkResearch() & checkFreeFastResearch() & checkFreePlacement(level));
             }
             default -> { }
         }
@@ -256,6 +256,83 @@ final class SelfTest
             ok &= Math.abs(strength - expect[i]) < 1e-9 && r.getDepth() == i + 1;
         }
         return ok;
+    }
+
+    /** All research is free (no item costs) and 10x faster (branch base time 72 -> 7 per level-1 research). */
+    private static boolean checkFreeFastResearch()
+    {
+        final var tree = com.minecolonies.api.research.IGlobalResearchTree.getInstance();
+        boolean ok = true;
+        int branches = 0;
+        for (final var branch : tree.getBranches())
+        {
+            final var data = tree.getBranchData(branch);
+            final int t = data.getBaseTime(1);
+            branches++;
+            if (t > 8)
+            {
+                log("research branch %s still slow: %d", branch, t);
+                ok = false;
+            }
+        }
+        final String[][] samples = {{"combat", "accuracy"}, {"civilian", "academic"}, {"technology", "ability"}};
+        int checked = 0;
+        for (final String[] smp : samples)
+        {
+            final var br = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("minecolonies", smp[0]);
+            final var id = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("minecolonies", smp[0] + "/" + smp[1]);
+            if (tree.hasResearch(br, id))
+            {
+                checked++;
+                if (!tree.getResearch(br, id).getCostList().isEmpty())
+                {
+                    log("research %s still costs items", id);
+                    ok = false;
+                }
+            }
+        }
+        final var tech = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("minecolonies", "technology");
+        final var own = NeoterraTrade.id("technology/efficientbenches");
+        if (tree.hasResearch(tech, own) && !tree.getResearch(tech, own).getCostList().isEmpty())
+        {
+            ok = false;
+        }
+        log("research: %d branches 10x faster, %d sampled researches free: %s", branches, checked, ok && checked > 0);
+        return ok && checked > 0;
+    }
+
+    /** A hut is placed with the build tool without its hut block in the inventory; a refused placement leaves nothing behind. */
+    private boolean checkFreePlacement(final ServerLevel level)
+    {
+        final String path = "craftsmanship/luxury/baker1.blueprint";
+        final com.ldtteam.structurize.blueprints.v1.Blueprint bp =
+            com.ldtteam.structurize.storage.StructurePacks.getBlueprint("Neoterra", path, level.registryAccess());
+        if (bp == null)
+        {
+            log("free placement: %s did not load", path);
+            return false;
+        }
+        final FakePlayer owner = FakePlayerFactory.get(level, new GameProfile(UUID.nameUUIDFromBytes("Alpha".getBytes()), "Alpha"));
+        owner.getInventory().clearContent();
+        final var handler = new com.minecolonies.core.placementhandlers.main.SurvivalHandler();
+        // inside Alpha's colony
+        final BlockPos inside = ground(level, new BlockPos(24, 0, 24)).above();
+        handler.handle(bp, "Neoterra", path, false, level, owner, inside, com.ldtteam.structurize.api.RotationMirror.NONE);
+        final boolean placed = a.getServerBuildingManager().getBuilding(inside) != null;
+        final int leftIn = owner.getInventory().countItem(net.minecraft.world.item.Item.byBlock(
+            bp.getBlockState(bp.getPrimaryBlockOffset()).getBlock()));
+        // far outside any colony: refused, and the loaned hut block is taken back
+        final BlockPos outside = ground(level, new BlockPos(3000, 0, 3000)).above();
+        final com.ldtteam.structurize.blueprints.v1.Blueprint bp2 =
+            com.ldtteam.structurize.storage.StructurePacks.getBlueprint("Neoterra", path, level.registryAccess());
+        handler.handle(bp2, "Neoterra", path, false, level, owner, outside, com.ldtteam.structurize.api.RotationMirror.NONE);
+        int items = 0;
+        for (int i = 0; i < owner.getInventory().getContainerSize(); i++)
+        {
+            items += owner.getInventory().getItem(i).getCount();
+        }
+        log("free placement: baker placed without a hut block: %s (hut blocks left %d); refused placement leaves %d items", placed, leftIn, items);
+        return placed && leftIn == 0 && items == 0;
     }
 
     /** Every hut blueprint of ours loads through Structurize, with the right hut block and (wonders) two wing huts. */

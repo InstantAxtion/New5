@@ -1,0 +1,13 @@
+{
+  "branch": "minecolonies:technology",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/farmingmultiplier",
+      "level": 5
+    }
+  ],
+  "icon": "minecolonies:barrel_block",
+  "parentResearch": "minecolonies:technology/fertilizer",
+  "researchLevel": 6
+}

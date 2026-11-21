@@ -18,6 +18,8 @@ def main():
     designs = hm.load_designs()
     n = 0
     for base, fn in sorted(designs.items()):
+        if pack not in hm.packs_for(base):
+            continue
         for rel in hm.rels_for(base):
             bp = fn(pack, rel, hm.REQ[rel]["level"]).finish()
             dst = root / rel

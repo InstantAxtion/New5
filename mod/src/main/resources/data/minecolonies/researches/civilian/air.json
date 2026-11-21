@@ -1,0 +1,14 @@
+{
+  "branch": "minecolonies:civilian",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/air",
+      "level": 1
+    }
+  ],
+  "icon": "minecraft:potion",
+  "parentResearch": "minecolonies:civilian/ambition",
+  "researchLevel": 2,
+  "sortOrder": 1
+}

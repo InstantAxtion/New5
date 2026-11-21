@@ -1,0 +1,13 @@
+{
+  "branch": "minecolonies:combat",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/fleeingdamagemultiplier",
+      "level": 4
+    }
+  ],
+  "icon": "minecraft:diamond_boots",
+  "parentResearch": "minecolonies:combat/retreat",
+  "researchLevel": 6
+}

@@ -1,0 +1,13 @@
+{
+  "branch": "minecolonies:technology",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/enhancesgatedurabilityaddition",
+      "level": 1
+    }
+  ],
+  "icon": "minecolonies:gate_wood",
+  "parentResearch": "minecolonies:technology/whatyaneed",
+  "researchLevel": 3
+}

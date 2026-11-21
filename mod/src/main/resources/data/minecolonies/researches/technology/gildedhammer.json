@@ -1,0 +1,21 @@
+{
+  "branch": "minecolonies:technology",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/crushing11unlock",
+      "level": 1
+    }
+  ],
+  "icon": "minecraft:gold_block",
+  "parentResearch": "minecolonies:technology/rockingroll",
+  "requirements": [
+    {
+      "type": "minecolonies:building",
+      "building": "minecolonies:crusher",
+      "level": 3
+    }
+  ],
+  "researchLevel": 3,
+  "subtitle": "com.minecolonies.research.technology.gildedhammer.subtitle"
+}

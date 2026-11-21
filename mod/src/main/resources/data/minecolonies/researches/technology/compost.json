@@ -1,0 +1,23 @@
+{
+  "branch": "minecolonies:technology",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/farmingmultiplier",
+      "level": 3
+    }
+  ],
+  "icon": "minecraft:bone",
+  "parentResearch": "minecolonies:technology/dung",
+  "requirements": [
+    {
+      "type": "minecolonies:alternate-building",
+      "alternate-buildings": [
+        "minecolonies:farmer",
+        "minecolonies:composter"
+      ],
+      "level": 5
+    }
+  ],
+  "researchLevel": 4
+}

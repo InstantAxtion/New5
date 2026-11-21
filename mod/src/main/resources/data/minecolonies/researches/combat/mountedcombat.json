@@ -1,0 +1,14 @@
+{
+  "branch": "minecolonies:combat",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/blockhutstable",
+      "level": 1
+    }
+  ],
+  "icon": "minecolonies:blockhutstable",
+  "parentResearch": "minecolonies:combat/tactictraining",
+  "researchLevel": 2,
+  "subtitle": "com.minecolonies.research.combat.mountedcombat.subtitle"
+}

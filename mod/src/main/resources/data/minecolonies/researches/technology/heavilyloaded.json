@@ -1,0 +1,14 @@
+{
+  "branch": "minecolonies:technology",
+  "costs": [],
+  "effects": [
+    {
+      "id": "minecolonies:effects/citizeninvslotsaddition",
+      "level": 3
+    }
+  ],
+  "icon": "minecraft:blue_shulker_box",
+  "no-reset": true,
+  "parentResearch": "minecolonies:technology/loaded",
+  "researchLevel": 6
+}

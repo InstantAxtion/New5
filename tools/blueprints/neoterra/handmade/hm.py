@@ -96,6 +96,16 @@ def premium_share(bp, gy):
 # --------------------------------------------------------------------------------------------- pack palettes
 # Starting vocabularies; a design may use any vanilla block it likes.
 PALETTES = {
+    # Farmworks: practical farm buildings – stone-brick plinths, spruce framing, cobble and glass
+    "Farmworks": dict(
+        wood="spruce", wood2="oak", log="stripped_spruce_log", plank="spruce_planks",
+        wall="stone_bricks", wall2="cobblestone", trim="spruce_planks", base="stone_bricks",
+        accent="green_terracotta", floor="smooth_stone", floor2="spruce_planks", glass="glass_pane",
+        glass2="glass_pane", roof="spruce_planks", roofslab="spruce_slab", roofstairs="spruce_stairs",
+        path="gravel", light="lantern", lamp="lantern",
+        rug=("green_carpet", "brown_carpet"), plant="potted_fern", fire="campfire",
+        hearth="stone_bricks", counter="spruce_slab", bed="green",
+    ),
     # modern / near-future: white concrete & quartz, big glazing, flat roofs & terraces, cyan accents
     "Neoterra": dict(
         wood="birch", wood2="mangrove", log="stripped_birch_log", plank="birch_planks",
@@ -871,8 +881,17 @@ def load_designs():
     return DESIGNS
 
 
+STYLE_PACKS = ("Neoterra", "Hearthwood", "Cascadia")
+
+
 def rels_for(base):
     return sorted((r for r, v in REQ.items() if v["base"] == base), key=lambda r: REQ[r]["level"])
+
+
+def packs_for(base):
+    """Packs a type is built for: requirements' "packs" (e.g. Farmworks farms) or the three style packs."""
+    rels = rels_for(base)
+    return tuple(REQ[rels[0]].get("packs", STYLE_PACKS)) if rels else STYLE_PACKS
 
 
 def assemble(design: "Design", bp: Blueprint, designs=None) -> Blueprint:
