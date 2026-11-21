@@ -287,19 +287,30 @@ def lib_hearthwood(rel, L):
         d.candle(22, y + 1, 14, 3)
         d.candle(24, y + 1, 14, 2)
         hang(d, [(22, 14), (26, 17), (18, 11)], 10)
-        for x, fl in ((18, "red_tulip"), (20, "cornflower"), (26, "oxeye_daisy"), (28, "red_tulip")):
+        for x, fl in ((18, "red_tulip"), (20, "cornflower"), (22, "allium"), (24, "allium"), (26, "oxeye_daisy"),
+                      (28, "red_tulip")):
             sill(d, x, 7, 7, "north", fl)                             # window boxes on the upper front windows
+        for z, fl in ((10, "red_tulip"), (12, "cornflower"), (14, "oxeye_daisy"), (16, "cornflower"), (18, "red_tulip")):
+            sill(d, 15, 7, z, "west", fl)                             # ... and on the west (side street) windows
+        for x, fl in ((18, "allium"), (20, "red_tulip"), (24, "oxeye_daisy"), (26, "red_tulip"), (28, "allium")):
+            sill(d, x, 7, 21, "south", fl)
+        seats(d, [(28, 10, "east"), (28, 12, "east")], y, W)            # armchair corner in the gallery
+        d.table(28, y, 11, W)
+        d.bookshelf(27, y, 19, 3)
+        for x in (18, 19, 27, 28):                                    # benches under the porch-side windows
+            d.chair(x, Y0, 6, "south", W, sit=False)
 
     if L >= 2:
         # --- stacks wing (x31-41, z10-18)
         swnf = 2 if L >= 4 else 1
         shell(d, 30, 9, 42, 19, swnf, "gable", "z", win="nse")
         link(d, 30, Y0, 12, "east")
-        press(d, 32, 40, 13, Y0, 3)
-        press(d, 32, 40, 16, Y0, 3)
-        tops(d, [(32, 10), (35, 10), (38, 10)], Y0, f"{W}_slab")      # desks under the north windows
-        seats(d, [(32, 11, "south"), (35, 11, "south"), (38, 11, "south")], Y0, W)
-        d.candle(35, Y0 + 1, 10, 1)
+        press(d, 32, 40, 13, Y0, hh)
+        press(d, 32, 40, 16, Y0, hh)
+        if L >= 3:
+            tops(d, [(32, 10), (35, 10), (38, 10)], Y0, f"{W}_slab")  # desks under the north windows
+            seats(d, [(32, 11, "south"), (35, 11, "south"), (38, 11, "south")], Y0, W)
+            d.candle(35, Y0 + 1, 10, 1)
         hang(d, [(34, 11), (38, 11), (36, 15)], 5)
         d.sign(36, 5, 8, "north", ["STACKS"], W)
         if swnf > 1:
