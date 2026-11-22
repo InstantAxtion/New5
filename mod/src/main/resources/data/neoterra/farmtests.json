@@ -4,13 +4,13 @@
    "blocks": [],
    "blocks_min": 0,
    "expect": {
-    "minecraft:cooked_chicken": 1
+    "minecraft:cooked_chicken": 2
    },
    "inputs": {
     "0,4,6": [
      [
       "minecraft:egg",
-      16
+      64
      ]
     ]
    },
@@ -29,20 +29,92 @@
     ],
     [
      "minecraft:chicken",
-     0,
-     3,
-     8,
-     1
-    ],
-    [
-     "minecraft:chicken",
      -2,
      5,
      5,
      3
     ]
    ],
-   "ticks": 3000
+   "ticks": 25500
+  },
+  "decorations/animalfarms/cowbreeder.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "expect": {
+    "minecraft:cooked_beef": 3
+   },
+   "inputs": {},
+   "mine": [],
+   "outputs": [
+    "-5,1,10"
+   ],
+   "presses": [],
+   "spawns": [
+    [
+     "minecraft:cow",
+     -3,
+     4,
+     10,
+     1
+    ],
+    [
+     "minecraft:cow",
+     -1,
+     4,
+     10,
+     1
+    ],
+    [
+     "minecraft:cow",
+     1,
+     4,
+     10,
+     1
+    ],
+    [
+     "minecraft:cow",
+     3,
+     4,
+     10,
+     1
+    ],
+    [
+     "minecraft:hopper_minecart",
+     -3,
+     2,
+     10,
+     1
+    ],
+    [
+     "minecraft:hopper_minecart",
+     -1,
+     2,
+     10,
+     1
+    ],
+    [
+     "minecraft:hopper_minecart",
+     1,
+     2,
+     10,
+     1
+    ],
+    [
+     "minecraft:hopper_minecart",
+     3,
+     2,
+     10,
+     1
+    ],
+    [
+     "minecraft:cow",
+     -2,
+     4,
+     6,
+     2
+    ]
+   ],
+   "ticks": 2000
   },
   "decorations/animalfarms/woolfarm.blueprint": {
    "blocks": [],
@@ -177,6 +249,58 @@
    "spawns": [],
    "ticks": 600
   },
+  "decorations/cropfarms/flowers.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "expect": {
+    "minecraft:poppy": 4
+   },
+   "inputs": {
+    "-4,2,6": [
+     [
+      "minecraft:water_bucket",
+      1
+     ]
+    ],
+    "-4,2,7": [
+     [
+      "minecraft:water_bucket",
+      1
+     ]
+    ],
+    "-4,2,8": [
+     [
+      "minecraft:water_bucket",
+      1
+     ]
+    ],
+    "0,1,9": [
+     [
+      "minecraft:bone_meal",
+      64
+     ]
+    ],
+    "3,1,9": [
+     [
+      "minecraft:bone_meal",
+      64
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "4,1,9"
+   ],
+   "presses": [
+    [
+     -5,
+     2,
+     4
+    ]
+   ],
+   "spawns": [],
+   "ticks": 6000
+  },
   "decorations/cropfarms/kelp.blueprint": {
    "blocks": [],
    "blocks_min": 0,
@@ -227,7 +351,7 @@
    "blocks": [],
    "blocks_min": 0,
    "expect": {
-    "minecraft:sweet_berries": 8
+    "minecraft:sweet_berries": 12
    },
    "inputs": {},
    "mine": [],
@@ -239,9 +363,33 @@
     [
      "minecraft:fox",
      -3,
-     1,
+     2,
      7,
      2
+    ]
+   ],
+   "ticks": 16000
+  },
+  "decorations/cropfarms/villagercrops.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "expect": {
+    "minecraft:carrot": 8,
+    "minecraft:potato": 4
+   },
+   "inputs": {},
+   "mine": [],
+   "outputs": [
+    "5,0,12"
+   ],
+   "presses": [],
+   "spawns": [
+    [
+     "minecraft:villager",
+     -4,
+     2,
+     8,
+     1
     ]
    ],
    "ticks": 8000
@@ -1498,15 +1646,14 @@
    "blocks": [],
    "blocks_min": 0,
    "expect": {
-    "minecraft:string": 3
+    "minecraft:string": 4
    },
    "inputs": {},
    "mine": [],
    "outputs": [
-    "-2,2,9",
-    "-1,2,9",
-    "0,2,9",
-    "1,2,9"
+    "-1,2,10",
+    "0,2,10",
+    "1,2,10"
    ],
    "presses": [],
    "spawns": [
@@ -1526,14 +1673,14 @@
     ],
     [
      "minecraft:spider",
-     3,
+     5,
      25,
      5,
      1
     ],
     [
      "minecraft:spider",
-     5,
+     7,
      25,
      7,
      1
@@ -1542,28 +1689,28 @@
      "minecraft:spider",
      -6,
      25,
-     16,
+     17,
      1
     ],
     [
      "minecraft:spider",
      -4,
      25,
-     18,
-     1
-    ],
-    [
-     "minecraft:spider",
-     3,
-     25,
-     16,
+     19,
      1
     ],
     [
      "minecraft:spider",
      5,
      25,
-     18,
+     17,
+     1
+    ],
+    [
+     "minecraft:spider",
+     7,
+     25,
+     19,
      1
     ],
     [
@@ -1575,7 +1722,7 @@
     ],
     [
      "minecraft:spider",
-     3,
+     5,
      29,
      5,
      1
@@ -1584,95 +1731,172 @@
      "minecraft:spider",
      -6,
      29,
+     17,
+     1
+    ],
+    [
+     "minecraft:spider",
+     5,
+     29,
+     17,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
+     25,
+     5,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
+     25,
+     8,
+     1
+    ],
+    [
+     "minecraft:spider",
+     7,
+     25,
+     12,
+     1
+    ],
+    [
+     "minecraft:spider",
+     4,
+     25,
+     12,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
+     25,
+     19,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
+     25,
      16,
      1
     ],
     [
      "minecraft:spider",
-     3,
+     -7,
+     25,
+     12,
+     1
+    ],
+    [
+     "minecraft:spider",
+     -4,
+     25,
+     12,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
+     27,
+     5,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
+     27,
+     8,
+     1
+    ],
+    [
+     "minecraft:spider",
+     7,
+     27,
+     12,
+     1
+    ],
+    [
+     "minecraft:spider",
+     4,
+     27,
+     12,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
+     27,
+     19,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
+     27,
+     16,
+     1
+    ],
+    [
+     "minecraft:spider",
+     -7,
+     27,
+     12,
+     1
+    ],
+    [
+     "minecraft:spider",
+     -4,
+     27,
+     12,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
+     29,
+     5,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
+     29,
+     8,
+     1
+    ],
+    [
+     "minecraft:spider",
+     7,
+     29,
+     12,
+     1
+    ],
+    [
+     "minecraft:spider",
+     4,
+     29,
+     12,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
+     29,
+     19,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
      29,
      16,
      1
     ],
     [
      "minecraft:spider",
-     -1,
-     25,
-     5,
-     1
-    ],
-    [
-     "minecraft:spider",
-     6,
-     25,
-     11,
-     1
-    ],
-    [
-     "minecraft:spider",
-     0,
-     25,
-     18,
-     1
-    ],
-    [
-     "minecraft:spider",
-     -7,
-     25,
-     12,
-     1
-    ],
-    [
-     "minecraft:spider",
-     -1,
-     27,
-     5,
-     1
-    ],
-    [
-     "minecraft:spider",
-     6,
-     27,
-     11,
-     1
-    ],
-    [
-     "minecraft:spider",
-     0,
-     27,
-     18,
-     1
-    ],
-    [
-     "minecraft:spider",
-     -7,
-     27,
-     12,
-     1
-    ],
-    [
-     "minecraft:spider",
-     -1,
-     29,
-     5,
-     1
-    ],
-    [
-     "minecraft:spider",
-     6,
-     29,
-     11,
-     1
-    ],
-    [
-     "minecraft:spider",
-     0,
-     29,
-     18,
-     1
-    ],
-    [
-     "minecraft:spider",
      -7,
      29,
      12,
@@ -1680,28 +1904,63 @@
     ],
     [
      "minecraft:spider",
-     -1,
-     31,
-     5,
-     1
-    ],
-    [
-     "minecraft:spider",
-     6,
-     31,
-     11,
+     -4,
+     29,
+     12,
      1
     ],
     [
      "minecraft:spider",
      0,
      31,
-     18,
+     5,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
+     31,
+     8,
+     1
+    ],
+    [
+     "minecraft:spider",
+     7,
+     31,
+     12,
+     1
+    ],
+    [
+     "minecraft:spider",
+     4,
+     31,
+     12,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
+     31,
+     19,
+     1
+    ],
+    [
+     "minecraft:spider",
+     0,
+     31,
+     16,
      1
     ],
     [
      "minecraft:spider",
      -7,
+     31,
+     12,
+     1
+    ],
+    [
+     "minecraft:spider",
+     -4,
      31,
      12,
      1

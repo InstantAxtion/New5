@@ -445,7 +445,7 @@ def spiderfarm(pack, rel, L):
               + [("minecraft:spider", x, y0 + 1, z, 1) for y0 in floors for (x, z) in chan])
     import os
     if os.environ.get("XPDBG"):
-        spawns = [("minecraft:spider", x, floors[0] + 1, z, 1) for (x, z) in chan]
+        spawns = [("minecraft:spider", 10, 23, 12, 8)] if os.environ["XPDBG"] == "fall" else [("minecraft:spider", x, floors[0] + 1, z, 1) for (x, z) in chan]
     d.farm_test(expect={"minecraft:string": 4}, spawns=spawns, ticks=6000)
     return d
 
