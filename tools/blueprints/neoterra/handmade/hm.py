@@ -648,7 +648,7 @@ class Design:
         }))
 
     def farm_test(self, expect, inputs=None, spawns=None, ticks=6000, min_count=1, light=None, mine=None,
-                  blocks=None, blocks_min=None, presses=None):
+                  blocks=None, blocks_min=None, presses=None, dimension=None):
         """Farmworks: how the in-game farm test runs this farm (python handmade.py writes it for the mod's test).
         expect   : {"minecraft:sugar_cane": 8, ...} items that must turn up in the farm's output containers
                    (containers tagged with d.tag(x, y, z, "farm_output")) after `ticks` game ticks;
@@ -662,13 +662,14 @@ class Design:
         blocks   : [(x, y, z, "minecraft:lava_cauldron"), ...] blocks to find at the end – at least `blocks_min`
                    of them (default all) must hold the given block;
         presses  : [(x, y, z), ...] buttons / levers the player presses every 200 ticks (e.g. dispensers);
+        dimension: "nether" / "end" to build and run the farm in that dimension (default: overworld).
         Item "minecraft:potion" in inputs is a water bottle.
         Coordinates are this design's grid coordinates. Blocks that random-tick (crops, cane, bamboo, kelp, cocoa,
         saplings, ...) are random-ticked by the test at the default rate x 10."""
         self.farm = dict(expect=dict(expect), inputs={f"{x},{y},{z}": list(v) for (x, y, z), v in (inputs or {}).items()},
                          spawns=[list(s) for s in (spawns or [])], ticks=ticks, light=light,
                          mine=[list(m) for m in (mine or [])], blocks=[list(b) for b in (blocks or [])],
-                         blocks_min=blocks_min, presses=[list(p) for p in (presses or [])])
+                         blocks_min=blocks_min, presses=[list(p) for p in (presses or [])], dimension=dimension)
 
     def anchor(self, x, y, z):
         """Plain pieces (walls, roads, rails, canals, bridges, subway, boardwalk, cliff climb): the placement anchor
@@ -815,7 +816,8 @@ class Design:
                                     mine=[[m[0] - hx, m[1] - hy, m[2] - hz, m[3], m[4]] for m in farm["mine"]],
                                     blocks=[[b[0] - hx, b[1] - hy, b[2] - hz, b[3]] for b in farm["blocks"]],
                                     blocks_min=farm["blocks_min"] if farm["blocks_min"] is not None else len(farm["blocks"]),
-                                    presses=[[q[0] - hx, q[1] - hy, q[2] - hz] for q in farm["presses"]])
+                                    presses=[[q[0] - hx, q[1] - hy, q[2] - hz] for q in farm["presses"]],
+                                    dimension=farm.get("dimension"))
             bp.architects = [self.pack]
             bp.name = f"{name}.blueprint"
             if self.req.get("hut") is None:          # plain piece: no controller, no tags

@@ -65,6 +65,7 @@ final class FarmTest
         final Map<Integer, Integer> mined = new HashMap<>();
         boolean built;
         String error;
+        ServerLevel lvl;        // the dimension the farm is built in (spec "dimension": nether / end; default overworld)
     }
 
     static void register()
@@ -138,6 +139,9 @@ final class FarmTest
             f.rel = e.getKey();
             f.spec = e.getValue().getAsJsonObject();
             f.ticks = f.spec.has("ticks") ? f.spec.get("ticks").getAsInt() : 6000;
+            final String dim = f.spec.has("dimension") && !f.spec.get("dimension").isJsonNull() ? f.spec.get("dimension").getAsString() : "";
+            f.lvl = dim.equals("nether") ? level.getServer().getLevel(net.minecraft.world.level.Level.NETHER)
+                : dim.equals("end") ? level.getServer().getLevel(net.minecraft.world.level.Level.END) : level;
             f.anchor = new BlockPos(1000 + (i % 6) * SPACING, BASE_Y, 1000 + (i / 6) * SPACING);
             farms.add(f);
             maxTicks = Math.max(maxTicks, f.ticks);
@@ -147,10 +151,11 @@ final class FarmTest
         log("%d farms to test, %d ticks", farms.size(), maxTicks);
     }
 
-    private void build(final ServerLevel level)
+    private void build(final ServerLevel ow)
     {
         for (final Farm f : farms)
         {
+            final ServerLevel level = f.lvl == null ? ow : f.lvl;
             final Blueprint bp = StructurePacks.getBlueprint(root(), f.rel, level.registryAccess());
             if (bp == null)
             {
@@ -248,10 +253,11 @@ final class FarmTest
         return st;
     }
 
-    private void start(final ServerLevel level)
+    private void start(final ServerLevel ow)
     {
         for (final Farm f : farms)
         {
+            final ServerLevel level = f.lvl == null ? ow : f.lvl;
             if (!f.built)
             {
                 continue;
@@ -314,15 +320,16 @@ final class FarmTest
                 }
             }
         }
-        level.getServer().tickRateManager().requestGameToSprint(maxTicks + 200);
+        ow.getServer().tickRateManager().requestGameToSprint(maxTicks + 200);
         log("inputs loaded, mobs spawned, sprinting %d ticks", maxTicks);
     }
 
     /** What the player does at the farm: mine regenerating blocks, press buttons. */
-    private void player(final ServerLevel level)
+    private void player(final ServerLevel ow)
     {
         for (final Farm f : farms)
         {
+            final ServerLevel level = f.lvl == null ? ow : f.lvl;
             if (!f.built || runTicks > f.ticks)
             {
                 continue;
@@ -374,10 +381,11 @@ final class FarmTest
     }
 
     /** Default random tick speed is 3 per 16x16x16 section; x10 for the test, applied to the blocks that tick. */
-    private void randomTicks(final ServerLevel level)
+    private void randomTicks(final ServerLevel ow)
     {
         for (final Farm f : farms)
         {
+            final ServerLevel level = f.lvl == null ? ow : f.lvl;
             if (!f.built || runTicks > f.ticks)
             {
                 continue;
@@ -416,12 +424,13 @@ final class FarmTest
         }
     }
 
-    private boolean check(final ServerLevel level)
+    private boolean check(final ServerLevel ow)
     {
         boolean all = true;
         int pass = 0;
         for (final Farm f : farms)
         {
+            final ServerLevel level = f.lvl == null ? ow : f.lvl;
             final Map<String, Integer> got = new HashMap<>();
             final Map<String, Integer> inBox = new HashMap<>();
             if (f.built)
