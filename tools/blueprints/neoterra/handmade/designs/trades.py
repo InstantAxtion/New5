@@ -2996,7 +2996,13 @@ def dl_neo(rel, L):
         ("G", 7, 7, FL if sto > 1 else "sea_lantern", 5), ("G", 10, 11, FL if sto > 1 else "sea_lantern", 5)], "birch")
     if sto > 1 and L == 2:                                           # first floor: parcel loft
         fit(d, 6, [("b", 5, 12, 3, "north"), ("b", 6, 12, 3, "north"), ("b", 7, 12, 1, "north"),
-                   ("s", 9, 7, sl("birch", "top")), ("c", 9, 8, "south", False), ("G", 8, 8, "sea_lantern", 9)], "birch")
+                   ("s", 10, 12, "barrel[facing=north,open=false]"), ("o", 10, 12, "barrel[facing=north,open=false]"),
+                   ("s", 11, 12, "barrel[facing=north,open=false]"),
+                   ("s", 9, 7, sl("birch", "top")), ("c", 9, 8, "south", False), ("o", 9, 7, "white_candle[candles=1,lit=false,waterlogged=false]"),
+                   ("s", 4, 8, sl("smooth_quartz", "top")), ("s", 4, 9, sl("smooth_quartz", "top")),
+                   ("o", 4, 8, "decorated_pot[cracked=false,facing=east,waterlogged=false]"),
+                   ("s", 4, 5, "chest[facing=east,type=single,waterlogged=false]"), ("s", 8, 5, pot(3)),
+                   ("G", 8, 8, "sea_lantern", 9)], "birch")
     elif sto > 1:                                                    # first floor: dispatch archive / library
         fit(d, 6, [("k", 4, z, 2) for z in range(6, 12)] + [
             ("i", 6, 12, "lectern", "north"), ("i", 7, 12, "cartography_table"), ("s", 8, 9, sl("birch", "top")),
@@ -3016,10 +3022,16 @@ def dl_neo(rel, L):
             fit(d, 6, [("bed", x, 13, "south", "orange") for x in (20, 23, 26)] +
                 [("s", x, 13, sl("birch", "top")) for x in (21, 24)] +
                 [("s", 19, 5, "chest[facing=south,type=single,waterlogged=false]"),
-                 ("s", 20, 5, "chest[facing=south,type=single,waterlogged=false]"), ("G", 24, 9, FL, 9)], "birch")
+                 ("s", 20, 5, "chest[facing=south,type=single,waterlogged=false]"), ("G", 24, 9, FL, 9),
+                 # crew table with two chairs, lockers by the door, a small rug between the bunks
+                 ("s", 23, 8, sl("birch", "top")), ("c", 22, 8, "west", False), ("c", 24, 8, "east", False),
+                 ("o", 23, 8, "white_candle[candles=2,lit=false,waterlogged=false]"),
+                 ("s", 27, 5, "barrel[facing=south,open=false]"), ("s", 28, 5, "barrel[facing=south,open=false]"),
+                 ("s", 28, 13, pot(1)), ("s", 19, 13, pot(4))], "birch")
             fit(d, 10, [("c", x, 10, "south", False) for x in (21, 22, 23, 24)] + [
                 ("s", 22, 8, sl("smooth_quartz", "top")), ("s", 23, 8, sl("smooth_quartz", "top")),
-                ("rug", 21, 7, 24, 9, "orange_carpet"), ("s", 19, 5, pot(3)), ("s", 27, 5, pot(0)),
+                ("rug", 22, 7, 23, 9, "orange_carpet"), ("s", 19, 5, pot(3)), ("s", 27, 5, pot(0)),
+                ("s", 28, 13, "jukebox"), ("k", 19, 12, 1), ("k", 19, 13, 1),
                 ("G", 23, 7, "sea_lantern", 13)], "birch")
     neo_roof(d, a, [(5, 11, 6, SOLAR), (5, 11, 9, SOLAR), (5, 11, 11, SOLAR)])
     if b:
@@ -3048,7 +3060,12 @@ def dl_neo(rel, L):
                 d.set(x, y0, z, "white_concrete" if z % 2 else "orange_concrete")
                 d.set(x, y0 + 1, z, "glass" if z in (21, 22, 23) else sl("smooth_quartz"))
         fit(d, y0, [("s", 28, 26, "chest[facing=north,type=single,waterlogged=false]"), ("s", 27, 26, "anvil[facing=east]"),
-                    ("s", 19, 18, pot(3)), ("G", 23, 22, "pearlescent_froglight[axis=y]", 5)])
+                    ("s", 19, 18, pot(3)), ("G", 23, 22, "pearlescent_froglight[axis=y]", 5),
+                    # service bay: tool bench, tyre/parts barrels, wash bucket
+                    ("s", 26, 26, "grindstone[face=floor,facing=north]"), ("s", 25, 26, "smithing_table"),
+                    ("s", 19, 22, "barrel[facing=east,open=false]"), ("s", 19, 23, "barrel[facing=east,open=false]"),
+                    ("o", 19, 22, "barrel[facing=up,open=false]"), ("s", 19, 25, "water_cauldron[level=3]"),
+                    ("s", 28, 18, "barrel[facing=up,open=false]"), ("G", 23, 25, "pearlescent_froglight[axis=y]", 5)])
         fit(d, 6, [("s", 20, 26, "smoker[facing=north,lit=false]"), ("s", 21, 26, sl("smooth_quartz", "top")),
                    ("s", 22, 26, "water_cauldron[level=3]"), ("s", 23, 26, "furnace[facing=north,lit=false]")] +
             [("s", x, 22, sl("birch", "top")) for x in (22, 23, 24)] +
@@ -3056,6 +3073,10 @@ def dl_neo(rel, L):
             [("G", 23, 20, "pearlescent_froglight[axis=y]", 9)], "birch")
         fit(d, 10, [("s", x, 26, sl("smooth_quartz", "top")) for x in (21, 23, 25)] +
             [("c", x, 25, "north", False) for x in (21, 23, 25)] + [("s", 19, 18, pot(0)),
+             # dispatch control: route library on the west wall, map table, rug before the desks
+             ("k", 19, 20, 2), ("k", 19, 21, 2), ("k", 19, 22, 2), ("s", 23, 19, "cartography_table"),
+             ("s", 24, 19, "lectern[facing=south,has_book=false,powered=false]"), ("rug", 21, 22, 25, 23, "orange_carpet"),
+             ("s", 28, 26, pot(3)), ("s", 26, 26, "chest[facing=north,type=single,waterlogged=false]"),
                                                                     ("G", 23, 22, "sea_lantern", 13)], "birch")
         yy = g.yr + 1
         for x in range(21, 30):
@@ -3126,6 +3147,12 @@ def dl_hw(rel, L):
         fit(d, 6, [("bed", 6, 22, "south", "blue"), ("s", 7, 22, sl("dark_oak", "top")),
                    ("s", 10, 22, sl("dark_oak", "top")), ("c", 10, 21, "north", False),
                    ("s", 5, 16, "chest[facing=south,type=single,waterlogged=false]"), ("L", 9, 18)], "dark_oak")
+        d.set(2, y0, 17, "water_cauldron[level=3]")                  # under the house eaves
+        for z in (21, 22):
+            d.set(2, y0, z, lg("oak_log", "z"))
+            d.set(2, y0 + 1, z, lg("oak_log", "z"))
+        bench(d, 9, 24, y0, "north", 2, "dark_oak", sit=False)
+        d.set(14, y0, 24, "barrel[facing=up,open=false]")
         if h.storeys > 2:
             fit(d, 10, [("bed", 7, 22, "south", "red"), ("bed", 10, 22, "south", "red"), ("s", 8, 22, sl("oak", "top")),
                         ("s", 5, 16, "chest[facing=south,type=single,waterlogged=false]"), ("L", 9, 18)], "oak")
@@ -3144,11 +3171,19 @@ def dl_hw(rel, L):
             d.set(x, so.stand(0), 33, sl("dark_oak", "top"))
             d.chair(x, so.stand(0), 32, "north", "dark_oak", sit=False)
         fit(d, y0, [("s", 5, 36, "barrel[facing=north,open=false]"), ("s", 6, 36, "barrel[facing=north,open=false]"),
-                    ("s", 14, 36, "chest[facing=north,type=single,waterlogged=false]"), ("L", 10, 30), ("L", 14, 34)])
+                    ("s", 14, 36, "chest[facing=north,type=single,waterlogged=false]"), ("L", 10, 30), ("L", 14, 34)] +
+            [("b", x, 36, 3, "north") for x in (8, 9, 10, 11, 12)])
         fit(d, 6, [("c", x, 33, "south", False) for x in (8, 9, 10)] + [
-            ("s", 9, 31, sl("dark_oak", "top")), ("rug", 7, 30, 11, 32, "red_carpet"), ("s", 15, 36, pot(2)),
+            ("s", 9, 31, sl("dark_oak", "top")), ("rug", 8, 30, 10, 32, "red_carpet"), ("s", 15, 36, pot(2)),
+            ("k", 5, 33, 2), ("k", 5, 34, 2), ("k", 5, 35, 2), ("k", 5, 36, 2), ("k", 5, 32, 2),
+            ("s", 12, 30, "barrel[facing=south,open=false]"), ("o", 12, 30, "barrel[facing=up,open=false]"),
+            ("s", 13, 30, "barrel[facing=south,open=false]"), ("s", 14, 30, "chest[facing=south,type=single,waterlogged=false]"),
             ("L", 12, 33)], "dark_oak")
         fit(d, 10, [("bed", x, 36, "south") for x in (7, 10, 13)] + [("s", 8, 36, sl("dark_oak", "top")),
+                                                                    ("s", 11, 36, sl("dark_oak", "top")),
+                                                                    ("o", 11, 36, "candle[candles=1,lit=false,waterlogged=false]"),
+                                                                    ("s", 5, 30, "chest[facing=south,type=single,waterlogged=false]"),
+                                                                    ("s", 6, 30, "chest[facing=south,type=single,waterlogged=false]"),
                                                                     ("L", 12, 33)], "dark_oak")
         for x in range(21, 34, 4):
             tree(d, x, 32, y0, "oak", 4, 1)
@@ -3167,10 +3202,14 @@ def dl_hw(rel, L):
         c.opening(23, 18, 26, 18, 3, lg("stripped_dark_oak_log", "x"))
         wagon(d, 24, 22, y0, "dark_oak", "barrel[facing=up,open=false]")   # the mail coach
         fit(d, y0, [("s", 29, 25, "hay_block[axis=y]"), ("s", 21, 25, "chest[facing=north,type=single,waterlogged=false]"),
+                    ("o", 29, 25, "hay_block[axis=y]"), ("s", 28, 25, "hay_block[axis=y]"), ("s", 27, 25, "water_cauldron[level=3]"),
+                    ("s", 21, 20, "barrel[facing=east,open=false]"), ("s", 21, 21, "barrel[facing=east,open=false]"),
+                    ("o", 21, 20, "barrel[facing=up,open=false]"), ("s", 21, 23, "grindstone[face=floor,facing=east]"),
                     ("L", 27, 21)])
         fit(d, 6, [("bed", 22, 25, "south"), ("bed", 26, 25, "south"), ("s", 23, 25, sl("dark_oak", "top")),
+                   ("o", 23, 25, "candle[candles=1,lit=false,waterlogged=false]"), ("s", 28, 25, "chest[facing=north,type=single,waterlogged=false]"),
+                   ("s", 29, 25, pot(2)), ("s", 22, 19, "chest[facing=south,type=single,waterlogged=false]"),
                    ("s", 21, 19, "chest[facing=south,type=single,waterlogged=false]"), ("L", 25, 22)], "dark_oak")
-        hedge(d, [(x, 27) for x in range(21, 34)], y0, "oak") if L >= 5 else None
     if L >= 4:
         tree(d, 1, 31, y0, "oak", 4, 1)
         lamp_post(d, 18, 22, y0, P)
@@ -3285,6 +3324,12 @@ def dl_cas(rel, L):
             d.set(34, y, 2, lg("spruce_log", "y") if y < t.ridge + 3 else "spruce_fence")
         d.set(34, t.ridge + 2, 1, "spruce_fence")
         d.set(34, t.ridge + 2, 3, "spruce_fence")
+        d.set(22, y0, 6, "water_cauldron[level=3]")                  # under the office eaves
+        crate_stack(d, 22, 10, y0, 2)
+        for z in (6, 7, 8):
+            d.set(34, y0, z, lg("spruce_log", "z"))
+            d.set(34, y0 + 1, z, lg("spruce_log", "z")) if z != 8 else None
+        bench(d, 26, 13, y0, "north", 2, "spruce", sit=False)
     if L >= 2:                                                       # waiting bench on the porch
         bench(d, 3, 5, y0, "north", 3, "spruce")
     if L >= 4:
@@ -3294,10 +3339,31 @@ def dl_cas(rel, L):
         f = build(d, 16, 19, 33, 33, 2, roof="gable", axis="z", core=(31, 21))
         f.opening(22, 19, 25, 19, 3, lg("spruce_log", "x"))
         wagon(d, 22, 26, y0, "spruce", "hay_block[axis=x]")
+        # freight floor: two-high barrel aisles on the west side, a walkway to the wagon bay, the freight clerk's
+        # desk by the doors and sacks on pallets in the south-east corner
         fit(d, y0, [("s", 18, 31, "barrel[facing=north,open=false]"), ("s", 19, 31, "barrel[facing=north,open=false]"),
-                    ("s", 28, 31, "hay_block[axis=y]"), ("o", 18, 31, "white_wool"), ("L", 24, 23), ("L", 24, 29)])
+                    ("s", 28, 31, "hay_block[axis=y]"), ("o", 18, 31, "white_wool"), ("L", 24, 23), ("L", 24, 29)] +
+            [("s", 17, z, "barrel[facing=east,open=false]") for z in range(22, 30)] +
+            [("o", 17, z, "barrel[facing=up,open=false]") for z in range(22, 30)] +
+            [("s", 19, z, "barrel[facing=west,open=false]") for z in range(22, 30, 2)] +
+            [("o", 19, z, "barrel[facing=up,open=false]") for z in range(22, 30, 2)] +
+            [("s", 28, 21, sl("spruce", "top")), ("c", 28, 22, "south", False),
+             ("o", 28, 21, "candle[candles=2,lit=false,waterlogged=false]"), ("s", 29, 21, "lectern[facing=south,has_book=false,powered=false]"),
+             ("s", 30, 31, sl("spruce")), ("o", 30, 31, "white_wool"), ("s", 29, 31, sl("spruce")), ("o", 29, 31, "brown_wool"),
+             ("s", 30, 29, "chest[facing=west,type=single,waterlogged=false]")], "spruce")
+        # loft: hay and feed sacks for the teams, bulk barrels on the east side
         fit(d, 6, [("s", x, 31, "hay_block[axis=y]") for x in (18, 19, 20)] + [("o", 18, 31, "hay_block[axis=y]"),
-                                                                               ("L", 24, 26)])
+                                                                               ("L", 24, 26), ("L", 24, 22)] +
+            [("s", 17, z, "hay_block[axis=y]") for z in range(21, 31)] + [("o", 17, z, "hay_block[axis=y]") for z in range(21, 30, 2)] +
+            [("s", 18, z, "white_wool" if z % 2 else "brown_wool") for z in range(22, 28)] +
+            [("s", 30, z, "barrel[facing=west,open=false]") for z in range(27, 32)] +
+            [("o", 30, z, "barrel[facing=up,open=false]") for z in range(27, 32, 2)] +
+            [("s", 25, 32, "chest[facing=north,type=single,waterlogged=false]")])
+        d.set(34, y0, 22, "water_cauldron[level=3]")                  # under the barn eaves
+        d.set(34, y0, 25, "barrel[facing=up,open=false]")
+        for z in (28, 29, 30):
+            d.set(34, y0, z, lg("spruce_log", "z"))
+            d.set(34, y0 + 1, z, lg("spruce_log", "z")) if z != 30 else None
     tree(d, 1, 30, y0, "spruce", 5, 2)
     return d
 
@@ -3391,7 +3457,7 @@ def cp_neo(rel, L):
         e.door(20, 18, "north", double=True)
         # eco centre: visitor foyer with a sofa; classroom with shelves and pupils' desks; staff office on top
         fit(d, y0, [("c", x, 23, "south", False) for x in (19, 20, 21, 22)] + [
-            ("s", 20, 21, sl("smooth_quartz", "top")), ("s", 21, 21, sl("smooth_quartz", "top")), ("rug", 19, 20, 22, 22, "lime_carpet"),
+            ("s", 20, 21, sl("smooth_quartz", "top")), ("s", 21, 21, sl("smooth_quartz", "top")), ("rug", 20, 20, 21, 22, "lime_carpet"),
             ("s", 18, 25, pot(3)), ("s", 23, 25, pot(0)), ("G", 21, 22, "pearlescent_froglight[axis=y]", 5)], "cherry")
         fit(d, 6, [("k", 18, z, 2) for z in range(20, 25)] + [("s", 20, 23, sl("cherry", "top")), ("c", 20, 22, "north", False),
                   ("s", 22, 23, sl("cherry", "top")), ("c", 22, 22, "north", False), ("s", 21, 25, "black_concrete"),
@@ -3399,7 +3465,10 @@ def cp_neo(rel, L):
         if L >= 5:
             fit(d, 10, [("s", 20, 25, sl("smooth_quartz", "top")), ("c", 20, 24, "north", False),
                        ("s", 22, 25, sl("smooth_quartz", "top")), ("c", 22, 24, "north", False), ("s", 18, 19, pot(3)),
-                       ("G", 21, 22, "sea_lantern", 13)], "cherry")
+                       ("o", 20, 25, "white_candle[candles=1,lit=false,waterlogged=false]"),
+                       ("k", 18, 20, 1), ("k", 18, 21, 1), ("s", 18, 22, "cartography_table"), ("s", 18, 24, "lectern[facing=east,has_book=false,powered=false]"),
+                       ("s", 23, 19, pot(0)), ("s", 24, 25, "barrel[facing=north,open=false]"),
+                       ("rug", 20, 21, 22, 22, "green_carpet"), ("G", 21, 22, "sea_lantern", 13)], "cherry")
         neo_roof(d, e, [(19, 25, 20, MOSS), (19, 25, 21, 'azalea'), (19, 25, 23, MOSS), (19, 25, 24, 'azalea')])
     # ---- biogas digesters (L5)
     if L >= 5:
@@ -3532,6 +3601,12 @@ def cp_hw(rel, L):
         fit(d, y0, [("r", x, 28, 1) for x in (6, 7)[:max(0, L - 3)]] + [("c", 6, z, "east", False) for z in (25, 27)] + [
             ("s", 9, 28, "water_cauldron[level=3]"), ("s", 10, 28, sl("oak", "top")), ("o", 10, 28, pot(4)),
             ("s", 5, 23, pot(1)), ("L", 8, 25)], "oak")
+        d.set(2, y0, 24, "water_cauldron[level=3]")                  # under the cottage eaves
+        for z in (27, 28):
+            d.set(2, y0, z, lg("oak_log", "z"))
+            d.set(2, y0 + 1, z, lg("oak_log", "z"))
+        bench(d, 8, 30, y0, "north", 2, "oak", sit=False)
+        d.set(14, y0, 25, "barrel[facing=up,open=false]")
         if L >= 4:
             fit(d, 6, [("bed", 7, 28, "south", "green"), ("s", 8, 28, sl("oak", "top")),
                       ("s", 5, 23, "chest[facing=south,type=single,waterlogged=false]"), ("L", 8, 25)], "oak")
@@ -3616,10 +3691,18 @@ def cp_cas(rel, L):
         for z in range(9, 14):                                        # worm beds down the middle
             d.set(23, y0, z, "podzol[snowy=false]" if z % 2 else "rooted_dirt")
         fit(d, y0, [("s", 19, 15, "brown_wool"), ("s", 20, 15, "brown_wool"), ("s", 27, 15, "hay_block[axis=y]"),
-                    ("s", 19, 7, "chest[facing=east,type=single,waterlogged=false]"), ("L", 21, 12)])
+                    ("s", 19, 7, "chest[facing=east,type=single,waterlogged=false]"), ("L", 21, 12),
+                    # barrels of castings, finishing composters and the sieving bench
+                    ("s", 19, 9, "barrel[facing=east,open=false]"), ("s", 19, 10, "barrel[facing=east,open=false]"),
+                    ("s", 19, 11, "barrel[facing=east,open=false]"), ("s", 19, 12, "barrel[facing=east,open=false]"),
+                    ("o", 19, 9, "barrel[facing=up,open=false]"), ("o", 19, 11, "barrel[facing=up,open=false]"),
+                    ("s", 21, 10, "composter[level=7]"), ("s", 21, 12, "composter[level=3]"),
+                    ("s", 24, 15, sl("spruce", "top")), ("o", 24, 15, pot(0)), ("s", 25, 15, "water_cauldron[level=3]")])
         if L >= 5:
             fit(d, 6, [("s", x, 15, "hay_block[axis=y]") for x in (19, 20, 21)] + [("o", 19, 15, "hay_block[axis=y]"),
-                                                                                     ("L", 21, 12)])
+                                                                                     ("L", 21, 12),
+                       ("s", 19, 9, "brown_wool"), ("s", 19, 10, "brown_wool"), ("o", 19, 9, "brown_wool"),
+                       ("s", 24, 15, "chest[facing=north,type=single,waterlogged=false]"), ("s", 25, 15, "barrel[facing=up,open=false]")])
     if L >= 5:
         gx1, gz1, gx2, gz2 = 15, 19, 27, 27
         d.box(gx1, y0, gz1, gx2, 4, gz2, "glass", floor="spruce_planks")
@@ -3632,6 +3715,8 @@ def cp_cas(rel, L):
             for z in (gz1 + 2, gz2 - 2):
                 d.set(x, 1, z, "farmland[moisture=7]")
                 d.set(x, y0, z, "carrots[age=5]" if x % 2 else "potatoes[age=6]")
+        fit(d, y0, [("s", 17, 23, sl("spruce", "top")), ("o", 17, 23, pot(4)), ("s", 25, 23, sl("spruce", "top")),
+                    ("o", 25, 23, pot(5)), ("s", 21, 23, "water_cauldron[level=3]"), ("L", 18, 22), ("L", 24, 24)])
         tree(d, 30, 29, y0, "spruce", 5, 1)
     return d
 

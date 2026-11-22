@@ -225,8 +225,7 @@ def chickencooker(pack, rel, L):
         d.set(x, 5, 5, hopper("south"))
         d.set(x, 5, 6, hopper("east" if x < cx else "west"))
     d.set(cx, 5, 6, hopper("down"))                       # R
-    d.set(cx, 4, 6, hopper("down"))
-    d.set(cx, 3, 6, hopper("south"))                      # into the dispenser
+    d.set(cx, 4, 6, hopper("south"))                      # into the dispenser
     for x in range(3, 14):
         for y in (6, 7):
             d.set(x, y, 4, "glass")
@@ -248,42 +247,46 @@ def chickencooker(pack, rel, L):
     d.set(cx, 6, 4, "spruce_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
     d.set(cx, 7, 4, AIR)
     d.fill(4, 5, 7, 12, 5, 7, SB)
-    # dispenser and its clock: torch + 2 repeaters (period 36 ticks, the torch toggles 3x a minute-tick: no burnout)
-    d.set(cx, 3, 7, dispenser("south"))
-    bt = cx - 1                                            # (7,3,7): the block that powers the dispenser
-    d.set(bt, 3, 7, SB)
-    d.set(bt - 1, 3, 7, "redstone_wall_torch[facing=west,lit=true]")
-    d.set(bt - 1, 3, 6, DUST)
-    d.set(bt - 1, 3, 5, "repeater[delay=4,facing=south,locked=false,powered=false]")
-    d.set(bt - 1, 3, 4, DUST)
-    d.set(bt, 3, 4, DUST)
-    d.set(bt, 3, 5, DUST)
-    d.set(bt, 3, 6, "repeater[delay=4,facing=north,locked=false,powered=false]")
-    # chick chamber: slab floor, lava blade, glass on the east side; the hoppers under the slabs only collect
-    # (they push west into a separate line), so they are ready to pull a drop the tick it lands
-    for z in (8, 9):
-        d.set(cx, 3, z, slab("stone_brick"))
-        d.set(cx, 4, z, LAVA)
-        d.set(cx + 1, 3, z, "glass")
-        d.set(cx + 1, 4, z, "glass")
-        d.set(cx, 2, z, hopper("west"))
-    d.set(cx - 1, 2, 9, hopper("north"))
+    # dispenser and its clock: torch + 2 repeaters at 4 ticks (period 36 game ticks: the torch toggles less than
+    # 8 times in 60 ticks, so it never burns out). It starts by itself when the blocks are placed.
+    d.set(cx, 4, 7, dispenser("south"))
+    bt = cx - 1                                            # (7,4,7): the block that powers the dispenser
+    d.set(bt, 4, 7, SB)
+    d.set(bt - 1, 4, 6, DUST)
+    d.set(bt - 1, 4, 5, "repeater[delay=4,facing=south,locked=false,powered=false]")
+    d.set(bt - 1, 4, 4, DUST)
+    d.set(bt, 4, 4, DUST)
+    d.set(bt, 4, 5, DUST)
+    d.set(bt, 4, 6, "repeater[delay=4,facing=north,locked=false,powered=false]")
+    # service corridors west (x6) and east (x10) of the cooker
+    d.fill(cx - 2, 3, 7, cx - 2, 5, 10, AIR)
+    d.fill(cx - 2, 2, 9, cx - 2, 2, 10, AIR)
+    d.set(cx - 2, 2, 7, AIR)
+    d.fill(cx + 2, 2, 7, cx + 2, 5, 10, AIR)
+    d.set(bt - 1, 4, 7, "redstone_wall_torch[facing=west,lit=true]")
+    # chick chamber (8,4,8): bottom slab floor, lava source right above it, glass on the east side
+    d.set(cx, 4, 8, slab("stone_brick"))
+    d.set(cx, 5, 8, LAVA)
+    d.set(cx + 1, 4, 8, "glass")
+    d.set(cx + 1, 5, 8, "glass")
+    # hopper minecart on the rail under the slab: it pulls the drops through the slab one per tick (a plain
+    # hopper takes one item and then waits 8 ticks - the rest would bounce up into the lava and burn);
+    # the hopper under the rail empties the cart into the chest
+    d.set(cx, 3, 8, "rail[shape=north_south,waterlogged=false]")
+    d.set(cx + 1, 3, 8, AIR)                              # slot to put the cart on the rail
+    d.set(cx, 2, 8, hopper("west"))
     d.set(cx - 1, 2, 8, hopper("west"))
     d.set(cx - 2, 2, 8, chest("east"))
     d.tag(cx - 2, 2, 8, "farm_output")
-    d.fill(cx - 2, 3, 7, cx - 2, 5, 10, AIR)
-    d.set(bt - 1, 3, 7, "redstone_wall_torch[facing=west,lit=true]")
-    d.fill(cx - 2, 2, 9, cx - 2, 5, 10, AIR)
-    d.set(cx - 2, 2, 7, AIR)
-    d.fill(cx + 2, 2, 7, cx + 2, 5, 10, AIR)
-    # the cooker housing above the lava: stone, with a chimney-like cap
-    d.fill(cx - 1, 5, 8, cx + 1, 5, 10, SB)
-    d.set(cx, 6, 9, "chiseled_stone_bricks")
+    # the cooker housing above the lava
+    d.fill(cx - 1, 6, 8, cx + 1, 6, 10, SB)
+    d.set(cx, 7, 9, "chiseled_stone_bricks")
     # gallery to the pen gate (y5 deck along z3) with stairs from the east
     for x in range(3, 12):
         d.set(x, 5, 3, "spruce_planks")
     d.set(12, 4, 3, stair("spruce", "west"))
     d.set(13, 3, 3, stair("spruce", "west"))
+    d.fill(12, 2, 3, 12, 3, 3, "spruce_planks")
     d.set(13, 2, 3, "spruce_planks")
     d.set(14, 2, 3, stair("spruce", "west"))
     lantern(d, 3, 6, 3, hanging=False)
@@ -300,8 +303,8 @@ def chickencooker(pack, rel, L):
         for z in range(Z1 + 1, Z2):
             d.set(x, top, z, logb("z"))
     approach(d, cx, Z1, ["Chicken Cooker", "Bring: chickens", "(10+) or eggs", "to throw in"])
-    d.farm_test(expect={"minecraft:cooked_chicken": 3}, ticks=3000,
+    d.farm_test(expect={"minecraft:cooked_chicken": 1}, ticks=3000,
                 inputs={(cx, 5, 6): [("minecraft:egg", 16)]},
-                spawns=[("minecraft:chicken", cx, 3, 8, 2), ("minecraft:chicken", cx, 3, 9, 2),
+                spawns=[("minecraft:hopper_minecart", cx, 3, 8, 1), ("minecraft:chicken", cx, 4, 8, 1),
                         ("minecraft:chicken", 6, 6, 5, 3)])
     return d

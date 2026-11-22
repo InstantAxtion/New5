@@ -4,7 +4,7 @@
    "blocks": [],
    "blocks_min": 0,
    "expect": {
-    "minecraft:cooked_chicken": 3
+    "minecraft:cooked_chicken": 1
    },
    "inputs": {
     "0,4,6": [
@@ -21,18 +21,18 @@
    "presses": [],
    "spawns": [
     [
-     "minecraft:chicken",
+     "minecraft:hopper_minecart",
      0,
      2,
      8,
-     2
+     1
     ],
     [
      "minecraft:chicken",
      0,
-     2,
-     9,
-     2
+     3,
+     8,
+     1
     ],
     [
      "minecraft:chicken",
