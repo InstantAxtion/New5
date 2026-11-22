@@ -4959,6 +4959,28 @@
   "yard": {},
   "yard_seats": 0
  },
+ "decorations/animalfarms/froglight.blueprint": {
+  "base": "froglight",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
  "decorations/animalfarms/goatfarm.blueprint": {
   "base": "goatfarm",
   "beds": 0,
@@ -5003,8 +5025,74 @@
   "yard": {},
   "yard_seats": 0
  },
+ "decorations/animalfarms/piglinbarter.blueprint": {
+  "base": "piglinbarter",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/animalfarms/squidfarm.blueprint": {
+  "base": "squidfarm",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
  "decorations/animalfarms/turtlefarm.blueprint": {
   "base": "turtlefarm",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/animalfarms/villagerbreeder.blueprint": {
+  "base": "villagerbreeder",
   "beds": 0,
   "bookshelves": 0,
   "cluster": null,
@@ -5047,8 +5135,118 @@
   "yard": {},
   "yard_seats": 0
  },
+ "decorations/craftfarms/autobread.blueprint": {
+  "base": "autobread",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/craftfarms/compactor.blueprint": {
+  "base": "compactor",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/craftfarms/itemsorter.blueprint": {
+  "base": "itemsorter",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/craftfarms/supersmelter.blueprint": {
+  "base": "supersmelter",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
  "decorations/cropfarms/bamboo.blueprint": {
   "base": "bamboo",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/cropfarms/chorusfarm.blueprint": {
+  "base": "chorusfarm",
   "beds": 0,
   "bookshelves": 0,
   "cluster": null,
@@ -5091,8 +5289,74 @@
   "yard": {},
   "yard_seats": 0
  },
+ "decorations/cropfarms/dripstonefarm.blueprint": {
+  "base": "dripstonefarm",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
  "decorations/cropfarms/flowers.blueprint": {
   "base": "flowers",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/cropfarms/glowberry.blueprint": {
+  "base": "glowberry",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/cropfarms/glowlichen.blueprint": {
+  "base": "glowlichen",
   "beds": 0,
   "bookshelves": 0,
   "cluster": null,
@@ -5135,8 +5399,74 @@
   "yard": {},
   "yard_seats": 0
  },
+ "decorations/cropfarms/mossfarm.blueprint": {
+  "base": "mossfarm",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/cropfarms/mushroomfarm.blueprint": {
+  "base": "mushroomfarm",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
  "decorations/cropfarms/pumpkinmelon.blueprint": {
   "base": "pumpkinmelon",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/cropfarms/seapickle.blueprint": {
+  "base": "seapickle",
   "beds": 0,
   "bookshelves": 0,
   "cluster": null,
@@ -5225,6 +5555,94 @@
  },
  "decorations/cropfarms/villagercrops.blueprint": {
   "base": "villagercrops",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/foodfarms/autokitchen.blueprint": {
+  "base": "autokitchen",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/foodfarms/bonemeal.blueprint": {
+  "base": "bonemeal",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/foodfarms/eggfarm.blueprint": {
+  "base": "eggfarm",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/foodfarms/smeltery.blueprint": {
+  "base": "smeltery",
   "beds": 0,
   "bookshelves": 0,
   "cluster": null,
@@ -5418,6 +5836,72 @@
    "neoterra",
    "sit"
   ],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/mobfarms/cactusfarm.blueprint": {
+  "base": "cactusfarm",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/mobfarms/ironfarm.blueprint": {
+  "base": "ironfarm",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
+  "yard": {},
+  "yard_seats": 0
+ },
+ "decorations/mobfarms/mobtower.blueprint": {
+  "base": "mobtower",
+  "beds": 0,
+  "bookshelves": 0,
+  "cluster": null,
+  "floor_items": 0,
+  "hut": "minecolonies:decorationcontroller",
+  "items": {},
+  "level": 1,
+  "nocap": true,
+  "packs": [
+   "Farmworks"
+  ],
+  "piece": true,
+  "racks": 0,
+  "seats": 0,
+  "spots": {},
+  "tagreq": {},
+  "tags": [],
   "yard": {},
   "yard_seats": 0
  },
