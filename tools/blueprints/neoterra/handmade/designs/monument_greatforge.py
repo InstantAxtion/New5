@@ -2994,8 +2994,6 @@ def nt_power(d, L):
     for x, z in disc(4.2, 5, 43):
         d.set(x, 1, z, WATER)
         d.set(x, 0, z, "structurize:blocksolidsubstitution")
-        if (x + z) % 2 == 0:
-            d.set(x, 4, z, "iron_bars")                    # the fill lattice over the pond
 
     # turbine house x 54..60, z 36..48: glass clerestory, turbine sets, switch gallery
     X1, X2, Z1, Z2 = 54, 60, 36, 48

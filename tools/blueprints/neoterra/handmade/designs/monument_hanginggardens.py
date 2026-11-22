@@ -2440,7 +2440,8 @@ def ca_terrace(d, k, last):
             d.set(x, top, z, surf)
     # ragged top edge: boulders and ferns along the front lip (hand-chosen spacing for this terrace)
     for x in range(x1 + 1, x2, 4):
-        if x in CA_STAIRS or x in CA_FALL or abs(x - 24) <= 2:
+        if x in CA_STAIRS or x in CA_FALL or abs(x - 24) <= 2 or (k == 2 and 30 <= x <= 40) or \
+                (k == 4 and 11 <= x <= 21):
             continue
         d.set(x, top + 1, z1, ("fern", "mossy_cobblestone", "large_fern", "sweet_berry_bush[age=3]")[(x + k) % 4]) \
             if (x + k) % 4 != 2 else flower(d, x, top + 1, z1, "large_fern")
@@ -2837,18 +2838,18 @@ def ca_fernhouse(d):
 def ca_ranger(d):
     """L5: ranger's cabin by the spring on the top terrace: a small log cabin with a porch and a stone chimney;
     map table, bunk, stove."""
-    x1, x2, z1, z2, y = 12, 20, 50, 54, 17
+    x1, x2, z1, z2, y = 12, 18, 50, 54, 17
     for x in range(x1, x2 + 1):
         for z in range(z1, z2 + 1):
             d.set(x, y - 1, z, "spruce_planks")
             for yy in range(y, y + 4):
                 d.set(x, yy, z, AIR)
-    ca_logwall(d, x1, x2, z1, z2, y, y + 3, windows={(14, 50), (18, 50), (12, 52), (20, 52)})
+    ca_logwall(d, x1, x2, z1, z2, y, y + 3, windows={(14, 50), (17, 50), (12, 52), (18, 52)})
     ca_aframe(d, x1, x2, z1, z2, y + 4, end="stripped_spruce_log[axis=y]")
     for yy in range(y - 1, y + 10):
-        d.set(21, yy, 52, "cobblestone" if yy % 2 else "mossy_cobblestone")
-    d.set(21, y + 10, 52, "cobblestone_wall")
-    d.door(16, y, z1, "north", "spruce")
+        d.set(11, yy, 52, "cobblestone" if yy % 2 else "mossy_cobblestone")
+    d.set(11, y + 10, 52, "cobblestone_wall")
+    d.door(15, y, z1, "north", "spruce")
     for x in range(x1, x2 + 1):                          # porch
         d.set(x, y - 1, z1 - 1, "spruce_planks")
         if x in (x1, x2):
@@ -2856,15 +2857,11 @@ def ca_ranger(d):
                 d.set(x, yy, z1 - 1, "spruce_fence")
         d.set(x, y + 3, z1 - 1, stair("spruce_stairs", "south", "top")) if False else None
     d.chair(13, y, z1 - 1, "north", "spruce")
-    d.chair(19, y, z1 - 1, "north", "spruce")
-    cab = [".....mb",
-           "4T.....",
-           "...RR.F",
-           ">..RR.c"]
-    cab = ["m.b...O",
-           ".....R.",
-           "4T2..RF",
-           "......c"]
+    d.chair(17, y, z1 - 1, "north", "spruce")
+    cab = ["mb.cO",
+           "....R",
+           "4T2RF",
+           "c.bR."]
     plan(d, 13, y, 51, cab, CS, {"O": "west", "F": "west"})
     d.bed(13, y, 53, "west", "green") if False else None
     d.set(16, y + 3, 52, lantern(True))
@@ -3167,9 +3164,9 @@ def ca_gardens(rel, L):
                 d.set(x, 10, 29, lv("flowering_azalea"))
                 d.set(x, 9, 29, "chain[axis=y,waterlogged=false]") if False else None
     if L >= 4:                                           # tea house veranda (engawa) on the north and west
-        for x in range(30, 40):
-            d.set(x, 10, 33, "spruce_planks") if x != 35 else None
-            if x in (30, 33, 37):
+        for x in range(30, 41):
+            d.set(x, 10, 33, "spruce_planks")
+            if x in (30, 40):
                 d.set(x, 11, 33, "spruce_fence")
                 d.set(x, 12, 33, "spruce_fence")
                 d.set(x, 13, 33, "spruce_fence")
