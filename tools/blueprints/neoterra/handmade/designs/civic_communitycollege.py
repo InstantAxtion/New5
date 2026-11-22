@@ -478,6 +478,11 @@ def col_hearthwood(rel, L):
                   (11, 3, 36, "cake[bites=0]"), (11, 2, 37, "barrel[facing=west,open=false]"),
                   (11, 2, 38, slab("dark_oak_slab", "top")), (11, 3, 38, "flower_pot")])
         hang(d, [(7, 29), (8, 33), (7, 37)], 5)
+        d.table(7, Y0, 30, W)                                           # games table and a book case
+        d.chair(6, Y0, 30, "west", W)
+        d.chair(8, Y0, 30, "east", W)
+        shelf(d, [(3, 28), (3, 29)], Y0, 2)
+        place(d, [(3, 2, 30, "potted_red_tulip")])
         # dormitory upstairs
         for z in (28, 30, 32, 35, 37, 39):
             d.bed(3, 7, z, "west", "blue")
@@ -490,6 +495,11 @@ def col_hearthwood(rel, L):
                   (11, 7, 39, chest("west"))])
         seat(d, [(10, 35), (10, 37)], 7, "west", W)
         carpet(d, [(7, z) for z in range(28, 40)], 7, "blue")
+        shelf(d, [(5, 28), (6, 28)], 7, 2)                              # book & wardrobe corner, study table
+        place(d, [(8, 7, 28, "potted_fern"), (9, 7, 28, chest("south"))])
+        d.table(8, 7, 33, W)
+        d.chair(9, 7, 33, "east", W)
+        d.chair(8, 7, 34, "south", W)
         hang(d, [(7, 28), (7, 32), (7, 36)], 10)
         # commons cottage: café with fireplace downstairs, tutor's flat upstairs
         entry(d, 42, 28, "south", step="stone_bricks")
@@ -520,6 +530,8 @@ def col_hearthwood(rel, L):
         shelf(d, [(39, 37), (39, 36)], 7, 2)
         d.chair(41, 7, 36, "north", W)
         carpet(d, [(41, 31), (42, 31), (41, 32), (42, 32), (41, 33), (42, 33)], 7, "orange")
+        d.chair(43, 7, 32, "east", W, sit=False)                         # armchair by the rug, wardrobe
+        place(d, [(43, 7, 33, slab("dark_oak_slab", "top")), (43, 8, 33, LS), (39, 7, 29, chest("east"))])
         hang(d, [(42, 30), (42, 34)], 10)
         # theatre's north eave: two benches with tubs and lamps on the wall
         for x in (18, 19, 31, 32):
@@ -780,6 +792,12 @@ def col_neoterra(rel, L):
                   (39, 17, 39, "potted_bamboo")])
         tops(d, [(40, 33), (41, 33)], 17, QS)
         d.set(41, 18, 33, "flower_pot")
+        seat(d, [(40, 34), (41, 34)], 17, "south", B)                   # crit table, plan chests, model bench
+        d.set(44, 17, 36, slab("birch_slab", "top"))
+        d.chair(44, 17, 37, "south", B)
+        place(d, [(44, 18, 36, LS), (42, 17, 31, "barrel[facing=up,open=false]"), (42, 18, 31, "potted_bamboo")])
+        shelf(d, [(39, 31), (40, 31), (41, 31)], 17, 2)
+        carpet(d, [(x, z) for x in (40, 41, 42) for z in (38, 39)], 17, "light_blue")
         panel(d, [(41, 34), (41, 37)], 21)
         # 4th: seminar room with the city view
         for x in range(40, 43):
@@ -1182,6 +1200,8 @@ def col_cascadia(rel, L):
             d.set(x, 8, 43, HAY)
         for x in (23, 24, 28, 29):
             d.set(x, 8, 41, HAY)
+        d.set(22, 8, 43, HAY)
+        d.set(30, 8, 43, HAY)
         hang(d, [(24, 34), (28, 34), (24, 38), (28, 38)], 7)
         hang(d, [(23, 42), (29, 42)], 5)
     return d
