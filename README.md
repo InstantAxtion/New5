@@ -67,6 +67,27 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## Monuments, free building and research, more farms (1.23.0)
+* **Place any building without its hut block.** The build tool lists every building of a pack, and placing one no
+  longer needs the hut block in your inventory (server config `placement.freeHutPlacement`, on by default).
+* **All research is free and 10x faster** (MineColonies' own research and this mod's).
+* **Monuments tab** (was "wonders"): the Grand Projects, now with three new ones – **Great Library** (citizens
+  gain skill +4% faster and pupils learn +4% faster per level), **Hanging Gardens** (children grow up +4% faster,
+  farmers harvest +4% more), **Great Forge** (workers break blocks +4% faster, tools last +3% longer, miners find
+  +3% more ores) – each hand-designed per pack with two wing towers. Recipes: golden scepter in the middle top,
+  bookshelves + lectern / moss + flowering azalea / deepslate bricks + anvil.
+* **Plots fit the building:** every hut's plot is its level-5 footprint plus one block all round.
+* **Interiors:** homes, sky tower, twin builder, bunker, grand bridge, royal granary, animal huts, industry, and the
+  alchemist / archery / combat academy / enchanter / graveyard / guard tower / mystical site got fully furnished
+  rooms and a different layout on every storey; level 1 of every building is a real, finished building.
+* **Player house:** working enchanting room (15 bookshelves), brewing, anvil/smithing/grindstone/loom/stonecutter,
+  auto-smelters, a hopper-fed storage room, an automatic sugar-cane farm, hen house, crop plots, beacon, nether
+  portal frame, map room.
+* **Hand-designed town walls, roads and parks** for each pack (gates, corners, stairs, watchtowers; streets,
+  junctions, avenue, street stairs; benches, fountains, parks, plaza).
+* **Farmworks resource farms** (in-game tested): cobblestone, stone and basalt generators, lava dripstone farm,
+  snow golem yard, ice pond, mud & clay works, concrete station.
+
 ## Every block placed by hand (1.22.0)
 No building uses automatic furniture or decoration any more. Every bed, table, chair, shelf, lamp, flower box,
 shutter and fence in all 73 hut types × 3 packs × every level is placed at a chosen spot by its designer: rooms laid

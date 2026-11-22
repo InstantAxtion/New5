@@ -18,7 +18,8 @@ MODDED = {
     "minecolonies:blockhutwarehouse": {"facing"},
     "minecolonies:blockhutbuilder": {"facing"},
     "neoterra:blockhutsupplydepot": {"facing"}, "neoterra:blockhutcathedral": {"facing"}, "neoterra:blockhutgrandbridge": {"facing"},
-    "neoterra:blockhutcolossus": {"facing"}, "neoterra:blockhutroyalgranary": {"facing"}, "neoterra:blockhutwonderwing": {"facing"},
+    "neoterra:blockhutcolossus": {"facing"}, "neoterra:blockhutroyalgranary": {"facing"}, "neoterra:blockhutgreatlibrary": {"facing"},
+    "neoterra:blockhuthanginggardens": {"facing"}, "neoterra:blockhutgreatforge": {"facing"}, "neoterra:blockhutwonderwing": {"facing"},
     "neoterra:blockhuttradepost": {"facing"},
     "minecolonies:blockhutcitizen": {"facing"},
     "minecolonies:blockhutcook": {"facing"},
@@ -126,8 +127,8 @@ def main():
                     continue
                 vals = s.get("values") or (["true", "false"] if s["type"] == "bool"
                                            else [str(i) for i in range(s.get("num_values", 0))])
-                if s["type"] == "int":
-                    vals = [str(i) for i in range(16)]
+                if s["type"] == "int" and not s.get("values"):
+                    vals = [str(i) for i in range(max(16, s.get("num_values", 0)))]
                 if v not in vals:
                     print(f"{Path(f).name}: {n} {k}={v} not in {vals}")
                     bad += 1
