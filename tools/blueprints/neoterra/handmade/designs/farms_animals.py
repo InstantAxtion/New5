@@ -385,5 +385,6 @@ def cowbreeder(pack, rel, L):
     d.farm_test(expect={"minecraft:cooked_beef": 3}, ticks=2000,
                 spawns=[("minecraft:cow", c, 5, 10, 1) for c in stalls]
                 + [("minecraft:hopper_minecart", c, 3, 10, 1) for c in stalls]
-                + [("minecraft:cow", 7, 5, 6, 2)])
+                + [("minecraft:cow", 7, 5, 6, 2)],
+                blocks=[(c, 6, 10, "minecraft:lava") for c in stalls] + [(c, 5, 10, "minecraft:warped_wall_sign") for c in stalls] + [(c, 5, 9, "minecraft:air") for c in stalls])
     return d

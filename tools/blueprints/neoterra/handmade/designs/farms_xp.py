@@ -428,9 +428,9 @@ def spiderfarm(pack, rel, L):
     widens to 4x4: a falling spider (1.4 wide) does not touch a wall, so it cannot climb (Spider: climbing =
     horizontal collision, which resets the fall). 22-block fall -> 19 damage (16 hp). A spider that does climb
     ends up under the platform ceiling and falls the full height later. 16 hoppers -> four chests."""
-    w = 3
-    d = Design(pack, rel, size=(21, 37, 23), gy=1, paving="grass_block")
-    shaft = (HX, HZ, HX + 2, HZ + 2)
+    w = 2
+    d = Design(pack, rel, size=(20, 37, 22), gy=1, paving="grass_block")
+    shaft = (HX - 1, HZ - 1, HX + 2, HZ + 2)
     floors = (25, 27, 29, 31)
     windows = [(5, 3, 5), (6, 3, 5), (13, 3, 5), (14, 3, 5), (4, 3, 12), (15, 3, 12), (7, 3, 16), (12, 3, 16)]
     tower(d, w, shaft, 3, floors[0], windows=windows,
@@ -439,14 +439,14 @@ def spiderfarm(pack, rel, L):
     for y0 in floors:
         y = water_floor(d, w, y0, "spider")
     roof_box(d, w, y)
-    cells = [(4, 5), (6, 7), (15, 5), (17, 7), (4, 17), (6, 19), (15, 17), (17, 19)]
-    chan = ((10, 5), (10, 8), (17, 12), (14, 12), (10, 19), (10, 16), (3, 12), (6, 12))
+    cells = [(4, 5), (6, 7), (13, 5), (15, 7), (4, 16), (6, 18), (13, 16), (15, 18)]
     spawns = (strip_spawns("minecraft:spider", floors[0] + 1, cells) + strip_spawns("minecraft:spider", floors[2] + 1, cells[::2])
-              + [("minecraft:spider", x, y0 + 1, z, 1) for y0 in floors for (x, z) in chan])
-    import os
-    if os.environ.get("XPDBG"):
-        spawns = [("minecraft:spider", 10, 23, 12, 8)] if os.environ["XPDBG"] == "fall" else [("minecraft:spider", x, floors[0] + 1, z, 1) for (x, z) in chan]
-    d.farm_test(expect={"minecraft:string": 4}, spawns=spawns, ticks=6000)
+              + [("minecraft:spider", x, y0 + 1, z, 1) for y0 in floors
+                 for (x, z) in CHANNEL + ((10, 8), (13, 12), (9, 15), (6, 11))]
+              + [("minecraft:spider", x, y0 + 1, z, 1) for y0 in floors for (x, z) in ((9, 9), (13, 11), (10, 14), (6, 12))])
+    # (spiders in a channel look for land within 5 s and walk into a quadrant, where they freeze in the test: the
+    #  ones near the hole are carried in first)
+    d.farm_test(expect={"minecraft:string": 6}, spawns=spawns, ticks=6000)
     return d
 
 

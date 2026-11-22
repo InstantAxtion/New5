@@ -102,6 +102,20 @@ def shell(d, X1, Z1, X2, Z2, top, floor="smooth_stone", wall="glass", plinth=SB,
     return posts
 
 
+def windows(d, X1, Z1, X2, Z2, ys=(3, 4)):
+    """Glass-pane windows in a cobble wall: every wall cell at `ys` that is cobblestone and not next to a post."""
+    for x in range(X1, X2 + 1):
+        for z in range(Z1, Z2 + 1):
+            if not (x in (X1, X2) or z in (Z1, Z2)):
+                continue
+            nb = [d.get(x + a, ys[0], z + b) for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1))]
+            if any("log" in n for n in nb):
+                continue
+            for y in ys:
+                if d.get(x, y, z) == "minecraft:cobblestone":
+                    d.set(x, y, z, "glass_pane")
+
+
 def entrance(d, x, z, name, bring, facing="north", path_to=0, sign_side=1, sign_wall=None, lines=None):
     """Door in the north wall at (x, 2, z), a wall sign beside it, a lantern over it and a gravel path north."""
     d.door(x, 2, z, facing=facing, wood="spruce")
@@ -401,7 +415,8 @@ def cocoa(pack, rel, L):
     every dust powers the stone under it, which sits right behind a piston."""
     d = Design(pack, rel, size=(19, 13, 14), gy=1, paving="grass_block")
     X1, Z1, X2, Z2 = 1, 3, 17, 11
-    shell(d, X1, Z1, X2, Z2, 6, floor="spruce_planks", wall="glass")
+    shell(d, X1, Z1, X2, Z2, 6, floor="spruce_planks", wall=CB, post_step=4)
+    windows(d, X1, Z1, X2, Z2)
     x1, x2 = 3, 13
     LOGZ = 7
     sides = ((5, 6, 4, "south", "north"), (9, 8, 10, "north", "south"))   # piston row, pod row, back row
@@ -453,7 +468,7 @@ def cocoa(pack, rel, L):
         d.set(9, 1, z, "gravel")
     for x in range(9, 17):
         d.set(x, 1, 2, "gravel")
-    d.farm_test(expect={"minecraft:cocoa_beans": 30}, presses=[(15, 3, 4)], ticks=600)
+    d.farm_test(expect={"minecraft:cocoa_beans": 40}, presses=[(15, 3, 4)], ticks=600)
     return d
 
 
@@ -573,7 +588,8 @@ def flowers(pack, rel, L):
     stand on stone, not grass (grass under a full water block turns to dirt)."""
     d = Design(pack, rel, size=(15, 14, 13), gy=1, paving="grass_block")
     X1, Z1, X2, Z2 = 0, 3, 14, 11
-    shell(d, X1, Z1, X2, Z2, 6, floor="spruce_planks", wall="glass")
+    shell(d, X1, Z1, X2, Z2, 6, floor="spruce_planks", wall=CB, post_step=3)
+    windows(d, X1, Z1, X2, Z2)
     rows = (6, 7, 8)
     for x in range(2, 13):
         for z in range(4, 11):
@@ -693,4 +709,66 @@ def villagercrops(pack, rel, L):
         d.set(x, 1, 2, "gravel")
     d.farm_test(expect={"minecraft:carrot": 8, "minecraft:potato": 4}, spawns=[("minecraft:villager", 4, 3, 8, 1)],
                 ticks=8000)
+    return d
+
+
+# ================================================================================================ tree farm
+@design("treefarm")
+def treefarm(pack, rel, L):
+    """Player-harvested birch grove (birch: a straight 5-7 log trunk, no branches, no 2x2 needed, so every log is
+    reached from the ground or one step up). Six saplings on dirt, four blocks apart so the crowns don't block
+    each other, fenced and lit by lanterns on the posts (no mob spawns at night). Next to it a tool shed with a
+    sapling chest, a log barrel, crafting table and chopping block. Replant the sapling the leaves drop.
+    Fully automatic tree farms in Java need TNT duping or wither-cages; this one is meant to be easy to chop."""
+    d = Design(pack, rel, size=(20, 9, 16), gy=1, paving="grass_block")
+    GX1, GZ1, GX2, GZ2 = 1, 3, 13, 14                       # grove fence
+    for x in range(GX1, GX2 + 1):
+        for z in (GZ1, GZ2):
+            d.set(x, 2, z, FENCE)
+    for z in range(GZ1, GZ2 + 1):
+        for x in (GX1, GX2):
+            d.set(x, 2, z, FENCE)
+    for (x, z) in ((GX1, GZ1), (GX2, GZ1), (GX1, GZ2), (GX2, GZ2), (GX1, 8), (GX2, 8), (4, GZ1), (10, GZ1),
+                   (4, GZ2), (10, GZ2)):
+        d.set(x, 2, z, logb())
+        d.set(x, 3, z, "lantern[hanging=false,waterlogged=false]")
+    d.set(7, 2, GZ1, "spruce_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
+    saps = [(x, z) for x in (3, 7, 11) for z in (6, 11)]
+    for x in range(GX1 + 1, GX2):
+        for z in range(GZ1 + 1, GZ2):
+            d.set(x, 1, z, "grass_block[snowy=false]")
+    for (x, z) in saps:
+        d.set(x, 1, z, "dirt")
+        d.set(x, 2, z, "birch_sapling[stage=0]")
+        for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            d.set(x + dx, 1, z + dz, "coarse_dirt")
+    for z in range(GZ1 + 1, GZ2):                           # gravel walk up the middle of the grove
+        d.set(5, 1, z, "gravel") if z not in (6, 11) else None
+        d.set(9, 1, z, "gravel") if z not in (6, 11) else None
+    for x in range(GX1 + 1, GX2):
+        d.set(x, 1, 9, "gravel")
+    # tool shed
+    SX1, SZ1, SX2, SZ2 = 14, 4, 19, 10
+    shell(d, SX1, SZ1, SX2, SZ2, 4, floor="spruce_planks", wall=CB, post_step=3)
+    for z in (6, 8):
+        d.set(SX2, 3, z, "glass_pane")
+    d.set(SX1, 3, 7, "glass_pane")
+    d.door(16, 2, SZ1, facing="north", wood="spruce")
+    d.set(18, 2, 9, "chest[facing=north,type=single,waterlogged=false]")
+    d.set(18, 2, 5, barrel())
+    d.set(18, 2, 7, "crafting_table")
+    d.set(15, 2, 9, "oak_log[axis=y]")
+    d.set(15, 2, 5, "grindstone[face=floor,facing=north]")
+    d.gable(SX1, SZ1, SX2, SZ2, 5, axis="z", stairs="spruce_stairs", ridge="spruce_slab", end=PLANK)
+    lantern(d, 16, 4, 7)
+    d.set(16, 5, 7, PLANK) if d.air(16, 5, 7) else None
+    d.sign(17, 3, SZ1 - 1, "north", ["Birch Grove", "Farmworks", "Bring: axe,", "birch saplings"], wood="spruce")
+    d.set(17, 3, SZ1, PLANK) if "glass" in d.get(17, 3, SZ1) else None
+    controller(d, 10)
+    for z in range(0, GZ1):
+        d.set(7, 1, z, "gravel")
+        d.set(16, 1, z, "gravel")
+    for x in range(7, 17):
+        d.set(x, 1, 1, "gravel")
+    d.farm_test(expect={}, blocks=[(x, 2, z, "minecraft:birch_log") for (x, z) in saps], blocks_min=4, ticks=8000)
     return d

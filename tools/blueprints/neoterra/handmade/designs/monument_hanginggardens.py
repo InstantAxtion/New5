@@ -953,8 +953,8 @@ def nt_propagation_house(d, x1, x2, door_x, door_f):
             d.set(x, 1, z, "smooth_stone")
             for y in range(2, 5):
                 if edge:
-                    post = (x - x1) % 3 == 0 or z in () or (x in (x1, x2) and z in (z1, z2))
-                    d.set(x, y, z, "white_concrete" if post or y == 4 and False else "glass_pane")
+                    post = (x - x1) % 3 == 0 or (x in (x1, x2) and z in (z1, z2))
+                    d.set(x, y, z, "white_concrete" if post else "glass_pane")
                 else:
                     d.set(x, y, z, AIR)
             d.set(x, 5, z, "white_concrete" if edge or (x - x1) % 3 == 0 else "light_blue_stained_glass")
@@ -1462,9 +1462,24 @@ def hw_palm_house(d, L):
     if L >= 4:
         hw_apse(d, 8, PH_ZC, Hw, -1)
         hw_apse(d, 46, PH_ZC, Hw, 1)
-    if L >= 5:                                            # cresting along the wing ridges
-        for x in list(range(9, 18, 2)) + list(range(37, 46, 2)):
-            d.set(x, 16, PH_ZC, "diorite_wall")
+    if L >= 5:                                            # clerestory lanterns on both wings, crested
+        for x1, x2 in ((10, 16), (38, 44)):
+            for x in range(x1, x2 + 1):
+                rib = (x - x1) % 2 == 0
+                for z in range(PH_ZC - 2, PH_ZC + 3):
+                    k = abs(z - PH_ZC)
+                    for y in range(14, 19):
+                        d.set(x, y, z, AIR)
+                    if k == 2:
+                        for y in range(14, 17):
+                            d.set(x, y, z, "white_concrete" if rib or y == 16 else "glass_pane")
+                    else:
+                        hw_column(d, x, z, 17, 17 + (1 - k), "glass", rib)
+                        if x in (x1, x2):
+                            for y in range(14, 17 + (1 - k)):
+                                d.set(x, y, z, "glass_pane")
+            for x in range(x1, x2 + 1, 2):
+                d.set(x, 19, PH_ZC, "diorite_wall")
     opening = {(x, z) for x in (PH_X1, PH_X2) for z in range(PH_ZC - 2, PH_ZC + 3)} if L >= 2 else set()
     hw_vault(d, PH_X1, PH_X2, PH_ZC, Hc, end_open=opening)
     if L >= 2:
@@ -2289,6 +2304,10 @@ def hw_gardens(rel, L):
                 for y in range(2, 4 + (1 if pier else 0)):
                     d.set(x, y, z, "bricks")
                 d.set(x, 4 + (1 if pier else 0), z, slab("stone_brick_slab"))
+                if pier and L >= 5:                      # L5: dressed piers with stone ball finials
+                    d.set(x, 5, z, "stone_bricks")
+                    d.set(x, 6, z, "stone_brick_wall")
+                    d.set(x, 7, z, "chiseled_stone_bricks")
         for x in (23, 31) if L < 5 else ():
             for y in range(2, 6):
                 d.set(x, y, 0, "stone_bricks")
@@ -2851,6 +2870,16 @@ def ca_lookout(d):
                     d.set(x, y, z, AIR)
     d.door(33, cab + 1, cz1, "north", "spruce")
     d.hip(cx1, cz1, cx2, cz2, cab + 4, stairs="spruce_stairs", cap="spruce_slab", overhang=1)
+    for x in (cx1, cx2):                                 # stone footings under the legs
+        for z in (cz1, cz2):
+            for dx in (-1, 0, 1):
+                for dz in (-1, 0, 1):
+                    if (dx, dz) != (0, 0) and d.air(x + dx, base, z + dz):
+                        d.set(x + dx, base, z + dz, "mossy_cobblestone" if (dx + dz) % 2 else "cobblestone")
+    for z in (52, 53, 54):                                # woodpile against the ranger cabin
+        for y in (17, 18):
+            if d.air(19, y, z):
+                d.set(19, y, z, "spruce_log[axis=x]" if (y + z) % 2 else "oak_log[axis=x]")
     for x, y, z, st in ((31, cab + 1, cz1 + 1, "cartography_table"), (34, cab + 1, cz1 + 1, "lectern[facing=north,has_book=true,powered=false]"),
                         (31, cab + 1, cz2 - 1, "barrel[facing=up,open=false]"), (34, cab + 1, cz2 - 1, stair("spruce_stairs", "east")),
                         (33, cab + 3, 51, lantern(True)), (31, cab + 1, 52, "potted_fern")):
@@ -3135,6 +3164,81 @@ def ca_logbridge(d, z, y):
         d.set(x, y + 2, z + 1, "spruce_fence")
 
 
+def ca_shelter(d, x1, z1):
+    """L2: little log picnic shelter (3x3) on the second terrace: corner posts, hip roof, table and two seats."""
+    y = 8
+    for x in (x1, x1 + 2):
+        for z in (z1, z1 + 2):
+            for yy in range(y, y + 3):
+                d.set(x, yy, z, "spruce_log[axis=y]")
+    d.hip(x1, z1, x1 + 2, z1 + 2, y + 3, stairs="spruce_stairs", cap="spruce_slab", overhang=1)
+    d.table(x1 + 1, y, z1 + 1, "spruce")
+    d.chair(x1 + 1, y, z1, "north", "spruce")
+    d.chair(x1 + 1, y, z1 + 2, "south", "spruce")
+    d.set(x1 + 1, y + 2, z1 + 1, lantern(True))
+
+
+def ca_tea_garden(d):
+    """L3: tea garden in front of the tea house: a low timber fence with a gate, a stone water basin and two
+    stone lanterns beside the path."""
+    for z in range(35, 41):                              # bamboo screen along the east side of the tea house
+        for y in (11, 12, 13):
+            d.set(41, y, z, "bamboo[age=0,leaves=large,stage=0]" if y == 13 else "bamboo[age=0,leaves=small,stage=0]")
+        d.set(41, 10, z, GRASS)
+    d.set(38, 11, 33, "cobblestone_wall")                # stone lantern and water basin east of the door
+    d.set(38, 12, 33, lantern())
+    d.set(37, 11, 33, "water_cauldron[level=3]")
+    d.set(39, 11, 33, "potted_bamboo")
+
+
+def ca_water_tower(d):
+    """L4: timber water tower beside the first-terrace pergola: four braced legs, a stave tank, cone roof."""
+    cx, cz, y0 = 4, 17, 5
+    for x, z in ((3, 16), (5, 16), (3, 18), (5, 18)):
+        for y in range(y0, y0 + 6):
+            d.set(x, y, z, "spruce_log[axis=y]")
+    for y in (y0 + 2, y0 + 4):
+        d.set(4, y, 16, "spruce_fence")
+        d.set(4, y, 18, "spruce_fence")
+        d.set(3, y, 17, "spruce_fence")
+        d.set(5, y, 17, "spruce_fence")
+    tank = disc(2.2, cx, cz)
+    rim = ring(2.2, cx, cz)
+    for x, z in tank:
+        d.set(x, y0 + 6, z, "spruce_planks")
+        for y in range(y0 + 7, y0 + 10):
+            d.set(x, y, z, "spruce_log[axis=y]" if (x, z) in rim else WATER)
+    for x, z in rim:
+        d.set(x, y0 + 8, z, "stripped_spruce_log[axis=y]")
+    for x, z in tank:
+        d.set(x, y0 + 10, z, stair("spruce_stairs", "south" if z < cz else "north" if z > cz else
+                                   ("east" if x < cx else "west")) if (x, z) in rim else "spruce_planks")
+    d.set(cx, y0 + 11, cz, slab("spruce_slab"))
+    for y in range(y0, y0 + 6):
+        d.set(cx, y, cz, "spruce_fence")
+
+
+def ca_covered_bridge(d):
+    """L5: covered timber bridge carrying the fourth-terrace walk over the stream (replaces the rope bridge)."""
+    for x in range(20, 29):
+        for z in (43, 44, 45):
+            for y in range(14, 19):
+                d.set(x, y, z, AIR)
+        d.set(x, 14, 44, "spruce_planks")
+        for z in (43, 45):
+            d.set(x, 14, z, "stripped_spruce_wood[axis=y]")
+            for y in range(15, 18):
+                post = x in (20, 24, 28)
+                d.set(x, y, z, "spruce_log[axis=y]" if post else
+                      ("glass_pane" if y == 16 and x % 2 else "spruce_planks"))
+    d.gable(20, 43, 28, 45, 18, axis="x", stairs="spruce_stairs", ridge="spruce_slab", end="spruce_planks")
+    for x in (20, 28):
+        for y in (15, 16):
+            d.set(x, y, 44, AIR)
+    d.set(24, 17, 44, lantern(True))
+
+
+
 def ca_gardens(rel, L):
     sx, sy, sz = CA["size"]
     d = Design("Cascadia", rel, CA["size"], paving="coarse_dirt")
@@ -3205,8 +3309,12 @@ def ca_gardens(rel, L):
         for x, z in ((6, 26), (42, 26), (17, 31), (31, 26)):
             lamppost(d, x, z, 8, 2, "spruce_fence", lantern())
         bench(d, 13, 8, 26, "north", "spruce", 2)
+        ca_shelter(d, 16, 30)
+        ca_shelter(d, 29, 30)
     if L >= 3:                                           # third terrace: tea house east, rock garden west
         ca_teahouse(d)
+        ca_tea_garden(d)
+        ca_logbridge(d, 29, 7)
     if L in (3, 4):
         for x, z, st in ((9, 35, "mossy_cobblestone"), (10, 35, "fern"), (12, 36, "andesite"), (13, 37, "large_fern"),
                          (15, 35, "mossy_cobblestone"), (10, 38, "sweet_berry_bush[age=3]"), (16, 38, "fern"),
@@ -3246,6 +3354,7 @@ def ca_gardens(rel, L):
     if L >= 4:                                           # fourth terrace: fern house, orchard, rope bridge
         ca_fernhouse(d)
         ca_boathouse(d)
+        ca_water_tower(d)
         ca_pergola(d, 30, 38, 42, 46, 14)
         ca_pergola(d, 7, 15, 27, 31, 8)                  # bean-tunnel pergolas over the vegetable beds
         ca_pergola(d, 32, 40, 27, 31, 8)
@@ -3269,7 +3378,7 @@ def ca_gardens(rel, L):
         ca_outcrops(d)
         ca_conservatory(d)
         ca_gazebo(d)
-        ca_logbridge(d, 29, 7)
+        ca_covered_bridge(d)
         ca_logbridge(d, 37, 10)
         for x in range(28, 38):                          # lower observation deck round the lookout legs
             for z in range(47, 57):
