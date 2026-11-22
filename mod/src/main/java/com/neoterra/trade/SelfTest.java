@@ -227,7 +227,7 @@ final class SelfTest
                     finish(level, false);
                     return;
                 }
-                finish(level, checkBlueprints(level) & checkResearch() & checkFreeFastResearch() & checkFreePlacement(level));
+                finish(level, checkBlueprints(level) & checkResearch() & checkFreeFastResearch() & checkFreePlacement(level) & checkEntities(level));
             }
             default -> { }
         }
@@ -299,6 +299,30 @@ final class SelfTest
         }
         log("research: %d branches 10x faster, %d sampled researches free: %s", branches, checked, ok && checked > 0);
         return ok && checked > 0;
+    }
+
+    /** Item frames and armour stands in the player house survive loading through Structurize. */
+    private static boolean checkEntities(final ServerLevel level)
+    {
+        boolean ok = true;
+        for (final String pack : new String[] {"Neoterra", "Hearthwood", "Cascadia"})
+        {
+            final com.ldtteam.structurize.blueprints.v1.Blueprint bp =
+                com.ldtteam.structurize.storage.StructurePacks.getBlueprint(pack, "decorations/housing/playerhouse5.blueprint", level.registryAccess());
+            int frames = 0, stands = 0;
+            if (bp != null && bp.getEntities() != null)
+            {
+                for (final net.minecraft.nbt.CompoundTag e : bp.getEntities())
+                {
+                    final String id = e.getString("id");
+                    frames += id.contains("item_frame") ? 1 : 0;
+                    stands += id.equals("minecraft:armor_stand") ? 1 : 0;
+                }
+            }
+            log("%s player house L5: %d item frames, %d armour stands", pack, frames, stands);
+            ok &= frames > 0 && stands > 0;
+        }
+        return ok;
     }
 
     /** A hut is placed with the build tool without its hut block in the inventory; a refused placement leaves nothing behind. */
