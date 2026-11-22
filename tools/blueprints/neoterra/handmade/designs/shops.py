@@ -771,7 +771,8 @@ def cook_hw(rel, L):
             d.chair(tx - 1, y0, 2, "west", oak)
             d.chair(tx + 1, y0, 2, "east", oak)
             seats += 2
-    d.rug(6, 6, 7, Z2 - 1, y0, ("red_carpet",), "plain")
+    for z0 in range(6, Z2 - 3, 5):                              # runner mats down the aisle, gaps between
+        d.rug(6, z0, 7, z0 + 2, y0, ("red_carpet",), "plain")
     need = {1: 8, 2: 20, 3: 34}.get(L, 37)
     assert seats >= need, (seats, need)
     for z in range(8, Z2, 4):
