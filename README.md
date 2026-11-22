@@ -67,6 +67,22 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## Every building finished, 29 automatic farms, all town pieces hand-made (1.24.0)
+* **Every hut type** now has fully furnished rooms and a different layout on every storey, in all three packs and
+  all levels (last groups: trades, fortifications, shops, landwork, tavern, cathedral & colossus, university,
+  community college, library, town hall, hospital, school). Broken stairs, blocked rooms and unreachable floors
+  found on the way were fixed.
+* **29 new Farmworks farms**, each built and run on a test server before release (`gradle runFarmtest`):
+  crops & plants (sugar cane, bamboo, kelp, pumpkin/melon, villager crops, cocoa, sweet berries, flowers, tree grove),
+  animals (wool, honey, chicken cooker, cow breeder, turtle beach, goat barn), mobs & XP (creeper, spider,
+  XP grinder with auto/XP switch, gold farm for the Nether, drowned farm for rivers, slime farm for slime chunks)
+  and resources (cobblestone/stone/basalt generators, lava, snow, ice, mud & clay, concrete). Each farm's sign says
+  what to bring.
+* **All town pieces hand-designed per pack:** walls & watchtowers, roads, parks, rails & rail stop, canals & lock,
+  bridges, subway, boardwalk & pier, cliff climb. Note: the subway entrance is now 9 wide (anchor moved one block)
+  and the pier controller sits one block higher.
+* **Player house:** item-frame labels on the storage rows, map walls, tool walls and armour stands.
+
 ## Monuments, free building and research, more farms (1.23.0)
 * **Place any building without its hut block.** The build tool lists every building of a pack, and placing one no
   longer needs the hut block in your inventory (server config `placement.freeHutPlacement`, on by default).
