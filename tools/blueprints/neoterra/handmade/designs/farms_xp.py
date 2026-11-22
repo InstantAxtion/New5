@@ -135,9 +135,11 @@ def water_floor(d, w, y0, kind):
     kind 'creeper': quadrants cut into 1-wide strips (spiders, 1.4 wide, cannot spawn) under closed top-half
                     trapdoors: 2 - 3/16 = 1.8125 clear -> creepers (1.7) fit, zombies / skeletons /
                     witches (1.95+) do not. Creepers are the only mob that can spawn on this floor.
-    kind 'spider' : quadrants raised 1, ONE block high -> only spiders (0.9 tall) spawn (they need the 3x3 room
-                    the open quadrants give them)."""
-    pitch = 3 if kind == "spider" else 4
+    kind 'spider' : ONE block high, quadrants at the SAME level as the water (a step would let spiders climb out
+                    of the channel): every quadrant cell next to a channel holds a standing sign - flowing water
+                    cannot enter a sign (FlowingFluid.canHoldFluid), mobs walk through it. Only spiders (0.9 tall)
+                    spawn; the open quadrants give them the 3x3 room they need."""
+    pitch = 2 if kind == "spider" else 4
     xs, zs = inner(w)
     X1, Z1, X2, Z2 = outer(w)
     d.fill(X1, y0, Z1, X2, y0, Z2, SB)
@@ -150,6 +152,10 @@ def water_floor(d, w, y0, kind):
             elif k == "arm":
                 d.set(x, y0 + 1, z, WATER if dist == 8 else AIR)          # sources at d=8, else: flow
                 d.clear(x, y0 + 2, z, x, y0 + pitch - 1, z)
+            elif kind == "spider":
+                edge = any(classify(x + a, z + b, w)[0] == "arm" for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1))
+                           if (x + a) in xs and (z + b) in zs)
+                d.set(x, y0 + 1, z, f"spruce_sign[rotation={(x * 3 + z) % 16},waterlogged=false]" if edge else AIR)
             else:
                 d.set(x, y0 + 1, z, "stone")                                # raised spawning floor
                 if kind == "creeper":
@@ -365,6 +371,15 @@ def strip_spawns(mob, y, cells, n_each=1):
     return [(mob, x, y, z, n_each) for (x, z) in cells]
 
 
+# Test note: the test server has no player. A hostile mob with no player within 32 blocks counts up noActionTime
+# and RandomStrollGoal stops after 100 ticks (Mob.checkDespawn never resets it), so in the test mobs stand still
+# 5 s after spawning (in game the player AFK at the farm keeps them wandering). The tests therefore put most mobs
+# where a wandering mob ends up - in the water channels / on the centre trapdoors - plus some on the spawning
+# floors, and check transport, kill and collection.
+CHANNEL = ((9, 5), (16, 11), (10, 18), (3, 12))           # channel cells (d = 6, 6, 6, 6) of a 2x2-hole platform
+CENTRE = ((HX, HZ), (HX + 1, HZ), (HX, HZ + 1), (HX + 1, HZ + 1))
+
+
 # ================================================================================================ creeper farm
 @design("creeperfarm")
 def creeperfarm(pack, rel, L):
@@ -388,7 +403,8 @@ def creeperfarm(pack, rel, L):
     roof_box(d, w, y)
     # test: creepers stand on the strips where they would have spawned (both floors, all four quadrants)
     cells = [(4, 10), (6, 8), (14, 6), (16, 10), (3, 13), (7, 15), (13, 17), (15, 13)]
-    spawns = strip_spawns("minecraft:creeper", 30, cells) + strip_spawns("minecraft:creeper", 34, cells[::2])
+    spawns = (strip_spawns("minecraft:creeper", 30, cells) + strip_spawns("minecraft:creeper", 34, cells[::2])
+              + [("minecraft:creeper", x, y0 + 1, z, 1) for y0 in floors for (x, z) in CHANNEL])
     d.farm_test(expect={"minecraft:gunpowder": 3}, spawns=spawns, ticks=6000)
     return d
 
@@ -398,16 +414,17 @@ def creeperfarm(pack, rel, L):
 def spiderfarm(pack, rel, L):
     """Spider tower (string), no spawner. Three spider-only floors on top of a 4x4 drop shaft.
 
-    Spawning floor (y0 = 25, 28, 31): open quadrants raised one block over the water channels and only ONE block
-    high - nothing but spiders (0.9 tall) fits, and the 8x8 quadrants give them the 3x3 room they need. Spiders
-    drop into the 2-wide channels, the water carries them into the 2x2 hole. Below the lowest floor the shaft
+    Spawning floor (y0 = 25, 27, 29, 31): ONE block high - nothing but spiders (0.9 tall) fits, and the 8x8
+    quadrants give them the 3x3 room they need. Quadrants and water channels are on the same level (a step lets a
+    spider climb back out of a channel); standing signs along the channel edges hold the water back. Spiders walk
+    into the 1-high channels and the water carries them into the 2x2 hole. Below the lowest floor the shaft
     widens to 4x4: a falling spider (1.4 wide) does not touch a wall, so it cannot climb (Spider: climbing =
     horizontal collision, which resets the fall). 22-block fall -> 19 damage (16 hp). A spider that does climb
     ends up under the platform ceiling and falls the full height later. 16 hoppers -> four chests."""
     w = 2
-    d = Design(pack, rel, size=(20, 38, 22), gy=1, paving="grass_block")
+    d = Design(pack, rel, size=(20, 37, 22), gy=1, paving="grass_block")
     shaft = (HX - 1, HZ - 1, HX + 2, HZ + 2)
-    floors = (25, 28, 31)
+    floors = (25, 27, 29, 31)
     windows = [(5, 3, 5), (6, 3, 5), (13, 3, 5), (14, 3, 5), (4, 3, 12), (15, 3, 12), (7, 3, 16), (12, 3, 16)]
     tower(d, w, shaft, 3, floors[0], windows=windows,
           lines=["Spider Farm", "string", "Bring: nothing", "(works at night)"])
@@ -415,11 +432,9 @@ def spiderfarm(pack, rel, L):
     for y0 in floors:
         y = water_floor(d, w, y0, "spider")
     roof_box(d, w, y)
-    cells = [(3, 5), (6, 8), (13, 5), (16, 8), (3, 15), (6, 18), (13, 15), (16, 18)]
-    spawns = strip_spawns("minecraft:spider", 27, cells) + strip_spawns("minecraft:spider", 30, cells[::2])
-    import os
-    if os.environ.get("XPDBG"):
-        spawns = [("minecraft:spider", x, y0 + 1, z, 1) for y0 in floors for (x, z) in ((9, 5), (16, 11), (10, 18), (3, 12))]
+    cells = [(4, 5), (6, 7), (13, 5), (15, 7), (4, 16), (6, 18), (13, 16), (15, 18)]
+    spawns = (strip_spawns("minecraft:spider", floors[0] + 1, cells) + strip_spawns("minecraft:spider", floors[2] + 1, cells[::2])
+              + [("minecraft:spider", x, y0 + 1, z, 1) for y0 in floors for (x, z) in CHANNEL])
     d.farm_test(expect={"minecraft:string": 3}, spawns=spawns, ticks=6000)
     return d
 
@@ -508,9 +523,7 @@ def xpgrinder(pack, rel, L):
     cells = [(3, 5), (6, 8), (13, 5), (16, 8), (3, 15), (6, 18), (13, 15), (16, 18)]
     spawns = (strip_spawns("minecraft:zombie", y0 + 2, cells[:4]) + strip_spawns("minecraft:skeleton", y0 + 2, cells[4:])
               + strip_spawns("minecraft:zombie", y0 + 2, cells[4:]) + strip_spawns("minecraft:skeleton", y0 + 2, cells[:4]))
-    import os
-    if os.environ.get("XPDBG"):
-        spawns = [("minecraft:zombie", x, y0 + 1, z, 2) for (x, z) in ((9, 5), (16, 11), (10, 18), (3, 12))]
+    spawns += [(m, x, y0 + 1, z, 2) for m in ("minecraft:zombie", "minecraft:skeleton") for (x, z) in CHANNEL]
     d.farm_test(expect={"minecraft:rotten_flesh": 1, "minecraft:bone": 1}, spawns=spawns, ticks=6000)
     return d
 
@@ -548,7 +561,8 @@ def goldfarm(pack, rel, L):
     for y0 in floors:                                    # the hole through every floor
         d.clear(HX, y0, HZ, HX + 1, y0, HZ + 1)
     cells = [(9, 4), (10, 7), (2, 11), (5, 12), (14, 11), (17, 12), (9, 16), (10, 19)]
-    spawns = [("minecraft:zombified_piglin", x, y0 + 1, z, 1) for y0 in floors for (x, z) in cells[::1 if y0 == 28 else 2]]
+    spawns = ([("minecraft:zombified_piglin", x, y0 + 1, z, 1) for y0 in floors for (x, z) in cells[::2]]
+              + [("minecraft:zombified_piglin", x, y0 + 1, z, 1) for y0 in floors for (x, z) in CENTRE])
     d.farm_test(expect={"minecraft:gold_nugget": 2, "minecraft:rotten_flesh": 1}, spawns=spawns, ticks=6000)
     return d
 
@@ -559,10 +573,11 @@ def drownedfarm(pack, rel, L):
     """Drowned farm: build it in a RIVER biome (drowned spawn in dark river water at any height; in oceans only
     below y = 58). Two cross-shaped tanks (floor y = 28 and 32) of still water, two blocks deep (a drowned spawns in
     water with water below it) and roofed (dark). With no target a drowned walks on the tank floor; the arms meet
-    only in the 2x2 centre, whose open trapdoors (dry: flowing water cannot enter a trapdoor, and the source above
-    it cannot flow down into it) it walks onto and drops 25 blocks onto the hoppers. Rotten flesh (and any
-    nautilus shell a drowned holds) to the chests; copper ingots and tridents only drop on player kills.
-    All water blocks are sources placed by the blueprint (2 layers, 4 arms, plus one over each trapdoor)."""
+    only in the 2x2 centre: two open trapdoors stacked in each centre cell (both water levels) keep the centre
+    DRY (flowing water cannot enter a trapdoor) - a drowned that walks onto them is out of the water at once and
+    drops 25 blocks onto the hoppers (with water over the centre it would only sink slowly and walk on across).
+    Rotten flesh (and any nautilus shell a drowned holds) to the chests; copper ingots and tridents only drop on
+    player kills. All water blocks are sources placed by the blueprint (2 layers in the 4 arms)."""
     w = 2
     d = Design(pack, rel, size=(20, 39, 22), gy=1, paving="grass_block")
     shaft = (HX, HZ, HX + 1, HZ + 1)
@@ -584,8 +599,9 @@ def drownedfarm(pack, rel, L):
     for y0 in floors:
         d.clear(HX, y0, HZ, HX + 1, y0, HZ + 1)
     cells = [(9, 4), (10, 7), (2, 11), (5, 12), (14, 11), (17, 12), (9, 16), (10, 19)]
-    spawns = [("minecraft:drowned", x, y0 + 1, z, 1) for y0 in floors for (x, z) in cells]
-    d.farm_test(expect={"minecraft:rotten_flesh": 3}, spawns=spawns, ticks=6000)
+    spawns = ([("minecraft:drowned", x, y0 + 1, z, 1) for y0 in floors for (x, z) in cells[::2]]
+              + [("minecraft:drowned", x, y0 + 1, z, 2) for y0 in floors for (x, z) in CENTRE])
+    d.farm_test(expect={"minecraft:rotten_flesh": 4}, spawns=spawns, ticks=6000)
     return d
 
 

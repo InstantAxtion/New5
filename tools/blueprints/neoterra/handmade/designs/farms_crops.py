@@ -324,7 +324,7 @@ def kelp(pack, rel, L):
     for x in range(2, 10):
         d.set(x, 1, 2, "gravel")
     d.farm_test(expect={"minecraft:kelp": 10}, ticks=12000,
-                blocks=[(x, 6, z, "minecraft:water") for x in (3, 15) for z in (A, K, B)], blocks_min=99)
+                blocks=[(x, 6, K, "minecraft:water") for x in range(3, 16)], blocks_min=99)
     return d
 
 

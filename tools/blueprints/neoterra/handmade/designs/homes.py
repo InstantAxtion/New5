@@ -3661,28 +3661,37 @@ def storage_vault(d, V, W, frame, pack):
     d.set(xe - 1, 3, zb - 1, frame)
     d.sign(xe - 1, 3, zb - 2, "north", ["Overflow", "chest at the", "east end ->"], W)
     d.sign(xa, 3, zb, "east", ["INPUT", "drop items in", "the chest above", "the hopper line"], W)
-    labels = ["Stone", "Wood", "Ores", "Metals", "Food", "Farming", "Mob drops", "Redstone", "Building",
-              "Dyes & wool", "Nether", "Ocean", "Tools", "Potions", "Valuables", "Misc"]
+    cats = ["Stone", "Cobble & gravel", "Dirt & sand", "Wood", "Logs & saplings", "Ores", "Metals", "Gems",
+            "Food", "Crops & seeds", "Mob drops", "Redstone", "Building", "Glass & clay", "Dyes & wool", "Nether",
+            "The End", "Ocean", "Tools", "Arms & armour", "Brewing", "Enchanting", "Valuables", "Misc"]
+    k = [0]
+
+    def label():
+        i = k[0]
+        k[0] += 1
+        return [cats[i % len(cats)] + ("" if i < len(cats) else " II")]
     for i, x in enumerate(range(xa + 1, xe - 1, 2)):
-        d.sign(x, 2, zb - 2, "north", ["Bulk", str(i + 1)], W)
-        d.sign(x, 3, zb - 2, "north", [labels[i % len(labels)]], W)
+        d.sign(x, 2, zb - 2, "north", ["Bulk", str(i + 1), "(fed by the", "hopper line)"], W)
+        d.sign(x, 3, zb - 2, "north", label(), W)
     # island: double chests two high, facing both aisles
     zi = (z1 + z2) // 2                                            # 40
-    k = 0
     for x in range(xa + 3, xe - 3, 2):
         for z, f in ((zi, "north"), (zi + 1, "south")):
             dchest(d, x, 2, z, f, "x")
             dchest(d, x, 3, z, f, "x")
-            d.sign(x if f == "north" else x + 1, 3, z + (-1 if f == "north" else 1), f,
-                   [labels[(k + 3) % len(labels)]], W)
-            k += 1
+            d.sign(x if f == "north" else x + 1, 3, z + (-1 if f == "north" else 1), f, label(), W)
     # side walls: three double chests two high each side, north part of the room
     for x, f in ((xa, "east"), (xe, "west")):
         for z in (z1 + 2, z1 + 4, z1 + 6):
             dchest(d, x, 2, z, f, "z")
             dchest(d, x, 3, z, f, "z")
-            d.sign(x + (1 if f == "east" else -1), 3, z, f, [labels[(k + 5) % len(labels)]], W)
-            k += 1
+            d.sign(x + (1 if f == "east" else -1), 3, z, f, label(), W)
+    # on top of the chests (non-solid pieces only, so every lid still opens): pots, candles, a few plants
+    tops = [POT, "candle[candles=3,lit=false,waterlogged=false]", "potted_fern", POT, "potted_spruce_sapling"]
+    for i, x in enumerate(range(xa + 4, xe - 3, 3)):
+        d.set(x, 4, zi + i % 2, tops[i % len(tops)])
+    for i, x in enumerate(range(xa + 3, xe - 1, 3)):
+        d.set(x, 4, zb - 1, tops[(i + 2) % len(tops)])
     # sorting desk by the door: crafting table, a slab bench, light
     dx = (x1 + x2) // 2
     fit(d, [(dx - 3, 2, z1 + 1, "crafting_table"), (dx - 2, 2, z1 + 1, slab(W, "top")),

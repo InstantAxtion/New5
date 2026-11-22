@@ -528,6 +528,10 @@ def hw_casting_house(d, L):
         for y in range(3, 17):
             d.set(33, y, 14, "bricks")
         d.set(33, 3, 13, stair("brick_stairs", "south", "top"))
+    # founders' tools between the side arches: sand riddles, rammers, the moulders' chest, water for the sand
+    put(d, [(22, 2, 10, "chest[facing=east,type=single,waterlogged=false]"), (22, 3, 10, trap("spruce_trapdoor", "east", open_=True)),
+            (34, 2, 10, "barrel[facing=up,open=false]"), (34, 3, 10, "barrel[facing=west,open=false]"),
+            (22, 2, 6, "water_cauldron[level=3]"), (34, 2, 9, "composter[level=7]")])
     for x, z in ((25, 10), (31, 10), (28, 7), (28, 13)):
         lamp(d, x, 6, z)
 
