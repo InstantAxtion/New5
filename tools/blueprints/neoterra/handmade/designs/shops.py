@@ -247,7 +247,12 @@ def baker_hw(rel, L):
         need = 8 if L == 2 else 12
         for tx, tz in [(18, 7), (21, 7)] + ([(19, 10)] if need > 8 else []):   # tea tables
             d.dining(tx, y0, tz, 1, "x", "oak", ("n", "s", "e", "w"))
-        d.rug(17, 9, 21, 11, y0, ("red_carpet",), "plain")
+        if need > 8:                                            # rug under the third table
+            d.rug(17, 9, 21, 11, y0, ("red_carpet",), "plain")
+        else:                                                   # L2: a dresser of cakes in the empty end
+            for x, top in ((18, CAKE), (19, "potted_red_tulip"), (20, CAKE)):
+                d.set(x, y0, 11, sl("oak", "top"))
+                d.set(x, 3, 11, top)
         d.lamp(19, 5, 8)
         d.door(22, y0, wz1, "south", oak)
     # ---- L3+: rear flour store (shed roof) behind the shop, door through the back wall
@@ -752,6 +757,8 @@ def cook_hw(rel, L):
                   "has_bottle_1=false,has_bottle_2=true]")
             d.set(x, 4, Z2 - 1, lant())
         seats += bar_row(d, 6, 11, Z2 - 3, y0, "stripped_dark_oak_wood[axis=y]", "north", oak)
+        d.set(7, 3, Z2 - 3, "candle[candles=3,lit=true,waterlogged=false]")          # on the bar top
+        d.set(10, 3, Z2 - 3, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
         d.set(12, y0, Z2 - 3, f"{oak}_fence_gate[facing=east,in_wall=false,open=false,powered=false]")
     for z in ([8] if L < 3 else [8, 20]):                        # booths under the west windows
         booth(d, 4, z, y0, oak)
@@ -771,8 +778,7 @@ def cook_hw(rel, L):
             d.chair(tx - 1, y0, 2, "west", oak)
             d.chair(tx + 1, y0, 2, "east", oak)
             seats += 2
-    for z0 in range(6, Z2 - 3, 5):                              # runner mats down the aisle, gaps between
-        d.rug(6, z0, 7, z0 + 2, y0, ("red_carpet",), "plain")
+    d.rug(6, 6, 7, 7, y0, ("red_carpet",), "plain")             # door mat inside the entrance
     need = {1: 8, 2: 20, 3: 34}.get(L, 37)
     assert seats >= need, (seats, need)
     for z in range(8, Z2, 4):
@@ -1589,6 +1595,11 @@ def florist_cas(rel, L):
     beds(d, cells, y0, 4 * L)
     d.set(16, y0, gz2 - 1, "water_cauldron[level=3]")
     d.set(16, 4, (gz1 + gz2) // 2, lant())
+    for x in (13, 14):                                          # potting bench + soil barrel / composter by the door
+        d.set(x, y0, gz1 + 1, sl("spruce", "top"))
+        d.set(x, 3, gz1 + 1, "flower_pot")
+    d.set(18, y0, gz1 + 1, "barrel[facing=up,open=false]")
+    d.set(19, y0, gz1 + 1, "composter[level=5]")
     # L2+: raised planter boxes in the yard in front of the greenhouse
     if L >= 2:
         for x in range(13, 20, 3):
@@ -1890,6 +1901,11 @@ def dyer_cas(rel, L):
     for x, z, f in spare[:max(0, L - (z2 - 2 - rz1))]:
         d.rack(x, y0, z, f)
     d.hut(x2 - 1, y0, z1 + 1)
+    for x in (x2 - 3, x2 - 2):                                  # bins of spun hanks in the loom room
+        d.set(x, y0, rz1 + 1, "barrel[facing=up,open=false]")
+    d.set(x2 - 1, y0, z1 + 3, "water_cauldron[level=3]")         # rinse tub + dyestuff barrels by the posts
+    d.set(x2 - 1, y0, z1 + 4, "barrel[facing=up,open=false]")
+    d.set(x2 - 1, 3, z1 + 4, "barrel[facing=up,open=false]")
     d.set(9, 5, z2 - 2, lant())
     d.set(9, 5, z1 + 3, lant())
     # drying frames with hanks of wool beside the pavilion
@@ -2062,6 +2078,8 @@ def glassblower_hw(rel, L):
         if i < L:
             d.rack(x, y0, z, f)
     d.set(cx - 4, y0, cz - 1, "water_cauldron[level=3]")
+    for x in (cx - 2, cx + 3):                                  # cullet barrels either side of the doorway
+        d.set(x, y0, cz - 3, "barrel[facing=up,open=false]")
     d.hut(cx - 3, y0, cz - 3)
     for x, z in ((cx - 3, cz), (cx + 3, cz)):
         d.set(x, 2, z, "lantern[hanging=false,waterlogged=false]")
@@ -2155,6 +2173,13 @@ def glassblower_cas(rel, L):
         d.set(x, y0, 10, "stripped_spruce_wood[axis=y]")
     d.set(10, 3, 10, glass_c(d, 2))
     d.set(11, 3, 10, "lightning_rod[facing=up,powered=false,waterlogged=false]")
+    for z in (10, 11):                                          # marver bench on the west wall + gaffer's chair
+        d.set(x1 + 1, y0, z, "stripped_spruce_wood[axis=y]")
+    d.set(x1 + 1, 3, 10, "flower_pot")
+    d.set(x1 + 1, 3, 11, glass_c(d, 4, True))
+    d.chair(x1 + 2, y0, 10, "east", "spruce", sit=False, arms=True)
+    for z in (z2 - 1, z2 - 2):                                  # sand barrels in the back corner
+        d.set(x2 - 1, y0, z, "barrel[facing=up,open=false]")
     if L >= 3:                                                  # showroom in the extension
         for x in (15, 17):
             d.set(x, y0, 10, "stripped_spruce_wood[axis=y]")
@@ -3399,6 +3424,11 @@ def _g_baker_cas(d, L):
                                                  "kWkhkWk"]], "z", tall=True, chimney=False, dormer=False,
             mlog="stripped_spruce_log", mroof="mangrove", lower="cobblestone")
         put(d, torch(25, 4, 6, "west") + [(25, 2, 4, "hay_block[axis=y]"), (25, 2, 10, "white_wool")])
+        put(d, wbox(28, 2, "north", "cornflower") + wbox(31, 2, "north", "poppy")          # mill eaves
+            + [(28, 2, 12, "barrel[facing=up,open=false]"), (29, 2, 12, "barrel[facing=up,open=false]"),
+               (29, 3, 12, "white_wool")])
+        if L == 2:                                                   # (the L3 porch takes over this side)
+            put(d, wbox(35, 5, "east", "allium") + wbox(35, 8, "east", "oxeye_daisy"))
         label(d, 25, 3, 9, "west", ["Mill"])
     if L >= 3:                                                       # baker's porch cabin
         bld(d, 37, 3, 45, 13, 2, ("west", 5), [[".     .",
@@ -3502,7 +3532,9 @@ def _g_baker_cas(d, L):
                                                   "..l....",
                                                   "D.....D"]], "x", roofkind="hip", chimney=False, dormer=False,
             mlog="spruce_log", mroof="dark_prismarine", lower="cobblestone")
-        put(d, torch(43, 4, 37, "west"))
+        put(d, torch(43, 4, 37, "west") + wbox(46, 33, "north", "allium") + wbox(49, 33, "north", "poppy")
+            + wbox(53, 36, "east", "cornflower") + wbox(53, 39, "east", "oxeye_daisy")
+            + [(47, 2, 43, "barrel[facing=up,open=false]"), (48, 2, 43, "barrel[facing=up,open=false]")])
         label(d, 43, 3, 40, "west", ["Rooms"])
         cart(d, 38, 34, "z", "hay_block[axis=y]")
         for x, z in ((38, 43), (27, 40), (6, 42), (51, 22), (51, 13)):
@@ -4010,6 +4042,11 @@ def _g_cook_hw(d, L):
             dormer=False, mwall="calcite", mroof="dark_prismarine", lower="bricks")
         put(d, torch(37, 4, 25, "west") + torch(37, 4, 27, "west")
             + [(37, 7, 21, "red_wall_banner[facing=west]"), (37, 7, 31, "red_wall_banner[facing=west]")])
+        # window boxes along both long walls (the west ones north of where the L5 garden room joins),
+        # a cider barrel at the back corner
+        put(d, wbox(37, 17, "west", "red_tulip", "crimson") + wbox(37, 20, "west", "oxeye_daisy", "crimson")
+            + wbox(51, 20, "east", "poppy", "crimson") + wbox(51, 26, "east", "cornflower", "crimson")
+            + wbox(51, 32, "east", "allium", "crimson") + [(51, 2, 36, "barrel[facing=up,open=false]")])
         label(d, 37, 3, 28, "west", ["Banquet", "Hall"])
     if L >= 5:                                                       # garden-room wing makes the hall an L
         bld(d, 26, 29, 38, 37, 1, ("north", 6), [["pV.......Vp",
@@ -4022,6 +4059,9 @@ def _g_cook_hw(d, L):
             mwall="smooth_sandstone", mroof="dark_prismarine", keep_roof=True)
         put(d, wbox(28, 28, "north", "pink_tulip", "crimson") + wbox(36, 28, "north", "cornflower", "crimson")
             + torch(31, 4, 28, "north") + torch(33, 4, 28, "north"))
+        put(d, wbox(25, 31, "west", "pink_tulip", "crimson") + wbox(25, 34, "west", "allium", "crimson")
+            + [(40, 2, 38, "water_cauldron[level=3]"), (41, 2, 38, "barrel[facing=up,open=false]")])
+        bench(d, 30, 38, "south", 2)                                  # bench under the eaves facing the orchard
         label(d, 34, 3, 28, "north", ["Garden", "Room"])
         bld(d, 26, 14, 34, 22, 4, ("west", 4), [[".     .",              # guest tower
                                                   ".......",
@@ -4116,6 +4156,10 @@ def _g_cook_cas(d, L):
         put(d, torch(46, 4, 23, "north") + torch(48, 4, 23, "north") + [(41, 2, 22, "barrel[facing=up,open=false]"),
                                                                          (53, 2, 22, "hay_block[axis=y]")])
         label(d, 50, 3, 23, "north", ["Mess", "Hall"])
+        # back eaves: window boxes, slop barrels by the kitchen end, firewood stacked against the wall
+        put(d, wbox(43, 37, "south", "cornflower") + wbox(52, 37, "south", "poppy")
+            + [(40, 2, 37, "barrel[facing=up,open=false]"), (41, 2, 37, "barrel[facing=up,open=false]")])
+        woodpile(d, 46, 49, 37, 2, "spruce")
         pavilion(d, 28, 26, 34, 30, 3, [(28, 26), (34, 26), (28, 30), (34, 30), (31, 30)], "x", "spruce",
                  "spruce_log")                                         # open wood shed
         woodpile(d, 29, 33, 29, 2, "spruce")
@@ -4447,7 +4491,8 @@ def _g_cookery_cas(d, L):
                                                   "kYk.kYk.l.kKk.hWh"]], "x", tall=True, chimney=(32, 13),
             dormer=False, mlog="stripped_spruce_log", mroof="cobbled_deepslate", lower="cobblestone")
         porch_lean(d, 25, 41, 23, 20, 6, "spruce", "spruce_log", (25, 29, 33, 37, 41), floor="spruce_planks")
-        put(d, torch(23, 4, 16, "west") + torch(23, 4, 18, "west"))
+        put(d, torch(23, 4, 16, "west") + torch(23, 4, 18, "west")
+            + wbox(43, 16, "east", "cornflower") + wbox(43, 19, "east", "oxeye_daisy"))
         label(d, 23, 3, 15, "west", ["Camp", "Kitchen"])
     if L >= 4:                                                       # supply barn with hay hoist
         bld(d, 2, 26, 20, 34, 2, ("north", 9), [[".     ......kYkYk",
@@ -4467,6 +4512,12 @@ def _g_cookery_cas(d, L):
             mlog="stripped_dark_oak_log", mroof="mangrove", wall="birch_planks", lower="cobblestone")
         hoist(d, 20, 30, 13, "east")
         put(d, torch(10, 4, 25, "north") + torch(12, 4, 25, "north"))
+        # under the eaves: window boxes, flour barrels at the west end, hay bales and a rain butt behind,
+        # a barrel under the hoist
+        put(d, wbox(4, 25, "north", "cornflower") + wbox(16, 25, "north", "poppy")
+            + [(1, 2, 29, "barrel[facing=up,open=false]"), (1, 2, 30, "barrel[facing=up,open=false]"),
+               (6, 2, 35, "hay_block[axis=x]"), (7, 2, 35, "hay_block[axis=x]"),
+               (14, 2, 35, "water_cauldron[level=3]"), (21, 2, 32, "barrel[facing=up,open=false]")])
         label(d, 14, 3, 25, "north", ["Supply", "Barn"])
     if L >= 5:
         pavilion(d, 24, 27, 36, 35, 4, [(24, 27), (30, 27), (36, 27), (24, 35), (30, 35), (36, 35)], "x",
@@ -5009,6 +5060,9 @@ def _g_florist_hw(d, L):
             mwall="white_terracotta", mroof="brick", lower="bricks")
         put(d, wbox(5, 23, "north", "red_tulip", "warped") + wbox(8, 23, "north", "lily_of_the_valley", "warped")
             + torch(10, 4, 23, "north"))
+        put(d, wbox(2, 26, "west", "pink_tulip", "warped") + wbox(2, 29, "west", "allium", "warped")    # west eaves
+            + wbox(2, 32, "west", "cornflower", "warped") + [(5, 2, 35, "composter[level=4]"),
+                                                            (6, 2, 35, "barrel[facing=up,open=false]")])
         label(d, 12, 3, 23, "north", ["Florist's", "House"])
         for x in (19, 21, 23, 25):                                    # rose arbour on the garden path
             for y in (2, 3, 4):
@@ -5543,12 +5597,12 @@ def _g_glass_neo(d, L):
                                                   "...l...",
                                                   "D.wTe.D",
                                                   "       "],
-                                                 ["       ",
+                                                 ["       ",                # design studio
                                                   ".......",
-                                                  "Hf...fH",
-                                                  "N.....N",
-                                                  "...l...",
-                                                  "D......",
+                                                  "C.TTT.E",
+                                                  "...s...",
+                                                  ".......",
+                                                  "p..l..b",
                                                   ".     ."],
                                                  [".     .",
                                                   ".......",

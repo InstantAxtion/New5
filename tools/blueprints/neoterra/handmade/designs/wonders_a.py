@@ -2771,6 +2771,10 @@ def cg_hall(d, x1, z1, x2, z2, ph, L):
 def nb_hall(d, x1, z1, x2, z2, ph, L):
     """Beacon gallery (hand-placed): reception desk beside the door, the statue model on a lit plinth at the
     back, two info kiosks, a bench pair, planters in the corners; later a media wall, display cases."""
+    if L >= 5:
+        return nb_hall5(d, x1, z1, x2, z2, ph)
+    if L == 4:
+        return nb_hall4(d, x1, z1, x2, z2, ph)
     ix1, iz1, ix2, iz2 = hall_box(x1, z1, x2, z2)
     cx, cz = (x1 + x2) // 2, (z1 + z2) // 2
     d.fill(ix1, 1, iz1, ix2, 1, iz2, "polished_diorite")
@@ -2804,6 +2808,220 @@ def nb_hall(d, x1, z1, x2, z2, ph, L):
         d.set(ix2, 2, iz2, "potted_bamboo")
         d.set(ix2, 3, iz1 + 3, "orange_wall_banner[facing=west]")
         d.set(ix1, 4, iz1 + 3, "orange_wall_banner[facing=east]")
+
+def cbook(facing, k=0):
+    """Chiseled bookshelf, partly filled (k varies the pattern)."""
+    occ = [((i + k) % 3) != 0 for i in range(6)]
+    return f"chiseled_bookshelf[facing={facing}," + ",".join(
+        f"slot_{i}_occupied={'true' if o else 'false'}" for i, o in enumerate(occ)) + "]"
+
+
+def nb_hall4(d, x1, z1, x2, z2, ph):
+    """L4 Beacon gallery (interior 16..32 x 18..34, one tall storey): reception by the door, the statue model in
+    the middle with benches, exhibit plinths on the west front, a media theatre on the EAST wall, the archive
+    with a reading table in the back-west corner, souvenir counter at the back, pendant lights."""
+    ix1, iz1, ix2, iz2 = hall_box(x1, z1, x2, z2)
+    cx = (x1 + x2) // 2                                              # 24
+    Q = "smooth_quartz_slab[type=top,waterlogged=false]"
+    d.fill(ix1, 1, iz1, ix2, 1, iz2, "polished_diorite")
+    d.rug(cx, iz1, cx, iz1 + 5, 2, ("orange_carpet",), "plain")
+    d.counter(26, 19, 27, 19, 2, top="smooth_quartz_slab")           # reception
+    d.chair(26, 2, 20, "south", "cherry", sit=False)
+    d.set(27, 3, 19, "black_stained_glass_pane")
+    d.set(ix2, 2, iz1, "potted_bamboo")
+    d.set(ix1, 2, iz1, "potted_bamboo")
+    d.set(cx, 2, 27, "smooth_quartz")                                # the model, benches round it
+    d.set(cx, 3, 27, "white_stained_glass")
+    d.set(cx, 4, 27, "end_rod[facing=up]")
+    d.rug(cx - 1, 26, cx + 1, 28, 2, ("cyan_carpet",), "plain")
+    d.chair(cx, 2, 25, "north", "cherry", sit=False)
+    d.chair(cx, 2, 29, "south", "cherry", sit=False)
+    d.chair(cx - 2, 2, 27, "west", "cherry", sit=False)
+    for x, z, top in ((18, 20, "decorated_pot[cracked=false,facing=north,waterlogged=false]"),
+                      (20, 20, "white_stained_glass"), (18, 23, "white_stained_glass")):
+        d.set(x, 2, z, Q)
+        d.set(x, 3, z, top)
+    d.set(19, 2, 20, "lectern[facing=north,has_book=true,powered=false]")
+    for z in range(25, 30):                                          # media theatre, east wall
+        for y in (3, 4):
+            d.set(ix2, y, z, "black_stained_glass_pane")
+    for x in (28, 30):
+        for z in (26, 27, 28):
+            d.chair(x, 2, z, "west", "cherry", sit=False)
+    d.set(ix2, 2, 24, "jukebox[has_record=false]")
+    for z in range(29, 35):                                          # archive, back-west
+        d.set(ix1, 2, z, cbook("east", z))
+        d.set(ix1, 3, z, "bookshelf" if z % 2 else cbook("east", z + 1))
+    d.dining(18, 2, 31, 2, "z", "cherry", chairs=("e",), sit=False)
+    d.set(18, 3, 31, "candle[candles=2,lit=false,waterlogged=false]")
+    d.counter(26, 32, 28, 32, 2, top="smooth_quartz_slab")           # souvenir counter and shelves
+    d.chair(27, 2, 33, "south", "cherry", sit=False)
+    for x in range(25, 32):
+        d.set(x, 2, iz2, cbook("north", x))
+    for x in (25, 28, 31):
+        d.set(x, 3, iz2, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
+    d.set(ix2, 2, iz2, "potted_bamboo")
+    d.set(cx - 2, 3, iz2, "orange_wall_banner[facing=north]")
+    for x, z in ((19, 21), (cx, 22), (29, 22), (19, 28), (29, 27), (cx, 31), (20, 33)):
+        d.set(x, ph - 1, z, "end_rod[facing=down]")
+
+
+def nb_hall5(d, x1, z1, x2, z2, ph):
+    """L5 Beacon pedestal (interior 14..34 x 16..36): two storeys. Ground floor = the Beacon gallery: reception
+    desk, the statue model in the middle with a ring of benches, exhibit plinths (west front), a media theatre on
+    the west wall, an education corner with low tables (east front), souvenir shop at the back, stair on the east
+    wall. Upper floor (y5 deck, walk y6) = the Beacon club: open office along the street windows, meeting table,
+    lounge round a rug, library wall, control desk looking out of the back windows."""
+    ix1, iz1, ix2, iz2 = hall_box(x1, z1, x2, z2)                     # 14, 16, 34, 36
+    cx = (x1 + x2) // 2                                              # 24
+    Q = "smooth_quartz_slab[type=top,waterlogged=false]"
+    d.fill(ix1, 1, iz1, ix2, 1, iz2, "polished_diorite")
+    # ---- structure: upper floor deck at y5 with a blackstone spandrel in the glass band, stair on the east wall
+    d.fill(ix1, 5, iz1, ix2, 5, iz2, "smooth_quartz")
+    for x in range(x1, x2 + 1):
+        for z in (z1, z2):
+            d.set(x, 5, z, "polished_blackstone")
+    for z in range(z1, z2 + 1):
+        for x in (x1, x2):
+            d.set(x, 5, z, "polished_blackstone")
+    for i, z in enumerate((30, 31, 32, 33)):
+        d.set(ix2, 2 + i, z, stair("smooth_quartz_stairs", "south"))
+        if i:
+            d.fill(ix2, 2, z, ix2, 1 + i, z, "white_concrete")
+    d.clear(ix2, 5, 30, ix2, 5, 32)
+    for z in (30, 31, 32):
+        d.set(ix2 - 1, 6, z, "iron_bars")                            # stair-well railing upstairs
+    # ================================================================ ground floor
+    d.rug(cx, iz1, cx, iz1 + 6, 2, ("orange_carpet",), "plain")      # entrance runner (7)
+    d.counter(26, 18, 28, 18, 2, top="smooth_quartz_slab")           # reception desk
+    d.chair(26, 2, 19, "south", "cherry", sit=False)
+    d.chair(28, 2, 19, "south", "cherry", sit=False)
+    d.set(26, 3, 18, "black_stained_glass_pane")
+    d.set(28, 3, 18, "potted_bamboo")
+    d.set(29, 2, 17, "potted_bamboo")
+    d.set(19, 2, 17, "potted_bamboo")
+    # statue model in the middle, benches round it
+    d.set(cx, 2, 26, "smooth_quartz")
+    d.set(cx, 3, 26, "white_stained_glass")
+    d.set(cx, 4, 26, "end_rod[facing=up]")
+    d.rug(cx - 1, 25, cx + 1, 27, 2, ("cyan_carpet",), "plain")
+    d.chair(cx, 2, 24, "north", "cherry", sit=False)
+    d.chair(cx, 2, 28, "south", "cherry", sit=False)
+    d.chair(cx - 2, 2, 26, "west", "cherry", sit=False)
+    d.chair(cx + 2, 2, 26, "east", "cherry", sit=False)
+    # exhibits, west front: plinths with pots and glass cases, info lecterns between them
+    for x, z, top in ((16, 18, "decorated_pot[cracked=false,facing=north,waterlogged=false]"),
+                      (19, 18, "white_stained_glass"),
+                      (16, 21, "white_stained_glass"),
+                      (19, 21, "decorated_pot[cracked=false,facing=east,waterlogged=false]")):
+        d.set(x, 2, z, Q)
+        d.set(x, 3, z, top)
+    d.set(17, 2, 18, "lectern[facing=north,has_book=true,powered=false]")
+    d.set(18, 2, 21, "lectern[facing=north,has_book=true,powered=false]")
+    d.set(ix1, 2, iz1, "potted_bamboo")
+    # media theatre on the west wall
+    for z in range(25, 30):
+        for y in (3, 4):
+            d.set(ix1, y, z, "black_stained_glass_pane")
+    d.set(ix1, 2, 27, "jukebox[has_record=false]")
+    for x in (17, 19):
+        for z in (26, 27, 28):
+            d.chair(x, 2, z, "east", "cherry", sit=False)
+    # education corner, east front: two low tables with stools, chalkboard, book trolley
+    for tx in (29, 32):
+        d.set(tx, 2, 23, Q)
+        d.chair(tx, 2, 22, "north", "cherry", sit=False)
+        d.chair(tx, 2, 24, "south", "cherry", sit=False)
+    for z in (21, 22, 23, 24):
+        d.set(ix2, 3, z, "black_stained_glass_pane")                 # chalkboard
+    d.set(ix2, 2, 26, cbook("west", 1))
+    d.set(ix2, 2, 27, cbook("west", 2))
+    d.rug(29, 26, 32, 27, 2, ("light_blue_carpet", "yellow_carpet"), "check")   # play mat (8)
+    # souvenir shop at the back
+    d.counter(27, 33, 29, 33, 2, top="smooth_quartz_slab")
+    d.chair(28, 2, 34, "south", "cherry", sit=False)
+    for x in range(26, 33):
+        d.set(x, 2, iz2, cbook("north", x))
+    for x in (26, 28, 30, 32):
+        d.set(x, 3, iz2, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
+    d.set(31, 2, 31, "barrel[facing=up,open=false]")
+    d.set(31, 3, 31, "potted_bamboo")
+    # archive and curator's desk, back west corner
+    for z in range(32, 37):
+        d.set(ix1, 2, z, cbook("east", z))
+        d.set(ix1, 3, z, cbook("east", z + 1))
+    d.set(17, 2, 34, Q)
+    d.set(18, 2, 34, Q)
+    d.chair(17, 2, 35, "south", "cherry", sit=False)
+    d.set(18, 3, 34, "black_stained_glass_pane")
+    d.set(17, 3, 34, "candle[candles=2,lit=false,waterlogged=false]")
+    d.set(20, 2, iz2, "potted_bamboo")
+    d.set(cx, 2, iz2, "smooth_quartz")                               # back-wall relief: a second model
+    d.set(cx, 3, iz2, "white_stained_glass")
+    d.set(cx - 1, 3, iz2, "orange_wall_banner[facing=north]")
+    d.set(cx + 1, 3, iz2, "orange_wall_banner[facing=north]")
+    for x, z in ((17, 19), (17, 30), (cx, 20), (cx, 32), (30, 20), (30, 29), (21, 26), (27, 26), (29, 35)):
+        d.set(x, 4, z, "end_rod[facing=down]")
+    # ================================================================ upper floor (walk y6)
+    y = 6
+    for x in (16, 17, 18, 21, 22, 23, 26, 27, 28):                   # open office along the street windows
+        d.set(x, y, iz1, Q)
+        d.chair(x, y, iz1 + 1, "south", "cherry", sit=False)
+        if x in (17, 22, 27):
+            d.set(x, y + 1, iz1, "black_stained_glass_pane")
+    d.set(19, y, iz1, "potted_bamboo")
+    d.set(25, y, iz1, "potted_bamboo")
+    d.set(ix1, y, iz1, "barrel[facing=up,open=false]")
+    d.set(ix1, y, iz1 + 1, "barrel[facing=up,open=false]")
+    # meeting table, west
+    for z in (23, 24, 25):
+        d.set(17, y, z, Q)
+        d.chair(16, y, z, "west", "cherry", sit=False)
+        d.chair(18, y, z, "east", "cherry", sit=False)
+    d.chair(17, y, 22, "north", "cherry", sit=False)
+    d.set(ix1, y + 1, 24, "black_stained_glass_pane")
+    d.set(ix1, y, 21, "potted_bamboo")
+    # lounge round a rug in the middle
+    d.rug(23, 26, 26, 28, y, ("orange_carpet", "white_carpet"), "border")   # 12
+    d.set(24, y, 27, "smooth_quartz_slab[type=bottom,waterlogged=false]")
+    d.set(25, y, 27, "smooth_quartz_slab[type=bottom,waterlogged=false]")
+    for x in (23, 24, 25, 26):
+        d.chair(x, y, 25, "north", "cherry", sit=False)
+        d.chair(x, y, 29, "south", "cherry", sit=False)
+    d.set(22, y, 27, "potted_bamboo")
+    d.set(27, y, 27, "potted_bamboo")
+    # library wall, east
+    for z in range(18, 28):
+        d.set(ix2, y, z, cbook("west", z))
+        d.set(ix2, y + 1, z, "bookshelf" if z % 3 else cbook("west", z + 2))
+    for z in (20, 24):
+        d.chair(31, y, z, "west", "cherry", sit=False)
+        d.set(31, y, z + 1, "smooth_quartz_slab[type=bottom,waterlogged=false]")
+    # control desk at the back windows: beacon console
+    for x in range(19, 30):
+        if x in (22, 26):
+            continue
+        d.set(x, y, iz2, Q)
+    for x in (20, 24, 28):
+        d.chair(x, y, iz2 - 1, "north", "cherry", sit=False)
+        d.set(x, y + 1, iz2, "black_stained_glass_pane")
+    d.set(22, y, iz2, "lectern[facing=north,has_book=true,powered=false]")
+    d.set(26, y, iz2, "redstone_lamp[lit=false]")
+    d.set(ix1, y, iz2, "potted_bamboo")
+    d.set(ix1, y, 33, "barrel[facing=up,open=false]")
+    d.set(ix1, y, 32, cbook("east", 3))
+    d.rug(19, 32, 21, 34, y, ("gray_carpet",), "plain")
+    d.rug(28, 32, 30, 34, y, ("gray_carpet",), "plain")
+    d.dining(29, y, 22, 2, "z", "cherry", chairs=("w", "n", "s"), sit=False)      # reading table
+    d.set(29, y + 1, 22, "candle[candles=3,lit=false,waterlogged=false]")
+    d.dining(21, y, 20, 2, "x", "cherry", chairs=("n", "s"), sit=False)          # stand-up table by the office
+    for x, b in ((30, "smoker[facing=north,lit=false]"), (31, "water_cauldron[level=3]"), (32, Q),
+                 (33, "barrel[facing=up,open=false]")):                          # tea kitchen in the corner
+        d.set(x, y, iz2, b)
+    d.set(32, y + 1, iz2, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
+    for x, z in ((18, 19), (24, 19), (30, 19), (19, 26), (30, 31), (19, 31), (24, 33), (30, 25)):
+        d.set(x, 8, z, "sea_lantern")
+
 
 # ---------------------------------------------------------------------------- Hearthwood: The Old King
 HK_SIZE = (45, 60, 46)
@@ -3343,6 +3561,17 @@ def nb_visitor_centre(d, L):
     d.set(5, 2, 43, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
     for x, z in ((4, 38), (7, 36), (10, 39)):
         d.set(x, 5, z, "end_rod[facing=down]")
+    d.rug(6, 38, 8, 40, 2, ("cyan_carpet",), "plain")                # mat round the model
+    d.chair(6, 2, 41, "south", "cherry", sit=False)
+    d.chair(8, 2, 41, "south", "cherry", sit=False)
+    d.set(12, 2, 36, cbook("west", 1))                                # brochure racks
+    d.set(12, 2, 37, cbook("west", 2))
+    d.set(12, 3, 36, "potted_bamboo")
+    for x in (9, 10, 11):                                            # visitors' lockers
+        d.set(x, 2, 43, "barrel[facing=north,open=false]")
+    d.set(12, 2, 43, "potted_bamboo")
+    d.set(7, 2, 35, "smooth_quartz_slab[type=top,waterlogged=false]")   # ticket gate posts
+    d.set(9, 2, 35, "smooth_quartz_slab[type=top,waterlogged=false]")
     for x, z in ((3, 35), (7, 38), (11, 41), (5, 42)):                # roof garden shrubs
         d.set(x, top + 2, z, "flowering_azalea" if z % 2 else "azalea")
     if two:

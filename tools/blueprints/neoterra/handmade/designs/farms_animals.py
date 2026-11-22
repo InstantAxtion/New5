@@ -203,15 +203,16 @@ def woolfarm(pack, rel, L):
 def chickencooker(pack, rel, L):
     """Automatic cooked-chicken farm (the classic egg-dispenser + lava-blade cooker).
 
-    Breeder pen (y6): chickens stand on a floor of 14 hoppers (y5) that funnel every egg they lay into the hopper
-    R = (7,5,6) and down (7,4,6) -> (7,3,6) into the dispenser D = (7,3,7), facing south.
-    Trigger: comparator C = (7,5,7) reads R (facing north = its input side); each time an egg comes in or out of R
-    its output toggles, and the observer O = (7,4,7) (facing up: watches C) pulses down into D, which throws the
-    eggs it holds into the chick chamber. 1 in 8 eggs hatches.
-    Chick chamber (7,3,8..9): bottom slabs (chickens stand at y3.5) with lava sources at y4 right over them; the lava
-    cannot flow into the slab cells. Chicks (0.35 high) live under the lava; when one grows up (0.7 high, ~20 min)
-    its head reaches into the lava and it burns: cooked chicken + feathers fall on the slabs and the hoppers under
-    them (they pull items through slabs) carry them to the chest at (5,2,8)."""
+    Breeder pen (feet y6): chickens stand on a floor of 18 hoppers (y5) that funnel every egg they lay into the
+    hopper (8,5,6) and down (8,4,6) into the dispenser D = (8,4,7), facing south.
+    Clock: redstone torch (6,4,7) on the block (7,4,7) -> dust -> repeater (6,4,5) -> dust -> repeater (7,4,6) back
+    into (7,4,7). Repeater facing = its input side. Both at 4 ticks: period 36 ticks, the torch never burns out;
+    every time (7,4,7) is powered, D (next to it) throws an egg. 1 in 8 eggs hatches.
+    Chick chamber (8,4,8): a bottom slab (chickens stand at y4.5) with a lava source at y5 right over it (lava cannot
+    flow into the slab). Chicks (0.35 high) live under the lava; a grown chicken (0.7 high, after 20 min) reaches into
+    it and burns. A HOPPER MINECART on the rail under the slab (8,3,8) pulls the drops through the slab one per tick
+    (a plain hopper takes one item and then waits 8 ticks while the rest bounce up into the lava and burn); the
+    hopper under the rail empties the cart into the chest at (6,2,8). Some drops still burn."""
     d = Design(pack, rel, size=(17, 15, 14), gy=1, paving="grass_block")
     X1, Z1, X2, Z2, top = 1, 2, 15, 11, 8
     cx = 8
@@ -302,7 +303,7 @@ def chickencooker(pack, rel, L):
     for x in (5, 11):
         for z in range(Z1 + 1, Z2):
             d.set(x, top, z, logb("z"))
-    approach(d, cx, Z1, ["Chicken Cooker", "Bring: chickens", "(10+) or eggs", "to throw in"])
+    approach(d, cx, Z1, ["Chicken Cooker", "Bring: 10+ hens,", "1 hopper cart", "(rail at back)"])
     # the real cycle: 64 eggs are thrown (~8 chicks hatch), the chicks grow up in 24000 ticks and are cooked
     d.farm_test(expect={"minecraft:cooked_chicken": 2}, ticks=25500,
                 inputs={(cx, 5, 6): [("minecraft:egg", 64)]},
@@ -475,8 +476,149 @@ def honeyfarm(pack, rel, L):
         for x in (8, 9, 10):
             d.set(x, 1, z, "gravel")
     d.hut(cx, 1, 0)
-    d.sign(cx + 2, 3, 1, "north", ["Honey Farm", "Bring: 6+ bees", "(in a lead or", "nest), 3 shears"], "spruce")
+    d.sign(cx + 2, 3, 1, "north", ["Honey Farm", "Bring: 9 bees", "via silk nest,", "3 shears"], "spruce")
     d.farm_test(expect={"minecraft:honeycomb": 3}, ticks=11000,
                 inputs={(a, 4, 11): [("minecraft:shears", 1)] for a in hives},
                 spawns=[("minecraft:bee", a, 4, 6, 3) for a in hives])
+    return d
+
+
+# ================================================================================================ goats
+@design("goatfarm")
+def goatfarm(pack, rel, L):
+    """Goat barn: a ramming wall of logs for goat horns, milking in the vestibule. PLAYER-operated, honestly:
+
+    A goat only rams a mob it can reach in a straight walkable line 4-7 blocks long (PrepareRamNearestTarget walks
+    out from the target and stops at the first non-walkable block), so a bait mob behind a log is never charged,
+    and a bait in front of the logs is hit instead of the logs. The vanilla way is the player as bait: stand on the
+    hopper line with your back to the log wall (z12) and side-step when a goat charges; it hits the logs (logs are in
+    the snaps_goat_horn tag) and drops a horn onto the hopper line (y1, z11), which runs west into the chest at
+    (2,1,11). Each goat has only TWO horns (not renewable): breed the goats with wheat for more. Milk: use a bucket
+    on a goat."""
+    d = Design(pack, rel, size=(19, 14, 17), gy=1, paving="grass_block")
+    X1, Z1, X2, Z2, top = 1, 2, 17, 15, 7
+    cx = 9
+    barn(d, X1, Z1, X2, Z2, top, cx, floor="coarse_dirt",
+         windows=[(4, Z1), (6, Z1), (12, Z1), (14, Z1), (X1, 8), (X2, 8), (X1, 11), (X2, 11)])
+    # vestibule z3..4, wall with a door at z5 (goats jump fences)
+    for x in range(2, 17):
+        for y in range(2, top):
+            d.set(x, y, 5, CB if y > 2 else SB)
+        d.set(x, top - 1, 5, logb("x"))
+    d.door(cx, 2, 5, "south", "spruce")
+    for x in (4, 14):
+        d.set(x, 3, 5, "glass_pane")
+        d.set(x, 4, 5, "glass_pane")
+    # pen floor: grass, hopper line in front of the ramming wall (oak logs, 2 high), hay stacked behind
+    for x in range(2, 17):
+        for z in range(6, 15):
+            d.set(x, 1, z, "grass_block")
+    for x in range(3, 16):
+        d.set(x, 1, 11, hopper("west"))
+        d.set(x, 2, 12, "oak_log[axis=x]")
+        d.set(x, 3, 12, "oak_log[axis=x]")
+    d.set(2, 1, 11, chest("east"))
+    d.tag(2, 1, 11, "farm_output")
+    d.set(2, 2, 11, AIR)
+    for x in range(2, 17):
+        for z in (13, 14):
+            d.set(x, 2, z, "hay_block[axis=y]")
+            d.set(x, 3, z, "hay_block[axis=y]" if (x + z) % 3 else AIR)
+    # milking stall / feed corner in the vestibule
+    d.set(2, 2, 3, "barrel[facing=up,open=false]")
+    d.set(3, 2, 3, "cauldron")
+    d.set(16, 2, 3, "hay_block[axis=y]")
+    d.set(16, 2, 4, "composter[level=0]")
+    for x in (5, 13):
+        for z in range(Z1 + 1, Z2):
+            d.set(x, top, z, logb("z"))
+    for (x, z) in ((5, 8), (13, 8), (9, 8), (9, 13), (5, 13), (13, 13), (9, 3)):
+        lantern(d, x, top - 1, z)
+    approach(d, cx, Z1, ["Goat Barn", "Bring: goats,", "wheat, bucket;", "stand by logs"])
+    # nothing is produced without the player (see above): the test checks the goats live in the pen without
+    # breaking it (ramming wall and collection line intact)
+    d.farm_test(expect={}, ticks=2400, spawns=[("minecraft:goat", 9, 2, 8, 4)],
+                blocks=[(x, 2, 12, "minecraft:oak_log") for x in range(3, 16)]
+                + [(x, 1, 11, "minecraft:hopper") for x in range(3, 16)] + [(cx, 2, 5, "minecraft:spruce_door")])
+    return d
+
+
+
+
+# ================================================================================================ turtles
+@design("turtlefarm")
+def turtlefarm(pack, rel, L):
+    """Turtle beach (player-run, honestly: nothing here can be collected automatically).
+
+    A two-deep pool of water SOURCES (x3..15, z11..14, y0..1, every cell a source, so nothing flows) and a sand beach
+    (y1, z6..10) inside a lit fence. Breed two turtles with seagrass: the pregnant one swims home and lays 1-4 eggs on
+    this beach (its home is where it was first brought/hatched - lead them here as babies or hatch them here). Eggs
+    hatch on sand, fastest at night; the hatchlings drop a turtle scute each when they grow up (~20 min) - pick them
+    up on the beach or in the pool. Lanterns keep zombies (which trample eggs) from spawning."""
+    d = Design(pack, rel, size=(19, 12, 17), gy=1, paving="grass_block")
+    cx = 9
+    # pool
+    for x in range(2, 17):
+        for z in range(10, 16):
+            for y in (0, 1):
+                d.set(x, y, z, SB if y == 1 else "stone")
+    for x in range(3, 16):
+        for z in range(11, 15):
+            d.set(x, 0, z, "water[level=0]")
+            d.set(x, 1, z, "water[level=0]")
+    for x in range(3, 16):
+        d.set(x, 1, 10, "sand")                           # the beach runs into the water
+        d.set(x, 0, 10, "sandstone")
+    # beach
+    for x in range(2, 17):
+        for z in range(5, 10):
+            d.set(x, 1, z, "sand")
+            d.set(x, 0, z, "sandstone")
+    for (x, z) in ((3, 6), (15, 6), (4, 9), (14, 8)):
+        d.set(x, 2, z, "dead_bush")
+    # fence with lantern posts and a gate
+    for x in range(1, 18):
+        for z in (4, 16):
+            d.set(x, 2, z, FENCE)
+    for z in range(4, 17):
+        for x in (1, 17):
+            d.set(x, 2, z, FENCE)
+    for (x, z) in ((1, 4), (17, 4), (1, 10), (17, 10), (1, 16), (17, 16), (5, 16), (13, 16), (5, 4), (13, 4)):
+        d.set(x, 2, z, SB)
+        lantern(d, x, 3, z, hanging=False)
+    d.set(cx, 2, 4, "spruce_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
+    for x in range(1, 18):
+        d.set(x, 1, 16, SB)
+        d.set(x, 1, 4, "sand")
+    for z in range(4, 17):
+        d.set(1, 1, z, SB if z >= 10 else "sand")
+        d.set(17, 1, z, SB if z >= 10 else "sand")
+    # beach hut on the west: spruce posts, slab roof, chest for scutes, seagrass barrel
+    for (x, z) in ((2, 5), (5, 5), (2, 8), (5, 8)):
+        for y in (2, 3, 4):
+            d.set(x, y, z, logb("y"))
+    for x in range(1, 7):
+        for z in range(4, 10):
+            d.set(x, 5, z, slab("spruce"))
+    for x in range(2, 6):
+        d.set(x, 5, 5, "spruce_planks")
+        d.set(x, 5, 8, "spruce_planks")
+    lantern(d, 3, 4, 6)
+    d.set(3, 2, 5, chest("south"))
+    d.tag(3, 2, 5, "farm_output")
+    d.set(4, 2, 5, "barrel[facing=up,open=false]")
+    d.set(2, 2, 6, stair("spruce", "west"))
+    d.set(2, 2, 7, stair("spruce", "west"))
+    # entrance
+    for z in range(0, 4):
+        for x in (cx - 1, cx, cx + 1):
+            d.set(x, 1, z, "gravel")
+    d.hut(cx, 1, 0)
+    d.sign(cx + 1, 2, 3, "north", ["Turtle Beach", "Bring: 2 turtles", "+ seagrass; pick", "up the scutes"], "spruce")
+    d.set(cx + 1, 2, 4, SB)
+    lantern(d, cx + 1, 3, 4, hanging=False)
+    # the turtles live on the beach and in the pool; the pool stays sources, the beach stays sand
+    d.farm_test(expect={}, ticks=1200, spawns=[("minecraft:turtle", 9, 2, 7, 2)],
+                blocks=[(x, 1, z, "minecraft:water") for x in (3, 9, 15) for z in (11, 14)]
+                + [(x, 1, z, "minecraft:sand") for x in (6, 9, 12) for z in (6, 8)])
     return d
