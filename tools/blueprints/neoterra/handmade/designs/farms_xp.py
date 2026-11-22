@@ -419,7 +419,7 @@ def creeperfarm(pack, rel, L):
 # ================================================================================================ spider farm
 @design("spiderfarm")
 def spiderfarm(pack, rel, L):
-    """Spider tower (string), no spawner. Three spider-only floors on top of a 4x4 drop shaft.
+    """Spider tower (string), no spawner. Four spider-only floors on top of a 4x4 drop shaft.
 
     Spawning floor (y0 = 25, 27, 29, 31): ONE block high - nothing but spiders (0.9 tall) fits, and the 8x8
     quadrants give them the 3x3 room they need. Quadrants and water channels are on the same level (a step lets a

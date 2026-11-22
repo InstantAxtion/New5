@@ -314,16 +314,15 @@ def chickencooker(pack, rel, L):
 # ================================================================================================ cows
 @design("cowbreeder")
 def cowbreeder(pack, rel, L):
-    """Cow breeding pen + cooking grinder (semi-automatic: the PLAYER breeds the cows with wheat; everything after
-    that is automatic).
+    """Cow breeding pen with calf crusher stalls (semi-automatic: the PLAYER breeds the cows with wheat; the rest is
+    automatic). Output is RAW beef + leather (cook it in the smoker by the chest) - a lava blade does not work for
+    cows: a 10-heart cow jumps around in the lava for a second and its drops fly up into the lava and burn.
 
-    Pen (feet level y5, floor y4) north of four 1x1 grinder stalls at x = 6, 8, 10, 12 (z10). Each stall is joined
-    to the pen by a 1-high hole (c,5,9): calves (0.7 high) wander through, adults (1.4 high) cannot.
-    Stall: floor block (c,4,10) on top of a rail with a HOPPER MINECART (c,3,10) (it pulls the drops through the
-    floor block), a hopper (c,2,10) under the rail (line west to the chest at (4,2,10)).
-    Lava source (c,6,10) over the stall, held up by a warped wall sign (c,5,10) (lava cannot flow into a sign;
-    warped wood does not burn). A calf stands under the lava; when it grows up its head reaches into the lava and
-    it burns: cooked beef + leather drop on the floor block and the cart picks them up."""
+    Pen (feet level y5, grass floor y4). Along its south side four 1-high alcoves (c,5,9), c = 6, 8, 10, 12:
+    calves (0.7 high) wander in, adults (1.4) cannot. When a calf grows up inside an alcove it no longer fits
+    (a grown-up entity is only nudged ~0.2 blocks to find room) and suffocates. The drops land on the floor block
+    (c,4,9); a HOPPER MINECART on the rail under it (c,3,9) pulls them through the block, the hopper under the rail
+    (c,2,9) empties the cart into the hopper line west to the chest at (4,2,9). Adults never enter the alcoves."""
     d = Design(pack, rel, size=(19, 14, 15), gy=1, paving="grass_block")
     X1, Z1, X2, Z2, top = 1, 2, 17, 13, 8
     cx = 9
@@ -331,38 +330,36 @@ def cowbreeder(pack, rel, L):
                                                (X1, 11), (X2, 11)])
     stalls = (6, 8, 10, 12)
     # pen platform
-    d.fill(3, 2, 4, 15, 3, 9, SB)
-    d.fill(3, 4, 4, 15, 4, 9, GRASS)
+    d.fill(3, 2, 4, 15, 3, 8, SB)
+    d.fill(3, 4, 4, 15, 4, 8, GRASS)
     for x in range(3, 16):
         d.set(x, 5, 4, FENCE)
     for z in range(5, 9):
         d.set(3, 5, z, FENCE)
         d.set(15, 5, z, FENCE)
     d.set(cx, 5, 4, "spruce_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
-    d.fill(3, 5, 9, 15, 6, 9, SB)
-    # grinder block z10..11, y2..7
-    d.fill(4, 2, 10, 14, 7, 11, SB)
+    # stall block z9..10, y2..6 (the alcoves open north into the pen); service aisle z10..12 under it
+    d.fill(3, 2, 9, 15, 6, 10, SB)
+    for x in range(3, 16):
+        d.set(x, 6, 9, "polished_andesite")
+        d.set(x, 7, 9, slab("polished_andesite"))
+        d.set(x, 7, 10, slab("polished_andesite"))
+    for x in range(4, 15):
+        d.set(x, 2, 10, AIR)
+        d.set(x, 3, 10, AIR)
     for x in range(5, 14):
-        d.set(x, 2, 10, hopper("west"))
-        d.set(x, 2, 11, AIR)                              # service aisle (z11..12) behind the grinder
-        d.set(x, 3, 11, AIR)
+        d.set(x, 2, 9, hopper("west"))
+        d.set(x, 3, 9, "chiseled_stone_bricks")
+        d.set(x, 4, 9, SB)
     for c in stalls:
-        d.set(c, 3, 10, "rail[shape=east_west,waterlogged=false]")
-        d.set(c, 4, 10, "smooth_stone")
-        d.set(c, 5, 10, "warped_wall_sign[facing=north,waterlogged=false]")
-        d.set(c, 6, 10, LAVA)
-        d.set(c, 5, 9, AIR)                               # calf hole
-        for x in (c - 1, c + 1):
-            d.set(x, 5, 10, "glass")
-    for x in (5, 7, 9, 11, 13):
-        d.set(x, 3, 10, "chiseled_stone_bricks")
-        d.set(x, 6, 10, "glass")
-    d.fill(4, 7, 9, 14, 7, 11, "polished_andesite")
-    d.set(4, 2, 10, chest("south"))
-    d.tag(4, 2, 10, "farm_output")
-    d.set(4, 2, 11, AIR)
-    d.set(4, 3, 11, AIR)
-    d.set(4, 3, 10, AIR)
+        d.set(c, 3, 9, "rail[shape=east_west,waterlogged=false]")
+        d.set(c, 4, 9, "smooth_stone")
+        d.set(c, 5, 9, AIR)                               # the alcove (1 high)
+        d.set(c, 6, 9, SB)
+    d.set(4, 2, 9, chest("south"))
+    d.tag(4, 2, 9, "farm_output")
+    d.set(4, 3, 9, AIR)
+    d.set(5, 2, 11, "smoker[facing=north,lit=false]")
     # deck + stairs up to the pen gate
     for x in range(3, 15):
         d.set(x, 4, 3, "spruce_planks")
@@ -382,9 +379,9 @@ def cowbreeder(pack, rel, L):
     for (x, z) in ((5, 6), (13, 6), (9, 12), (9, 6)):
         lantern(d, x, top - 1, z)
     approach(d, cx, Z1, ["Cow Breeder", "Bring: 2+ cows,", "wheat, 4 hopper", "minecarts"])
-    d.farm_test(expect={"minecraft:cooked_beef": 3}, ticks=2000,
-                spawns=[("minecraft:cow", c, 5, 10, 1) for c in stalls]
-                + [("minecraft:hopper_minecart", c, 3, 10, 1) for c in stalls]
-                + [("minecraft:cow", 7, 5, 6, 2)],
-                blocks=[(c, 6, 10, "minecraft:lava") for c in stalls] + [(c, 5, 10, "minecraft:warped_wall_sign") for c in stalls] + [(c, 5, 9, "minecraft:air") for c in stalls])
+    # the test puts a grown cow into each alcove (as if a calf had grown up there)
+    d.farm_test(expect={"minecraft:beef": 4}, ticks=1500,
+                spawns=[("minecraft:cow", c, 5, 9, 1) for c in stalls]
+                + [("minecraft:hopper_minecart", c, 3, 9, 1) for c in stalls]
+                + [("minecraft:cow", 7, 5, 6, 2)])
     return d
