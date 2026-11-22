@@ -91,6 +91,44 @@
    ],
    "ticks": 1500
   },
+  "decorations/animalfarms/froglight.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": "nether",
+   "expect": {
+    "minecraft:pearlescent_froglight": 2
+   },
+   "inputs": {},
+   "mine": [],
+   "outputs": [
+    "2,0,12"
+   ],
+   "presses": [],
+   "spawns": [
+    [
+     "minecraft:frog",
+     0,
+     1,
+     8,
+     3
+    ],
+    [
+     "minecraft:magma_cube",
+     -1,
+     1,
+     7,
+     9
+    ],
+    [
+     "minecraft:magma_cube",
+     1,
+     1,
+     9,
+     9
+    ]
+   ],
+   "ticks": 3000
+  },
   "decorations/animalfarms/goatfarm.blueprint": {
    "blocks": [
     [
@@ -333,6 +371,89 @@
    ],
    "ticks": 11000
   },
+  "decorations/animalfarms/piglinbarter.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": "nether",
+   "expect": {
+    "minecraft:gravel": 1
+   },
+   "inputs": {
+    "-1,4,6": [
+     [
+      "minecraft:gold_ingot",
+      64
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "3,0,7"
+   ],
+   "presses": [],
+   "spawns": [
+    [
+     "minecraft:piglin",
+     0,
+     1,
+     6,
+     2
+    ],
+    [
+     "minecraft:piglin",
+     1,
+     1,
+     7,
+     2
+    ]
+   ],
+   "ticks": 6000
+  },
+  "decorations/animalfarms/squidfarm.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:ink_sac": 3
+   },
+   "inputs": {},
+   "mine": [],
+   "outputs": [
+    "-4,-7,10"
+   ],
+   "presses": [],
+   "spawns": [
+    [
+     "minecraft:squid",
+     -2,
+     -2,
+     6,
+     1
+    ],
+    [
+     "minecraft:squid",
+     1,
+     -1,
+     8,
+     1
+    ],
+    [
+     "minecraft:squid",
+     3,
+     -2,
+     7,
+     1
+    ],
+    [
+     "minecraft:squid",
+     0,
+     -2,
+     6,
+     1
+    ]
+   ],
+   "ticks": 6000
+  },
   "decorations/animalfarms/turtlefarm.blueprint": {
    "blocks": [
     [
@@ -427,6 +548,62 @@
     ]
    ],
    "ticks": 1200
+  },
+  "decorations/animalfarms/villagerbreeder.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:paper": 1
+   },
+   "inputs": {
+    "0,6,8": [
+     [
+      "minecraft:bread",
+      32
+     ]
+    ],
+    "1,0,6": [
+     [
+      "minecraft:paper",
+      64
+     ]
+    ],
+    "2,6,8": [
+     [
+      "minecraft:bread",
+      32
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "-2,0,6"
+   ],
+   "presses": [
+    [
+     1,
+     6,
+     7
+    ]
+   ],
+   "spawns": [
+    [
+     "minecraft:villager",
+     0,
+     4,
+     9,
+     1
+    ],
+    [
+     "minecraft:villager",
+     2,
+     4,
+     9,
+     1
+    ]
+   ],
+   "ticks": 11000
   },
   "decorations/animalfarms/woolfarm.blueprint": {
    "blocks": [],
@@ -525,6 +702,345 @@
     ]
    ],
    "ticks": 10000
+  },
+  "decorations/craftfarms/autobread.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:bread": 60
+   },
+   "inputs": {
+    "-4,3,6": [
+     [
+      "minecraft:wheat",
+      64
+     ],
+     [
+      "minecraft:wheat",
+      64
+     ]
+    ],
+    "2,3,6": [
+     [
+      "minecraft:wheat",
+      64
+     ],
+     [
+      "minecraft:wheat",
+      64
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "-3,1,6",
+    "3,1,6"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 2400
+  },
+  "decorations/craftfarms/compactor.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:gold_block": 5,
+    "minecraft:iron_block": 5
+   },
+   "inputs": {
+    "-6,3,9": [
+     [
+      "minecraft:iron_ingot",
+      27
+     ]
+    ],
+    "-7,4,6": [
+     [
+      "minecraft:iron_nugget",
+      64
+     ],
+     [
+      "minecraft:iron_nugget",
+      64
+     ],
+     [
+      "minecraft:iron_nugget",
+      64
+     ]
+    ],
+    "1,4,6": [
+     [
+      "minecraft:gold_nugget",
+      64
+     ],
+     [
+      "minecraft:gold_nugget",
+      64
+     ],
+     [
+      "minecraft:gold_nugget",
+      64
+     ]
+    ],
+    "2,3,9": [
+     [
+      "minecraft:gold_ingot",
+      27
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "-5,1,9",
+    "3,1,9"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 3000
+  },
+  "decorations/craftfarms/itemsorter.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:coal": 20,
+    "minecraft:copper_ingot": 20,
+    "minecraft:gold_ingot": 20,
+    "minecraft:iron_ingot": 20,
+    "minecraft:redstone": 20
+   },
+   "inputs": {
+    "-1,3,6": [
+     [
+      "minecraft:copper_ingot",
+      41
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ]
+    ],
+    "-4,3,6": [
+     [
+      "minecraft:gold_ingot",
+      41
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ]
+    ],
+    "-7,3,6": [
+     [
+      "minecraft:iron_ingot",
+      41
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ]
+    ],
+    "-8,5,6": [
+     [
+      "minecraft:iron_ingot",
+      8
+     ],
+     [
+      "minecraft:gold_ingot",
+      8
+     ],
+     [
+      "minecraft:copper_ingot",
+      8
+     ],
+     [
+      "minecraft:coal",
+      8
+     ],
+     [
+      "minecraft:redstone",
+      8
+     ],
+     [
+      "minecraft:cobblestone",
+      8
+     ],
+     [
+      "minecraft:iron_ingot",
+      8
+     ],
+     [
+      "minecraft:gold_ingot",
+      8
+     ],
+     [
+      "minecraft:copper_ingot",
+      8
+     ],
+     [
+      "minecraft:coal",
+      8
+     ],
+     [
+      "minecraft:redstone",
+      8
+     ],
+     [
+      "minecraft:cobblestone",
+      8
+     ],
+     [
+      "minecraft:iron_ingot",
+      8
+     ],
+     [
+      "minecraft:gold_ingot",
+      8
+     ],
+     [
+      "minecraft:copper_ingot",
+      8
+     ],
+     [
+      "minecraft:coal",
+      8
+     ],
+     [
+      "minecraft:redstone",
+      8
+     ],
+     [
+      "minecraft:cobblestone",
+      8
+     ]
+    ],
+    "2,3,6": [
+     [
+      "minecraft:coal",
+      41
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ]
+    ],
+    "5,3,6": [
+     [
+      "minecraft:redstone",
+      41
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ],
+     [
+      "minecraft:stick",
+      1
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "-7,1,6",
+    "-4,1,6",
+    "-1,1,6",
+    "2,1,6",
+    "5,1,6"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 2400
+  },
+  "decorations/craftfarms/supersmelter.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:iron_ingot": 100
+   },
+   "inputs": {
+    "-4,3,7": [
+     [
+      "minecraft:coal",
+      64
+     ]
+    ],
+    "-4,4,6": [
+     [
+      "minecraft:raw_iron",
+      64
+     ],
+     [
+      "minecraft:raw_iron",
+      64
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "5,0,4"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 5000
   },
   "decorations/cropfarms/bamboo.blueprint": {
    "blocks": [],
@@ -629,6 +1145,59 @@
    "spawns": [],
    "ticks": 12000
   },
+  "decorations/cropfarms/glowberry.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:glow_berries": 15
+   },
+   "inputs": {
+    "-1,3,7": [
+     [
+      "minecraft:bone_meal",
+      64
+     ]
+    ],
+    "-2,3,7": [
+     [
+      "minecraft:bone_meal",
+      64
+     ]
+    ],
+    "0,3,7": [
+     [
+      "minecraft:bone_meal",
+      64
+     ]
+    ],
+    "1,3,7": [
+     [
+      "minecraft:bone_meal",
+      64
+     ]
+    ],
+    "2,3,7": [
+     [
+      "minecraft:bone_meal",
+      64
+     ]
+    ],
+    "3,3,7": [
+     [
+      "minecraft:bone_meal",
+      64
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "4,1,8"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 12000
+  },
   "decorations/cropfarms/kelp.blueprint": {
    "blocks": [],
    "blocks_min": 0,
@@ -644,6 +1213,66 @@
    "presses": [],
    "spawns": [],
    "ticks": 12000
+  },
+  "decorations/cropfarms/mossfarm.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:azalea": 3,
+    "minecraft:moss_carpet": 20
+   },
+   "inputs": {
+    "0,2,7": [
+     [
+      "minecraft:bone_meal",
+      192
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "4,0,8"
+   ],
+   "presses": [],
+   "spawns": [
+    [
+     "minecraft:hopper_minecart",
+     -2,
+     1,
+     8,
+     1
+    ],
+    [
+     "minecraft:hopper_minecart",
+     -1,
+     1,
+     8,
+     1
+    ],
+    [
+     "minecraft:hopper_minecart",
+     0,
+     1,
+     8,
+     1
+    ],
+    [
+     "minecraft:hopper_minecart",
+     1,
+     1,
+     8,
+     1
+    ],
+    [
+     "minecraft:hopper_minecart",
+     2,
+     1,
+     8,
+     1
+    ]
+   ],
+   "ticks": 6000
   },
   "decorations/cropfarms/pumpkinmelon.blueprint": {
    "blocks": [],
@@ -775,6 +1404,483 @@
     ]
    ],
    "ticks": 8000
+  },
+  "decorations/foodfarms/autokitchen.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:cooked_beef": 12,
+    "minecraft:cooked_porkchop": 6
+   },
+   "inputs": {
+    "-3,4,7": [
+     [
+      "minecraft:coal",
+      16
+     ]
+    ],
+    "-3,5,6": [
+     [
+      "minecraft:beef",
+      32
+     ],
+     [
+      "minecraft:porkchop",
+      32
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "3,1,6"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 6000
+  },
+  "decorations/foodfarms/bonemeal.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:bone_meal": 8
+   },
+   "inputs": {
+    "-2,5,6": [
+     [
+      "minecraft:wheat",
+      192
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "3,1,6"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 6000
+  },
+  "decorations/foodfarms/eggfarm.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:egg": 5
+   },
+   "inputs": {},
+   "mine": [],
+   "outputs": [
+    "0,1,5"
+   ],
+   "presses": [],
+   "spawns": [
+    [
+     "minecraft:chicken",
+     -2,
+     2,
+     7,
+     1
+    ],
+    [
+     "minecraft:chicken",
+     0,
+     2,
+     7,
+     1
+    ],
+    [
+     "minecraft:chicken",
+     2,
+     2,
+     7,
+     1
+    ],
+    [
+     "minecraft:chicken",
+     -1,
+     2,
+     8,
+     1
+    ],
+    [
+     "minecraft:chicken",
+     1,
+     2,
+     8,
+     1
+    ],
+    [
+     "minecraft:chicken",
+     -1,
+     2,
+     6,
+     1
+    ]
+   ],
+   "ticks": 13000
+  },
+  "decorations/foodfarms/smeltery.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:iron_ingot": 20
+   },
+   "inputs": {
+    "-3,4,7": [
+     [
+      "minecraft:coal",
+      16
+     ]
+    ],
+    "-3,5,6": [
+     [
+      "minecraft:raw_iron",
+      64
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "5,1,6"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 6000
+  },
+  "decorations/mobfarms/cactusfarm.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:cactus": 8
+   },
+   "inputs": {},
+   "mine": [],
+   "outputs": [
+    "0,1,5"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 6000
+  },
+  "decorations/mobfarms/ironfarm.blueprint": {
+   "blocks": [
+    [
+     -1,
+     9,
+     9,
+     "minecraft:lava"
+    ],
+    [
+     0,
+     9,
+     10,
+     "minecraft:lava"
+    ],
+    [
+     -1,
+     8,
+     9,
+     "minecraft:crimson_wall_sign"
+    ],
+    [
+     -2,
+     10,
+     9,
+     "minecraft:water"
+    ],
+    [
+     -1,
+     10,
+     8,
+     "minecraft:water"
+    ],
+    [
+     -6,
+     10,
+     4,
+     "minecraft:water"
+    ],
+    [
+     -1,
+     10,
+     9,
+     "minecraft:air"
+    ],
+    [
+     -1,
+     7,
+     9,
+     "minecraft:air"
+    ],
+    [
+     -1,
+     6,
+     9,
+     "minecraft:hopper"
+    ]
+   ],
+   "blocks_min": 9,
+   "dimension": null,
+   "expect": {
+    "minecraft:iron_ingot": 6
+   },
+   "inputs": {},
+   "mine": [],
+   "outputs": [
+    "0,1,9"
+   ],
+   "presses": [],
+   "spawns": [
+    [
+     "minecraft:villager",
+     -5,
+     14,
+     9,
+     1
+    ],
+    [
+     "minecraft:villager",
+     -1,
+     14,
+     5,
+     1
+    ],
+    [
+     "minecraft:villager",
+     3,
+     14,
+     9,
+     1
+    ],
+    [
+     "minecraft:zombie",
+     -1,
+     14,
+     9,
+     1
+    ]
+   ],
+   "ticks": 27000
+  },
+  "decorations/mobfarms/mobtower.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:arrow": 1,
+    "minecraft:bone": 2,
+    "minecraft:rotten_flesh": 2
+   },
+   "inputs": {},
+   "mine": [],
+   "outputs": [
+    "-1,2,10",
+    "0,2,10"
+   ],
+   "presses": [],
+   "spawns": [
+    [
+     "minecraft:zombie",
+     -1,
+     27,
+     5,
+     1
+    ],
+    [
+     "minecraft:zombie",
+     6,
+     27,
+     11,
+     1
+    ],
+    [
+     "minecraft:zombie",
+     0,
+     27,
+     18,
+     1
+    ],
+    [
+     "minecraft:zombie",
+     -7,
+     27,
+     12,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     -1,
+     27,
+     5,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     6,
+     27,
+     11,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     0,
+     27,
+     18,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     -7,
+     27,
+     12,
+     1
+    ],
+    [
+     "minecraft:zombie",
+     -1,
+     31,
+     5,
+     1
+    ],
+    [
+     "minecraft:zombie",
+     6,
+     31,
+     11,
+     1
+    ],
+    [
+     "minecraft:zombie",
+     0,
+     31,
+     18,
+     1
+    ],
+    [
+     "minecraft:zombie",
+     -7,
+     31,
+     12,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     -1,
+     31,
+     5,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     6,
+     31,
+     11,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     0,
+     31,
+     18,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     -7,
+     31,
+     12,
+     1
+    ],
+    [
+     "minecraft:zombie",
+     -1,
+     35,
+     5,
+     1
+    ],
+    [
+     "minecraft:zombie",
+     6,
+     35,
+     11,
+     1
+    ],
+    [
+     "minecraft:zombie",
+     0,
+     35,
+     18,
+     1
+    ],
+    [
+     "minecraft:zombie",
+     -7,
+     35,
+     12,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     -1,
+     35,
+     5,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     6,
+     35,
+     11,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     0,
+     35,
+     18,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     -7,
+     35,
+     12,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     -7,
+     32,
+     5,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     3,
+     32,
+     5,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     -7,
+     32,
+     15,
+     1
+    ],
+    [
+     "minecraft:skeleton",
+     3,
+     32,
+     15,
+     1
+    ]
+   ],
+   "ticks": 6000
   },
   "decorations/resourcefarms/basaltgen.blueprint": {
    "blocks": [],
