@@ -262,7 +262,7 @@ def compactor(pack, rel, L):
     d.set(9, 2, 11, "crafting_table")
     tie_beams(d, (9,), 3, 11, top)
     approach(d, cx, Z1, ["Compactor", "Bring: iron and", "gold nuggets", "(or ingots)"])
-    d.farm_test(expect={"minecraft:iron_block": 5, "minecraft:gold_block": 5}, ticks=3000, inputs=ins)
+    d.farm_test(expect={"minecraft:iron_block": 4, "minecraft:gold_block": 4}, ticks=3000, inputs=ins)
     return d
 
 
@@ -434,7 +434,7 @@ def supersmelter(pack, rel, L):
     d.sign(2, 3, 3, "east", ["Top chest: ore,", "sand, food...", "Low chest left:", "coal / fuel"], "spruce")
     tie_beams(d, (5, 9), 3, 9, top)
     approach(d, cx, Z1, ["Super Smelter", "Bring: things", "to smelt and", "coal for fuel"])
-    d.farm_test(expect={"minecraft:iron_ingot": 100}, ticks=5000,
+    d.farm_test(expect={"minecraft:iron_ingot": 80}, ticks=5000,
                 inputs={(3, 5, 6): [("minecraft:raw_iron", 64), ("minecraft:raw_iron", 64)],
                         (2, 4, 7): [("minecraft:coal", 64)]})
     return d

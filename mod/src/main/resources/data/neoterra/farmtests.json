@@ -1017,12 +1017,6 @@
     "minecraft:iron_ingot": 100
    },
    "inputs": {
-    "-4,3,7": [
-     [
-      "minecraft:coal",
-      64
-     ]
-    ],
     "-4,4,6": [
      [
       "minecraft:raw_iron",
@@ -1030,6 +1024,12 @@
      ],
      [
       "minecraft:raw_iron",
+      64
+     ]
+    ],
+    "-5,3,7": [
+     [
+      "minecraft:coal",
       64
      ]
     ]
@@ -1058,6 +1058,52 @@
    "spawns": [],
    "ticks": 6000
   },
+  "decorations/cropfarms/chorusfarm.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": "end",
+   "expect": {
+    "minecraft:chorus_fruit": 6
+   },
+   "inputs": {
+    "0,1,5": [
+     [
+      "minecraft:cobblestone",
+      256
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "-8,0,9",
+    "8,0,9"
+   ],
+   "presses": [],
+   "spawns": [
+    [
+     "minecraft:hopper_minecart",
+     -6,
+     1,
+     13,
+     1
+    ],
+    [
+     "minecraft:hopper_minecart",
+     0,
+     1,
+     13,
+     1
+    ],
+    [
+     "minecraft:hopper_minecart",
+     6,
+     1,
+     13,
+     1
+    ]
+   ],
+   "ticks": 2500
+  },
   "decorations/cropfarms/cocoa.blueprint": {
    "blocks": [],
    "blocks_min": 0,
@@ -1079,6 +1125,22 @@
    ],
    "spawns": [],
    "ticks": 600
+  },
+  "decorations/cropfarms/dripstonefarm.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:pointed_dripstone": 8
+   },
+   "inputs": {},
+   "mine": [],
+   "outputs": [
+    "4,1,10"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 18000
   },
   "decorations/cropfarms/flowers.blueprint": {
    "blocks": [],
@@ -1198,6 +1260,122 @@
    "spawns": [],
    "ticks": 12000
   },
+  "decorations/cropfarms/glowlichen.blueprint": {
+   "blocks": [
+    [
+     -4,
+     2,
+     8,
+     "minecraft:glow_lichen"
+    ],
+    [
+     -3,
+     1,
+     8,
+     "minecraft:glow_lichen"
+    ],
+    [
+     -3,
+     3,
+     8,
+     "minecraft:glow_lichen"
+    ],
+    [
+     -2,
+     2,
+     8,
+     "minecraft:glow_lichen"
+    ],
+    [
+     -1,
+     1,
+     8,
+     "minecraft:glow_lichen"
+    ],
+    [
+     -1,
+     3,
+     8,
+     "minecraft:glow_lichen"
+    ],
+    [
+     0,
+     2,
+     8,
+     "minecraft:glow_lichen"
+    ],
+    [
+     1,
+     1,
+     8,
+     "minecraft:glow_lichen"
+    ],
+    [
+     1,
+     3,
+     8,
+     "minecraft:glow_lichen"
+    ],
+    [
+     2,
+     2,
+     8,
+     "minecraft:glow_lichen"
+    ],
+    [
+     3,
+     1,
+     8,
+     "minecraft:glow_lichen"
+    ],
+    [
+     3,
+     3,
+     8,
+     "minecraft:glow_lichen"
+    ],
+    [
+     4,
+     2,
+     8,
+     "minecraft:glow_lichen"
+    ]
+   ],
+   "blocks_min": 10,
+   "dimension": null,
+   "expect": {},
+   "inputs": {
+    "-1,2,9": [
+     [
+      "minecraft:bone_meal",
+      32
+     ]
+    ],
+    "-3,2,9": [
+     [
+      "minecraft:bone_meal",
+      32
+     ]
+    ],
+    "1,2,9": [
+     [
+      "minecraft:bone_meal",
+      32
+     ]
+    ],
+    "3,2,9": [
+     [
+      "minecraft:bone_meal",
+      32
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [],
+   "presses": [],
+   "spawns": [],
+   "ticks": 4000
+  },
   "decorations/cropfarms/kelp.blueprint": {
    "blocks": [],
    "blocks_min": 0,
@@ -1274,6 +1452,36 @@
    ],
    "ticks": 6000
   },
+  "decorations/cropfarms/mushroomfarm.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:brown_mushroom": 2,
+    "minecraft:red_mushroom": 2
+   },
+   "inputs": {
+    "-3,2,7": [
+     [
+      "minecraft:water_bucket",
+      1
+     ]
+    ],
+    "0,5,13": [
+     [
+      "minecraft:cobblestone",
+      40
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "3,0,11"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 30000
+  },
   "decorations/cropfarms/pumpkinmelon.blueprint": {
    "blocks": [],
    "blocks_min": 0,
@@ -1290,6 +1498,30 @@
    "presses": [],
    "spawns": [],
    "ticks": 12000
+  },
+  "decorations/cropfarms/seapickle.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "dimension": null,
+   "expect": {
+    "minecraft:sea_pickle": 20
+   },
+   "inputs": {
+    "0,2,7": [
+     [
+      "minecraft:bone_meal",
+      192
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "-5,1,7",
+    "5,1,7"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 6000
   },
   "decorations/cropfarms/sugarcane.blueprint": {
    "blocks": [],

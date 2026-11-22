@@ -552,7 +552,7 @@ def ironfarm(pack, rel, L):
     fences = [(8, 9), (6, 9), (9, 8), (9, 6), (10, 9), (12, 9)]
     gaps = [(7, 9), (9, 7), (11, 9)]
     beds = [(S1, (5, 8), "south"), (S2, (10, 5), "west"), (S3, (13, 8), "south")]
-    work = [((5, 10), "fletching_table"), ((8, 5), "smithing_table"), ((13, 10), "cartography_table")]
+    work = [((5, 10), "fletching_table"), ((8, 5), "fletching_table"), ((13, 10), "cartography_table")]
     for x in range(BX1, BX2 + 1):
         for z in range(BZ1, BZ2 + 1):
             d.set(x, FLOOR, z, GLASS)
@@ -575,6 +575,20 @@ def ironfarm(pack, rel, L):
     for (c, blk) in work:
         d.set(c[0], Y, c[1], blk)
     d.set(A[0], Y + 2, A[1], SB)               # the zombie's sun shade (2-high cell), glass ceiling over it
+    # night blinds: a panicking villager never goes to bed (only VillagerCalmDown - no hostile in sight - hands it
+    # back to its schedule), so the zombie must be hidden at night. In each arm the sight line crosses the fence
+    # cell next to the pod (D') at y17 (eyes 17.18 on the bed -> 16.74). A sticky piston in the arm's side wall
+    # at y17 holds a plank in that cell; the daylight detector on top of the piston powers it by day, the piston
+    # pushes the plank on into a niche and only its arm (y 17.375-17.625, above the sight line) and its head plate
+    # (the far quarter of the cell, beside the sight line) stay in the cell. At dusk the detector goes to 0, the
+    # piston pulls the plank back: no zombie in sight, the villagers calm down and sleep; at dawn it opens again.
+    blinds = [((6, 8), "south"), ((8, 6), "east"), ((12, 8), "south")]
+    for ((x, z), f) in blinds:
+        dx, dz = {"south": (0, 1), "east": (1, 0)}[f]
+        d.set(x, Y + 2, z, f"sticky_piston[extended=false,facing={f}]")
+        d.set(x + dx, Y + 2, z + dz, "spruce_planks")                  # the blind (in the sight line at night)
+        d.set(x + 2 * dx, Y + 2, z + 2 * dz, AIR)                       # niche it is pushed into by day
+        d.set(x, CEIL, z, "daylight_detector[inverted=false,power=0]")
     # iron doors (villagers cannot open them) with a button on the gallery side
     doors = [((4, 9), "west", (4, 10)), ((9, 4), "north", (8, 4)), ((14, 9), "east", (14, 10)),
              ((9, 10), "south", (10, 10))]
@@ -629,7 +643,12 @@ def ironfarm(pack, rel, L):
            "spruce")
     # test: three villagers in their pods, the zombie in its cell. They claim the beds, sleep the first night
     # (run tick ~11000) and from the morning (~23000) the zombie makes them spawn golems.
-    d.farm_test(expect={"minecraft:iron_ingot": 6},
+    # PROBE (temporary): night detector
+    d.set(20, 2, 15, "daylight_detector[inverted=false,power=0]")
+    d.set(20, 2, 16, hopper("south"))
+    d.set(20, 3, 16, chest("north"))
+    d.set(20, 2, 17, chest("north"))
+    d.farm_test(expect={"minecraft:iron_ingot": 6}, inputs={(20, 3, 16): [("minecraft:stick", 64)]},
                 spawns=[("minecraft:villager", x, Y, z, 1) for (x, z) in (S1, S2, S3)] +
                        [("minecraft:zombie", A[0], Y, A[1], 1)], ticks=27000,
                 blocks=[(9, 10, 9, "minecraft:lava"), (10, 10, 10, "minecraft:lava"), (9, 9, 9, "minecraft:crimson_wall_sign"),
