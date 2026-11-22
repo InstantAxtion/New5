@@ -535,6 +535,8 @@ def hw_tower_storey(d, k, y, m):
         d.set(6, y + 1, 2, "potted_azure_bluet")
         d.set(2, y, 2, CHS("east"))
         d.set(2, y, 6, BARU)
+        d.set(2, y + 1, 6, "potted_fern")
+        d.set(2, y + 1, 2, LANT_S)
         d.set(6, y, 6, SL("dark_oak", "top"))
         d.candle(6, y + 1, 6, 3)
         d.set(1, y, 3, CHS("east"))
@@ -1069,6 +1071,11 @@ def hw_bar(rel, L):
                    (19, 23, "red_carpet"), (19, 24, "red_carpet"), (19, 25, "red_carpet"),
                    (11, 20, SLD(w), "potted_red_tulip"), (14, 21, "red_carpet"), (15, 21, "red_carpet"),
                    ("lamp", 14, 24), ("lamp", 16, 22)])
+        # sitting corner with a rug, wardrobe and coffer by the bed
+        lay(d, 8, [(15, 24, "dark_oak_fence", "dark_oak_pressure_plate[powered=false]"), (15, 23, ST(w, "north")),
+                   (15, 25, ST(w, "south")), (12, 20, CH("south")), (20, 25, KEG("west"), BAR), (20, 26, BAR),
+                   (13, 28, BAR)])
+        d.rug(14, 23, 16, 25, 8, ["red_carpet", "yellow_carpet"])
         put(d, 16, 10, 20, "red_wall_banner[facing=south]")
         put(d, 16, 10, 28, "white_wall_banner[facing=north]")
     ridge = soft(d, d.gable, hx1, hz1, hx2, hz2, HT + 1, "x", "deepslate_tile_stairs", "deepslate_tile_slab",
@@ -1189,6 +1196,17 @@ def cs_tower_skirt(d, X0, Z0, corner):
     put(d, xr, 2, Z0 + 6, LOG("stripped_spruce_log"))
     put(d, xr, 3, Z0 + 6, "spruce_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]")
     put(d, xr, 4, Z0 + 5, LANT)
+    # outer sides (facing out of the fort): watch lanterns under the overhang, a stacked woodpile, a water barrel
+    zo = Z0 if corner[0] == "N" else Z0 + 8
+    xo = X0 + 8 if corner[1] == "E" else X0
+    for a in (X0 + 2, X0 + 6):
+        put(d, a, 4, zo, LANT)
+    for c in (Z0 + 2, Z0 + 6):
+        put(d, xo, 4, c, LANT)
+    for a in (X0 + 5, X0 + 6):
+        put(d, a, 2, zo, LOG("spruce_log", "x"))
+    put(d, X0 + 6, 3, zo, LOG("spruce_log", "x"))
+    put(d, xo, 2, Z0 + 4, "barrel[facing=up,open=false]")
 
 
 def cs_bar(rel, L):
@@ -1556,8 +1574,9 @@ def nt_bar(rel, L):
         d.set(9, 8, 28, LOCK)
         d.set(9, 8, 29, LOCK)
         d.set(16, 8, 29, "potted_azalea_bush")
-        d.set(16, 8, 28, "smooth_quartz_slab[type=top,waterlogged=false]")
-        d.set(16, 9, 28, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=false]")
+        d.set(11, 9, 27, "candle[candles=3,lit=false,waterlogged=false]")
+        d.set(12, 9, 27, "lantern[hanging=false,waterlogged=false]")
+        d.set(13, 9, 27, "flower_pot")
     if L >= 4:                                                # solar panels on the roof
         for x in range(x1 + 2, x2 - 1):
             for z in (z1 + 2, z1 + 3):
@@ -1853,6 +1872,10 @@ def cs_bar_outer(d, L):
                        (9, -15, "hay_block[axis=x]"), (3, -8, "white_wool"), (4, -8, "brown_wool", "white_wool"),
                        (9, -8, BAR), (10, -8, BAR, BAR), (11, -8, CH("north")), (8, -11, "composter[level=6]"),
                        ("lamp", 6, -11)])
+        # under the north gable: hay stack, rain barrel, a bench and a lantern post for the stable hands
+        lay(d, 2, [(2, -17, "hay_block[axis=y]", "hay_block[axis=y]"), (3, -17, "hay_block[axis=x]"),
+                   (5, -17, BAR), (7, -17, ST("spruce", "south")), (8, -17, ST("spruce", "south")),
+                   (10, -17, "spruce_fence", LANT_S)])
         for x in range(1, 13):                                  # corral
             put(d, x, 2, -5, "spruce_fence")
         put(d, 1, 2, -6, "spruce_fence")
@@ -2061,7 +2084,7 @@ def nt_bar_east(d, L):
     if L >= 5:
         ys, top, ridge = bld(d, 29, 19, 46, 29, 4, "x", doors=[(37, 19)], lad=(45, 28, "north"),
                              pal=PAL_BAR["nt_gym"])
-        mats = [(x, z) for x in (32, 33, 34, 35) for z in (23, 24, 25)]
+        mats = [(x, z) for x in (33, 34, 35) for z in (23, 24, 25)]
         lay(d, ys[0], [(30, 22, LOCK), (30, 23, LOCK), (30, 24, LOCK), (30, 25, LOCK), (31, 20, "water_cauldron[level=3]"),
                        (41, 26, ST("birch", "east")), (42, 26, "iron_bars"), (41, 28, ST("birch", "east")),
                        (42, 28, "iron_bars"), (44, 21, "potted_bamboo"), ("lamp", 34, 24), ("lamp", 41, 23)])
@@ -2088,7 +2111,7 @@ def nt_bar_east(d, L):
         DB = "chain[axis=x,waterlogged=false]"
         # gym: changing benches by the lockers, dumbbell rack on the back wall, rowing machines, more lights
         lay(d, ys[0], [(31, 23, ST("birch", "west")), (31, 24, ST("birch", "west")),
-                       (33, 28, SST, DB), (34, 28, SST, DB), (35, 28, SST, DB), (36, 28, "polished_andesite_wall"),
+                       (33, 28, SST, DB), (34, 28, SST, DB), (35, 28, SST, DB), (36, 28, "andesite_wall"),
                        (37, 28, SST, DB), (32, 20, "potted_bamboo"), (45, 20, "potted_azalea_bush"),
                        (44, 25, "black_carpet"), (44, 26, "black_carpet"), (43, 25, SST), (43, 26, SST),
                        ("lamp", 31, 27), ("lamp", 38, 27), ("lamp", 44, 21)])
@@ -2120,7 +2143,7 @@ def nt_bar_east(d, L):
                        ("lamp", 41, 21), ("lamp", 31, 25)])
         for x in (40, 41, 42):
             put(d, x, ys[3] + 2, 29, "black_stained_glass") if False else None
-        d.rug(32, 24, 36, 26, ys[3], ["cyan_carpet", "white_carpet"])
+        d.rug(32, 24, 36, 25, ys[3], ["cyan_carpet", "white_carpet"], "check")
         # roof terrace on the training centre: running track, planters, bench
         track = [(x, 21) for x in range(31, 45)] + [(x, 27) for x in range(31, 45)] + \
                 [(31, z) for z in range(22, 27)] + [(44, z) for z in range(22, 27)]
@@ -2771,6 +2794,7 @@ def gh_neoterra(rel, L):
         for y in (2, 3, 4, 5):
             d.set(x, y, 3, GATE_IRON)
     gate_tags(d, range(9, 13), 3, (8, 13), 5, (10, 11), 11, 4)
+    # (the control bridge drawn below sets the passage ceiling; its lights and wall banners are added after it)
     # glazed control bridge (upper floor level) with roof terrace
     for x in range(8, 14):
         for z in range(2, 9):
@@ -2796,6 +2820,13 @@ def gh_neoterra(rel, L):
     for y in range(7, 12):
         d.set(12, y, 8, "white_concrete")
     d.set(9, 10, 6, "sea_lantern")
+    # passage behind the gate: recessed ceiling lights, compound banners and wayfinding signs on the side walls
+    for x, z in ((9, 5), (12, 5), (9, 8), (12, 8)):
+        d.set(x, 6, z, "sea_lantern")
+    d.banner(8, 4, 7, "east", "cyan")
+    d.banner(13, 4, 7, "west", "cyan")
+    d.sign(8, 4, 4, "east", ["GUARD", "WEST"], "birch", glow=True, color="cyan")
+    d.sign(13, 4, 4, "west", ["GUARD", "EAST"], "birch", glow=True, color="cyan")
     # guard blocks: doors from the passage, ladders up, desks
     d.door(7, 2, 5, "west", "birch")
     d.door(14, 2, 5, "east", "birch")
@@ -2943,6 +2974,13 @@ def gh_complex(d, L, xa, xb, r1, r2, tz, yw):
                              doors=[(wx2, tz + 8)], lad=(wx1 + 1, za + 1, "east"),
                              chimney=(wx1 + 3, zz) if pk != "Neoterra" else None)
         gh_barracks_in(d, ys, wx1 + 1, wx2 - 1, tz)
+        if pk == "Hearthwood":                                 # lane between town wall and guards' hall
+            lay(d, 2, [(wx1 + 2, za - 1, ST("dark_oak", "south")), (wx1 + 3, za - 1, ST("dark_oak", "south")),
+                       (wx1 + 5, za - 1, BAR), (wx1 + 6, za - 1, KEG("east"), "potted_red_tulip"),
+                       (wx1 - 1, za + 2, LOG("oak_log", "z"), LOG("oak_log", "z")), (wx1 - 1, za + 3, LOG("oak_log", "z")),
+                       (wx1 - 1, za + 5, "water_cauldron[level=3]")])
+            for x, z, f in ((wx1 + 4, za - 1, "north"), (wx1 + 9, za - 1, "north"), (wx1 - 1, za + 4, "west")):
+                put(d, x, 4, z, f"wall_torch[facing={f}]")
         ex1, ex2 = r2 + 3, xb + 8
         kind = {"Hearthwood": "armoury", "Cascadia": "stable", "Neoterra": "armoury"}[pk]
         ys, top, ridge = bld(d, ex1, za, ex2, zz, 1, "x", doors=[(ex1, tz + 8)], sh=5, pal=PAL[("gh", pk, "b")])

@@ -102,13 +102,13 @@ def shell(d, X1, Z1, X2, Z2, top, floor="smooth_stone", wall="glass", plinth=SB,
     return posts
 
 
-def entrance(d, x, z, name, bring, facing="north", path_to=0, sign_side=1, sign_wall=None):
+def entrance(d, x, z, name, bring, facing="north", path_to=0, sign_side=1, sign_wall=None, lines=None):
     """Door in the north wall at (x, 2, z), a wall sign beside it, a lantern over it and a gravel path north."""
     d.door(x, 2, z, facing=facing, wood="spruce")
     sx = x + sign_side
     if sign_wall:
         d.set(sx, 3, z, sign_wall)
-    d.sign(sx, 3, z - 1, "north", [name, "Farmworks", "Bring:", bring], wood="spruce")
+    d.sign(sx, 3, z - 1, "north", lines or [name, "Farmworks", "Bring:", bring], wood="spruce")
     lantern(d, x, 4, z - 1, hanging=False) if d.air(x, 4, z - 1) else None
     for zz in range(path_to, z):
         d.set(x, 1, zz, "gravel")
@@ -546,5 +546,151 @@ def sweetberry(pack, rel, L):
     for z in (3, 4):
         d.set(8, 1, z, "gravel")
     d.set(9, 1, 3, "gravel")
-    d.farm_test(expect={"minecraft:sweet_berries": 8}, spawns=[("minecraft:fox", 6, 2, 7, 2)], ticks=8000)
+    d.farm_test(expect={"minecraft:sweet_berries": 12}, spawns=[("minecraft:fox", 6, 3, 7, 2)], ticks=16000)
+    return d
+
+
+def repeater(inp, delay=4):
+    """Repeater whose INPUT is on side `inp` (Java: facing = input side), output on the opposite side."""
+    return f"repeater[delay={delay},facing={inp},locked=false,powered=false]"
+
+
+def dispenser(f):
+    return f"dispenser[facing={f},triggered=false]"
+
+
+# ================================================================================================ flowers
+@design("flowers")
+def flowers(pack, rel, L):
+    """Bone-meal flower farm with a water flush (the common design: dispensers bone-meal a grass bed, a water
+    dispenser washes the flowers into hoppers). One button does a whole cycle on every press:
+      * three water dispensers (west end, y3) either place their water or pick it up again (they alternate);
+      * the same pulse runs through repeaters (3 x 4 ticks to the first, 5 x 4 to the second bone-meal dispenser),
+        so the bone meal comes AFTER the water has drained back (flowing water vanishes 5 ticks per block).
+    Press A: water on -> it flows east over the grass (6 blocks of flow), breaks every flower / grass tuft and
+    carries the items to the hoppers under the stream end (x=11). The bone meal then finds water on the grass and
+    is not used. Press B: water off -> the bone meal grows new flowers on the dry grass. The water source cells
+    stand on stone, not grass (grass under a full water block turns to dirt)."""
+    d = Design(pack, rel, size=(15, 14, 13), gy=1, paving="grass_block")
+    X1, Z1, X2, Z2 = 0, 3, 14, 11
+    shell(d, X1, Z1, X2, Z2, 6, floor="spruce_planks", wall="glass")
+    rows = (6, 7, 8)
+    for x in range(2, 13):
+        for z in range(4, 11):
+            d.set(x, 2, z, SB)
+    for x in range(4, 12):
+        for z in (5, 9):
+            d.set(x, 3, z, GLASS)
+    for z in rows:
+        d.set(3, 3, z, dispenser("east"))
+        d.set(3, 4, z, dust(n="side", s="side"))
+        d.set(4, 2, z, SB)
+        d.set(4, 3, z, AIR)                                  # water source (from the dispenser)
+        for x in range(5, 11):
+            d.set(x, 2, z, "grass_block[snowy=false]")
+        d.set(11, 2, z, hopper("south"))
+        d.set(12, 3, z, GLASS)
+    output(d, 11, 2, 9)
+    d.set(11, 3, 9, GLASS)
+    # controls: button on the west aisle, dust over the water dispensers, delayed line to the bone meal
+    for z in (4, 5, 9):
+        d.set(3, 3, z, SB)
+    d.set(3, 4, 4, dust(s="side"))
+    d.set(2, 3, 4, button("west"))
+    d.set(3, 4, 5, dust(n="side", s="side"))
+    d.set(3, 4, 9, dust(n="side", e="side"))
+    line = {4: repeater("west"), 5: repeater("west"), 6: repeater("west"), 7: dust(e="side", w="side"),
+            8: repeater("west"), 9: repeater("west"), 10: dust(w="side")}
+    for x, st in line.items():
+        d.set(x, 3, 9, SB if x in (7, 10) else GLASS)
+        d.set(x, 4, 9, st)
+    for x in (7, 10):
+        d.set(x, 2, 9, dispenser("north"))                   # bone meal, aimed at the grass row z=8
+    d.sign(2, 3, 5, "west", ["Press: water", "on / off.", "Bone meal", "after drain"], wood="spruce")
+    for z in range(Z1 + 1, Z2):
+        d.set(1, 1, z, "spruce_planks")
+        for y in (2, 3, 4):
+            d.set(1, y, z, AIR)
+        d.set(2, 1, z, "spruce_planks")
+        if z not in (4, 5):
+            for y in (2, 3):
+                d.set(2, y, z, AIR)
+    for x in range(2, 14):
+        d.set(x, 1, 10, "spruce_planks")
+        for y in (2, 3, 4):
+            d.set(x, y, 10, AIR)
+    d.set(12, 2, 9, "chest[facing=south,type=single,waterlogged=false]")
+    entrance(d, 1, Z1, "Flowers", "", sign_side=1, lines=["Flower Farm", "Bring:", "bone meal,", "3 water buckets"])
+    for x in range(X1 + 1, X2):
+        d.set(x, 6, 7, logb("x"))
+    for x in (1, 7, 13):
+        lantern(d, x, 5, 7)
+    roof(d, X1, Z1, X2, Z2, 7, axis="x")
+    controller(d, 7)
+    for z in (1, 2):
+        d.set(7, 1, z, "gravel")
+    for x in range(1, 8):
+        d.set(x, 1, 2, "gravel")
+    inputs = {(3, 3, z): [("minecraft:water_bucket", 1)] for z in rows}
+    inputs.update({(x, 2, 9): [("minecraft:bone_meal", 64)] for x in (7, 10)})
+    d.farm_test(expect={"minecraft:poppy": 4}, inputs=inputs, presses=[(2, 3, 4)], ticks=6000)
+    return d
+
+
+# ================================================================================================ villager crops
+@design("villagercrops")
+def villagercrops(pack, rel, L):
+    """Villager crop farm: a farmer villager (job site: the composter in the middle of the field) harvests ripe
+    wheat / carrots / potatoes and replants from what it picks up. The whole field is FARMLAND over hoppers, so
+    a good share of every harvest drops straight into the hoppers before the farmer grabs it; the farmer also
+    composts its spare seeds and the hopper under the composter takes the bone meal. Everything runs east into
+    the output barrel. Open sky over the field (crops need light >= 9); glass walls keep the villager in.
+    Water (two sources under slabs) keeps the farmland wet."""
+    d = Design(pack, rel, size=(17, 9, 15), gy=1, paving="grass_block")
+    FX1, FZ1, FX2, FZ2 = 3, 5, 11, 11                       # field
+    for x in range(FX1 - 1, FX2 + 2):                      # low wall: stone-brick plinth, glass panes, slab cap
+        for z in range(FZ1 - 1, FZ2 + 2):
+            edge = x in (FX1 - 1, FX2 + 1) or z in (FZ1 - 1, FZ2 + 1)
+            d.set(x, 1, z, SB)
+            if edge:
+                d.set(x, 2, z, SB)
+                d.set(x, 3, z, "glass_pane")
+                d.set(x, 4, z, slab("stone_brick"))
+    for (x, z) in ((FX1 - 1, FZ1 - 1), (FX2 + 1, FZ1 - 1), (FX1 - 1, FZ2 + 1), (FX2 + 1, FZ2 + 1),
+                   (7, FZ2 + 1), (FX1 - 1, 8), (FX2 + 1, 8)):
+        d.set(x, 2, z, logb())
+        d.set(x, 3, z, logb())
+        d.set(x, 4, z, "lantern[hanging=false,waterlogged=false]")
+    collect(d, FX1, FX2 + 1, list(range(FZ1, FZ2 + 1)))
+    crops = {5: "wheat", 6: "carrots", 7: "potatoes", 9: "potatoes", 10: "carrots", 11: "wheat"}
+    for x in range(FX1, FX2 + 1):
+        for z in range(FZ1, FZ2 + 1):
+            if z == 8 and x in (5, 9):
+                d.set(x, 2, z, WATER)
+                d.set(x, 3, z, slab("spruce"))
+            elif z == 8 and x == 7:
+                d.item(x, 2, z, "composter")
+            else:
+                d.set(x, 2, z, "farmland[moisture=7]")
+                if z in crops:
+                    d.set(x, 3, z, f"{crops[z]}[age=7]")
+    for z in range(FZ1, FZ2 + 1):
+        d.set(FX2 + 1, 2, z, SB)
+    # gate house on the north side: door into the field, barrel side aisle on the east
+    d.door(7, 2, FZ1 - 1, facing="north", wood="spruce")
+    d.set(7, 4, FZ1 - 1, SB)
+    d.set(15, 2, 12, "chest[facing=west,type=single,waterlogged=false]")
+    d.set(15, 2, 11, "hay_block[axis=y]")
+    d.set(15, 3, 11, "lantern[hanging=false,waterlogged=false]")
+    d.set(6, 3, FZ1 - 1, SB)
+    d.sign(6, 3, FZ1 - 2, "north", ["Villager Farm", "Farmworks", "Bring:", "1 villager"], wood="spruce")
+    controller(d, 8)
+    for z in range(0, FZ1 - 1):
+        d.set(7, 1, z, "gravel")
+    for z in range(2, 14):
+        d.set(14, 1, z, "gravel")
+    for x in range(7, 15):
+        d.set(x, 1, 2, "gravel")
+    d.farm_test(expect={"minecraft:carrot": 8, "minecraft:potato": 4}, spawns=[("minecraft:villager", 4, 3, 8, 1)],
+                ticks=8000)
     return d

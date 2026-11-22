@@ -428,26 +428,25 @@ def spiderfarm(pack, rel, L):
     widens to 4x4: a falling spider (1.4 wide) does not touch a wall, so it cannot climb (Spider: climbing =
     horizontal collision, which resets the fall). 22-block fall -> 19 damage (16 hp). A spider that does climb
     ends up under the platform ceiling and falls the full height later. 16 hoppers -> four chests."""
-    w = 2
-    d = Design(pack, rel, size=(20, 37, 22), gy=1, paving="grass_block")
-    shaft = (HX - 1, HZ - 1, HX + 2, HZ + 2)
+    w = 3
+    d = Design(pack, rel, size=(21, 37, 23), gy=1, paving="grass_block")
+    shaft = (HX, HZ, HX + 2, HZ + 2)
     floors = (25, 27, 29, 31)
     windows = [(5, 3, 5), (6, 3, 5), (13, 3, 5), (14, 3, 5), (4, 3, 12), (15, 3, 12), (7, 3, 16), (12, 3, 16)]
-    tower(d, w, shaft, 3, floors[0], windows=windows, landing="campfire",
+    tower(d, w, shaft, 3, floors[0], windows=windows,
           lines=["Spider Farm", "string", "Bring: nothing", "(works at night)"])
     y = floors[0]
     for y0 in floors:
         y = water_floor(d, w, y0, "spider")
     roof_box(d, w, y)
-    cells = [(4, 5), (6, 7), (13, 5), (15, 7), (4, 16), (6, 18), (13, 16), (15, 18)]
+    cells = [(4, 5), (6, 7), (15, 5), (17, 7), (4, 17), (6, 19), (15, 17), (17, 19)]
+    chan = ((10, 5), (10, 8), (17, 12), (14, 12), (10, 19), (10, 16), (3, 12), (6, 12))
     spawns = (strip_spawns("minecraft:spider", floors[0] + 1, cells) + strip_spawns("minecraft:spider", floors[2] + 1, cells[::2])
-              + [("minecraft:spider", x, y0 + 1, z, 1) for y0 in floors for (x, z) in CHANNEL])
+              + [("minecraft:spider", x, y0 + 1, z, 1) for y0 in floors for (x, z) in chan])
     import os
-    if os.environ.get("XPDBG") == "low":
-        spawns = [("minecraft:spider", x, floors[0] + 1, z, 3) for (x, z) in CHANNEL]
-    if os.environ.get("XPDBG") == "top":
-        spawns = [("minecraft:spider", x, floors[-1] + 1, z, 3) for (x, z) in CHANNEL]
-    d.farm_test(expect={"minecraft:string": 3}, spawns=spawns, ticks=6000)
+    if os.environ.get("XPDBG"):
+        spawns = [("minecraft:spider", x, floors[0] + 1, z, 1) for (x, z) in chan]
+    d.farm_test(expect={"minecraft:string": 4}, spawns=spawns, ticks=6000)
     return d
 
 

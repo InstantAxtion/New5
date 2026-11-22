@@ -303,8 +303,87 @@ def chickencooker(pack, rel, L):
         for z in range(Z1 + 1, Z2):
             d.set(x, top, z, logb("z"))
     approach(d, cx, Z1, ["Chicken Cooker", "Bring: chickens", "(10+) or eggs", "to throw in"])
-    d.farm_test(expect={"minecraft:cooked_chicken": 1}, ticks=3000,
-                inputs={(cx, 5, 6): [("minecraft:egg", 16)]},
-                spawns=[("minecraft:hopper_minecart", cx, 3, 8, 1), ("minecraft:chicken", cx, 4, 8, 1),
-                        ("minecraft:chicken", 6, 6, 5, 3)])
+    # the real cycle: 64 eggs are thrown (~8 chicks hatch), the chicks grow up in 24000 ticks and are cooked
+    d.farm_test(expect={"minecraft:cooked_chicken": 2}, ticks=25500,
+                inputs={(cx, 5, 6): [("minecraft:egg", 64)]},
+                spawns=[("minecraft:hopper_minecart", cx, 3, 8, 1), ("minecraft:chicken", 6, 6, 5, 3)])
+    return d
+
+
+
+# ================================================================================================ cows
+@design("cowbreeder")
+def cowbreeder(pack, rel, L):
+    """Cow breeding pen + cooking grinder (semi-automatic: the PLAYER breeds the cows with wheat; everything after
+    that is automatic).
+
+    Pen (feet level y5, floor y4) north of four 1x1 grinder stalls at x = 6, 8, 10, 12 (z10). Each stall is joined
+    to the pen by a 1-high hole (c,5,9): calves (0.7 high) wander through, adults (1.4 high) cannot.
+    Stall: floor block (c,4,10) on top of a rail with a HOPPER MINECART (c,3,10) (it pulls the drops through the
+    floor block), a hopper (c,2,10) under the rail (line west to the chest at (4,2,10)).
+    Lava source (c,6,10) over the stall, held up by a warped wall sign (c,5,10) (lava cannot flow into a sign;
+    warped wood does not burn). A calf stands under the lava; when it grows up its head reaches into the lava and
+    it burns: cooked beef + leather drop on the floor block and the cart picks them up."""
+    d = Design(pack, rel, size=(19, 14, 15), gy=1, paving="grass_block")
+    X1, Z1, X2, Z2, top = 1, 2, 17, 13, 8
+    cx = 9
+    barn(d, X1, Z1, X2, Z2, top, cx, windows=[(3, Z1), (5, Z1), (13, Z1), (15, Z1), (X1, 6), (X2, 6),
+                                               (X1, 11), (X2, 11)])
+    stalls = (6, 8, 10, 12)
+    # pen platform
+    d.fill(3, 2, 4, 15, 3, 9, SB)
+    d.fill(3, 4, 4, 15, 4, 9, GRASS)
+    for x in range(3, 16):
+        d.set(x, 5, 4, FENCE)
+    for z in range(5, 9):
+        d.set(3, 5, z, FENCE)
+        d.set(15, 5, z, FENCE)
+    d.set(cx, 5, 4, "spruce_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
+    d.fill(3, 5, 9, 15, 6, 9, SB)
+    # grinder block z10..11, y2..7
+    d.fill(4, 2, 10, 14, 7, 11, SB)
+    for x in range(5, 14):
+        d.set(x, 2, 10, hopper("west"))
+        d.set(x, 2, 11, AIR)                              # service aisle (z11..12) behind the grinder
+        d.set(x, 3, 11, AIR)
+    for c in stalls:
+        d.set(c, 3, 10, "rail[shape=east_west,waterlogged=false]")
+        d.set(c, 4, 10, "smooth_stone")
+        d.set(c, 5, 10, "warped_wall_sign[facing=north,waterlogged=false]")
+        d.set(c, 6, 10, LAVA)
+        d.set(c, 5, 9, AIR)                               # calf hole
+        for x in (c - 1, c + 1):
+            d.set(x, 5, 10, "glass")
+    for x in (5, 7, 9, 11, 13):
+        d.set(x, 3, 10, "chiseled_stone_bricks")
+        d.set(x, 6, 10, "glass")
+    d.fill(4, 7, 9, 14, 7, 11, "polished_andesite")
+    d.set(4, 2, 10, chest("south"))
+    d.tag(4, 2, 10, "farm_output")
+    d.set(4, 2, 11, AIR)
+    d.set(4, 3, 11, AIR)
+    d.set(4, 3, 10, AIR)
+    # deck + stairs up to the pen gate
+    for x in range(3, 15):
+        d.set(x, 4, 3, "spruce_planks")
+    d.set(15, 3, 3, stair("spruce", "west"))
+    d.set(15, 2, 3, "spruce_planks")
+    d.set(16, 2, 3, stair("spruce", "west"))
+    lantern(d, 3, 5, 3, hanging=False)
+    # aisle furniture and light
+    d.set(16, 2, 12, "hay_block[axis=y]")
+    d.set(16, 3, 12, "hay_block[axis=y]")
+    d.set(15, 2, 12, "barrel[facing=up,open=false]")
+    d.set(2, 2, 12, chest("east"))
+    d.set(2, 2, 11, "crafting_table")
+    for x in (5, 13):
+        for z in range(Z1 + 1, Z2):
+            d.set(x, top, z, logb("z"))
+    for (x, z) in ((5, 6), (13, 6), (9, 12), (9, 6)):
+        lantern(d, x, top - 1, z)
+    approach(d, cx, Z1, ["Cow Breeder", "Bring: 2+ cows,", "wheat, 4 hopper", "minecarts"])
+    d.farm_test(expect={"minecraft:cooked_beef": 3}, ticks=2000,
+                spawns=[("minecraft:cow", c, 5, 10, 1) for c in stalls]
+                + [("minecraft:hopper_minecart", c, 3, 10, 1) for c in stalls]
+                + [("minecraft:cow", 7, 5, 6, 2)])
     return d
