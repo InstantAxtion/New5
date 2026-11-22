@@ -5642,7 +5642,7 @@
   "yard_seats": 0
  },
  "decorations/foodfarms/smeltery.blueprint": {
-  "base": "smeltery",
+  "base": "farmsmeltery",
   "beds": 0,
   "bookshelves": 0,
   "cluster": null,

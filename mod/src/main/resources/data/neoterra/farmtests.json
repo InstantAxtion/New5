@@ -1648,8 +1648,8 @@
    "blocks_min": 0,
    "dimension": null,
    "expect": {
-    "minecraft:cooked_beef": 12,
-    "minecraft:cooked_porkchop": 6
+    "minecraft:cooked_beef": 20,
+    "minecraft:cooked_porkchop": 12
    },
    "inputs": {
     "-3,4,7": [
@@ -1682,7 +1682,7 @@
    "blocks_min": 0,
    "dimension": null,
    "expect": {
-    "minecraft:bone_meal": 8
+    "minecraft:bone_meal": 10
    },
    "inputs": {
     "-2,5,6": [
@@ -1705,7 +1705,7 @@
    "blocks_min": 0,
    "dimension": null,
    "expect": {
-    "minecraft:egg": 5
+    "minecraft:egg": 6
    },
    "inputs": {},
    "mine": [],
@@ -1755,6 +1755,20 @@
      2,
      6,
      1
+    ],
+    [
+     "minecraft:chicken",
+     1,
+     2,
+     6,
+     1
+    ],
+    [
+     "minecraft:chicken",
+     2,
+     2,
+     8,
+     1
     ]
    ],
    "ticks": 13000
@@ -1764,7 +1778,7 @@
    "blocks_min": 0,
    "dimension": null,
    "expect": {
-    "minecraft:iron_ingot": 20
+    "minecraft:iron_ingot": 32
    },
    "inputs": {
     "-3,4,7": [
@@ -1793,7 +1807,7 @@
    "blocks_min": 0,
    "dimension": null,
    "expect": {
-    "minecraft:cactus": 8
+    "minecraft:cactus": 10
    },
    "inputs": {},
    "mine": [],
@@ -1864,37 +1878,12 @@
    "blocks_min": 9,
    "dimension": null,
    "expect": {
-    "minecraft:bone": 1,
-    "minecraft:feather": 1,
-    "minecraft:iron_ingot": 6,
-    "minecraft:stick": 1
+    "minecraft:iron_ingot": 6
    },
-   "inputs": {
-    "-4,16,12": [
-     [
-      "minecraft:feather",
-      64
-     ]
-    ],
-    "-7,14,8": [
-     [
-      "minecraft:bone",
-      64
-     ]
-    ],
-    "10,1,16": [
-     [
-      "minecraft:stick",
-      64
-     ]
-    ]
-   },
+   "inputs": {},
    "mine": [],
    "outputs": [
-    "0,1,9",
-    "10,1,17",
-    "-7,13,8",
-    "-4,15,12"
+    "0,1,9"
    ],
    "presses": [],
    "spawns": [

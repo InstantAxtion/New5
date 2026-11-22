@@ -233,7 +233,7 @@ def autokitchen(pack, rel, L):
     d.set(X2 - 1, 2, 4, barrel("up"))
     d.set(X2 - 1, 3, 4, "potted_fern")
     d.set(X1 + 1, 2, 3, "cauldron")
-    d.farm_test(expect={"minecraft:cooked_beef": 12, "minecraft:cooked_porkchop": 6},
+    d.farm_test(expect={"minecraft:cooked_beef": 20, "minecraft:cooked_porkchop": 12},
                 inputs={cin: [("minecraft:beef", 32), ("minecraft:porkchop", 32)],
                         cf: [("minecraft:coal", 16)]}, ticks=6000)
     return d
@@ -250,7 +250,7 @@ def smeltery(pack, rel, L):
     d.set(X1 + 1, 2, 3, "anvil[facing=west]")
     d.set(X2 - 1, 2, 3, "smithing_table")
     d.set(X2 - 1, 2, 4, barrel("up"))
-    d.farm_test(expect={"minecraft:iron_ingot": 20},
+    d.farm_test(expect={"minecraft:iron_ingot": 32},
                 inputs={cin: [("minecraft:raw_iron", 64)], cf: [("minecraft:coal", 16)]}, ticks=6000)
     return d
 
@@ -268,7 +268,7 @@ def bonemeal(pack, rel, L):
     d.set(X1 + 1, 2, 3, "hay_block[axis=y]")
     d.set(X2 - 1, 2, 3, barrel("up"))
     d.set(X2 - 1, 2, 4, "composter[level=0]")
-    d.farm_test(expect={"minecraft:bone_meal": 8}, inputs={cin: [("minecraft:wheat", 192)]}, ticks=6000)
+    d.farm_test(expect={"minecraft:bone_meal": 10}, inputs={cin: [("minecraft:wheat", 192)]}, ticks=6000)
     return d
 
 
@@ -316,10 +316,11 @@ def eggfarm(pack, rel, L):
     d.set(8, 2, 4, "crafting_table")
     lantern(d, 2, 3, 4, hanging=False)
     lantern(d, 8, 3, 4, hanging=False)
-    approach(d, cx, Z1, ["Egg Coop", "eggs -> chest", "Bring: 6+ hens", "(seeds to breed)"])
-    d.farm_test(expect={"minecraft:egg": 5}, ticks=13000,
+    approach(d, cx, Z1, ["Egg Coop", "eggs -> chest", "Bring: 8+ hens", "(seeds to breed)"])
+    # a hen lays her first egg 6000-12000 ticks after she appears: 8 hens -> at least 8 eggs in 13000 ticks
+    d.farm_test(expect={"minecraft:egg": 6}, ticks=13000,
                 spawns=[("minecraft:chicken", x, 3, z, 1) for (x, z) in ((3, 7), (5, 7), (7, 7), (4, 8), (6, 8),
-                                                                         (4, 6))])
+                                                                         (4, 6), (6, 6), (7, 8))])
     return d
 
 
@@ -398,7 +399,7 @@ def cactusfarm(pack, rel, L):
     d.set(2, 2, 4, barrel("up"))
     d.set(10, 2, 4, "crafting_table")
     approach(d, 6, ZR, ["Cactus Farm", "cactus -> chest", "Bring: nothing", "(smelt: green dye)"])
-    d.farm_test(expect={"minecraft:cactus": 8}, ticks=6000)
+    d.farm_test(expect={"minecraft:cactus": 10}, ticks=6000)
     return d
 
 
@@ -453,26 +454,29 @@ IV = 15                                      # villagers' feet (pod floor y14)
 
 @design("ironfarm")
 def ironfarm(pack, rel, L):
-    """Iron golem farm (the 1.21 villager-pod design). Platform 20x20, floor y10, glass walls; villager deck y14-18
-    with a timber roof from y21.
+    """Iron golem farm (the 1.21 villager-pod / zombie-scare design). Platform 20x20, floor y10, glass walls;
+    villager deck y14-18 under a timber roof from y21.
 
-    Villager deck (feet y15): three 1x1 villager pods west / north / east of the zombie cell (9,15,9); each pod has
-    its bed head right beside the villager and a workstation. Between pod and zombie: fence / air / fence. A fence
-    is 1.5 high, the villagers' eyes (1.62) and the zombie's (1.74) are above it, so they see each other across the
-    two fences and the gap, but neither can reach the other (4 blocks). The zombie cell has a stone-brick ceiling
-    (no sun). Iron doors (buttons outside) let the player put the villagers and the zombie in from the glass
-    gallery around the deck (ladder on the east wall). Every floor up here is glass (no golem can spawn on glass)
-    and every ceiling is glass, so the spawn scan falls through to the platform.
+    Villager deck: the zombie cell (9,15,9) in the middle, an arm of fence / air / fence running west, north and east
+    to three 1x1 villager pods. Each villager stands ON its bed head (bed foot capped, so it stays within 1.14 of
+    the bed centre that SleepInBed needs) with a fletching / cartography table beside it. A fence is 1.5 high: the
+    villagers' eyes (17.18 on the bed) and the zombie's (16.74) are above it, so they see each other along the arm
+    but nothing can cross it (4 blocks: no zombie reach). The zombie cell has a stone-brick ceiling (no sun).
+    Night shutters: a villager that sees a hostile stays in PANIC (only VillagerCalmDown returns it to its
+    schedule), so it would never go to bed - and a villager that has not slept in the last 24000 ticks spawns no
+    golem. Iron trapdoors over the three fences next to the zombie lie flat by day and stand up at night (torch
+    inverter on a daylight detector), so the villagers sleep, and panic again at dawn.
+    Iron doors (buttons outside) let the player put the villagers and the zombie in from the glass gallery
+    around the deck (ladder on the east wall). Every floor up here is glass (no golem can spawn on glass) and every
+    ceiling is glass, so the golem spawn scan (villager y+6 down to y-6) falls through to the platform.
     Golem platform (floor y10, golems at y11, 3 clear up to the deck): water SOURCES along all four walls (x = 1,
     18, z = 1, 18; not in the corners, where a cell between two sources would become a source), the rest flows
-    inward (air in the blueprint). The 2x2 hole (9..10, 9..10) is 7 cells from the
-    sources, so the water next to it is the weakest (level 7) and never pours in. Golems are carried to the middle
-    and fall through the lava blade: lava sources in the hole at y10 (held up by crimson wall signs at y9 - lava
-    cannot flow into a sign - and by the platform floor around), golem at y8 in the 2x2 kill chamber with its head
-    in the lava. Iron and poppies land on the 4 hoppers (y7, items stay 2 blocks under the lava) -> hopper column
-    -> chest (10,2,9) in the room under the platform.
-    Rate: one golem about every 700-900 ticks while the villagers can see the zombie in daylight (they must sleep
-    every night - the beds are in the pods - and are panicked by the zombie during the day)."""
+    inward (air in the blueprint). The 2x2 hole (9..10, 9..10) is 7 cells from the sources, so the water next to it
+    is the weakest (level 7) and never pours in. Golems are carried to the middle and fall through the lava blade:
+    lava sources in the hole at y10 (held up by crimson wall signs at y9 - lava cannot flow into a sign - and by
+    the platform floor around), golem at y8 in the 2x2 kill chamber with its head in the lava. Iron and poppies land
+    on the 4 hoppers (y7, items stay 2 blocks under the lava) -> hopper column -> chest (10,2,9) in the room under
+    the platform. Rate: a golem every ~700-900 ticks in daylight (the 600-tick golem cooldown + the burn)."""
     d = Design(pack, rel, size=(21, 28, 20), gy=1, paving="grass_block")
     P = 10                                     # platform floor
     HX, HZ = 9, 9                              # hole north-west cell
@@ -575,20 +579,21 @@ def ironfarm(pack, rel, L):
     for (c, blk) in work:
         d.set(c[0], Y, c[1], blk)
     d.set(A[0], Y + 2, A[1], SB)               # the zombie's sun shade (2-high cell), glass ceiling over it
-    # night blinds: a panicking villager never goes to bed (only VillagerCalmDown - no hostile in sight - hands it
-    # back to its schedule), so the zombie must be hidden at night. In each arm the sight line crosses the fence
-    # cell next to the pod (D') at y17 (eyes 17.18 on the bed -> 16.74). A sticky piston in the arm's side wall
-    # at y17 holds a plank in that cell; the daylight detector on top of the piston powers it by day, the piston
-    # pushes the plank on into a niche and only its arm (y 17.375-17.625, above the sight line) and its head plate
-    # (the far quarter of the cell, beside the sight line) stay in the cell. At dusk the detector goes to 0, the
-    # piston pulls the plank back: no zombie in sight, the villagers calm down and sleep; at dawn it opens again.
-    blinds = [((6, 8), "south"), ((8, 6), "east"), ((12, 8), "south")]
-    for ((x, z), f) in blinds:
-        dx, dz = {"south": (0, 1), "east": (1, 0)}[f]
-        d.set(x, Y + 2, z, "spruce_planks")  # PROBE: blinds fixed closed
-        d.set(x + dx, Y + 2, z + dz, "spruce_planks")                  # the blind (in the sight line at night)
-        d.set(x + 2 * dx, Y + 2, z + 2 * dz, AIR)                       # niche it is pushed into by day
-        d.set(x, CEIL, z, GLASS)
+    # night shutters: a panicking villager never goes to bed (only VillagerCalmDown - no hostile in sight - hands
+    # it back to its schedule), so the zombie must be hidden at night. Every sight line to the zombie's eyes (y16.74)
+    # crosses the cell above the fence next to it (B, y16). There an IRON TRAPDOOR (bottom half): closed it lies on
+    # the fence (y16-16.19, under the sight line), open it stands across the arm and hides the zombie.
+    # Day: daylight detector (9,18,8) -> dust (8,18,8) / (10,18,8) powers the corner blocks (8,17,8) / (10,17,8) ->
+    # the redstone wall torches on them go OFF -> trapdoors closed. Night: detector 0 -> torches ON -> each torch
+    # powers the trapdoor right under it -> open. (A torch inverter, toggling twice a day.)
+    d.set(9, CEIL, 8, "daylight_detector[inverted=false,power=0]")
+    d.set(8, CEIL, 8, "redstone_wire[east=side,north=none,power=0,south=none,west=none]")
+    d.set(10, CEIL, 8, "redstone_wire[east=none,north=none,power=0,south=none,west=side]")
+    shutters = [((8, 9), "east", (8, 17, 9), "south"), ((9, 8), "south", (9, 17, 8), "east"),
+                ((10, 9), "west", (10, 17, 9), "south")]
+    for ((x, z), tf, (tx, ty, tz), wf) in shutters:
+        d.set(x, Y + 1, z, f"iron_trapdoor[facing={tf},half=bottom,open=true,powered=true,waterlogged=false]")
+        d.set(tx, ty, tz, f"redstone_wall_torch[facing={wf},lit=true]")
     # iron doors (villagers cannot open them) with a button on the gallery side
     doors = [((4, 9), "west", (4, 10)), ((9, 4), "north", (8, 4)), ((14, 9), "east", (14, 10)),
              ((9, 10), "south", (10, 10))]
@@ -641,24 +646,10 @@ def ironfarm(pack, rel, L):
     approach(d, 10, RZ1, ["Iron Farm", "Bring: 3 villagers", "+ 1 zombie (name", "tag), ladder east"])
     d.sign(9, 3, RZ1 - 1, "north", ["Doors on the", "glass deck: one", "villager per pod,", "zombie in middle"],
            "spruce")
-    # test: three villagers in their pods, the zombie in its cell. They claim the beds, sleep the first night
-    # (run tick ~11000) and from the morning (~23000) the zombie makes them spawn golems.
-    # PROBE (temporary): night detector
-    d.set(20, 2, 15, "daylight_detector[inverted=false,power=0]")
-    d.set(20, 2, 16, "dropper[facing=south,triggered=false]")
-    d.set(20, 2, 17, chest("north"))
-    d.tag(20, 2, 17, "farm_output")
-    for (x, z) in ((8, 9), (9, 8), (10, 9)):
-        d.set(x, 16, z, "stone")      # PROBE seal
-    d.set(4, 15, 8, "observer[facing=east,powered=false]")
-    d.set(3, 15, 8, "dropper[facing=down,triggered=false]")
-    d.set(3, 14, 8, chest("north"))
-    d.tag(3, 14, 8, "farm_output")
-    d.set(6, 17, 11, "observer[facing=north,powered=false]")
-    d.set(6, 17, 12, "dropper[facing=down,triggered=false]")
-    d.set(6, 16, 12, chest("north"))
-    d.tag(6, 16, 12, "farm_output")
-    d.farm_test(expect={"minecraft:iron_ingot": 6, "minecraft:stick": 1, "minecraft:bone": 1, "minecraft:feather": 1}, inputs={(20, 2, 16): [("minecraft:stick", 64)], (3, 15, 8): [("minecraft:bone", 64)], (6, 17, 12): [("minecraft:feather", 64)]},
+    # test: three villagers in their pods, the zombie in its cell. They claim the beds, panic all day 1 (no golem:
+    # they have not slept yet), sleep behind the night shutters (run tick ~11500) and from dawn (~23000) spawn
+    # golems; the block checks make sure the lava blade and the dry hole stay as built.
+    d.farm_test(expect={"minecraft:iron_ingot": 6},
                 spawns=[("minecraft:villager", x, Y, z, 1) for (x, z) in (S1, S2, S3)] +
                        [("minecraft:zombie", A[0], Y, A[1], 1)], ticks=27000,
                 blocks=[(9, 10, 9, "minecraft:lava"), (10, 10, 10, "minecraft:lava"), (9, 9, 9, "minecraft:crimson_wall_sign"),
