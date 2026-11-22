@@ -2286,8 +2286,11 @@ def playerhouse_hw(rel, L):
         d.set(24, y0, 23, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
         for y in range(y0 + 1, 14):
             d.set(24, y, 23, "bricks")
-        work = [(21, 23, "furnace"), (22, 23, "blast_furnace"), (23, 23, "blast_furnace"), (25, 23, "furnace"),
-                (26, 23, "smithing_table"), (27, 23, "stonecutter"), (27, 22, "grindstone" if L >= 3 else None),
+        # auto-smelter in the west bay (x21-22, see auto_smelter), then the forge line along the back wall
+        auto_smelter(Frame(d, 21, y0, 23), W)
+        d.item(22, y0 + 1, 23, "furnace", "north")
+        work = [(23, 23, "blast_furnace"), (25, 23, "blast_furnace"), (26, 23, "furnace"),
+                (27, 23, "smithing_table"), (27, 22, "stonecutter"), (27, 18, "grindstone" if L >= 3 else None),
                 (27, 21, "fletching_table"), (27, 20, "loom"), (27, 19, "cartography_table")]
         items(d, work, y0, "north")
         d.item(23, y0, 20, "anvil", "east")
@@ -2297,9 +2300,7 @@ def playerhouse_hw(rel, L):
         d.set(24, 5, 20, lantern(True))
         # kitchen garden with composter and a bench
         garden(d, 20, 26, 29, 28, y0, "spruce", ((20, 27, "west"),), beds=False)
-        for x in range(21, 29):
-            d.set(x, 1, 27, "farmland[moisture=7]")
-            d.set(x, y0, 27, ("carrots[age=7]", "potatoes[age=7]", "wheat[age=7]")[x % 3])
+        crop_plot(d, 21, 27, 28, 27, (24, 27), ("carrots[age=7]", "potatoes[age=7]", "wheat[age=7]"))
         d.item(19, y0, 26, "composter")
         d.set(19, 1, 26, "grass_block[snowy=false]")
     # front lawn with a bench, and a back terrace with garden table (L5)
@@ -2309,11 +2310,14 @@ def playerhouse_hw(rel, L):
     for z in range(0, z1 - 2):
         d.set(12, 1, z, "gravel")
     if L >= 5:
-        for x, z in cells(20, 4, 28, 11):
+        for x, z in cells(20, 2, 28, 5):                      # terrace north of the kitchen plot
             d.set(x, 1, z, "stone_bricks" if (x + z) % 2 else "polished_andesite")
-        d.dining(23, y0, 7, 2, "x", "spruce", ("n", "s"))
-        d.set(21, y0, 4, "flowering_azalea")
-        d.set(27, y0, 10, "flowering_azalea")
+        d.dining(23, y0, 4, 2, "x", "spruce", ("n", "s"))
+        d.set(21, y0, 5, "flowering_azalea")
+        d.set(27, y0, 2, "flowering_azalea")
+    # L1+: kitchen plot east of the house (hydrated by the pond in its middle), gravel edge, composter
+    crop_plot(d, 21, 8, 27, 11, (24, 9), CROPS, "gravel")
+    d.set(28, y0, 12, "composter[level=3]")
     eave_corners(d, 3, 3, 19, 12)                    # rain butts at the house corners
     return d
 
@@ -2503,8 +2507,10 @@ def playerhouse_ca(rel, L):
         d.set(8, y0, 27, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
         for y in range(y0 + 1, 13):
             d.set(8, y, 27, "cobblestone" if y % 3 else "mossy_cobblestone")
-        work = [(4, 27, "furnace"), (5, 27, "furnace"), (6, 27, "blast_furnace"), (7, 27, "blast_furnace"),
-                (9, 27, "smithing_table"), (10, 27, "stonecutter"), (11, 27, "grindstone" if L >= 3 else None),
+        auto_smelter(Frame(d, 4, y0, 27), W)                      # x4-5, see auto_smelter
+        d.item(5, y0 + 1, 27, "furnace", "north")
+        work = [(6, 27, "furnace"), (7, 27, "blast_furnace"), (9, 27, "blast_furnace"),
+                (10, 27, "smithing_table"), (11, 27, "stonecutter"), (12, 27, "grindstone" if L >= 3 else None),
                 (13, 26, "fletching_table"), (13, 25, "loom"), (13, 24, "cartography_table")]
         items(d, work, y0, "north")
         d.item(7, y0, 24, "anvil", "east")
@@ -2514,10 +2520,9 @@ def playerhouse_ca(rel, L):
         d.set(3, y0, 26, log("spruce_log", "y"))
         d.set(3, y0 + 1, 27, log("spruce_log", "y"))
         d.set(8, 5, 24, lantern(True))
-        d.item(16, y0, 28, "composter")
-        for x, z in cells(17, 27, 23, 29):
-            d.set(x, 1, z, "farmland[moisture=7]")
-            d.set(x, y0, z, ("carrots[age=7]", "potatoes[age=7]", "beetroots[age=3]")[x % 3])
+    # L1+: kitchen plot south-east of the lodge, hydrated by the pond in its middle, composter at its head
+    crop_plot(d, 17, 27, 23, 29, (20, 28), ("carrots[age=7]", "potatoes[age=7]", "beetroots[age=3]"), "coarse_dirt")
+    d.item(16, y0, 28, "composter")
     # yard: rail fence along the street, gravel track
     for x in range(0, 31):
         if x not in (7, 8, 9, 22, 23, 24):
@@ -2679,16 +2684,21 @@ def playerhouse_nt(rel, L):
                 d.set(x, 8, z, "daylight_detector[inverted=false,power=0]")
         if L >= 4:
             d.item(17, y0, 14, "ender_chest", "south")
+        auto_smelter(Frame(d, 24, y0, 14, rot=2), W)             # x24 chests, x23 furnace, front south
+        d.item(23, y0 + 1, 14, "furnace", "south")
         d.door(x2, y0, 16, "east", W)
         for x in range(x2 + 1, bx1):
             d.set(x, 1, 16, "smooth_stone")
         d.item(13, y0, 11, "composter")
         planter(d, 13, 8, 13, 10, 1)
-    # ---- terrace (L5): table for four between the wings
+    # ---- L1+: kitchen plot behind the villa (pond in the middle keeps it wet), diorite edging, path at x11-12
+    crop_plot(d, 3, 22, 10, 24, (6, 23), CROPS, "polished_andesite")
+    d.set(10, y0, 21, "composter[level=4]")
+    # ---- terrace (L5): table for four beyond the kitchen plot
     if L >= 5:
-        for x, z in cells(3, 23, 12, 29):
+        for x, z in cells(3, 26, 12, 29):
             d.set(x, 1, z, "smooth_quartz" if (x + z) % 2 else "polished_diorite")
-        d.dining(6, y0, 26, 2, "x", W, ("n", "s"))
+        d.dining(6, y0, 27, 2, "x", W, ("n", "s"))
         planter(d, 3, 29, 12, 29, 1)
         d.door(11, y0, z2, "south", W)
     return d
@@ -3688,10 +3698,21 @@ def player_estate(rel, L):
                 d.set(x, 3, z, ("rose_bush[half=upper]", "peony[half=upper]", "lilac[half=upper]")[x % 3])
     if pack == "Neoterra" and L >= 3:
         nt_court(d, L)
+    if L >= 3:
+        # L3: automatic sugar-cane farm (cane_farm) and an unlit nether portal frame, hand-placed per pack
+        if pack == "Hearthwood":     # farm along the lane west of the hall (front east), portal by the library tower
+            cane_farm(Frame(d, 28, d.gy, 45, rot=3), 5, "stone_bricks", slab("dark_oak"), back="stone_bricks")
+            portal_frame(d, 44, 4, "x")
+        elif pack == "Cascadia":     # farm beside the kitchen plot (front south), portal west of the tower lawn
+            cane_farm(Frame(d, 25, d.gy, 29), 4, "cobblestone", slab("spruce"), back="spruce_planks")
+            portal_frame(d, 27, 36, "x")
+        else:                        # farm in the service lane behind the storage hall, portal on the court
+            cane_farm(Frame(d, 18, d.gy, 31), 5, "white_concrete", slab("polished_diorite"))
+            portal_frame(d, 58, 17, "x", "obsidian")
     if pack == "Cascadia" and L >= 3:                    # spruce stands: north meadow (L3), east of the garden
         trees = [(37, 19), (47, 18), (57, 18), (30, 40), (61, 20)]  # (L4), round the watch tower and chapel (L5)
         trees += [(52, 45), (58, 45)] if L >= 4 else []
-        trees += [(45, 55), (45, 60), (60, 52), (60, 58), (38, 60), (5, 60), (53, 60), (24, 30), (27, 60), (10, 30)] if L >= 5 else []
+        trees += [(45, 55), (45, 60), (60, 52), (60, 58), (38, 60), (5, 60), (53, 60), (27, 60), (10, 30)] if L >= 5 else []
         for tx, tz in trees:
             tree(d, tx, tz, 2, "spruce", 7, 2)
     if pack == "Hearthwood" and L >= 3:                  # walnut by the library tower; apple orchard round the
@@ -3710,7 +3731,18 @@ def player_estate(rel, L):
                                     "Neoterra": "white_concrete"}[pack], pack)
         recolor(d, pal_vault, (VAULT[0] - 1, VAULT[1] - 1, VAULT[2] + 1, VAULT[3] + 1, 2))
         for x in range(VAULT[0], VAULT[2] + 1, 6):
-            lamp_post(d, x, VAULT[1] - 2, 1, lamp)
+            if not (pack == "Neoterra" and x > 16):          # NT: the cane farm fills the lane east of the door
+                lamp_post(d, x, VAULT[1] - 2, 1, lamp)
+        # L4: beacon on its iron pyramid in a garden quadrant, and a hen house on a hopper floor
+        if pack == "Hearthwood":
+            beacon(d, 54, 15)
+            hen_house(Frame(d, 25, d.gy + 1, 31, rot=2), "stone_bricks", "spruce", "dark_oak")
+        elif pack == "Cascadia":
+            beacon(d, 55, 35)
+            hen_house(Frame(d, 32, d.gy + 1, 18, rot=1), "cobblestone", "spruce", "spruce")
+        else:
+            beacon(d, 55, 38)
+            hen_house(Frame(d, 30, d.gy + 1, 14, rot=1), "white_concrete", "birch", "polished_diorite")
     if L >= 5:
         ph_tower(d, T2[0], T2[1], tower_rooms(W, "guard"))
         recolor(d, pal_tower, (T2[0] - 1, T2[1] - 1, T2[0] + 7, T2[1] + 7, 2))

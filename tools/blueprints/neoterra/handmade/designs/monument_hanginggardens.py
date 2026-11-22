@@ -2436,8 +2436,7 @@ def ca_terrace(d, k, last):
             for y in range(2, top + 1):
                 face = x in (x1, x2) or z == z1 or (z == z2 and last)
                 d.set(x, y, z, rock(x, y, z) if face else SOLIDSUB)
-            surf = "moss_block" if x in (x1, x2) or z == z1 else \
-                ("podzol" if (x * 3 + z) % 7 == 0 else ("coarse_dirt" if (x + z * 3) % 11 == 0 else GRASS))
+            surf = "moss_block" if x in (x1, x2) or z == z1 else ("coarse_dirt" if (x + z * 3) % 13 == 0 else GRASS)
             d.set(x, top, z, surf)
     # ragged top edge: boulders and ferns along the front lip (hand-chosen spacing for this terrace)
     for x in range(x1 + 1, x2, 4):
@@ -2571,14 +2570,14 @@ def ca_lodge(d, L):
     for z in (16, 17):
         d.set(x1 - 1, 4, z, "spruce_planks")
     # conservatory planting (a plant gallery: pots on the sill, ferns, a bench)
-    for x, z, st in ((32, 16, "potted_fern"), (33, 17, "potted_flowering_azalea_bush"), (35, 16, "potted_fern"),
-                     (40, 16, "potted_red_tulip"), (42, 17, "potted_flowering_azalea_bush"), (42, 16, "potted_fern"),
-                     (39, 17, "potted_blue_orchid"), (34, 17, "potted_bamboo")):
+    for x, z, st in ((32, 17, "potted_fern"), (33, 17, "potted_flowering_azalea_bush"), (34, 17, "potted_bamboo"),
+                     (35, 17, "potted_red_tulip"), (39, 17, "potted_blue_orchid"), (40, 17, "potted_fern"),
+                     (42, 17, "potted_flowering_azalea_bush")):
         d.set(x, y0, z, st)
-    bench(d, 36, y0, 16, "north", "spruce", 2, arms=False) if False else None
-    d.chair(36, y0, 16, "north", "spruce")
-    d.chair(38, y0, 16, "north", "spruce")
-    d.set(37, y0, 16, slab("spruce_slab", "top"))
+    d.chair(40, y0, 16, "west", "spruce")
+    d.chair(42, y0, 16, "east", "spruce")
+    d.set(41, y0, 16, slab("spruce_slab", "top"))
+    d.set(41, y0 + 1, 16, "potted_red_tulip")
     for x in (34, 40):
         d.set(x, 8, 17, lantern(True)) if False else d.set(x, 7, 16, AIR)
     # great hall (interior x32..42, z19..23): sofas at the fire, dining table, kitchen corner, hut desk
@@ -2604,10 +2603,8 @@ def ca_lodge(d, L):
                 for z in range(19, 24):
                     if d.get(x, y, z) in ("minecraft:spruce_planks",) and 19 < z < 23:
                         d.set(x, y, z, AIR)
-        for i, y in enumerate(range(y0, y0 + 4)):          # ladder up from the hall
-            d.set(32, y, 23, "ladder[facing=east,waterlogged=false]")
-        d.set(32, y0 + 4, 23, "ladder[facing=east,waterlogged=false]")
-        d.set(32, y0, 23, "ladder[facing=east,waterlogged=false]")
+        for y in range(y0, y0 + 5):                        # ladder up from the hall
+            d.set(32, y, 21, "ladder[facing=east,waterlogged=false]")
         loft = [(34, 21, "bed_w"), (34, 22, "bed_w2"), (38, 21, "bed_e"), (36, 20, "chest"), (40, 22, "barrel"),
                 (39, 20, "lantern"), (35, 20, "carpet"), (36, 21, "carpet"), (36, 22, "carpet"), (37, 21, "carpet")]
         for x, z, k in loft:
@@ -2881,10 +2878,10 @@ def ca_wing(rel, L):
     for k in range(half + 1):
         zn, zs = z1 - 1 + k, z2 + 1 - k
         y = wall_h + 1 + k
-        for x in range(x1 - (1 if L >= 3 else 0), x2 + 1 + (1 if L >= 3 else 0)):
+        for x in range(max(0, x1 - (1 if L >= 3 else 0)), min(10, x2 + (1 if L >= 3 else 0)) + 1):
             rib = (x - x1) % 2 == 0
             for z, f in ((zn, "south"), (zs, "north")):
-                if zn > zs:
+                if zn > zs or not 0 <= z <= 10:
                     continue
                 if zn == zs:
                     d.set(x, y, z, "spruce_planks")
