@@ -67,6 +67,17 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## 22 more farms – 51 tested farms in Farmworks (1.25.0)
+* **Plants:** moss, glow berries, sea pickles, pointed dripstone, mushrooms (automatic); glow lichen (you shear)
+  and chorus fruit (End – you replant).
+* **Animals & Nether:** squid ink, piglin bartering, villager breeder, froglights.
+* **1.21 crafter stations:** automatic bread, nugget → ingot → block compactor, filtered item sorter, nine-furnace
+  super smelter.
+* **The original seven farms remade by hand:** iron golem farm (with night shutters so villagers sleep), cactus,
+  mob tower, egg coop, auto-kitchen, bone meal, smeltery.
+* Every one of the 51 farms is built from its blueprint and run on a test server before release
+  (`gradle runFarmtest`, also in the Nether and the End). Each farm's sign says what to bring.
+
 ## Every building finished, 29 automatic farms, all town pieces hand-made (1.24.0)
 * **Every hut type** now has fully furnished rooms and a different layout on every storey, in all three packs and
   all levels (last groups: trades, fortifications, shops, landwork, tavern, cathedral & colossus, university,
