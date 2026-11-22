@@ -352,7 +352,8 @@ def collector(d, cx1, cz1, cx2, cz2, ytop, y_hop=3, landing="hopper"):
                 d.set(x, y, z, logb())
 
 
-def tower(d, w, shaft, y_shaft, y_platform, door_x=10, top=5, lines=(), windows=None, ytop_glass=5, with_piers=True):
+def tower(d, w, shaft, y_shaft, y_platform, door_x=10, top=5, lines=(), windows=None, ytop_glass=5, with_piers=True,
+          landing="hopper"):
     """Ground part shared by the tower farms: base room around the glass landing, approach, yard, piers, shaft.
     shaft = (cx1, cz1, cx2, cz2) inner cells of the drop shaft below the platform."""
     BX1, BZ1, BX2, BZ2 = 4, 5, 15, 16
@@ -361,7 +362,7 @@ def tower(d, w, shaft, y_shaft, y_platform, door_x=10, top=5, lines=(), windows=
                    (BX2, 3, 8), (BX2, 3, 12), (7, 3, BZ2), (12, 3, BZ2)]
     base_room(d, BX1, BZ1, BX2, BZ2, top, door_x, windows=windows)
     cx1, cz1, cx2, cz2 = shaft
-    collector(d, cx1, cz1, cx2, cz2, ytop_glass)
+    collector(d, cx1, cz1, cx2, cz2, ytop_glass, landing=landing)
     column(d, cx1, cz1, cx2, cz2, ytop_glass + 1, y_platform - 1)
     approach(d, door_x, BZ1, list(lines))
     X1, Z1, X2, Z2 = outer(w)
@@ -432,7 +433,7 @@ def spiderfarm(pack, rel, L):
     shaft = (HX - 1, HZ - 1, HX + 2, HZ + 2)
     floors = (25, 27, 29, 31)
     windows = [(5, 3, 5), (6, 3, 5), (13, 3, 5), (14, 3, 5), (4, 3, 12), (15, 3, 12), (7, 3, 16), (12, 3, 16)]
-    tower(d, w, shaft, 3, floors[0], windows=windows,
+    tower(d, w, shaft, 3, floors[0], windows=windows, landing="campfire",
           lines=["Spider Farm", "string", "Bring: nothing", "(works at night)"])
     y = floors[0]
     for y0 in floors:
