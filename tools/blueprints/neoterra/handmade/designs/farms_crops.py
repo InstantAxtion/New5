@@ -465,7 +465,11 @@ def sweetberry(pack, rel, L):
     hydrated FARMLAND (15/16 high) over hoppers, so dropped berries are inside the hoppers' pick-up area; the fox
     lanes between the bush rows are farmland over hoppers too. Foxes are too small to trample farmland. The pen
     has no roof: foxes only sleep in the daytime under cover, and the bushes need light >= 9 to grow.
-    The water that keeps the farmland wet sits in the middle, under a slab the foxes walk over."""
+    The water that keeps the farmland wet sits in the middle, under a slab the foxes walk over.
+    The fox lanes are FULL blocks (coarse dirt): the fox's berry search (MoveToBlockGoal) only looks at its own
+    block level and the two below, and a fox standing on 15/16-high farmland counts as one level lower, so it
+    would never see bushes standing on the same farmland. Berries pop out at the bush itself and land on the
+    bush's farmland, where the hopper under it takes them."""
     d = Design(pack, rel, size=(19, 9, 14), gy=1, paving="grass_block")
     PX1, PZ1, PX2, PZ2 = 3, 5, 13, 11                       # pen walls
     for x in range(PX1, PX2 + 1):
@@ -490,9 +494,11 @@ def sweetberry(pack, rel, L):
                 d.set(x, 2, z, WATER)
                 d.set(x, 3, z, slab("spruce", "bottom"))
                 continue
-            d.set(x, 2, z, "farmland[moisture=7]")
             if z in (6, 10) or (z == 8 and abs(x - WX) > 1):
+                d.set(x, 2, z, "farmland[moisture=7]")
                 d.set(x, 3, z, "sweet_berry_bush[age=3]")
+            else:                                           # fox lanes: full blocks (see docstring)
+                d.set(x, 2, z, "coarse_dirt")
     d.door(8, 2, PZ1, facing="north", wood="spruce")
     d.set(8, 1, PZ1, SB)
     # east lean-to over the collector: barrel, chest, roof

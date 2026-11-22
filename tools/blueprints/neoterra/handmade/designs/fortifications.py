@@ -2083,6 +2083,42 @@ def nt_bar_east(d, L):
                        ("bed", 37, 28, "south", "cyan"), ("bed", 39, 28, "south", "cyan"), (32, 28, LOCK), (34, 28, LOCK),
                        (36, 28, LOCK), (38, 28, LOCK), (31, 20, LOCK), (32, 20, LOCK), (43, 20, "potted_bamboo"),
                        ("lamp", 35, 24), ("lamp", 40, 24)])
+        DB = "chain[axis=x,waterlogged=false]"
+        # gym: changing benches by the lockers, dumbbell rack on the back wall, rowing machines, more lights
+        lay(d, ys[0], [(31, 23, ST("birch", "west")), (31, 24, ST("birch", "west")),
+                       (33, 28, SST, DB), (34, 28, SST, DB), (35, 28, SST, DB), (36, 28, "polished_andesite_wall"),
+                       (37, 28, SST, DB), (32, 20, "potted_bamboo"), (45, 20, "potted_azalea_bush"),
+                       (44, 25, "black_carpet"), (44, 26, "black_carpet"), (43, 25, SST), (43, 26, SST),
+                       ("lamp", 31, 27), ("lamp", 38, 27), ("lamp", 44, 21)])
+        # classroom: whiteboard and instructor's desk at the front, a second row of desks, bookshelves
+        lay(d, ys[1], [(36, 20, "white_concrete", "white_concrete"), (37, 20, "white_concrete", "white_concrete"),
+                       (38, 20, "white_concrete", "white_concrete"), (37, 22, SST, "lectern[facing=south,has_book=true,powered=false]"),
+                       (38, 22, SST, "flower_pot"), (37, 21, ST("birch", "north")),
+                       (32, 27, SST, "black_stained_glass_pane"), (32, 28, ST("birch", "south")),
+                       (35, 27, SST, "black_stained_glass_pane"), (35, 28, ST("birch", "south")),
+                       (40, 27, SST, "black_stained_glass_pane"), (40, 28, ST("birch", "south")),
+                       (43, 27, SST, "black_stained_glass_pane"), (43, 28, ST("birch", "south")),
+                       (30, 22, BOOK("east")), (30, 23, BOOK("east")), (30, 24, BOOK("east")),
+                       (45, 21, "potted_bamboo"), (45, 24, "potted_bamboo"), ("lamp", 32, 21), ("lamp", 43, 21),
+                       ("lamp", 38, 27)])
+        # mess: counter run on the kitchen wall, a long table for the trainees
+        lay(d, ys[2], [(36, 20, SST, "flower_pot"), (37, 20, SST), (30, 21, LOCK),
+                       (31, 26, SST), (32, 26, SST), (33, 26, SST), (34, 26, SST),
+                       (31, 25, ST("birch", "north")), (32, 25, ST("birch", "north")), (33, 25, ST("birch", "north")),
+                       (34, 25, ST("birch", "north")), (31, 27, ST("birch", "south")), (32, 27, ST("birch", "south")),
+                       (33, 27, ST("birch", "south")), (34, 27, ST("birch", "south")), (32, 26, SST, "candle[candles=2,lit=false,waterlogged=false]"),
+                       (45, 21, "potted_azalea_bush"), ("lamp", 32, 26), ("lamp", 44, 26)])
+        put(d, 33, ys[2] + 1, 26, POTD)
+        # dorm: sofa corner with a screen, desk and bookshelf, wardrobe lockers, rug in the aisle
+        lay(d, ys[3], [(40, 20, ST("birch", "north")), (41, 20, ST("birch", "north")), (42, 20, ST("birch", "north")),
+                       (41, 22, "smooth_stone_slab[type=bottom,waterlogged=false]"),
+                       (44, 20, "potted_bamboo"), (45, 22, BOOK("west")), (45, 23, BOOK("west")),
+                       (45, 25, SST, "lantern[hanging=false,waterlogged=false]"), (44, 25, ST("birch", "east")),
+                       (30, 21, LOCK), (30, 22, LOCK), (30, 23, LOCK), (39, 22, "potted_cactus"),
+                       ("lamp", 41, 21), ("lamp", 31, 25)])
+        for x in (40, 41, 42):
+            put(d, x, ys[3] + 2, 29, "black_stained_glass") if False else None
+        d.rug(32, 24, 36, 26, ys[3], ["cyan_carpet", "white_carpet"])
         # roof terrace on the training centre: running track, planters, bench
         track = [(x, 21) for x in range(31, 45)] + [(x, 27) for x in range(31, 45)] + \
                 [(31, z) for z in range(22, 27)] + [(44, z) for z in range(22, 27)]
