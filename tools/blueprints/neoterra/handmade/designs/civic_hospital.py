@@ -475,11 +475,11 @@ def hw_children(d, L):
         stand(d, 9, y, z, "birch_slab", b)
     for z, b in ((21, "potted_oxeye_daisy"), (24, CAND), (27, "potted_blue_orchid")):
         stand(d, 19, y, z, "birch_slab", b)
-    d.rug(12, 22, 16, 26, y, ("light_blue_carpet", "yellow_carpet"), "check")
     d.set(14, y, 24, slab("birch_slab", "top"))
     d.set(14, y + 1, 24, "cake[bites=0]")
     d.chair(13, y, 24, "west", "birch", sit=False)
     d.chair(15, y, 24, "east", "birch", sit=False)
+    d.rug(12, 23, 16, 25, y, ("light_blue_carpet", "yellow_carpet"), "check")      # 15 cells, around the table
     stair(d, 10, 29, y, 7, "east", rails=[(10, 29), (11, 28), (12, 28), (13, 28)])
     hang(d, [(12, 22), (16, 26)], 5)
     # schoolroom and playroom upstairs
@@ -523,6 +523,46 @@ def hw_garden(d):
     park_bench(d, 30, 44, "z", "east")
     post_lamp(d, 25, 39)
     post_lamp(d, 28, 42)
+
+
+def hw_west_eaves(d):
+    """Strip under the west eaves of the Albert ward and the children's ward: firewood for the two hearths,
+    a water butt, a bench in the afternoon sun, pots by the bench and two wall lanterns."""
+    y = Y0
+    for z in (15, 16):                                           # log stack against the ward chimney
+        d.set(7, y, z, log("oak_log", "z"))
+        d.set(7, y + 1, z, log("oak_log", "z"))
+    d.set(7, y, 12, "water_cauldron[level=3]")
+    sit(d, [(7, 24), (7, 25)], y, "east", "oak")
+    P(d, y, [(7, 23, "potted_red_tulip"), (7, 26, "potted_cornflower"), (7, 29, "composter[level=0]")])
+    for z in (20, 28):
+        d.set(7, 2, z, "oak_fence")                               # lantern posts
+        d.set(7, 3, z, "oak_fence")
+        d.set(7, 4, z, "lantern[hanging=false,waterlogged=false]")
+
+
+def hw_herb_garden(d):
+    """Walled physic garden east of the surgery (from L4): gravel cross path, four herb beds, potting bench."""
+    y = Y0
+    grass(d, 47, 21, 52, 29)
+    d.fill(49, 1, 21, 50, 1, 29, "gravel")
+    d.fill(47, 1, 25, 52, 1, 25, "gravel")
+    for x in range(46, 54):
+        for z in (20, 30):
+            if not (z == 20 and x in (49, 50)):
+                d.set(x, y, z, "brick_wall")
+    for z in range(21, 30):
+        d.set(46, y, z, "brick_wall")
+        d.set(53, y, z, "brick_wall")
+    for (x1, z1, x2, z2), f in (((47, 21, 48, 23), "fern"), ((51, 21, 52, 23), "lily_of_the_valley"),
+                                ((47, 27, 48, 28), "sweet_berry_bush[age=2]"), ((51, 27, 52, 28), "azure_bluet")):
+        bed_of(d, x1, z1, x2, z2, f)
+    P(d, y, [(47, 29, "composter[level=3]"), (52, 29, "water_cauldron[level=3]"), (48, 24, "potted_allium"),
+             (51, 26, "potted_red_tulip")])
+    park_bench(d, 52, 24, "z", "east")
+    d.set(49, y, 20, "oak_fence_gate[facing=north,in_wall=true,open=false,powered=false]")
+    d.set(50, y, 20, "oak_fence_gate[facing=north,in_wall=true,open=false,powered=false]")
+    post_lamp(d, 48, 26)
 
 
 def hw_chapel(d):
@@ -611,8 +651,10 @@ def hosp_hearthwood(rel, L):
         park_bench(d, 39, 6, "x", "north")
     if L >= 4:
         hw_surgery(d, L)
+        hw_herb_garden(d)
     if L >= 5:
         hw_children(d, L)
+        hw_west_eaves(d)
         hw_garden(d)
         hw_chapel(d)
         hw_carriage(d)
@@ -765,7 +807,13 @@ def nt_tower_floor(d, k, y):
         P(d, y + 1, [(20, 29, "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]"),
                      (23, 29, "potted_azure_bluet")])
         P(d, y, [(15, 29, "barrel[facing=up,open=false]"), (16, 29, "barrel[facing=up,open=false]"), (15, 28, chest("east"))])
-        panels(d, [(19, 21), (25, 28)], c)
+        # two-bed recovery bay on the east wall, curtained off, clear of the ambulance door at z=23
+        d.bed(27, y, 20, "east", "light_gray")
+        d.bed(27, y, 26, "east", "light_gray")
+        curtain(d, [(26, 21), (27, 21), (26, 25), (27, 25)], y)
+        P(d, y, [(27, 19, "white_concrete"), (27, 27, "white_concrete")])
+        P(d, y + 1, [(27, 19, "black_stained_glass_pane"), (27, 27, "black_stained_glass_pane")])
+        panels(d, [(19, 21), (25, 28), (26, 20), (26, 26)], c)
     elif k == 1:                                                 # maternity
         for z in (20, 23, 26):
             d.bed(27, y, z, "east", "pink")
@@ -803,6 +851,10 @@ def nt_tower_floor(d, k, y):
         P(d, y, [(19, 27, QS), (20, 27, QS), (17, 29, chest("north", "left")), (18, 29, chest("north", "right"))])
         d.chair(19, y, 28, "south", "mangrove", sit=False)
         d.set(20, y + 1, 27, "black_stained_glass_pane")
+        sit(d, [(21, 20), (21, 21), (21, 22)], y, "east", "mangrove")   # waiting seats against the glass
+        d.set(20, y, 21, QS)
+        d.set(20, y + 1, 21, "potted_azure_bluet")
+        P(d, y, [(18, 19, "potted_bamboo"), (21, 25, "water_cauldron[level=3]")])
         panels(d, [(25, 21), (25, 27), (19, 22)], c)
     elif k == 3:                                                 # intensive care
         for x in (19, 22, 25):
@@ -843,6 +895,11 @@ def nt_tower_floor(d, k, y):
                     d.set(x, y, z, Q)
                 else:
                     d.set(x, y, z, "water[level=0]")
+        for x in range(22, 27):                                  # hand rails round the hydrotherapy pool,
+            d.set(x, y + 1, 29, "iron_bars")                     # open on the north (entry) side
+        for z in range(25, 29):
+            d.set(22, y + 1, z, "iron_bars")
+            d.set(26, y + 1, z, "iron_bars")
         couch(d, [(26, 20), (26, 21)], y, "smooth_quartz_slab")
         d.set(27, y, 23, "potted_bamboo")
         panels(d, [(22, 21), (24, 27), (19, 27)], c)
@@ -856,6 +913,10 @@ def nt_tower_floor(d, k, y):
         d.fill(20, y + 1, 19, 24, y + 2, 19, "black_concrete")
         P(d, y, [(27, 19, "potted_bamboo"), (27, 29, "potted_bamboo"), (19, 29, "potted_azure_bluet")])
         P(d, y + 1, [(20, 24, "potted_white_tulip"), (24, 24, "potted_white_tulip")])
+        d.set(22, y, 21, "lectern[facing=south,has_book=false,powered=false]")
+        d.bookshelf(27, y, 25, 2)
+        d.bookshelf(27, y, 26, 2)
+        P(d, y, [(25, 29, chest("north", "left")), (26, 29, chest("north", "right"))])
         panels(d, [(20, 24), (24, 24), (22, 21), (22, 27)], c)
 
 
@@ -935,6 +996,14 @@ def nt_research(d, L):
         d.set(13, y, z, "white_shulker_box[facing=up]")
     P(d, y, [(13, 22, "grindstone[face=floor,facing=north]"), (13, 23, chest("west")), (7, 22, Q), (8, 22, Q)])
     d.set(7, y + 1, 22, "black_stained_glass_pane")
+    d.chair(7, y, 23, "south", "birch", sit=False)
+    for z in (17, 18, 19):                                       # sample store
+        d.set(3, y, z, "barrel[facing=east,open=false]")
+    for x in range(6, 10):                                       # microscope bench
+        d.set(x, y, 26, QS)
+    P(d, y + 1, [(6, 26, "end_rod[facing=up]"), (7, 26, "amethyst_cluster[facing=up,waterlogged=false]"),
+                 (9, 26, "flower_pot")])
+    sit(d, [(6, 25), (8, 25)], y, "north", "birch")
     panels(d, [(7, 13), (7, 21), (9, 26)], 6)
     y = 7                                                        # medical library and records
     for z in (11, 14):
@@ -958,6 +1027,9 @@ def nt_research(d, L):
     d.set(4, y, 10, slab("smooth_quartz_slab", "top"))
     d.set(4, y + 1, 10, "black_stained_glass_pane")
     P(d, y, [(3, 9, "potted_bamboo"), (11, 9, "potted_bamboo"), (8, 23, "potted_white_tulip")])
+    d.set(9, y, 10, "lectern[facing=south,has_book=false,powered=false]")
+    for z in (20, 21, 22):
+        d.bookshelf(3, y, z, 2)
     panels(d, [(7, 11), (7, 17), (8, 24)], 16)
     ry = r["top"] + 2                                            # roof garden
     for x in range(4, 13):
@@ -1212,6 +1284,15 @@ def cs_doctor(d):
     d.rug(43, 9, 45, 11, u, ("red_carpet", "brown_carpet"))
     hang(d, [(45, 10)], 10)
     d.sign(45, 5, 3, "north", ["DOCTOR"], "spruce")
+    # under the eaves: pots by the door, a bench, firewood and water barrels, wall torches
+    P(d, y, [(44, 3, "potted_fern"), (46, 3, "potted_blue_orchid"), (51, 10, "barrel[facing=up,open=false]"),
+             (51, 12, "water_cauldron[level=3]"), (39, 11, "barrel[facing=up,open=false]")])
+    sit(d, [(42, 3), (43, 3)], y, "south", "spruce")
+    for z in (6, 7, 8):
+        d.set(51, y, z, log("spruce_log", "z"))
+        d.set(51, y + 1, z, log("spruce_log", "z"))
+    d.wall_torch(45, 4, 15, "south")
+    d.wall_torch(39, 4, 12, "west")
     # laundry and boiler house
     lh = shell(d, 42, 18, 50, 24, 1, "gable", "x", mat="cobblestone", up="cobblestone", gable_end="cobblestone")
     entry(d, 46, y, 18, "south")

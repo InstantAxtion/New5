@@ -475,7 +475,7 @@ def uni_hearthwood(rel, L):
         for x, z in ((20, 23), (26, 23), (23, 19), (23, 28), (18, 24), (28, 24), (23, 17), (23, 30)):
             d.spot(x, Y0, z, "leisure")
             keep(d, x, Y0, z)
-        for x, z in ((19, 19), (28, 19), (19, 28), (28, 28)):
+        for x, z in ((19, 19), (27, 28)):                              # two quad trees (two more at L4)
             plant_tree(d, x, z)
         park_bench(d, 20, 21, "x", "north")
         park_bench(d, 26, 26, "x", "south")
@@ -501,7 +501,7 @@ def uni_hearthwood(rel, L):
             ["===..nnnnnnnn...nnnnnnnnn...p",
              "wT=.." + tables + "....",
              "wT=..ssssssss...sssssssss... ",
-             "wT=" + "=" * 25 + " ",
+             "wT=" + "." * 9 + "=" * 7 + "." * 9 + " ",
              "wT=..nnnnnnnn...nnnnnnnnn... ",
              "wT=.." + tables + "....",
              "===..ssssssss...sssssssss...p"],
@@ -536,9 +536,9 @@ def uni_hearthwood(rel, L):
             ["BB   ", "", "", "BB   ", "", "", "BB   ", "", "", "BB   ", "", "", "BB   "],
             ["", "   L ", "", "", "", "   L ", "", "", "", "", "  L  "]], lg)
         plan(d, 9, 17, 7, [
-            ["BBp..", "BwTe.", "BwTe.", "BwTe.", "BwTe.", "BwTe.", "B....", "B....", "B... ", "B..  ", "B..  ",
+            ["BBp..", "BwTe.", "BwTe.", "BwTe.", "BwTe.", "BwTe.", "B....", "Bnn..", "BTT. ", "BTT  ", "Bss  ",
              "B..  ", "B... ", "BBXp."],
-            ["BB   ", "B c  ", "B o  ", "B c  ", "B o  ", "B c  ", "B    ", "B    ", "B    ", "B    ", "B    ",
+            ["BB   ", "B c  ", "B o  ", "B c  ", "B o  ", "B c  ", "B    ", "B    ", "Bc   ", "B o  ", "B    ",
              "B    ", "B    ", "BB   "],
             [],
             ["", "", "  L  ", "", "", "", "  L  ", "", "", "", "  L  "]], lg)
@@ -548,6 +548,20 @@ def uni_hearthwood(rel, L):
                     d.set(16, y, z, "stone_brick_wall")
             d.set(16, 5, z, SB)
             d.set(15, 5, z, slab("stone_brick_slab", "top"))
+            d.set(15, 6, z, st("deepslate_tile_stairs", "west"))       # pentice roof against the range
+            if z % 2:                                                 # east walk (later along the chapel)
+                for y in range(Y0, 5):
+                    d.set(30, y, z, "stone_brick_wall")
+            d.set(30, 5, z, SB)
+            d.set(31, 5, z, slab("stone_brick_slab", "top"))
+            d.set(31, 6, z, st("deepslate_tile_stairs", "east"))
+            d.set(30, 6, z, slab("deepslate_tile_slab"))
+            d.set(16, 6, z, slab("deepslate_tile_slab"))
+        for z in (19, 27):                                            # cloister lanterns
+            d.set(15, 4, z, "lantern[hanging=true,waterlogged=false]")
+            d.set(31, 4, z, "lantern[hanging=true,waterlogged=false]")
+        for x, z in ((27, 19), (19, 28)):                             # the quad's second pair of trees
+            plant_tree(d, x, z)
 
     # ---------------------------------------------------------------- L5: chapel, garden, New Building
     if L >= 5:
@@ -561,6 +575,9 @@ def uni_hearthwood(rel, L):
             [], [], [], [],
             ["", "", "", "  L  ", "", "", "", "  L  ", "", "", "", "  L  "]], lg)
         d.window(35, 4, 31, 35, 7, 31, "purple_stained_glass_pane")
+        for z, col in ((19, "blue"), (21, "red"), (25, "red"), (27, "blue")):   # college banners in the nave
+            d.banner(33, 5, z, "east", col)
+            d.banner(37, 5, z, "west", col)
         for x in (34, 36):                                            # bell-cote on the north gable
             d.set(x, c["ridge"] + 1, 16, "stone_brick_wall")
             d.set(x, c["ridge"] + 2, 16, "stone_brick_slab[type=bottom,waterlogged=false]")
@@ -621,7 +638,7 @@ def uni_hearthwood(rel, L):
         plan(d, 11, 46, 7, [
             ["p" + "htC" * 8,
              "." + " .." * 8,
-             " " + "-" * 24,
+             " " + "-" * 11 + ".." + "-" * 11,
              "." * 25,
              "..   ...n..n..n..........",
              ".      .t..t..t.X.      p"],
@@ -930,8 +947,8 @@ def uni_neoterra(rel, L):
         _ceiling(d, 21, [(42, 19), (42, 26), (42, 31)])
         plan(d, 39, 18, 22, [                                         # 4th: graduate flat – lounge & 2 rooms
             [".pBBBp.", " ......", " .nnn..", " .=t=..", " .sss..", " ......", ".......", "III.III",
-             "C.....X", "C......", "te.... ", "....=  ", "te..=  ", ".....  ", ".  .   ", "tHHtHHt"],
-            ["  BBB", "", "", "   o", "", "", "", "III III", "", "", "l", "", "l", "", "", "k  k  k"],
+             "C.....X", "C......", "te.... ", "....=  ", "te..=  ", ".....  ", ".  ..  ", "tHH.tHt"],
+            ["  BBB", "", "", "   o", "", "", "", "III III", "", "", "l", "", "l", "", "", "k   k k"],
             ["", "", "", "", "", "", "", "III III"], ["", "", "", "", "", "", "", "III III"]], tw)
         _ceiling(d, 26, [(42, 21), (41, 29), (44, 29)])
         plan(d, 39, 18, 27, [                                         # 5th: sky lounge with a bar
@@ -1088,7 +1105,7 @@ def uni_cascadia(rel, L):
         link(d, 30, Y0, 10, "west")
         for x in (21, 24, 27):
             d.set(x, 5, 10, "lantern[hanging=true,waterlogged=false]")
-        trees = [(22, 3), (27, 3)] + ([(46, 4)] if L < 5 else [])
+        trees = [(22, 3), (27, 3), (20, 18), (34, 18)] + ([(46, 4)] if L < 5 else [])
         for x, z in trees:
             plant_tree(d, x, z)
 
@@ -1109,9 +1126,9 @@ def uni_cascadia(rel, L):
         for x, z in ((17, 24), (21, 24), (17, 28), (21, 28), (32, 22), (36, 28), (25, 20), (25, 32)):
             d.spot(x, Y0, z, "leisure")
             keep(d, x, Y0, z)
-        trees = [(34, 18), (20, 18)]
+        trees = []
         if L < 4:
-            trees += [(9, 33), (42, 24)]
+            trees += [(9, 33)]
         if L < 5:
             trees += [(30, 33)]
         for x, z in trees:
@@ -1142,24 +1159,54 @@ def uni_cascadia(rel, L):
 
     # ---------------------------------------------------------------- L4: reading lodge + bunkhouse
     if L >= 4:
-        shell(d, 6, 17, 13, 34, 2, "gable", "z", ties=(20, 25, 30))
+        read2 = L >= 5                                                # reading loft added at L5
+        rl = shell(d, 6, 17, 13, 34, 2 if read2 else 1, "gable", "z", ties=(20, 25, 30))
         entrance(d, 13, Y0, 25, "west")
-        stairs(d, 8, 22, Y0, 7, "south", rails=[(8, 7, 22), (7, 7, 23), (7, 7, 24), (7, 7, 25),
-                                                 (9, 7, 23), (9, 7, 24), (9, 7, 25)])
+        chimney(d, 10, 34, Y0, rl["ridge"] + 1)                       # stone chimney on the south gable
+        for x, z in ((15, 23), (15, 27)):                             # small porch over the quad door
+            for y in range(Y0, 6):
+                d.set(x, y, z, LOGY)
+        for x in (14, 15):
+            for z in range(23, 28):
+                d.set(x, 6, z, slab("spruce_slab"))
+        d.chair(15, Y0, 24, "east", "spruce", sit=False)
+        d.chair(15, Y0, 26, "east", "spruce", sit=False)
+        d.set(14, 5, 25, "lantern[hanging=true,waterlogged=false]")
+        if read2:
+            stairs(d, 8, 22, Y0, 7, "south", rails=[(8, 7, 22), (7, 7, 23), (7, 7, 24), (7, 7, 25),
+                                                     (9, 7, 23), (9, 7, 24), (9, 7, 25)])
         plan(d, 7, 18, Y0, [
             ["B....p", "B...wt", "B.....", "B...wt", "B ....", "B ..wt", "B ....", "B ....", "B ....",
-             "B.....", "BwTewt", "BwTe..", "BwTewt", "BwTe..", "B...wt", "BB..pX"],
+             "B.....", "BwTewt", "BwTe..", "BwTewt", "BwTe..", "B...wt", "BB...p"],
             ["B", "B    k", "B", "B    o", "B", "B    k", "B", "B", "B", "B", "B c  o", "B", "B o  k", "B c",
              "B    k", "BB"],
             ["B", "B", "B", "B", "B", "B", "B", "B", "B", "B", "B", "B", "B", "B", "B", "B"],
-            ["", "", "   L", "", "", "", "", "", "   L", "", "", "", "", "   L"]], lg)
-        plan(d, 7, 18, 7, [
-            ["BB..BB", "B..P.B", "B..s.B", "p....p", ". ....", "   wTe", "   wTe", "   ..X", ". ....",
-             "B.....", "B..wTe", "B..wTe", "B..wTe", "B..wTe", "B..wTe", "BB.pBB"],
-            ["BB  BB", "B    B", "B    B", "", "", "    c", "    o", "", "", "B", "B   c", "B   o", "B   c",
-             "B   o", "B   c", "BB  BB"],
-            ["BB  BB", "B    B", "B    B", "", "", "", "", "", "", "B", "B", "B", "B", "B", "B", "BB  BB"],
             ["", "", "   L", "", "", "", "", "   L", "", "", "", "", "   L"]], lg)
+        d.hearth(10, Y0, 33, "north", Y0 + 2, "cobblestone", "campfire")
+        if read2:
+            plan(d, 7, 18, 7, [
+                ["BB..BB", "B..P.B", "B..s.B", "p....p", ". ....", "   wTe", "   wTe", "   ..X", ". ....",
+                 "B.....", "B..wTe", "B..wTe", "B..wTe", "B..wTe", "B..wTe", "BB.pBB"],
+                ["BB  BB", "B    B", "B    B", "", "", "    c", "    o", "", "", "B", "B   c", "B   o", "B   c",
+                 "B   o", "B   c", "BB  BB"],
+                ["BB  BB", "B    B", "B    B", "", "", "", "", "", "", "B", "B", "B", "B", "B", "B", "BB  BB"],
+                ["", "", "   L", "", "", "", "", "   L", "", "", "", "", "   L"]], lg)
+        # woodshed against the bunkhouse's south gable: split logs, chopping block, saw horse
+        for x in (39, 45):
+            for y in range(Y0, 5):
+                d.set(x, y, 37, LOGY)
+        for x in range(38, 47):
+            for z in range(35, 38):
+                d.set(x, 5, z, slab("spruce_slab"))
+            d.set(x, 5, 38, st("spruce_stairs", "north"))
+        for x in range(40, 45):
+            for z in (35, 36):
+                for y in (Y0, Y0 + 1):
+                    d.set(x, y, z, log("spruce_log", "x"))
+        d.set(42, Y0, 38, log("stripped_spruce_log"))
+        d.set(40, Y0, 38, "spruce_fence")
+        d.set(41, Y0, 38, "spruce_fence")
+        d.set(42, 4, 36, "lantern[hanging=true,waterlogged=false]")
         bunk2 = L >= 5
         bk = shell(d, 38, 17, 46, 34, 2 if bunk2 else 1, "gable", "z", ties=(21, 29))
         entrance(d, 38, Y0, 25, "east")
@@ -1229,8 +1276,7 @@ def uni_cascadia(rel, L):
         d.set(tx1 + 1, Y0, tz1 + 1, "barrel[facing=up,open=false]")
         d.set(tx1 + 1, Y0, tz1 + 3, "water_cauldron[level=3]")
         d.set(tx1 + 3, Y0, tz1 + 3, "potted_fern")
-        d.set(tx1 + 1, 6, tz1 + 2, "lantern[hanging=true,waterlogged=false]")
-        d.set(tx1 + 1, 7, tz1 + 2, "spruce_planks")
+        d.set(tx1 + 2, 6, tz1, "lantern[hanging=true,waterlogged=false]")
         d.set(tx1 + 2, 16, tz1 + 1, "cartography_table")               # spotter's map table in the cab
         d.set(tx1 + 1, 16, tz1 + 3, st("spruce_stairs", "west"))
         # faculty lodge: two studies either side of a board wall, common room with a fire, bedrooms above

@@ -836,6 +836,13 @@ def sch_neoterra(rel, L):
     lamp_post(d, 4, 4)
     lamp_post(d, 22, 4)
     ground(d, 12, 0, 13, 4, "polished_andesite")
+    # under the cantilevered roof on the west side: bike stands, a bench and a planter
+    for z in (8, 9, 10, 11):
+        d.set(5, Y0, z, "iron_bars")
+    d.chair(5, Y0, 13, "east", B, sit=False)
+    d.chair(5, Y0, 14, "east", B, sit=False)
+    d.set(5, Y0, 15, "moss_block")
+    d.set(5, Y0 + 1, 15, "flowering_azalea")
     if pnf > 1:                                                         # upper floor: media and language room
         stairs(d, 14, 7, Y0, 7, "east")
         rails(d, 7, [(15, 8), (16, 8), (17, 8), (14, 7)])
@@ -979,6 +986,20 @@ def sch_neoterra(rel, L):
         for x in range(23, 32):
             if x != 27:
                 d.chair(x, Y0, 21, "north", B)
+        for z in range(22, 29):                                         # crash mats in front of the wall bars
+            for x in (8, 9):
+                d.set(x, Y0, z, "blue_carpet")
+        for xs in (range(11, 19), range(23, 31)):                       # benches along the south wall
+            for x in xs:
+                d.chair(x, Y0, 31, "south", B, sit=False)
+        # outside, under the cantilevered roof: planters and benches either side of the doors, bike shelter east
+        for x in (8, 13, 27, 32):
+            d.set(x, Y0, 19, "moss_block")
+            d.set(x, Y0 + 1, 19, "flowering_azalea" if x in (8, 32) else "azalea")
+        for x in (10, 11, 29, 30):
+            d.chair(x, Y0, 19, "south", B, sit=False)
+        for z in range(22, 28):
+            d.set(35, Y0, z, "iron_bars")
         d.set(33, Y0, 31, "barrel[facing=up,open=false]")
         d.set(33, Y0, 30, "barrel[facing=up,open=false]")
         d.set(32, Y0, 31, "target[power=0]")
@@ -1090,6 +1111,8 @@ def sch_neoterra(rel, L):
                 d.set(x, Y0, z, "white_concrete")
             for x in (9, 12, 15):
                 d.set(x, Y0 + 1, z, "potted_bamboo" if x == 12 else "flower_pot")
+            for x in (10, 14):
+                d.set(x, Y0 + 1, z, candle(1, "lime" if z == 39 else "orange"))
         for z in range(37, 46):
             if z != 41:
                 d.set(21, Y0, z, Q)

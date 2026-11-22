@@ -348,6 +348,17 @@ def col_hearthwood(rel, L):
                   (37, 2, 20, slab("dark_oak_slab", "top")), (37, 3, 20, LS), (36, 2, 20, st("dark_oak_stairs", "south")),
                   (31, 2, 20, "potted_fern")])
         hang(d, [(32, 15), (36, 19)], 5)
+        # sheltered nook under the east gable: garden bench, tubs, a lantern by the door-less wall
+        d.chair(39, Y0, 16, "west", W, sit=False)
+        d.chair(39, Y0, 17, "west", W, sit=False)
+        place(d, [(39, 2, 15, "potted_red_tulip"), (39, 2, 18, "potted_allium"), (39, 2, 20, "barrel[facing=up,open=false]"),
+                  (39, 3, 20, "potted_fern")])
+        d.wall_torch(39, 4, 17, "east")
+        # under the street eaves of both wings: benches against the wall between flower tubs
+        for x in (6, 7, 33, 34):
+            d.chair(x, Y0, 12, "south", W, sit=False)
+        place(d, [(5, 2, 12, "potted_red_tulip"), (8, 2, 12, "potted_cornflower"), (11, 2, 12, "potted_oxeye_daisy"),
+                  (32, 2, 12, "potted_allium"), (35, 2, 12, "potted_red_tulip"), (37, 2, 12, "potted_fern")])
         if L >= 3:                                                      # seminar room upstairs
             link(d, 30, 7, 17, "east")
             for x in range(33, 36):
@@ -414,7 +425,15 @@ def col_hearthwood(rel, L):
         d.fill(17, 8, 35, 33, 8, 35, "red_wool")
         blackboard(d, 23, 37, 28, 37, 4, "north", "black_concrete", W)
         d.item(29, 3, 36, "lectern", "north")
-        place(d, [(18, 3, 37, "potted_fern"), (32, 3, 37, "potted_fern"), (21, 3, 36, "red_candle[candles=3,lit=false,waterlogged=false]")])
+        place(d, [(18, 3, 37, "potted_fern"), (32, 3, 37, "potted_fern"), (21, 3, 37, "red_candle[candles=3,lit=false,waterlogged=false]")])
+        # stage set for a parlour scene: table with two chairs, a piano, footlights along the front edge
+        d.table(20, 3, 36, W)
+        d.chair(19, 3, 36, "west", W, sit=False)
+        d.chair(21, 3, 36, "east", W, sit=False)
+        place(d, [(31, 3, 37, "note_block[instrument=harp,note=0,powered=false]"),
+                  (32, 3, 36, st("dark_oak_stairs", "east"))])
+        for x in (18, 20, 22, 29, 31, 32):
+            d.set(x, 3, 35, cand(3))
         for z in (29, 31, 33):
             seat(d, [(x, z) for x in range(16, 24)] + [(x, z) for x in range(28, 35)], Y0, "north", W)
         carpet(d, [(x, z) for x in (25, 26) for z in range(27, 34)], Y0, "red")
@@ -492,6 +511,13 @@ def col_hearthwood(rel, L):
         d.chair(41, 7, 36, "north", W)
         carpet(d, [(41, 31), (42, 31), (41, 32), (42, 32), (41, 33), (42, 33)], 7, "orange")
         hang(d, [(42, 30), (42, 34)], 10)
+        # theatre's north eave: two benches with tubs and lamps on the wall
+        for x in (18, 19, 31, 32):
+            d.chair(x, Y0, 25, "south", W, sit=False)
+        place(d, [(17, 2, 25, "potted_red_tulip"), (20, 2, 25, "potted_cornflower"), (30, 2, 25, "potted_allium"),
+                  (33, 2, 25, "potted_oxeye_daisy")])
+        d.wall_torch(22, 4, 25, "north")
+        d.wall_torch(29, 4, 25, "north")
         # back lawn: orchard row, beds, a bench pair
         d.fill(2, 1, 41, 46, 1, 48, "grass_block[snowy=false]")
         d.fill(13, 1, 39, 13, 1, 48, "gravel")
@@ -588,7 +614,7 @@ def col_neoterra(rel, L):
         nt_table(d, 25, 7, 23, "nsw")
         shelf(d, [(29, 17), (29, 18), (29, 19), (29, 23), (29, 24), (29, 25)], 7, 3)
         place(d, [(15, 7, 17, "potted_bamboo"), (15, 7, 25, "potted_bamboo"), (22, 7, 25, "potted_white_tulip")])
-        carpet(d, [(22, z) for z in range(17, 26)], 7, "light_gray")
+        carpet(d, [(22, z) for z in (17, 18, 20, 21, 22, 24, 25)], 7, "light_gray")
         panel(d, [(20, 21), (25, 21)], 11)
     ry = P["top"] + 2                                                   # roof garden
     for x, z in ((15, 17), (29, 17), (15, 25), (29, 25), (22, 25)):
@@ -638,7 +664,7 @@ def col_neoterra(rel, L):
             for z in (18, 19, 20, 22, 23, 24):
                 seat(d, [(31, z), (34, z)], 7, "west", B)
                 tops(d, [(32, z), (35, z)], 7, QS)
-            shelf(d, [(x, 25) for x in range(31, 40)], 7, 1)
+            shelf(d, [(x, 25) for x in range(31, 40)], 7, 2)
             place(d, [(39, 7, 17, "potted_bamboo"), (31, 7, 17, "potted_white_tulip")])
             panel(d, [(33, 21), (37, 21)], 11)
 
@@ -748,7 +774,14 @@ def col_neoterra(rel, L):
                 d.set(x, 22, z, Q)
         seat(d, [(40, 33), (41, 33), (42, 33)], 22, "north", B)
         seat(d, [(40, 36), (41, 36), (42, 36)], 22, "south", B)
-        place(d, [(41, 23, 34, cand(3, "white")), (41, 23, 35, "potted_white_tulip"), (39, 22, 39, "potted_bamboo")])
+        place(d, [(41, 23, 34, cand(3, "white")), (41, 23, 35, "potted_white_tulip"), (39, 22, 39, "potted_bamboo"),
+                  (43, 22, 31, slab(QS, "top")), (43, 23, 31, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=false]"),
+                  (44, 22, 31, "barrel[facing=up,open=false]"), (45, 22, 31, "potted_bamboo"),
+                  (37, 22, 37, slab(QS, "top")), (37, 23, 37, LS), (37, 22, 31, "potted_white_tulip")])
+        shelf(d, [(38, 31), (39, 31), (40, 31), (41, 31)], 22, 2)       # reference shelves on the north glass
+        d.chair(37, 22, 36, "south", B, sit=False)                      # reading corner by the view
+        d.chair(37, 22, 38, "north", B, sit=False)
+        carpet(d, [(38, 36), (38, 37), (38, 38), (39, 36), (39, 37), (39, 38)], 22, "yellow")
         panel(d, [(41, 34), (41, 37)], 26)
         ry4 = ST["top"] + 2
         for x in range(38, 45):
@@ -908,6 +941,10 @@ def col_cascadia(rel, L):
         d.chair(10, Y0, 19, "south", S)
         place(d, [(11, 2, 25, "potted_fern"), (11, 2, 17, "potted_fern")])
         hang(d, [(7, 18), (7, 22)], 5)
+        for z in range(18, 25):                                         # firewood under the west eave
+            d.set(1, 2, z, log("spruce_log", "z"))
+            d.set(1, 3, z, log("spruce_log", "z"))
+        d.set(1, 4, 21, LS)
         if L >= 3:
             stair(d, 4, 25, Y0, 7, "east", [(4, 7, 25), (5, 7, 24), (6, 7, 24), (7, 7, 24)])
             for x in range(5, 9):
@@ -923,6 +960,13 @@ def col_cascadia(rel, L):
             place(d, [(11, 7, 17, chest("west")), (11, 7, 25, "potted_fern")])
             carpet(d, [(x, 23) for x in range(5, 11)], 7, "green")
             hang(d, [(7, 18), (7, 22)], 10)
+
+    if L >= 3:                                                          # back door yard under the hall eave
+        seat(d, [(16, 27), (17, 27)], Y0, "north", S, sit=False)
+        place(d, [(15, 2, 27, "potted_fern"), (20, 2, 27, "water_cauldron[level=3]"),
+                  (21, 2, 27, "barrel[facing=up,open=false]"), (22, 2, 27, "barrel[facing=up,open=false]"),
+                  (21, 3, 27, "potted_fern"), (25, 2, 27, "composter[level=3]")])
+        d.wall_torch(19, 4, 27, "south")
 
     # ---------------------------------------------------------------- bunkhouse (L4+)
     if L >= 4:

@@ -453,6 +453,47 @@ def hw_rooms(d, L):
         hw_rear(d, L, leg)
     if L >= 5:
         hw_square(d, L, leg)
+    if L >= 2:
+        hw_eaves(d, L)
+
+
+def hw_eaves(d, L):
+    """The one-block strip under the wing eaves, dressed by hand: flower borders under the street windows,
+    benches against the back walls, firewood at the chimney, water butts, crates at the store's loading door
+    and wall torches beside the side doors."""
+    W = "dark_oak"
+    for x0, row in ((9, "fdaf"), (15, "afdf"), (34, "fdaf"), (40, "afdf")):      # street front of both wings
+        d.fill(x0, 1, 13, x0 + 3, 1, 13, "grass_block[snowy=false]")
+        plan(d, Y0, x0, 13, [row], {"f": "red_tulip", "d": "oxeye_daisy", "a": "allium"})
+    for z in (14, 15):                                                # log stack against the workshop chimney
+        pts(d, Y0, [(7, z)], log("dark_oak_log", "x"))
+        pts(d, Y0 + 1, [(7, z)], log("dark_oak_log", "x"))
+    pts(d, Y0, [(7, 21)], "water_cauldron[level=3]")
+    pts(d, Y0, [(45, 15), (45, 16)], "barrel[facing=up,open=false]")      # crates by the loading door
+    pts(d, Y0, [(45, 21)], "chest[facing=west,type=single,waterlogged=false]")
+    wtorch(d, 45, 4, 17, "east")
+    wtorch(d, 45, 4, 20, "east")
+    for xs in ((9, 10), (41, 42)):                                    # benches on the garden side (clear of L5 doors)
+        plan(d, Y0, xs[0], 23, ["vv"], {"v": OUTSEAT("north", W)})
+        pts(d, Y0, [(xs[0] - 1, 23), (xs[1] + 1, 23)], "potted_red_tulip")
+    pts(d, Y0, [(16, 23)], "water_cauldron[level=3]")
+    pts(d, Y0, [(36, 23)], "composter[level=0]")
+    if L <= 3:                                                        # behind the core before the rear hall
+        wtorch(d, 24, 4, 23, "south")
+        wtorch(d, 28, 4, 23, "south")
+        pts(d, Y0, [(26, 23)], "potted_cornflower")
+    if L >= 4:                                                        # along the rear hall's side walls
+        wtorch(d, 19, 4, 26, "west")
+        wtorch(d, 19, 4, 33, "west")
+        wtorch(d, 33, 4, 26, "east")
+        wtorch(d, 33, 4, 33, "east")
+        for z in (31, 32):                                            # firewood for the banquet-hall hearth
+            pts(d, Y0, [(33, z)], log("dark_oak_log", "z"))
+            pts(d, Y0 + 1, [(33, z)], log("dark_oak_log", "z"))
+    if L == 4:                                                        # still open yard on both sides
+        plan(d, Y0, 19, 28, ["v", "v"], {"v": OUTSEAT("east", W)})
+        pts(d, Y0, [(19, 27), (19, 30)], "potted_azure_bluet")
+        plan(d, Y0, 33, 27, ["v", "v"], {"v": OUTSEAT("west", W)})
 
 
 def lamppost_hw(d, x, z):
@@ -971,6 +1012,7 @@ def nt_upper(d, L, leg):
     ], leg | {"I": IT("lectern", "south"), "J": IT("jukebox")}, w=13)
     pts(d, y + 1, [(22, 15), (28, 15)], "potted_bamboo")
     pts(d, y + 1, [(25, 18)], "end_rod[facing=up]")
+    pts(d, y + 1, [(22, 17), (28, 17)], "black_stained_glass_pane")     # clerks' screens at the table ends
     hang(d, y, [(25, 16), (25, 19)], kind="sea_lantern")
     # ---------------------------------------------------------------- archive (west upper)
     plan(d, y, 7, 13, [
@@ -1047,6 +1089,7 @@ def nt_rear(d, L, leg):
     pts(d, Y0 + 1, [(22, 26), (27, 30)], "potted_bamboo")
     pts(d, Y0 + 1, [(25, 26), (24, 30)], LANT())
     pts(d, Y0 + 1, [(20, 33)], "cake[bites=0]")
+    pts(d, Y0 + 1, [(21, 30), (28, 26)], CAN(3))
     hang(d, Y0, [(23, 26), (27, 26), (23, 30), (27, 30)], kind="glowstone")
     # ---------------------------------------------------------------- open-plan offices (rear floor 2)
     y = 7
@@ -1228,6 +1271,8 @@ def nt_tower(d, L, leg):
         ".......p.. ",
     ], leg, w=11)
     pts(d, y + 1, [(41, 28), (40, 35)], "potted_bamboo")
+    pts(d, y + 1, [(39, 28)], "decorated_pot")                        # water jug and desk lamp on the table
+    pts(d, y + 1, [(43, 29)], "end_rod[facing=up]")
     hang(d, y, [(41, 29), (40, 35)], kind="glowstone")
     # F4 staff canteen
     y = 22
@@ -1602,6 +1647,12 @@ def cs_mayor(d, L, leg):
                         continue
                     d.set(x, yy, z, log("stripped_spruce_log", "y") if yy not in (15, 17) else "spruce_planks")
     d.hip(48, 4, 52, 8, 19, "dark_oak_stairs", "dark_oak_slab", overhang=1)
+    # under the tank: horse trough below the outlet, a hay bale, a feed barrel and a lantern on a leg
+    pts(d, Y0, [(50, 6), (51, 6)], "water_cauldron[level=3]")
+    pts(d, Y0, [(49, 5)], "hay_block[axis=y]")
+    pts(d, Y0, [(49, 7)], "barrel[facing=up,open=false]")
+    pts(d, 12, [(50, 6)], "chain[axis=y,waterlogged=false]")          # outlet pipe over the trough
+    pts(d, 4, [(47, 6)], "wall_torch[facing=west]")
 
 
 def cs_street(d, L, leg):
@@ -1644,6 +1695,13 @@ def cs_street(d, L, leg):
     pts(d, 8, [(44, 18)], LANT())
     hang(d, 7, [(41, 18), (41, 24)])
     d.sign(42, 6, 13, "north", ["FIRE", "HALL"], W)
+    # east side under the eaves: two ladders racked on the wall, fire buckets, hose barrels, a wall torch
+    for z in (17, 18):
+        for yy in (Y0, Y0 + 1, Y0 + 2):
+            pts(d, yy, [(49, z)], "ladder[facing=east,waterlogged=false]")
+    pts(d, Y0, [(49, 20), (49, 21)], "water_cauldron[level=3]")
+    pts(d, Y0, [(49, 25), (49, 26)], "barrel[facing=up,open=false]")
+    wtorch(d, 49, 4, 23, "east")
     # ---------------------------------------------------------------- jail
     plan(d, Y0, 37, 35, [
         "c.......p",
