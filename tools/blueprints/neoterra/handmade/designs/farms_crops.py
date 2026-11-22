@@ -249,82 +249,65 @@ def bamboo(pack, rel, L):
 # ================================================================================================ kelp
 @design("kelp")
 def kelp(pack, rel, L):
-    """Observer + piston kelp farm (wiki: pistons break the 2nd kelp block, the observer above the piston watches
-    the 3rd; flowing water at the top carries the floating items to hoppers).
-      * Kelp only grows into water with amount 8 (a source or FALLING water): after a cut the cell is refilled by
-        water falling from the source above it, so the kelp regrows.
-      * All pistons of a row share one dust line: whenever any kelp of the row reaches its observer, every kelp of
-        the row is cut at the 2nd block. A cut re-rolls the base kelp's random age, so a plant that stopped at
-        height 2 (age 25) is freed by its neighbours instead of staying stuck.
-      * Flowing water does not spread sideways over water, so the item stream on top (y6) runs as a centre lane
-        over solid blocks (row K) fed from sources in the middle (x=9); it spills sideways into the lanes over the
-        kelp rows, whose flow follows the centre lane's slope towards the hoppers at both ends ("flow" cells are
-        air in the blueprint)."""
-    d = Design(pack, rel, size=(19, 15, 14), gy=1, paving="grass_block")
-    X1, Z1, X2, Z2 = 1, 3, 17, 11
-    shell(d, X1, Z1, X2, Z2, 8, floor="spruce_planks", wall="glass")
+    """Observer + piston kelp farm (wiki: pistons break the 2nd kelp block; "an observer facing the bottom kelp
+    plant detects when it grows"). Per kelp column x (every other x, rows A north / B south of a water row K):
+      base kelp (y3) on stone, cut cell (y4) above it, glass ceiling (y5) over the whole tank;
+      observer (y3) beside the base, facing it: when the kelp grows into y4 the base turns from kelp head into kelp
+      plant -> the observer pulses its back into the stone behind it (strong power) -> the lone dust on that stone
+      (y4, a '+' with no neighbours, so it powers all four sides) powers the piston (y4) next to it -> the piston
+      breaks the kelp in y4 and pushes the item into row K. The base turns back into a head (with a fresh random
+      age, so it can always grow again) -> one more harmless pulse, then all is quiet: no clock, no loop.
+      The cut cell refills as a SOURCE: its neighbours along x and in row K are water sources that are never
+      pushed. Row K is one block of water under the glass ceiling, over a hopper line: floating items stay in the
+      water cell and the hoppers under it take them (east -> output barrel)."""
+    d = Design(pack, rel, size=(20, 14, 15), gy=1, paving="grass_block")
+    X1, Z1, X2, Z2 = 1, 3, 18, 11
+    shell(d, X1, Z1, X2, Z2, 7, floor="spruce_planks", wall="glass")
     A, K, B = 6, 7, 8
-    rows = ((5, A, 4, "south"), (9, B, 10, "north"))       # piston row, kelp row, dust row, facing
-    KX1, KX2 = 4, 14
-    kelps = (5, 7, 11, 13)
-    for x in range(3, 16):
+    rows = ((5, A, 4, "south"), (9, B, 10, "north"))       # piston/observer row, kelp row, back row, facing
+    KX1, KX2 = 3, 15
+    for x in range(KX1 - 1, KX2 + 2):
         for z in range(4, 11):
-            d.set(x, 2, z, SB)
-            for y in (3, 4, 5):
+            for y in (2, 3, 4):
                 d.set(x, y, z, SB)
+            d.set(x, 5, z, GLASS if 5 <= z <= 9 else AIR)
     for x in range(KX1, KX2 + 1):
-        for (pz, kz, dz, f) in rows:
-            k = x in kelps
+        k = (x - KX1) % 2 == 0
+        d.set(x, 3, K, hopper("east"))
+        d.set(x, 4, K, WATER)
+        for (pz, kz, bz, f) in rows:
+            d.set(x, 3, kz, "kelp[age=0]" if k else SB)
+            d.set(x, 4, kz, WATER)
             if k:
-                d.set(x, 3, kz, "kelp_plant")
-                d.set(x, 4, kz, "kelp[age=0]")
-                d.set(x, 5, kz, WATER)
+                d.set(x, 3, pz, observer(f))
                 d.set(x, 4, pz, piston(f))
-                d.set(x, 5, pz, observer(f))
-            n, s = ("none", "side") if f == "south" else ("side", "none")
-            if not k:
-                n = s = "none"
-            d.set(x, 5, dz, dust(n=n, s=s, e="side" if x < KX2 else "none", w="side" if x > KX1 else "none"))
-            d.set(x, 6, pz, GLASS)
-            d.set(x, 7, pz, GLASS)
-        for z in (A, K, B):
-            d.set(x, 6, z, WATER if (x == 9 and z == K) else AIR)     # item stream ("flow" except the source)
-    for xe, wx in ((3, 2), (15, 16)):
-        d.set(xe, 5, A, hopper("south"))
-        d.set(xe, 5, B, hopper("north"))
-        for y in (5, 4, 3):
-            d.set(xe, y, K, hopper("down"))
-        output(d, xe, 2, K)
-        for z in range(5, 10):
-            d.set(xe, 6, z, AIR if z in (A, K, B) else GLASS)
-            d.set(wx, 6, z, GLASS)
-            d.set(xe, 7, z, GLASS if z in (5, 9) else AIR)
-        for z in range(Z1 + 1, Z2):
-            d.set(wx, 1, z, "spruce_planks")
+                d.set(x, 4, bz, "redstone_wire[east=side,north=side,power=0,south=side,west=side]")
+            else:
+                d.set(x, 4, bz, SB)
+    d.set(KX2 + 1, 3, K, hopper("down"))
+    output(d, KX2 + 1, 2, K)
+    for z in range(Z1 + 1, Z2):                            # walkways round the tank
+        for x in (2, 17):
+            d.set(x, 1, z, "spruce_planks")
             for y in (2, 3, 4, 5):
-                d.set(wx, y, z, AIR)
-    for x in range(3, 16):
+                d.set(x, y, z, AIR)
+    for x in range(2, 18):
         for z in (4, 10):
-            for y in (3, 4):
-                d.set(x, y, z, SB)
-    entrance(d, 2, Z1, "Kelp", "nothing", sign_side=1)
-    d.door(16, 2, Z1, facing="north", wood="spruce")
-    for z in (0, 1, 2):
-        d.set(16, 1, z, "gravel")
-    d.set(16, 2, 9, "chest[facing=west,type=single,waterlogged=false]")
-    d.set(16, 2, 10, "smoker[facing=west,lit=false]")
-    for x in range(X1 + 1, X2):                            # tie beam with lanterns over the tank
-        d.set(x, 9, 7, logb("x"))
-    for x in (2, 6, 12, 16):
-        lantern(d, x, 8, 7)
-    roof(d, X1, Z1, X2, Z2, 9, axis="x")
+            pass
+    entrance(d, 17, Z1, "Kelp", "nothing", sign_side=-1)
+    d.set(2, 2, 10, "chest[facing=east,type=single,waterlogged=false]")
+    d.set(2, 2, 9, "smoker[facing=east,lit=false]")
+    for x in range(X1 + 1, X2):                            # tie beam with lanterns
+        d.set(x, 7, 7, logb("x"))
+    for x in (2, 6, 10, 14, 17):
+        lantern(d, x, 6, 7)
+    roof(d, X1, Z1, X2, Z2, 8, axis="x")
     controller(d, 9)
     for z in (1, 2):
         d.set(9, 1, z, "gravel")
-    for x in range(2, 10):
+    for x in range(9, 18):
         d.set(x, 1, 2, "gravel")
-    d.farm_test(expect={"minecraft:kelp": 10}, ticks=12000,
-                blocks=[(x, 6, K, "minecraft:water") for x in range(3, 16)], blocks_min=99)
+    d.farm_test(expect={"minecraft:kelp": 20}, ticks=12000)
     return d
 
 

@@ -2423,9 +2423,9 @@ ROCK = ("cobblestone", "mossy_cobblestone", "andesite", "tuff", "stone", "cobble
 CA_STAIRS = (19, 20, 28, 29)                              # stair flights either side of the cascade
 CA_FALL = (23, 24, 25)                                    # the cascade
 _F, _B, _M, _L = "fern", "sweet_berry_bush[age=3]", "mossy_cobblestone", "large_fern"
-CA_LIP = {0: [(4, _F), (8, _M), (12, _L), (16, _B), (32, _F), (36, _M), (40, _L), (44, _B)],
+CA_LIP = {0: [(4, _F), (8, _M), (12, _L), (16, _B), (45, _B)],
           1: [(6, _M), (10, _L), (14, _B), (34, _F), (38, _M), (42, _L)],
-          2: [(8, _L), (12, _B), (16, _F), (20, _M), (28, _F) if False else (27, _B)],
+          2: [(8, _L), (12, _B), (16, _F), (27, _B)],
           3: [(10, _B), (14, _F), (18, _M), (30, _L), (34, _B), (38, _F)],
           4: [(26, _F), (30, _M), (34, _L)]}
 

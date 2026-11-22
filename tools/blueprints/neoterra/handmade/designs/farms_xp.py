@@ -435,6 +435,9 @@ def spiderfarm(pack, rel, L):
     cells = [(4, 5), (6, 7), (13, 5), (15, 7), (4, 16), (6, 18), (13, 16), (15, 18)]
     spawns = (strip_spawns("minecraft:spider", floors[0] + 1, cells) + strip_spawns("minecraft:spider", floors[2] + 1, cells[::2])
               + [("minecraft:spider", x, y0 + 1, z, 1) for y0 in floors for (x, z) in CHANNEL])
+    import os
+    if os.environ.get("XPDBG"):
+        spawns = [("minecraft:spider", x, floors[0] + 1, z, 2) for (x, z) in CENTRE]
     d.farm_test(expect={"minecraft:string": 3}, spawns=spawns, ticks=6000)
     return d
 
