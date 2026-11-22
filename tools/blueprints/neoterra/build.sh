@@ -157,6 +157,8 @@ FP=docs/previews/farmworks
 rm -rf "$FW"
 python3 $T/neoterra/farms.py "$FW"
 python3 $T/neoterra/tradepost.py "$FW"
+# hand-made automatic farms (crops, animals, mobs & XP, resources); also writes the in-game farm test list
+python3 $T/neoterra/handmade/handmade.py "$FW" Farmworks
 python3 $T/neoterra/plotmax.py "$FW"
 mkdir -p "$FP"
 for f in $(find "$FW" -name "*.blueprint"); do

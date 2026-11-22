@@ -336,7 +336,8 @@ GLYPHS = {
     "military": g_swords, "mystic": g_star, "walls": g_wall, "infrastructure": g_bridge, "bridge": g_bridge,
     "roads": g_road, "rails": g_rails, "canals": g_canal, "boardwalk": g_boardwalk, "cliffclimb": g_ladder,
     "mineshafts": g_pickaxe, "subway": g_train, "wonders": g_crown, "monuments": g_crown, "trade": g_scales, "foodfarms": g_egg,
-    "mobfarms": g_skull,
+    "mobfarms": g_skull, "xpfarms": g_skull, "cropfarms": g_wheat, "animalfarms": g_horseshoe,
+    "resourcefarms": g_pickaxe,
 }
 
 
