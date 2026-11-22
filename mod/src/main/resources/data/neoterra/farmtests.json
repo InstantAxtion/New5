@@ -3,6 +3,7 @@
   "decorations/animalfarms/chickencooker.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:cooked_chicken": 2
    },
@@ -40,6 +41,7 @@
   "decorations/animalfarms/cowbreeder.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:beef": 5,
     "minecraft:leather": 1
@@ -255,6 +257,7 @@
     ]
    ],
    "blocks_min": 27,
+   "dimension": null,
    "expect": {},
    "inputs": {},
    "mine": [],
@@ -276,6 +279,7 @@
   "decorations/animalfarms/honeyfarm.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:honeycomb": 3
    },
@@ -405,6 +409,7 @@
     ]
    ],
    "blocks_min": 12,
+   "dimension": null,
    "expect": {},
    "inputs": {},
    "mine": [],
@@ -426,6 +431,7 @@
   "decorations/animalfarms/woolfarm.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:white_wool": 4
    },
@@ -523,6 +529,7 @@
   "decorations/cropfarms/bamboo.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:bamboo": 32
    },
@@ -538,6 +545,7 @@
   "decorations/cropfarms/cocoa.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:cocoa_beans": 40
    },
@@ -559,6 +567,7 @@
   "decorations/cropfarms/flowers.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:dandelion": 3
    },
@@ -623,6 +632,7 @@
   "decorations/cropfarms/kelp.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:kelp": 20
    },
@@ -638,6 +648,7 @@
   "decorations/cropfarms/pumpkinmelon.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:melon_slice": 16,
     "minecraft:pumpkin": 8
@@ -654,6 +665,7 @@
   "decorations/cropfarms/sugarcane.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:sugar_cane": 20
    },
@@ -669,6 +681,7 @@
   "decorations/cropfarms/sweetberry.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:sweet_berries": 12
    },
@@ -729,6 +742,7 @@
     ]
    ],
    "blocks_min": 4,
+   "dimension": null,
    "expect": {},
    "inputs": {},
    "mine": [],
@@ -740,6 +754,7 @@
   "decorations/cropfarms/villagercrops.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:carrot": 8,
     "minecraft:potato": 4
@@ -764,6 +779,7 @@
   "decorations/resourcefarms/basaltgen.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {},
    "inputs": {},
    "mine": [
@@ -875,6 +891,7 @@
     ]
    ],
    "blocks_min": 9,
+   "dimension": null,
    "expect": {},
    "inputs": {},
    "mine": [
@@ -1028,6 +1045,7 @@
     ]
    ],
    "blocks_min": 16,
+   "dimension": null,
    "expect": {},
    "inputs": {},
    "mine": [],
@@ -1102,6 +1120,7 @@
     ]
    ],
    "blocks_min": 4,
+   "dimension": null,
    "expect": {},
    "inputs": {},
    "mine": [],
@@ -1176,6 +1195,7 @@
     ]
    ],
    "blocks_min": 7,
+   "dimension": null,
    "expect": {},
    "inputs": {},
    "mine": [],
@@ -1220,6 +1240,7 @@
     ]
    ],
    "blocks_min": 4,
+   "dimension": null,
    "expect": {},
    "inputs": {
     "-2,4,8": [
@@ -1327,6 +1348,7 @@
     ]
    ],
    "blocks_min": 2,
+   "dimension": null,
    "expect": {},
    "inputs": {},
    "mine": [],
@@ -1410,6 +1432,7 @@
     ]
    ],
    "blocks_min": 9,
+   "dimension": null,
    "expect": {},
    "inputs": {},
    "mine": [
@@ -1466,6 +1489,7 @@
   "decorations/xpfarms/creeperfarm.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:gunpowder": 3
    },
@@ -1623,6 +1647,7 @@
   "decorations/xpfarms/drownedfarm.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:rotten_flesh": 4
    },
@@ -1752,6 +1777,7 @@
   "decorations/xpfarms/goldfarm.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:gold_nugget": 2,
     "minecraft:rotten_flesh": 1
@@ -1938,6 +1964,7 @@
   "decorations/xpfarms/slimefarm.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:slime_ball": 2
    },
@@ -2012,6 +2039,7 @@
   "decorations/xpfarms/spiderfarm.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:string": 6
    },
@@ -2451,6 +2479,7 @@
   "decorations/xpfarms/xpgrinder.blueprint": {
    "blocks": [],
    "blocks_min": 0,
+   "dimension": null,
    "expect": {
     "minecraft:bone": 1,
     "minecraft:rotten_flesh": 1
