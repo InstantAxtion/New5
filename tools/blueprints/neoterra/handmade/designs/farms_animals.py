@@ -329,19 +329,21 @@ def cowbreeder(pack, rel, L):
     barn(d, X1, Z1, X2, Z2, top, cx, windows=[(3, Z1), (5, Z1), (13, Z1), (15, Z1), (X1, 6), (X2, 6),
                                                (X1, 11), (X2, 11)])
     stalls = (6, 8, 10, 12)
-    # pen platform
-    d.fill(3, 2, 4, 15, 3, 8, SB)
-    d.fill(3, 4, 4, 15, 4, 8, GRASS)
+    # pen platform (z4..7)
+    d.fill(3, 2, 4, 15, 3, 7, SB)
+    d.fill(3, 4, 4, 15, 4, 7, GRASS)
     for x in range(3, 16):
         d.set(x, 5, 4, FENCE)
-    for z in range(5, 9):
+    for z in range(5, 8):
         d.set(3, 5, z, FENCE)
         d.set(15, 5, z, FENCE)
     d.set(cx, 5, 4, "spruce_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
-    # stall block z9..10, y2..6 (the alcoves open north into the pen); service aisle z10..12 under it
-    d.fill(3, 2, 9, 15, 6, 10, SB)
+    # stall block z8..10, y2..6: alcoves 2 deep (z8..9) open north into the pen; service aisle z10..12 under it
+    d.fill(3, 2, 8, 15, 6, 10, SB)
     for x in range(3, 16):
+        d.set(x, 6, 8, "polished_andesite")
         d.set(x, 6, 9, "polished_andesite")
+        d.set(x, 7, 8, slab("polished_andesite"))
         d.set(x, 7, 9, slab("polished_andesite"))
         d.set(x, 7, 10, slab("polished_andesite"))
     for x in range(4, 15):
@@ -349,13 +351,11 @@ def cowbreeder(pack, rel, L):
         d.set(x, 3, 10, AIR)
     for x in range(5, 14):
         d.set(x, 2, 9, hopper("west"))
-        d.set(x, 3, 9, "chiseled_stone_bricks")
-        d.set(x, 4, 9, SB)
     for c in stalls:
-        d.set(c, 3, 9, "rail[shape=east_west,waterlogged=false]")
-        d.set(c, 4, 9, "smooth_stone")
-        d.set(c, 5, 9, AIR)                               # the alcove (1 high)
-        d.set(c, 6, 9, SB)
+        d.set(c, 4, 8, hopper("south"))                   # alcove floor: hoppers (calves stand in the bowl)
+        d.set(c, 4, 9, hopper("down"))
+        d.set(c, 3, 9, hopper("down"))
+        d.clear(c, 5, 8, c, 5, 9)                         # the alcove (1 high, 2 deep)
     d.set(4, 2, 9, chest("south"))
     d.tag(4, 2, 9, "farm_output")
     d.set(4, 3, 9, AIR)
@@ -378,10 +378,8 @@ def cowbreeder(pack, rel, L):
             d.set(x, top, z, logb("z"))
     for (x, z) in ((5, 6), (13, 6), (9, 12), (9, 6)):
         lantern(d, x, top - 1, z)
-    approach(d, cx, Z1, ["Cow Breeder", "Bring: 2+ cows,", "wheat, 4 hopper", "minecarts"])
+    approach(d, cx, Z1, ["Cow Breeder", "Bring: 2+ cows", "and wheat to", "breed them"])
     # the test puts a grown cow into each alcove (as if a calf had grown up there)
-    d.farm_test(expect={"minecraft:beef": 4}, ticks=1500,
-                spawns=[("minecraft:cow", c, 5, 9, 1) for c in stalls]
-                + [("minecraft:hopper_minecart", c, 3, 9, 1) for c in stalls]
-                + [("minecraft:cow", 7, 5, 6, 2)])
+    d.farm_test(expect={"minecraft:beef": 5, "minecraft:leather": 1}, ticks=1500,
+                spawns=[("minecraft:cow", c, 5, 9, 1) for c in stalls] + [("minecraft:cow", 7, 5, 6, 2)])
     return d

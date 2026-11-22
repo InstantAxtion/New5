@@ -972,7 +972,9 @@ def cook_neo(rel, L):
         d.chair(x2 - 1, y0, 6, "north", "birch")
         d.chair(x2 - 1, y0, 8, "south", "birch")
         seats += 2
-    d.rug(x1 + 2, 8, x2 - 2, 9, y0, ("light_gray_carpet",), "plain")
+    for x in range(x1 + 2, x2 - 1):                             # dark stone runner down the dining aisle
+        d.set(x, 1, 8, "polished_andesite")
+        d.set(x, 1, 9, "polished_andesite")
     for x in range(x1 + 2, x2 - 1, 3):
         d.set(x, 6, 8, "sea_lantern")
     if two:                                                      # upper dining room
@@ -984,7 +986,9 @@ def cook_neo(rel, L):
             seats += 4
         for x in (9, 13, 17):
             d.plant(x, 7, 12, "potted_bamboo")
-        d.rug(x1 + 3, 9, x2 - 1, 10, 7, ("cyan_carpet",), "plain")
+        for x in range(x1 + 3, x2 - 1):                         # cyan runner inlaid in the upper floor
+            d.set(x, 6, 9, "cyan_terracotta")
+            d.set(x, 6, 10, "cyan_terracotta")
         for x in range(x1 + 3, x2 - 1):                          # upper bar on the back wall
             if d.air(x, 7, z2 - 1):
                 d.set(x, 7, z2 - 1, "smooth_quartz")
@@ -1946,6 +1950,18 @@ def dyer_neo(rel, L):
         d.set(x, y1 + 1, 9, "sea_lantern")
     for x in range(x1 + 2, x2 - 1, 2):                          # swatch wall: banners over the work line
         d.set(x, 5, z2 - 1, f"{dy(d, x)}_wall_banner[facing=north]")
+    if L >= 3:                                                  # new east bay: cloth cutting table + bolt shelf
+        for x in (16, 17, 18):
+            d.set(x, y0, 7, sl("birch", "top"))
+        d.set(16, 3, 7, f"{dy(d, 1)}_carpet")
+        d.set(17, 3, 7, "white_carpet")
+        d.set(18, 3, 7, f"{dy(d, 4)}_carpet")
+        for x in (17, 18):
+            d.chair(x, y0, 8, "south", "birch", sit=False)
+        for z in (6, 7):
+            d.set(20, y0, z, f"{dy(d, z)}_wool")
+            d.set(20, 3, z, f"{dy(d, z + 2)}_wool")
+            d.set(20, 4, z, f"{dy(d, z)}_carpet")
     # L3+: roof drying deck with banners on steel rails; L5 pergola of stained glass
     if L >= 3:
         for z in (8, 11):
@@ -2205,6 +2221,25 @@ def glassblower_neo(rel, L):
         d.set(x1 + 1, y0, z, "smooth_quartz")
         d.set(x1 + 1, 3, z, glass_c(d, z, True))
     d.hut(x2 - 1, y0, z1 + 1)
+    # studio fittings: marver bench + stool and quench bucket on the west wall, annealing lehr with sand and
+    # cullet bins on the south wall, a sales shelf and the order lectern by the hut
+    d.set(5, y0, 11, sl("smooth_stone", "top"))
+    d.set(5, 3, 11, "flower_pot")
+    d.set(5, y0, 12, sl("smooth_stone", "top"))
+    d.set(5, 3, 12, glass_c(d, 2, True))
+    d.chair(6, y0, 12, "east", "birch", sit=False)
+    d.set(5, y0, 13, "water_cauldron[level=3]")
+    d.set(11, y0, 14, "barrel[facing=up,open=false]")
+    d.set(12, y0, 14, "blast_furnace[facing=north,lit=true]")
+    d.set(13, y0, 14, "blast_furnace[facing=north,lit=false]")
+    d.set(14, y0, 14, "barrel[facing=up,open=false]")
+    for x in (13, 14):
+        d.set(x, y0, 6, sl("birch", "top"))
+    d.set(13, 3, 6, "decorated_pot[cracked=false,facing=south,waterlogged=false]")
+    d.set(14, 3, 6, "potted_" + "blue_orchid")
+    d.set(6, y0, 6, sl("birch", "top"))
+    d.set(6, 3, 6, glass_c(d, 5, True))
+    d.set(15, y0, 8, "lectern[facing=west,has_book=true,powered=false]")
     for x in range(x1 + 2, x2 - 1, 3):
         d.set(x, y1 + 1, 8, "sea_lantern")
         d.set(x, y1 + 1, 13, "sea_lantern")
@@ -4168,6 +4203,9 @@ def _g_cook_neo(d, L):
                                                    "p.UUUUuUUUUU.Z..p"]], tall=True, wall="glass",
             roofitems=GREEN([2, 4, 6, 8, 10, 12, 14, 16], 11) + [(x, 2, "white_stained_glass_pane") for x in
                                                                    range(1, 18)])
+        put(d, [(27, 3, 30, "decorated_pot[cracked=false,facing=north,waterlogged=false]"),   # bar-top dressing
+                (32, 3, 30, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]"),
+                (34, 3, 30, "candle[candles=3,lit=true,waterlogged=false]")])
         canopy(d, 25, 21, 39, 28, 15, [(25, 21), (32, 21), (39, 21), (25, 28), (32, 28), (39, 28)],    # roof pergola
                "birch_slab", "birch_fence", 12)
         canopy(d, 23, 12, 31, 15, 5, [(23, 12), (31, 12), (23, 15), (31, 15)])     # street cafe terrace

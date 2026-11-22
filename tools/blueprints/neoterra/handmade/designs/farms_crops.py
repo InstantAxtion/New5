@@ -581,7 +581,7 @@ def flowers(pack, rel, L):
     dispenser washes the flowers into hoppers). One button does a whole cycle on every press:
       * three water dispensers (west end, y3) either place their water or pick it up again (they alternate);
       * the same pulse runs through repeaters (3 x 4 ticks to the first, 5 x 4 to the second bone-meal dispenser),
-        so the bone meal comes AFTER the water has drained back (flowing water vanishes 5 ticks per block).
+        so the bone meal (four dispensers in the side walls) comes AFTER the water has drained back (flowing water vanishes 5 ticks per block).
     Press A: water on -> it flows east over the grass (6 blocks of flow), breaks every flower / grass tuft and
     carries the items to the hoppers under the stream end (x=11). The bone meal then finds water on the grass and
     is not used. Press B: water off -> the bone meal grows new flowers on the dry grass. The water source cells
@@ -613,15 +613,16 @@ def flowers(pack, rel, L):
         d.set(3, 3, z, SB)
     d.set(3, 4, 4, dust(s="side"))
     d.set(2, 3, 4, button("west"))
-    d.set(3, 4, 5, dust(n="side", s="side"))
+    d.set(3, 4, 5, dust(n="side", s="side", e="side"))
     d.set(3, 4, 9, dust(n="side", e="side"))
     line = {4: repeater("west"), 5: repeater("west"), 6: repeater("west"), 7: dust(e="side", w="side"),
             8: repeater("west"), 9: repeater("west"), 10: dust(w="side")}
-    for x, st in line.items():
-        d.set(x, 3, 9, SB if x in (7, 10) else GLASS)
-        d.set(x, 4, 9, st)
-    for x in (7, 10):
-        d.set(x, 2, 9, dispenser("north"))                   # bone meal, aimed at the grass row z=8
+    for zl, f in ((9, "north"), (5, "south")):              # delayed lines on both side walls
+        for x, st in line.items():
+            d.set(x, 3, zl, SB if x in (7, 10) else GLASS)
+            d.set(x, 4, zl, st)
+        for x in (7, 10):
+            d.set(x, 2, zl, dispenser(f))                    # bone meal, aimed at the outer grass rows
     d.sign(2, 3, 5, "west", ["Press: water", "on / off.", "Bone meal", "after drain"], wood="spruce")
     for z in range(Z1 + 1, Z2):
         d.set(1, 1, z, "spruce_planks")
@@ -648,8 +649,8 @@ def flowers(pack, rel, L):
     for x in range(1, 8):
         d.set(x, 1, 2, "gravel")
     inputs = {(3, 3, z): [("minecraft:water_bucket", 1)] for z in rows}
-    inputs.update({(x, 2, 9): [("minecraft:bone_meal", 64)] for x in (7, 10)})
-    d.farm_test(expect={"minecraft:poppy": 4}, inputs=inputs, presses=[(2, 3, 4)], ticks=6000)
+    inputs.update({(x, 2, z): [("minecraft:bone_meal", 64)] for x in (7, 10) for z in (5, 9)})
+    d.farm_test(expect={"minecraft:dandelion": 3}, inputs=inputs, presses=[(2, 3, 4)], ticks=12000)
     return d
 
 

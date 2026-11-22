@@ -38,88 +38,16 @@
    "ticks": 25500
   },
   "decorations/animalfarms/cowbreeder.blueprint": {
-   "blocks": [
-    [
-     -3,
-     5,
-     10,
-     "minecraft:lava"
-    ],
-    [
-     -1,
-     5,
-     10,
-     "minecraft:lava"
-    ],
-    [
-     1,
-     5,
-     10,
-     "minecraft:lava"
-    ],
-    [
-     3,
-     5,
-     10,
-     "minecraft:lava"
-    ],
-    [
-     -3,
-     4,
-     10,
-     "minecraft:warped_wall_sign"
-    ],
-    [
-     -1,
-     4,
-     10,
-     "minecraft:warped_wall_sign"
-    ],
-    [
-     1,
-     4,
-     10,
-     "minecraft:warped_wall_sign"
-    ],
-    [
-     3,
-     4,
-     10,
-     "minecraft:warped_wall_sign"
-    ],
-    [
-     -3,
-     4,
-     9,
-     "minecraft:air"
-    ],
-    [
-     -1,
-     4,
-     9,
-     "minecraft:air"
-    ],
-    [
-     1,
-     4,
-     9,
-     "minecraft:air"
-    ],
-    [
-     3,
-     4,
-     9,
-     "minecraft:air"
-    ]
-   ],
-   "blocks_min": 12,
+   "blocks": [],
+   "blocks_min": 0,
    "expect": {
-    "minecraft:cooked_beef": 3
+    "minecraft:beef": 5,
+    "minecraft:leather": 1
    },
    "inputs": {},
    "mine": [],
    "outputs": [
-    "-5,1,10"
+    "-5,1,9"
    ],
    "presses": [],
    "spawns": [
@@ -127,56 +55,28 @@
      "minecraft:cow",
      -3,
      4,
-     10,
+     9,
      1
     ],
     [
      "minecraft:cow",
      -1,
      4,
-     10,
+     9,
      1
     ],
     [
      "minecraft:cow",
      1,
      4,
-     10,
+     9,
      1
     ],
     [
      "minecraft:cow",
      3,
      4,
-     10,
-     1
-    ],
-    [
-     "minecraft:hopper_minecart",
-     -3,
-     2,
-     10,
-     1
-    ],
-    [
-     "minecraft:hopper_minecart",
-     -1,
-     2,
-     10,
-     1
-    ],
-    [
-     "minecraft:hopper_minecart",
-     1,
-     2,
-     10,
-     1
-    ],
-    [
-     "minecraft:hopper_minecart",
-     3,
-     2,
-     10,
+     9,
      1
     ],
     [
@@ -187,7 +87,7 @@
      2
     ]
    ],
-   "ticks": 2000
+   "ticks": 1500
   },
   "decorations/animalfarms/woolfarm.blueprint": {
    "blocks": [],
@@ -326,7 +226,7 @@
    "blocks": [],
    "blocks_min": 0,
    "expect": {
-    "minecraft:poppy": 4
+    "minecraft:dandelion": 3
    },
    "inputs": {
     "-4,2,6": [
@@ -347,7 +247,19 @@
       1
      ]
     ],
+    "0,1,5": [
+     [
+      "minecraft:bone_meal",
+      64
+     ]
+    ],
     "0,1,9": [
+     [
+      "minecraft:bone_meal",
+      64
+     ]
+    ],
+    "3,1,5": [
      [
       "minecraft:bone_meal",
       64
@@ -372,7 +284,7 @@
     ]
    ],
    "spawns": [],
-   "ticks": 6000
+   "ticks": 12000
   },
   "decorations/cropfarms/kelp.blueprint": {
    "blocks": [],
