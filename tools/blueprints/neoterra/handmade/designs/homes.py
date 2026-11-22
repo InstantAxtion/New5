@@ -3635,7 +3635,43 @@ def enchant_room(d, tx, tz):
     d.item(tx + 3, y, tz + 3, "enchanting_table")
 
 
-def storage_vault(d, V, W, frame, pack):
+def frame(d, x, y, z, facing, item, glow=False):
+    """Item frame in air cell (x,y,z) on the block behind it (checked in check_entities)."""
+    d.item_frame(x, y, z, facing, item, glow=glow)
+    d.__dict__.setdefault("ph_frames", []).append((x, y, z, facing))
+
+
+def stand(d, x, y, z, facing, kit, hand=None, off=None):
+    """Armour stand in cell (x,y,z) wearing `kit` = material of the set ('leather', 'chainmail', 'iron', 'golden')
+    or a 4-tuple (head, chest, legs, feet) with None for an empty slot."""
+    if isinstance(kit, str):
+        kit = tuple(f"{kit}_{p}" for p in ("helmet", "chestplate", "leggings", "boots"))
+    d.armor_stand(x, y, z, facing, head=kit[0], chest=kit[1], legs=kit[2], feet=kit[3], mainhand=hand, offhand=off)
+    d.__dict__.setdefault("ph_stands", []).append((x, y, z))
+
+
+NOT_BACKING = ("air", "pane", "fence", "door", "ladder", "torch", "carpet", "water", "leaves", "lantern", "sign",
+               "banner", "trapdoor", "chain", "rod", "pot", "candle", "flower", "sapling", "slab", "stairs")
+
+
+def check_entities(d):
+    """Every frame hangs in an air cell on a solid block; every stand has two air cells on a solid floor."""
+    def nm(x, y, z):
+        return d.get(x, y, z).split("[")[0].split(":")[-1]
+    bad = []
+    for x, y, z, f in getattr(d, "ph_frames", []):
+        dx, dz = D4[f]
+        back = nm(x - dx, y, z - dz)
+        if nm(x, y, z) != "air" or any(k in back for k in NOT_BACKING):
+            bad.append(f"frame {(x, y, z)} {f}: cell {nm(x, y, z)}, behind {back}")
+    for x, y, z in getattr(d, "ph_stands", []):
+        if nm(x, y, z) != "air" or nm(x, y + 1, z) != "air" or nm(x, y - 1, z) in ("air", "water"):
+            bad.append(f"stand {(x, y, z)}: {nm(x, y - 1, z)}/{nm(x, y, z)}/{nm(x, y + 1, z)}")
+    if bad:
+        raise RuntimeError(f"{d.pack} {d.rel}: " + "; ".join(bad))
+
+
+def storage_vault(d, V, W, frame_block, pack):
     """The estate store (L4+) inside the vault shell V = (x1, z1, x2, z2), interior y 2..5, door in the north wall.
     BULK LINE along the back wall: an input chest on top of the first hopper of a hopper line (y3, z2-1) running
     east; under each line hopper a drop hopper (y2) pointing north into a double chest of the bulk row (z2-2). A
@@ -3651,42 +3687,48 @@ def storage_vault(d, V, W, frame, pack):
         d.set(x, 3, zb, hopper("east"))                              # line
     for x in range(xa + 1, xe - 1):
         d.set(x, 2, zb, hopper("north"))                             # drops
-    d.set(xe - 1, 2, zb, frame)
-    d.set(xe, 2, zb, frame)
+    d.set(xe - 1, 2, zb, frame_block)
+    d.set(xe, 2, zb, frame_block)
     d.set(xe, 3, zb, CHEST("north"))                                # overflow
     d.set(xa + 1, 4, zb, CHEST("north"))                            # input
     for x in range(xa + 1, xe - 1, 2):
         dchest(d, x, 2, zb - 1, "north", "x")                        # bulk row (fed)
         dchest(d, x, 3, zb - 1, "north", "x")                        # manual row above
-    d.set(xe - 1, 2, zb - 1, frame)
-    d.set(xe - 1, 3, zb - 1, frame)
+    d.set(xe - 1, 2, zb - 1, frame_block)
+    d.set(xe - 1, 3, zb - 1, frame_block)
     d.sign(xe - 1, 3, zb - 2, "north", ["Overflow", "chest at the", "east end ->"], W)
     d.sign(xa, 3, zb, "east", ["INPUT", "drop items in", "the chest above", "the hopper line"], W)
     cats = ["Stone", "Cobble & gravel", "Dirt & sand", "Wood", "Logs & saplings", "Ores", "Metals", "Gems",
             "Food", "Crops & seeds", "Mob drops", "Redstone", "Building", "Glass & clay", "Dyes & wool", "Nether",
             "The End", "Ocean", "Tools", "Arms & armour", "Brewing", "Enchanting", "Valuables", "Misc"]
+    show = {"Stone": "stone", "Cobble & gravel": "cobblestone", "Dirt & sand": "dirt", "Wood": "oak_planks",
+            "Logs & saplings": "oak_log", "Ores": "raw_iron", "Metals": "iron_ingot", "Gems": "diamond",
+            "Food": "bread", "Crops & seeds": "wheat", "Mob drops": "bone", "Redstone": "redstone",
+            "Building": "bricks", "Glass & clay": "glass", "Dyes & wool": "white_wool", "Nether": "netherrack",
+            "The End": "end_stone", "Ocean": "prismarine_shard", "Tools": "iron_pickaxe", "Arms & armour": "iron_sword",
+            "Brewing": "glass_bottle", "Enchanting": "book", "Valuables": "emerald", "Misc": "string"}
     k = [0]
 
-    def label():
-        i = k[0]
+    def label(x, y, z, f):
+        """Item-frame label on the face of an upper chest: one example item of the row's category."""
+        frame(d, x, y, z, f, show[cats[k[0] % len(cats)]])
         k[0] += 1
-        return [cats[i % len(cats)] + ("" if i < len(cats) else " II")]
     for i, x in enumerate(range(xa + 1, xe - 1, 2)):
         d.sign(x, 2, zb - 2, "north", ["Bulk", str(i + 1), "(fed by the", "hopper line)"], W)
-        d.sign(x, 3, zb - 2, "north", label(), W)
+        label(x, 3, zb - 2, "north")
     # island: double chests two high, facing both aisles
     zi = (z1 + z2) // 2                                            # 40
     for x in range(xa + 3, xe - 3, 2):
         for z, f in ((zi, "north"), (zi + 1, "south")):
             dchest(d, x, 2, z, f, "x")
             dchest(d, x, 3, z, f, "x")
-            d.sign(x if f == "north" else x + 1, 3, z + (-1 if f == "north" else 1), f, label(), W)
+            label(x if f == "north" else x + 1, 3, z + (-1 if f == "north" else 1), f)
     # side walls: three double chests two high each side, north part of the room
     for x, f in ((xa, "east"), (xe, "west")):
         for z in (z1 + 2, z1 + 4, z1 + 6):
             dchest(d, x, 2, z, f, "z")
             dchest(d, x, 3, z, f, "z")
-            d.sign(x + (1 if f == "east" else -1), 3, z, f, label(), W)
+            label(x + (1 if f == "east" else -1), 3, z, f)
     # on top of the chests (non-solid pieces only, so every lid still opens): pots, candles, a few plants
     tops = [POT, "candle[candles=3,lit=false,waterlogged=false]", "potted_fern", POT, "potted_spruce_sapling"]
     for i, x in enumerate(range(xa + 4, xe - 3, 3)):
@@ -3857,7 +3899,57 @@ def player_estate(rel, L):
                 if d.get(x, 2, z).startswith("minecraft:" + wall):
                     d.set(x, 2, z, f"{wall}[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
                     d.set(x, 3, z, lantern(False))
+    estate_displays(d, pack, L, T1, T2 if L >= 5 else None)
     return d
+
+
+# armour on the entrance-hall stand per pack and level (the player's kit grows with the house)
+HALL_KIT = {
+    "Hearthwood": ("leather", "leather", "chainmail", "iron", "iron"),
+    "Cascadia": (("leather_helmet", "leather_chestplate", None, None), "leather", "leather", "chainmail", "iron"),
+    "Neoterra": (("chainmail_helmet", None, None, "leather_boots"), "chainmail", "chainmail", "iron", "iron"),
+}
+HALL_STAND = {"Hearthwood": (8, 4, "south"), "Cascadia": (5, 5, "south"), "Neoterra": (9, 4, "south")}
+# tools hung on the workshop walls (L2+): (x, y, z, facing, item), hand-placed over each pack's work row
+WORKSHOP_TOOLS = {
+    "Hearthwood": [(25, 4, 23, "north", "iron_pickaxe"), (26, 4, 23, "north", "iron_axe"),
+                   (27, 4, 23, "north", "iron_shovel"), (27, 4, 21, "west", "shears"), (27, 4, 20, "west", "bow"),
+                   (27, 4, 19, "west", "fishing_rod")],
+    "Cascadia": [(10, 4, 27, "north", "iron_axe"), (11, 4, 27, "north", "iron_pickaxe"),
+                 (12, 4, 27, "north", "iron_shovel"), (13, 4, 26, "west", "bow"), (13, 4, 25, "west", "shears"),
+                 (13, 4, 24, "west", "fishing_rod")],
+    "Neoterra": [(21, 4, 9, "north", "iron_pickaxe"), (22, 4, 9, "north", "iron_axe"),
+                 (23, 4, 9, "north", "iron_shovel"), (26, 4, 8, "west", "shears"), (26, 4, 7, "west", "bow"),
+                 (26, 4, 6, "west", "fishing_rod")],
+}
+
+
+def estate_displays(d, pack, L, T1, T2):
+    """Entities, hand-placed: armour stand in the entrance hall (all levels), tools on the workshop wall (L2+),
+    glow frames with empty maps in the lore tower study (L3+) and the guard tower map room (L5), and an iron and a
+    chainmail stand in the guard tower armoury (L5). (Storage labels are placed in storage_vault.)"""
+    x, z, f = HALL_STAND[pack]
+    kit = HALL_KIT[pack][L - 1]
+    stand(d, x, d.gy + 1, z, f, kit, hand="iron_sword" if L >= 4 else None, off="shield" if L >= 5 else None)
+    if L >= 2:
+        for tx, ty, tz, tf, item in WORKSHOP_TOOLS[pack]:
+            frame(d, tx, ty, tz, tf, item)
+    if L >= 3:                                   # lore tower, floor 2 (study with the cartography table)
+        tx, tz = T1
+        y = d.gy + 1 + 8
+        for dz in (2, 4):
+            frame(d, tx + 1, y + 1, tz + dz, "east", "map", glow=True)
+    if T2:
+        tx, tz = T2
+        y = d.gy + 1 + 8                         # guard tower floor 2: map room
+        for dy in (1, 2):
+            for dz in (2, 4):
+                frame(d, tx + 1, y + dy, tz + dz, "east", "map", glow=True)
+            frame(d, tx + 3, y + dy, tz + 5, "north", "map", glow=True)
+        y = d.gy + 1                             # guard tower floor 0: armoury
+        stand(d, tx + 1, y, tz + 3, "east", "iron", hand="iron_sword", off="shield")
+        stand(d, tx + 1, y, tz + 5, "east", "chainmail", hand="bow")
+    check_entities(d)
 
 
 def nt_court(d, L):

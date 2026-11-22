@@ -782,6 +782,76 @@ NT_TSY = 30
 NT_BED_SLOTS = [(1, 1, "west"), (5, 1, "east"), (1, 5, "west"), (5, 5, "east")]
 
 
+NT_FLOORS = {   # storey -> (bed colour, bed heads) ; each storey has its own room plan
+    1: ("cyan", [(1, 1, "west"), (5, 1, "east"), (1, 5, "west"), (5, 5, "east")]),       # standard dorm
+    2: ("light_blue", [(1, 1, "north"), (5, 1, "north"), (1, 5, "south"), (5, 5, "south")]),  # study dorm
+    3: ("gray", [(5, 1, "east"), (5, 2, "east"), (5, 4, "east"), (5, 5, "east")]),       # lounge dorm
+    4: ("white", [(1, 1, "north"), (1, 5, "south"), (5, 5, "south"), (5, 1, "east")]),   # medic bay
+    5: ("black", [(1, 5, "south"), (2, 5, "south"), (4, 5, "south"), (5, 5, "south")]),  # officers' flat
+}
+
+
+def nt_tower_storey(d, k, y):
+    QS = "smooth_quartz_slab[type=top,waterlogged=false]"
+    col, heads = NT_FLOORS[k]
+    for x, z, f in heads:
+        d.bed(x, y, z, f, col)
+    if k == 1:
+        d.set(1, y, 3, QS)
+        d.set(1, y + 1, 3, "potted_bamboo")
+        d.set(5, y, 3, LOCK)
+        d.set(5, y + 1, 3, "potted_cactus")
+        for x, z in ((2, 3), (2, 4), (4, 3), (4, 4), (3, 4), (3, 5)):
+            put(d, x, y, z, "cyan_carpet" if (x + z) % 2 else "light_gray_carpet")
+        d.set(3, y + 2, 4, "sea_lantern")
+    elif k == 2:
+        for x, cx, back in ((1, 2, "east"), (5, 4, "west")):       # two study desks facing the walls
+            d.set(x, y, 3, QS)
+            d.set(x, y + 1, 3, "lantern[hanging=false,waterlogged=false]" if x == 1 else "potted_white_tulip")
+            d.chair(cx, y, 3, back, "birch", sit=False)
+        d.set(3, y, 5, BOOK("north"))
+        d.set(2, y, 1, LOCK)
+        d.set(4, y, 1, LOCK)
+        for x in (2, 3, 4):
+            put(d, x, y, 4, "light_blue_carpet")
+        d.set(3, y + 2, 4, "sea_lantern")
+        d.set(3, y + 2, 1, "sea_lantern")
+    elif k == 3:
+        for z in (2, 3, 4):                                         # sofa along the west wall
+            d.chair(1, y, z, "west", "birch", sit=False)
+        d.set(1, y, 1, "potted_bamboo")
+        d.set(1, y, 5, "potted_bamboo")
+        d.set(2, y, 3, "smooth_quartz_slab[type=bottom,waterlogged=false]")   # coffee table
+        d.set(3, y, 5, LOCK)
+        for x, z in ((2, 4), (3, 4), (2, 5)):
+            put(d, x, y, z, "gray_carpet")
+        d.set(2, y + 2, 3, "sea_lantern")
+        d.set(4, y + 2, 3, "sea_lantern")
+    elif k == 4:
+        d.set(5, y, 2, QS)
+        d.set(5, y + 1, 2, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]")
+        d.set(5, y, 3, "water_cauldron[level=3]")
+        d.set(1, y, 3, LOCK)
+        d.set(1, y + 1, 3, "potted_azure_bluet")
+        for x, z in ((3, 4), (2, 4), (4, 4), (3, 5)):
+            put(d, x, y, z, "red_carpet" if (x, z) in ((3, 4), (3, 5)) else "white_carpet")
+        d.set(2, y + 2, 4, "sea_lantern")
+        d.set(4, y + 2, 4, "sea_lantern")
+    else:
+        d.set(1, y, 1, QS)                                          # officer's desk + chair
+        d.set(2, y, 1, QS)
+        d.set(1, y + 1, 1, "lantern[hanging=false,waterlogged=false]")
+        d.chair(1, y, 2, "south", "birch", sit=False)
+        d.set(5, y, 1, BOOK("west"))
+        d.set(5, y, 2, LOCK)
+        d.set(3, y, 5, QS)
+        d.set(3, y + 1, 5, "potted_white_tulip")
+        for x, z in ((4, 3), (5, 3), (2, 3), (1, 3)):
+            put(d, x, y, z, "black_carpet" if x in (1, 5) else "gray_carpet")
+        d.set(3, y + 2, 4, "sea_lantern")
+        d.set(4, y + 2, 1, "sea_lantern")
+
+
 def bt_neoterra(rel, L):
     n = L + 1
     top = 4 * n
@@ -825,16 +895,7 @@ def bt_neoterra(rel, L):
     d.set(1, 1, 5, "potted_bamboo")
     d.set(3, 3, 4, "sea_lantern")
     for k in range(1, n):
-        y = 4 * k + 1
-        beds(d, y, NT_BED_SLOTS, 4, "cyan")
-        d.set(1, y, 3, "smooth_quartz_slab[type=top,waterlogged=false]")
-        d.set(1, y + 1, 3, "potted_bamboo" if k % 2 else "potted_cactus")
-        d.set(5, y, 3, "light_gray_shulker_box[facing=up]")
-        d.set(3, y + 2, 4, "sea_lantern")
-        for x, z in ((3, 1), (3, 4), (3, 5), (2, 2), (4, 2), (2, 4), (4, 4)):
-            put(d, x, y, z, "cyan_carpet" if (x + z) % 2 else "light_gray_carpet")
-        put(d, 5, y + 1, 3, "potted_bamboo") if d.get(5, y, 3).endswith("shulker_box[facing=up]") else None
-        put(d, 3, y + 2, 1, "cyan_wall_banner[facing=south]")
+        nt_tower_storey(d, k, 4 * k + 1)
     # roof watch post: glass rail, searchlight, antenna
     for x in range(7):
         for z in range(7):
@@ -1108,6 +1169,26 @@ def hw_bar(rel, L):
     return d
 
 
+def cs_tower_skirt(d, X0, Z0, corner):
+    """Dress the sheltered strip under a blockhouse's overhang on its two fort-facing sides: a bench against the
+    stone storey, a water barrel and a lantern on the long side, a split-log pile with a chopping block on the
+    short side. The door approaches (X0+4) stay clear."""
+    zr = Z0 + 8 if corner[0] == "N" else Z0           # fort-facing row
+    xr = X0 if corner[1] == "E" else X0 + 8           # fort-facing column
+    back = "north" if zr == Z0 + 8 else "south"
+    put(d, X0 + 2, 2, zr, ST("spruce", back))
+    put(d, X0 + 3, 2, zr, ST("spruce", back))
+    put(d, X0 + 6, 2, zr, "barrel[facing=up,open=false]")
+    put(d, X0 + 4, 4, zr, LANT)
+    wood_ax = "z"
+    for z in (Z0 + 3, Z0 + 4):
+        put(d, xr, 2, z, LOG("spruce_log", wood_ax))
+    put(d, xr, 3, Z0 + 3, LOG("spruce_log", wood_ax))
+    put(d, xr, 2, Z0 + 6, LOG("stripped_spruce_log"))
+    put(d, xr, 3, Z0 + 6, "spruce_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]")
+    put(d, xr, 4, Z0 + 5, LANT)
+
+
 def cs_bar(rel, L):
     d = Shifted("Cascadia", rel, (45, CS_TSY + 2, 29 + 27), gy=1, paving="grass_block[snowy=false]", ox=12, oz=27)
     boxes = {"SW": (1, 19), "NE": (23, 1), "SE": (23, 19), "NW": (1, 1)}
@@ -1307,6 +1388,7 @@ def cs_bar(rel, L):
     # ---- blockhouses (child huts) -----------------------------------------------------------------
     for k in built:
         X0, Z0 = boxes[k]
+        cs_tower_skirt(d, X0, Z0, k)
         d.reserve(X0 + 1, 1, Z0 + 1, X0 + 7, 4, Z0 + 7)
         d.reserve(X0, 5, Z0, X0 + 8, CS_TSY, Z0 + 8)
         d.child_hut(X0 + CS_THUT[0], 2, Z0 + CS_THUT[2], TOWER)
@@ -1455,7 +1537,25 @@ def nt_bar(rel, L):
         d.set(12, 9, 28, "lectern[facing=north,has_book=false,powered=false]") if False else None
         for x in (10, 13, 16):
             d.set(x, 11, 26, "sea_lantern")
-        carpet(d, 8, [(x, z) for x in range(9, 15 + 1) for z in range(25, 29 + 1)], "light_gray")
+        # conference table under the wall screen, lockers and shelving on the west wall, plants
+        for x in (11, 12, 13):
+            d.table(x, 8, 27, "birch", "block", "smooth_quartz")
+            d.chair(x, 8, 26, "north", "birch", sit=False)
+            d.chair(x, 8, 28, "south", "birch", sit=False)
+        d.chair(10, 8, 27, "west", "birch", sit=False)
+        d.chair(14, 8, 27, "east", "birch", sit=False)
+        d.rug(10, 26, 14, 28, 8, ["light_gray_carpet", "cyan_carpet"])
+        for x in (11, 12, 13):
+            for y in (9, 10):
+                d.set(x, y, 30, "black_stained_glass")          # briefing screen in the back wall
+        d.set(9, 8, 25, BOOK("east"))
+        d.set(9, 8, 26, BOOK("east"))
+        d.set(9, 8, 27, "potted_bamboo")
+        d.set(9, 8, 28, LOCK)
+        d.set(9, 8, 29, LOCK)
+        d.set(16, 8, 29, "potted_azalea_bush")
+        d.set(16, 8, 28, "smooth_quartz_slab[type=top,waterlogged=false]")
+        d.set(16, 9, 28, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=false]")
     if L >= 4:                                                # solar panels on the roof
         for x in range(x1 + 2, x2 - 1):
             for z in (z1 + 2, z1 + 3):

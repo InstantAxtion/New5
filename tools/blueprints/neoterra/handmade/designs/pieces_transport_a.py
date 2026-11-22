@@ -40,7 +40,7 @@ CANALS (canalstraight 9x7x8, canalcorner / canalintersection 9x7x9, canallock 9x
              lights, white/gray footbridges.
   Hearthwood brick quays, clay bed, stone-brick coping left open, dirt towpath, black lamps and bollards, brick
              hump bridges, white balance beams.
-  Cascadia   log-crib quays, river-rock bed, stripped-log coping with a rail fence, coarse-dirt towpath, lanterns
+  Cascadia   log-crib quays, river-rock bed, river-rock kerb with a spruce rail fence, coarse-dirt towpath, lanterns
              on fence posts, log pilings, plank footbridges.
 
 BRIDGE (bridgestart 7x8x10 anchor (3,0,0); bridgestraight 7x10x8 (Neoterra 7x8x8) anchor (3,0,0); bridgepillar
@@ -512,7 +512,8 @@ RIVER_ROCK = ("cobblestone", "mossy_cobblestone", "andesite", "cobblestone", "tu
 
 def canal_rows(d, rows, z0=0, y=CANAL_GY):
     """Lay the channel from a hand-drawn map (T towpath, C coping/quay, W water): bed at y-2, water at y-1, the
-    ground layer at y. Cascadia's quays are log cribs (logs laid along the bank) with a river-rock bed."""
+    ground layer at y. Cascadia's quays are log cribs (logs laid along the bank) under a river-rock kerb, on a
+    river-rock bed."""
     quay, bed, coping, tow = CANAL_STYLE[d.pack]
     for dz, row in enumerate(rows):
         z = z0 + dz
@@ -522,8 +523,8 @@ def canal_rows(d, rows, z0=0, y=CANAL_GY):
                 along_x = (0 < dz < len(rows) - 1 and (rows[dz - 1][x] == "W" or rows[dz + 1][x] == "W")
                            if ch == "C" else False)
                 ax = "y" if along_z and along_x else ("z" if along_z else "x")
-                quay = log("spruce_log", ax if ax != "y" else "y")
-                coping = log("stripped_spruce_log", ax)
+                quay = log("spruce_log", ax)
+                coping = "mossy_cobblestone" if (x * 5 + z * 3) % 4 == 0 else "cobblestone"   # river-rock kerb
                 bed = RIVER_ROCK[(x * 3 + z * 7) % len(RIVER_ROCK)]
             if ch == "T":
                 d.set(x, y, z, tow)

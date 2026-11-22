@@ -607,10 +607,11 @@ def fit(d, y, spec, wood="oak"):
             d.set(x, y + 2, z, LANT)
         elif k == "G":
             d.set(e[1], y + 3 if len(e) < 5 else e[4], e[2], e[3])
-        elif k == "rug":
+        elif k == "rug":                                         # carpet only on free floor cells
             for x in range(e[1], e[3] + 1):
                 for z in range(e[2], e[4] + 1):
-                    d.set(x, y, z, e[5])
+                    if d.air(x, y, z):
+                        d.set(x, y, z, e[5])
         else:
             raise ValueError(e)
     return seats
@@ -1836,6 +1837,8 @@ def jack_neo(rel, L):
         seats = 2
         for x in (5, 11):
             d.set(x, 5, 18, "end_rod[facing=down]")
+        for x, z in ((5, 21), (8, 20), (11, 21)):                    # grow lights over the sapling beds
+            d.set(x, 5, z, "end_rod[facing=down]")
         for z in (14, 18, 22):                                       # avenue of young birches
             d.set(0, y0, z, "moss_block")
             tree(d, 0, z, y0 + 1, "birch", 3, 1)
@@ -1980,11 +1983,22 @@ def jack_hw(rel, L):
     if L >= 5:
         e = build(d, 19, 15, 29, 22, 3, roof="gable", axis="x", core=(20, 16))
         e.door(29, 18, "east", double=True)
-        for s_ in (0, 1, 2):                                       # timber store floors
-            yy = e.stand(s_)
-            log_pile(d, 24, 19, 27, 20, yy, 2 if s_ < 2 else 1, "oak_log" if s_ == 0 else "stripped_oak_log", "x")
-            fit(d, yy, [("s", 24, 17, "oak_planks"), ("s", 25, 17, "oak_planks"), ("o", 24, 17, sl("oak")),
-                        ("L", 26, 18)])
+        # ground: round-log store with a chopping block; first floor: sawn boards on racks; top: tool & cooper's loft
+        log_pile(d, 24, 19, 27, 20, e.stand(0), 2, "oak_log", "x")
+        chopping_block(d, 23, 16, e.stand(0), "oak_log")
+        fit(d, e.stand(0), [("s", 24, 16, "barrel[facing=south,open=false]"), ("s", 25, 16, "barrel[facing=south,open=false]"),
+                            ("o", 24, 16, "barrel[facing=up,open=false]"), ("s", 27, 16, "grindstone[face=floor,facing=south]"),
+                            ("L", 26, 18)])
+        fit(d, e.stand(1), [("s", x, z, sl("oak", "top")) for x in range(23, 28) for z in (17, 20)] +
+            [("o", x, z, "oak_planks" if x % 2 else sl("spruce")) for x in range(23, 28) for z in (17, 20)] +
+            [("s", 28, 16, "chest[facing=west,type=single,waterlogged=false]"), ("s", 28, 21, "barrel[facing=west,open=false]"),
+             ("L", 25, 18)])
+        log_pile(d, 25, 21, 27, 21, e.stand(2), 1, "stripped_oak_log", "x")
+        fit(d, e.stand(2), [("s", 23, 16, "smithing_table"), ("s", 24, 16, "anvil[facing=east]"),
+                            ("s", 25, 16, sl("oak", "top")), ("o", 25, 16, "candle[candles=1,lit=false,waterlogged=false]"),
+                            ("s", 28, 17, "barrel[facing=west,open=false]"), ("s", 28, 18, "barrel[facing=west,open=false]"),
+                            ("o", 28, 17, "barrel[facing=up,open=false]"), ("c", 25, 17, "north", False),
+                            ("s", 23, 21, "chest[facing=north,type=single,waterlogged=false]"), ("L", 26, 19)], "oak")
         # hoist beam on the gable
         d.set(30, e.yr - 1, 18, lg("dark_oak_log", "x"))
         d.set(31, e.yr - 1, 18, lg("dark_oak_log", "x"))
@@ -2042,6 +2056,12 @@ def jack_cas(rel, L):
             d.fill(x, y0, 3, x, 5, 3, lg("spruce_log", "y"))
         d.set(x, y0 + 1, 3, "spruce_fence")
     log_pile(d, 0, 9, 2, 17, y0, 3, "spruce_log", "z")
+    if L >= 2:                                                       # under the cabin eaves
+        d.set(4, y0, 9, "water_cauldron[level=3]")
+        d.set(4, y0, z2 - 1, "barrel[facing=up,open=false]")
+        d.set(16, y0, 9, "grindstone[face=floor,facing=east]")
+        d.set(16, y0, z2 - 1, "barrel[facing=up,open=false]")
+        bench(d, 12, z2 + 1, y0, "north", 2, "spruce", sit=False)
     chopping_block(d, 18, 9, y0, "spruce_log")
     sawhorse(d, 18, 12, y0, "spruce", "z")
     # ---- woodshed (L3+)
@@ -2118,11 +2138,14 @@ def jack_cas(rel, L):
                     ("s", 10, 39, "water_cauldron[level=3]"), ("s", 11, 39, "furnace[facing=north,lit=false]")] +
             [("s", x, 36, sl("spruce", "top")) for x in range(9, 15)] +
             [("c", x, 35, "north", False) for x in range(9, 15)] + [("c", x, 37, "south", False) for x in range(9, 15)] +
-            [("L", 11, 35), ("L", 14, 38)], "spruce")
+            [("o", 9, 36, "candle[candles=3,lit=false,waterlogged=false]"), ("o", 12, 36, "candle[candles=2,lit=false,waterlogged=false]"),
+             ("o", 14, 36, "cake[bites=0]"), ("L", 11, 35), ("L", 14, 38)], "spruce")
         fit(d, 6, [("bed", x, 39, "south") for x in (7, 9, 11, 13)] + [("s", 15, 39, "chest[facing=north,type=single,waterlogged=false]"),
                                                                         ("L", 10, 36)], "spruce")
         fit(d, 10, [("s", 7, 39, "hay_block[axis=y]"), ("s", 8, 39, "white_wool"), ("s", 9, 39, "brown_wool"),
-                    ("o", 7, 39, "hay_block[axis=y]"), ("L", 10, 36)])
+                    ("o", 7, 39, "hay_block[axis=y]"), ("L", 10, 36),
+                    ("s", 11, 39, "barrel[facing=north,open=false]"), ("s", 12, 39, "barrel[facing=north,open=false]"),
+                    ("o", 11, 39, "barrel[facing=up,open=false]"), ("s", 15, 39, "chest[facing=north,type=single,waterlogged=false]")])
     tree(d, 27, 37 if L >= 3 else 28, y0, "spruce", 6, 2)
     tree(d, 1, 26, y0, "spruce", 5, 2) if L < 4 else None
     if L >= 5:
@@ -2198,8 +2221,9 @@ def fl_neo(rel, L):
     if sto >= 2:
         n1 = FRACKS[L] - racks
         fit(d, 6, [("i", x, 11, "fletching_table") for x in (5, 6)[:max(0, FLETCH[L] - 3)]] +
-            ([("i", 4, z, "barrel", "east") for z in (7, 8, 9, 10)] + [("i", 8, 11, "barrel", "north")] if L >= 3 else []) +
-            [("r", x, 11, 1) for x in (9, 10, 7)[:n1]] + [
+            [("i", 4, z, "barrel", "east") for z in (7, 8, 9, 10)] + [("i", 8, 11, "barrel", "north")] +
+            [("r", x, 11, 1) for x in (9, 10, 7)[:n1]] + [("s", 5, 5, "loom[facing=south]"),
+            ("s", 6, 5, "white_wool"), ("o", 6, 5, "white_carpet"),
             ("s", 7, 7, sl("birch", "top")), ("c", 7, 8, "south", False), ("s", 9, 5, pot(3)),
             ("G", 7, 9, "sea_lantern")], "birch")
         racks = FRACKS[L]
@@ -2259,7 +2283,7 @@ def fl_neo(rel, L):
             "birch")
         fit(d, 6, [("c", x, 9, "south", False) for x in range(25, 29)] + [
             ("s", 26, 7, sl("smooth_quartz", "top")), ("s", 27, 7, sl("smooth_quartz", "top")),
-            ("rug", 25, 6, 28, 8, "magenta_carpet"), ("s", 24, 5, pot(3)), ("s", 29, 5, pot(0)),
+            ("rug", 26, 6, 27, 8, "magenta_carpet"), ("s", 24, 5, pot(3)), ("s", 29, 5, pot(0)),
             ("G", 27, 8, "pearlescent_froglight[axis=y]")], "birch")
         fit(d, 10, [("s", x, 6, sl("smooth_quartz", "top")) for x in (25, 27, 29)] +
             [("c", x, 7, "south", False) for x in (25, 27, 29)] + [("s", 24, 11, pot(3)),
@@ -2376,6 +2400,11 @@ def fl_hw(rel, L):
         fit(d, 6, [("bed", 24, 23, "south", "yellow"), ("s", 25, 23, sl("oak", "top")),
                    ("s", 21, 18, "chest[facing=south,type=single,waterlogged=false]"),
                    ("s", 22, 18, "chest[facing=south,type=single,waterlogged=false]"), ("L", 25, 20)], "oak")
+        d.set(18, y0, 19, "water_cauldron[level=3]")                # under the cottage eaves
+        for z in (21, 22, 23):
+            d.set(30, y0, z, lg("oak_log", "z"))
+            d.set(30, y0 + 1, z, lg("oak_log", "z")) if z != 23 else None
+        bench(d, 24, 25, y0, "north", 2, "oak", sit=False)
         # open pavilion at the butts end
         for x, z in ((3, 28), (9, 28), (3, 32), (9, 32)):
             d.fill(x, y0, z, x, 4, z, lg("stripped_oak_log", "y"))
@@ -2388,7 +2417,8 @@ def fl_hw(rel, L):
         fit(d, y0, [("s", x, 31, sl("oak", "top")) for x in range(17, 26)] +
             [("c", x, 30, "north", False) for x in range(17, 26)] + [("c", x, 32, "south", False) for x in range(17, 26)] +
             [("s", 27, 32, "barrel[facing=north,open=false]"), ("s", 28, 32, "barrel[facing=north,open=false]"),
-             ("L", 20, 29), ("L", 24, 29)], "oak")
+             ("o", 18, 31, "candle[candles=3,lit=false,waterlogged=false]"), ("o", 21, 31, "cake[bites=0]"),
+             ("o", 24, 31, "candle[candles=2,lit=false,waterlogged=false]"), ("L", 20, 29), ("L", 24, 29)], "oak")
         for x in (19, 23):
             d.banner(x, y0 + 2, 32, "north", "red")
         fit(d, 6, [("k", x, 32, 2) for x in range(16, 22)] + [
@@ -2489,6 +2519,8 @@ def fl_cas(rel, L):
         fit(d, y0, [("s", x, 29, sl("spruce", "top")) for x in range(8, 17)] +
             [("c", x, 28, "north", False) for x in range(8, 17)] + [("c", x, 30, "south", False) for x in range(8, 17)] +
             [("s", 18, 32, "barrel[facing=north,open=false]"), ("s", 19, 32, "barrel[facing=north,open=false]"),
+             ("o", 9, 29, "candle[candles=3,lit=false,waterlogged=false]"), ("o", 11, 29, "cake[bites=0]"),
+             ("o", 13, 29, "candle[candles=2,lit=false,waterlogged=false]"), ("o", 15, 29, pot(0)),
              ("L", 10, 27), ("L", 15, 31)], "spruce")
         for x in (10, 13):
             d.banner(x, y0 + 2, 32, "north", "green")
@@ -2736,8 +2768,14 @@ def wh_hw(rel, L):
         for s_ in (0, 1):
             yy = g.stand(s_)
             racks += wh_racks(d, yy, 22, 23, 27, 29, max(36, WH[L] - racks))
-            fit(d, yy, [("s", 22, 21, "white_wool"), ("s", 23, 21, "brown_wool"), ("o", 22, 21, "white_wool"),
-                        ("L", 24, 22 if s_ else 21)])
+            if s_ == 0:                                              # sack store by the cart door
+                fit(d, yy, [("s", 22, 21, "white_wool"), ("s", 23, 21, "brown_wool"), ("o", 22, 21, "white_wool"),
+                            ("s", 28, 21, "barrel[facing=north,open=false]"), ("L", 24, 21)])
+            else:                                                    # hay & grain loft
+                fit(d, yy, [("s", 22, 21, "hay_block[axis=y]"), ("o", 22, 21, "hay_block[axis=y]"),
+                            ("s", 23, 21, "hay_block[axis=y]"), ("s", 26, 21, "barrel[facing=up,open=false]"),
+                            ("s", 27, 21, "barrel[facing=up,open=false]"), ("o", 26, 21, "barrel[facing=up,open=false]"),
+                            ("L", 25, 22)])
     # ---- second barn closing the yard (L5)
     if L >= 5:
         e = build(d, 3, 29, 17, 38, 2, roof="gable", axis="x", core=(15, 31))
@@ -2747,7 +2785,16 @@ def wh_hw(rel, L):
             yy = e.stand(s_)
             racks += wh_racks(d, yy, 4, 32, 13, 37, max(36, WH[L] - racks), "x")
             fit(d, yy, [("s", 4, 30, "hay_block[axis=y]"), ("s", 5, 30, "white_wool"), ("s", 12, 30, "brown_wool"),
-                        ("L", 10, 31 if s_ else 30)])
+                        ("L", 10, 30)] if s_ == 0 else
+                [("s", 4, 30, "barrel[facing=south,open=false]"), ("s", 5, 30, "barrel[facing=south,open=false]"),
+                 ("o", 4, 30, "barrel[facing=up,open=false]"), ("s", 12, 30, "chest[facing=south,type=single,waterlogged=false]"),
+                 ("s", 13, 30, "hay_block[axis=y]"), ("L", 8, 31)])
+        d.set(2, y0, 37, "water_cauldron[level=3]")                  # under the south eaves
+        for x in (5, 6, 7):
+            d.set(x, y0, 39, lg("oak_log", "x"))
+            d.set(x, y0 + 1, 39, lg("oak_log", "x")) if x != 7 else None
+        bench(d, 11, 39, y0, "north", 2, "spruce", sit=False)
+        d.set(15, y0, 39, "barrel[facing=up,open=false]")
         wagon(d, 19, 33, y0, "spruce", "hay_block[axis=z]", "z")
         # yard wall with a gateway between the barns
         for x in range(18, 33):
@@ -2855,7 +2902,10 @@ def wh_cas(rel, L):
             yy = e.stand(s_)
             racks += wh_racks(d, yy, 4, 25, 16, 29, max(45 if s_ == 0 else 36, WH[L] - racks), "x")
             fit(d, yy, [("s", 10, 23, "barrel[facing=up,open=false]"), ("s", 11, 23, "barrel[facing=up,open=false]"),
-                        ("o", 10, 23, "white_wool"), ("s", 16, 23, "hay_block[axis=y]"), ("L", 12, 24)])
+                        ("o", 10, 23, "white_wool"), ("s", 16, 23, "hay_block[axis=y]"), ("L", 12, 24)] if s_ == 0 else
+                [("s", 10, 23, "chest[facing=south,type=single,waterlogged=false]"), ("s", 12, 23, "barrel[facing=south,open=false]"),
+                 ("o", 12, 23, "barrel[facing=up,open=false]"), ("s", 5, 23, "white_wool"), ("s", 6, 23, "brown_wool"),
+                 ("L", 8, 24)])
     if L >= 3:
         st_ = build(d, 27, 13, 39, 21, 1, roof="gable", axis="x")
         st_.opening(27, 16, 27, 18, 3, lg("spruce_log", "z"))
@@ -2876,7 +2926,8 @@ def wh_cas(rel, L):
                    ("s", 10, 40, "water_cauldron[level=3]"), ("s", 11, 40, "furnace[facing=north,lit=false]")] +
             [("s", x, 37, sl("spruce", "top")) for x in range(8, 15)] +
             [("c", x, 36, "north", False) for x in range(8, 15)] + [("c", x, 38, "south", False) for x in range(8, 15)] +
-            [("L", 11, 35), ("L", 15, 39)], "spruce")
+            [("o", 9, 37, "candle[candles=3,lit=false,waterlogged=false]"), ("o", 11, 37, "cake[bites=0]"),
+             ("o", 13, 37, "candle[candles=2,lit=false,waterlogged=false]"), ("L", 11, 35), ("L", 15, 39)], "spruce")
         fit(d, 6, [("bed", x, 40, "south", "yellow") for x in (6, 9, 12, 15)] +
             [("s", 7, 40, sl("spruce", "top")), ("s", 13, 40, sl("spruce", "top")),
              ("s", 17, 34, "chest[facing=south,type=single,waterlogged=false]"), ("L", 9, 37)], "spruce")

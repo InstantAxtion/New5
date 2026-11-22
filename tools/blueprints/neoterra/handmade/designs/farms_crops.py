@@ -455,3 +455,90 @@ def cocoa(pack, rel, L):
         d.set(x, 1, 2, "gravel")
     d.farm_test(expect={"minecraft:cocoa_beans": 30}, presses=[(15, 3, 4)], ticks=600)
     return d
+
+
+# ================================================================================================ sweet berries
+@design("sweetberry")
+def sweetberry(pack, rel, L):
+    """Fox-picked sweet berry farm (the vanilla way to harvest berries without breaking the bushes: a fox picks a
+    ripe bush, keeps one berry in its mouth and drops the rest, the bush stays and regrows). Bushes stand on
+    hydrated FARMLAND (15/16 high) over hoppers, so dropped berries are inside the hoppers' pick-up area; the fox
+    lanes between the bush rows are farmland over hoppers too. Foxes are too small to trample farmland. The pen
+    has no roof: foxes only sleep in the daytime under cover, and the bushes need light >= 9 to grow.
+    The water that keeps the farmland wet sits in the middle, under a slab the foxes walk over."""
+    d = Design(pack, rel, size=(19, 9, 14), gy=1, paving="grass_block")
+    PX1, PZ1, PX2, PZ2 = 3, 5, 13, 11                       # pen walls
+    for x in range(PX1, PX2 + 1):
+        for z in range(PZ1, PZ2 + 1):
+            edge = x in (PX1, PX2) or z in (PZ1, PZ2)
+            d.set(x, 1, z, SB)
+            if edge:
+                d.set(x, 2, z, SB)
+                for y in (3, 4):
+                    d.set(x, y, z, "glass_pane")
+                d.set(x, 5, z, slab("spruce", "bottom"))
+    for (x, z) in ((PX1, PZ1), (PX2, PZ1), (PX1, PZ2), (PX2, PZ2), (8, PZ1), (8, PZ2), (PX1, 8), (PX2, 8)):
+        for y in (2, 3, 4):
+            d.set(x, y, z, logb())
+        d.set(x, 5, z, "lantern[hanging=false,waterlogged=false]")
+    zs = list(range(PZ1 + 1, PZ2))                          # 6..10
+    collect(d, PX1 + 1, PX2, zs)
+    WX, WZ = 8, 8
+    for x in range(PX1 + 1, PX2):
+        for z in zs:
+            if (x, z) == (WX, WZ):
+                d.set(x, 2, z, WATER)
+                d.set(x, 3, z, slab("spruce", "bottom"))
+                continue
+            d.set(x, 2, z, "farmland[moisture=7]")
+            if z in (6, 10) or (z == 8 and abs(x - WX) > 1):
+                d.set(x, 3, z, "sweet_berry_bush[age=3]")
+    d.door(8, 2, PZ1, facing="north", wood="spruce")
+    d.set(8, 1, PZ1, SB)
+    # east lean-to over the collector: barrel, chest, roof
+    SX1, SX2 = 14, 17
+    for x in range(SX1, SX2 + 1):
+        for z in range(4, 13):
+            edge = x == SX2 or z in (4, 12)
+            if x == SX1 and z in range(PZ1, PZ2 + 1):
+                continue
+            d.set(x, 1, z, SB if edge else "spruce_planks" if d.get(x, 1, z) in ("minecraft:grass_block",) else d.get(x, 1, z))
+            for y in (2, 3, 4):
+                d.set(x, y, z, (SB if y == 2 else CB) if edge else AIR)
+    for (x, z) in ((SX2, 4), (SX2, 12), (SX1, 4), (SX1, 12), (SX2, 8)):
+        for y in (2, 3, 4):
+            d.set(x, y, z, logb())
+    for z in (6, 10):
+        d.set(SX2, 3, z, "glass_pane")
+    for z in range(3, 14):                                   # lean-to roof sloping east
+        for x, y in ((14, 6), (15, 6), (16, 5), (17, 5), (18, 4)):
+            if x == 14:
+                d.set(x, 5, z, logb("z")) if 4 <= z <= 12 else None
+                d.set(x, 6, z, stair("spruce", "west"))
+            elif y == 6:
+                d.set(x, 6, z, stair("spruce", "west"))
+            else:
+                d.set(x, y, z, stair("spruce", "west"))
+    for z in range(4, 13):
+        d.set(15, 5, z, PLANK) if 5 <= z <= 11 else None
+    for x in (15, 16):
+        for y in (2, 3):
+            d.set(x, y, 4, AIR)
+    d.door(16, 2, 4, facing="north", wood="spruce")
+    d.set(15, 2, 4, SB)
+    d.set(15, 3, 4, CB)
+    d.sign(15, 3, 3, "north", ["Sweet Berries", "Farmworks", "Bring:", "2 foxes (leads)"], wood="spruce")
+    d.set(16, 2, 12 - 1, "chest[facing=west,type=single,waterlogged=false]")
+    lantern(d, 16, 4, 8)
+    d.set(16, 5, 8, PLANK)
+    # paths
+    controller(d, 9)
+    for z in (1, 2):
+        d.set(9, 1, z, "gravel")
+    for x in range(8, 17):
+        d.set(x, 1, 3, "gravel")
+    for z in (3, 4):
+        d.set(8, 1, z, "gravel")
+    d.set(9, 1, 3, "gravel")
+    d.farm_test(expect={"minecraft:sweet_berries": 8}, spawns=[("minecraft:fox", 6, 2, 7, 2)], ticks=8000)
+    return d

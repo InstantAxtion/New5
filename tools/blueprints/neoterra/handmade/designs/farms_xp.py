@@ -38,16 +38,20 @@ from hm import Design, design, AIR
 SB = "stone_bricks"
 CB = "cobblestone"
 MSB = "mossy_stone_bricks"
-LOG = "stripped_spruce_log"
 GLASS = "glass"
 WATER = "water[level=0]"
-FENCE = "spruce_fence[east=false,north=false,south=false,waterlogged=false,west=false]"
+# timber of the current farm: spruce, or crimson (fire-proof) for the Nether gold farm - see goldfarm()
+WOOD = {"w": "spruce", "log": "stripped_spruce_log"}
+
+
+def fence():
+    return f"{WOOD['w']}_fence[east=false,north=false,south=false,waterlogged=false,west=false]"
 HX, HZ = 9, 11                       # north-west cell of the drop hole
 Z0 = 2                               # north wall of the platform
 
 
 def logb(axis="y"):
-    return f"{LOG}[axis={axis}]"
+    return f"{WOOD['log']}[axis={axis}]"
 
 
 def slab(b, t="bottom"):
@@ -215,7 +219,7 @@ def cross_cap(d, w, y):
                        for a in (-1, 0, 1) for b in (-1, 0, 1))
             if near:
                 d.set(x, y, z, SB)
-                d.set(x, y + 1, z, slab("spruce"))
+                d.set(x, y + 1, z, slab(WOOD["w"]))
 
 
 def roof_box(d, w, y):
@@ -223,10 +227,10 @@ def roof_box(d, w, y):
     coping, lanterns at the corners (lit and slabbed: nothing spawns up there)."""
     X1, Z1, X2, Z2 = outer(w)
     d.fill(X1, y, Z1, X2, y, Z2, SB)
-    d.flat(X1, Z1, X2, Z2, y + 1, slab="spruce_slab[type=bottom,waterlogged=false]", parapet=SB,
+    d.flat(X1, Z1, X2, Z2, y + 1, slab=slab(WOOD["w"]), parapet=SB,
            coping="stone_brick_slab")
     for x, z in ((X1 + 1, Z1 + 1), (X2 - 1, Z1 + 1), (X1 + 1, Z2 - 1), (X2 - 1, Z2 - 1)):
-        d.set(x, y + 1, z, FENCE)
+        d.set(x, y + 1, z, fence())
         lantern(d, x, y + 2, z, hanging=False)
 
 
@@ -262,16 +266,17 @@ def base_room(d, X1, Z1, X2, Z2, top, door_x, floor="smooth_stone", windows=(), 
             d.set(x, y, z, logb())
     for (x, y, z) in windows:
         d.set(x, y, z, "glass_pane")
-    d.door(door_x, gy + 1, Z1, "south", "spruce")
+    d.door(door_x, gy + 1, Z1, "south", WOOD["w"])
     for x in beams:                                       # tie beams with lanterns hanging under them
         for z in range(Z1 + 1, Z2):
             d.set(x, top, z, logb("z"))
         for z in lamps_z:
             lantern(d, x, top - 1, z)
     if roof == "gable":
-        d.gable(X1, Z1, X2, Z2, top + 1, axis="x", end="spruce_planks")
+        d.gable(X1, Z1, X2, Z2, top + 1, axis="x", end=f"{WOOD['w']}_planks", stairs=f"{WOOD['w']}_stairs",
+                ridge=f"{WOOD['w']}_slab")
     else:
-        d.flat(X1, Z1, X2, Z2, top + 1, slab="spruce_slab[type=bottom,waterlogged=false]")
+        d.flat(X1, Z1, X2, Z2, top + 1, slab=slab(WOOD["w"]))
 
 
 def approach(d, door_x, Z1, lines):
@@ -280,9 +285,9 @@ def approach(d, door_x, Z1, lines):
             d.set(x, 1, z, "gravel")
     d.hut(10, 1, 0)
     for x in (door_x - 2, door_x + 2):
-        d.set(x, 2, Z1 - 1, FENCE)
+        d.set(x, 2, Z1 - 1, fence())
         lantern(d, x, 3, Z1 - 1, hanging=False)
-    d.sign(door_x + 1, 3, Z1 - 1, "north", lines, "spruce")
+    d.sign(door_x + 1, 3, Z1 - 1, "north", lines, WOOD["w"])
 
 
 def yard(d, w, lamp_cells):
@@ -290,8 +295,8 @@ def yard(d, w, lamp_cells):
     stone-brick corner piers carrying the platform."""
     X1, Z1, X2, Z2 = outer(w)
     for (x, z) in lamp_cells:
-        d.set(x, 2, z, FENCE)
-        d.set(x, 3, z, FENCE)
+        d.set(x, 2, z, fence())
+        d.set(x, 3, z, fence())
         lantern(d, x, 4, z, hanging=False)
 
 
@@ -436,6 +441,11 @@ def spiderfarm(pack, rel, L):
     cells = [(4, 5), (6, 7), (13, 5), (15, 7), (4, 16), (6, 18), (13, 16), (15, 18)]
     spawns = (strip_spawns("minecraft:spider", floors[0] + 1, cells) + strip_spawns("minecraft:spider", floors[2] + 1, cells[::2])
               + [("minecraft:spider", x, y0 + 1, z, 1) for y0 in floors for (x, z) in CHANNEL])
+    import os
+    if os.environ.get("XPDBG") == "low":
+        spawns = [("minecraft:spider", x, floors[0] + 1, z, 3) for (x, z) in CHANNEL]
+    if os.environ.get("XPDBG") == "top":
+        spawns = [("minecraft:spider", x, floors[-1] + 1, z, 3) for (x, z) in CHANNEL]
     d.farm_test(expect={"minecraft:string": 3}, spawns=spawns, ticks=6000)
     return d
 
@@ -532,6 +542,15 @@ def xpgrinder(pack, rel, L):
 # ================================================================================================ gold farm
 @design("goldfarm")
 def goldfarm(pack, rel, L):
+    old = dict(WOOD)
+    WOOD.update(w="crimson", log="stripped_crimson_stem")            # crimson wood does not burn (ghast fire)
+    try:
+        return _goldfarm(pack, rel, L)
+    finally:
+        WOOD.update(old)
+
+
+def _goldfarm(pack, rel, L):
     """Nether gold farm (zombified piglins): build it in a NETHER WASTES or CRIMSON FOREST biome.
 
     Three cross-shaped floors (y0 = 28, 31, 34) of MAGMA BLOCKS, 2 high: on magma only fire-immune mobs can spawn

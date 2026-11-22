@@ -930,6 +930,48 @@ def nt_step_garden(d, L):
     return NT_STEPS[nsteps - 1]
 
 
+def nt_living_wall(d, n):
+    """Green wall on the east face of the stair shaft: a planted panel (moss, azalea) between two concrete
+    frame columns, the full height of the shaft (L3+)."""
+    top = 2 + 5 * n + 3
+    for y in range(2, top + 1):
+        for z in (23, 27):
+            d.set(33, y, z, "light_gray_concrete")
+        for z in (24, 25, 26):
+            d.set(33, y, z, ("moss_block", lv("azalea"), lv("flowering_azalea"), "moss_block",
+                             lv("azalea"))[(y * 2 + z) % 5])
+    for z in range(23, 28):
+        d.set(33, top + 1, z, slab("smooth_stone_slab"))
+
+
+def nt_propagation_house(d, x1, x2, door_x, door_f):
+    """L5: a long, low glass propagation house in the meadow (seedling benches for the farmers)."""
+    z1, z2 = 35, 38
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            edge = x in (x1, x2) or z in (z1, z2)
+            d.set(x, 1, z, "smooth_stone")
+            for y in range(2, 5):
+                if edge:
+                    post = (x - x1) % 3 == 0 or z in () or (x in (x1, x2) and z in (z1, z2))
+                    d.set(x, y, z, "white_concrete" if post or y == 4 and False else "glass_pane")
+                else:
+                    d.set(x, y, z, AIR)
+            d.set(x, 5, z, "white_concrete" if edge or (x - x1) % 3 == 0 else "light_blue_stained_glass")
+        if (x - x1) % 3 != 0:
+            d.set(x, 6, 36, "light_blue_stained_glass")
+            d.set(x, 6, 37, "light_blue_stained_glass")
+    d.door(door_x, 2, 36, door_f, "birch")
+    for x in range(x1 + 1, x2):                          # seedling bench along the back, trays of crops
+        if x == door_x:
+            continue
+        d.set(x, 2, 37, slab("smooth_stone_slab", "top"))
+        d.set(x, 3, 37, ("potted_fern", "potted_azalea_bush", "potted_red_tulip", "potted_bamboo")[x % 4])
+    d.set(x1 + 1 if door_f == "east" else x2 - 1, 2, 36, "composter[level=5]")
+    d.set((x1 + x2) // 2, 4, 36, lantern(True))
+
+
+
 def nt_gardens(rel, L):
     sx, sy, sz = NT["size"]
     d = Design("Neoterra", rel, NT["size"], paving="smooth_stone")
@@ -1073,6 +1115,7 @@ def nt_gardens(rel, L):
                         d.set(x, y0 + 6, z, "white_concrete")
                         d.set(x, y0 + 5, z, lv("azalea"))
         d.set(23, y0 + 6, 25, "sea_lantern")
+    if L >= 3:
         # winter-garden arcade linking the two domes across the forecourt
         for x in range(14, 33):
             for z in (15, 18):
@@ -1085,6 +1128,11 @@ def nt_gardens(rel, L):
                 for z in (16, 17):
                     d.set(x, 6, z, "white_concrete")
                     d.set(x, 5, z, lantern(True)) if z == 16 else None
+    if L >= 3:
+        nt_living_wall(d, n)
+    if L >= 5:
+        nt_propagation_house(d, 2, 13, 2, "west")
+        nt_propagation_house(d, 33, 44, 44, "east")
     place_wings(d, NT["res"], NT["wsize"], NT["whut"])
     connect_walls(d)
     return d
@@ -1596,7 +1644,7 @@ def hw_wing_rooms(d, L):
             "...ccc..]",
             "..........",
             "b?K?b.C.."]
-    rows = ["e]i?g?i]e",
+    rows = ["e]i?.?i]e",
             ".........",
             "?.cgc.?..",
             "..cic....",
@@ -1620,7 +1668,7 @@ def hw_wing_rooms(d, L):
         d.set(x, 4, z, "lily_pad")
     for x in range(38, 45):
         d.set(x, 3, 34, "polished_andesite") if x % 2 == 0 else None
-    rows = ["{}!}{!{}{",
+    rows = ["{}!}.!{}{",
             "!.......!",
             ".........",
             ".........",
@@ -2125,6 +2173,43 @@ def hw_gatehouse(d):
         d.set(x, 10, z, lantern(True))
 
 
+def hw_vestibule(d, xc):
+    """L4: glazed entrance vestibule from the terrace into a side wing (north wall), with a small pediment."""
+    for x in range(xc - 1, xc + 2):
+        for z in (27, 28):
+            d.set(x, 2, z, "bricks")
+            d.set(x, 3, z, "polished_andesite")
+            for y in range(4, 8):
+                edge = x != xc or z == 27
+                d.set(x, y, z, ("white_concrete" if x != xc else "glass_pane") if edge and x != xc else AIR)
+        d.set(x, 8, 27, "white_concrete")
+        d.set(x, 8, 28, "white_concrete")
+    for x in (xc - 1, xc + 1):
+        for y in range(4, 8):
+            d.set(x, y, 27, "white_concrete")
+            d.set(x, y, 28, "glass_pane")
+    d.set(xc, 6, 27, "glass_pane")
+    d.set(xc, 7, 27, "glass_pane")
+    d.set(xc, 9, 27, "white_concrete")
+    d.set(xc - 1, 9, 27, stair("polished_diorite_stairs", "east"))
+    d.set(xc + 1, 9, 27, stair("polished_diorite_stairs", "west"))
+    d.door(xc, 4, 27, "north", "birch")
+    d.set(xc, 4, 29, AIR)
+    d.set(xc, 5, 29, AIR)
+    d.set(xc, 7, 28, lantern(True))
+
+
+def hw_cold_frames(d):
+    """L4: glazed cold frames along the south edge of the kitchen garden (seedlings under glass)."""
+    for x1, x2 in ((5, 18), (36, 49)):
+        for x in range(x1, x2 + 1):
+            end = (x - x1) % 5 == 0 or x == x2
+            d.set(x, 1, 55, "bricks" if end else "farmland[moisture=7]")
+            d.set(x, 2, 55, "bricks" if end else ("carrots[age=3]", "potatoes[age=3]", "wheat[age=2]")[x % 3])
+            d.set(x, 3, 55, slab("brick_slab") if end else "glass_pane")
+
+
+
 def hw_gardens(rel, L):
     sx, sy, sz = HW["size"]
     d = Design("Hearthwood", rel, HW["size"], paving="gravel")
@@ -2249,6 +2334,9 @@ def hw_gardens(rel, L):
     if L >= 4:
         hw_lodge(d, L)
         hw_kitchen_garden(d, L)
+        hw_cold_frames(d)
+        hw_vestibule(d, 13)
+        hw_vestibule(d, 41)
         zs = PH_ZC + 7                                   # garden door in the south wall of the palm house
         d.door(27, 4, zs, "south", "birch")
         for x in (26, 27, 28):

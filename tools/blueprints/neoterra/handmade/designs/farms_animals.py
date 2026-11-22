@@ -248,22 +248,31 @@ def chickencooker(pack, rel, L):
     d.set(cx, 6, 4, "spruce_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
     d.set(cx, 7, 4, AIR)
     d.fill(4, 5, 7, 12, 5, 7, SB)
-    # trigger and dispenser
-    d.set(cx, 5, 7, "comparator[facing=north,mode=compare,powered=false]")
-    d.set(cx, 4, 7, observer("up"))
+    # dispenser and its clock: torch + 2 repeaters (period 36 ticks, the torch toggles 3x a minute-tick: no burnout)
     d.set(cx, 3, 7, dispenser("south"))
-    # chick chamber: slab floor, lava blade, glass on the east side, hoppers below to the chest
+    bt = cx - 1                                            # (7,3,7): the block that powers the dispenser
+    d.set(bt, 3, 7, SB)
+    d.set(bt - 1, 3, 7, "redstone_wall_torch[facing=west,lit=true]")
+    d.set(bt - 1, 3, 6, DUST)
+    d.set(bt - 1, 3, 5, "repeater[delay=4,facing=south,locked=false,powered=false]")
+    d.set(bt - 1, 3, 4, DUST)
+    d.set(bt, 3, 4, DUST)
+    d.set(bt, 3, 5, DUST)
+    d.set(bt, 3, 6, "repeater[delay=4,facing=north,locked=false,powered=false]")
+    # chick chamber: slab floor, lava blade, glass on the east side; the hoppers under the slabs only collect
+    # (they push west into a separate line), so they are ready to pull a drop the tick it lands
     for z in (8, 9):
         d.set(cx, 3, z, slab("stone_brick"))
         d.set(cx, 4, z, LAVA)
         d.set(cx + 1, 3, z, "glass")
         d.set(cx + 1, 4, z, "glass")
-    d.set(cx, 2, 9, hopper("north"))
-    d.set(cx, 2, 8, hopper("west"))
+        d.set(cx, 2, z, hopper("west"))
+    d.set(cx - 1, 2, 9, hopper("north"))
     d.set(cx - 1, 2, 8, hopper("west"))
     d.set(cx - 2, 2, 8, chest("east"))
     d.tag(cx - 2, 2, 8, "farm_output")
     d.fill(cx - 2, 3, 7, cx - 2, 5, 10, AIR)
+    d.set(bt - 1, 3, 7, "redstone_wall_torch[facing=west,lit=true]")
     d.fill(cx - 2, 2, 9, cx - 2, 5, 10, AIR)
     d.set(cx - 2, 2, 7, AIR)
     d.fill(cx + 2, 2, 7, cx + 2, 5, 10, AIR)
@@ -291,8 +300,8 @@ def chickencooker(pack, rel, L):
         for z in range(Z1 + 1, Z2):
             d.set(x, top, z, logb("z"))
     approach(d, cx, Z1, ["Chicken Cooker", "Bring: chickens", "(10+) or eggs", "to throw in"])
-    d.farm_test(expect={"minecraft:cooked_chicken": 2}, ticks=3000,
+    d.farm_test(expect={"minecraft:cooked_chicken": 3}, ticks=3000,
                 inputs={(cx, 5, 6): [("minecraft:egg", 16)]},
-                spawns=[("minecraft:chicken", cx, 3, 8, 1), ("minecraft:chicken", cx, 3, 9, 2),
+                spawns=[("minecraft:chicken", cx, 3, 8, 2), ("minecraft:chicken", cx, 3, 9, 2),
                         ("minecraft:chicken", 6, 6, 5, 3)])
     return d
