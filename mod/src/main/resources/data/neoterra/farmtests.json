@@ -4,7 +4,7 @@
    "blocks": [],
    "blocks_min": 0,
    "expect": {
-    "minecraft:cooked_chicken": 2
+    "minecraft:cooked_chicken": 3
    },
    "inputs": {
     "0,4,6": [
@@ -25,7 +25,7 @@
      0,
      2,
      8,
-     1
+     2
     ],
     [
      "minecraft:chicken",
@@ -222,6 +222,29 @@
    "presses": [],
    "spawns": [],
    "ticks": 9000
+  },
+  "decorations/cropfarms/sweetberry.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "expect": {
+    "minecraft:sweet_berries": 8
+   },
+   "inputs": {},
+   "mine": [],
+   "outputs": [
+    "5,0,11"
+   ],
+   "presses": [],
+   "spawns": [
+    [
+     "minecraft:fox",
+     -3,
+     1,
+     7,
+     2
+    ]
+   ],
+   "ticks": 8000
   },
   "decorations/resourcefarms/basaltgen.blueprint": {
    "blocks": [],
