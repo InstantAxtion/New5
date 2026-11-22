@@ -961,8 +961,8 @@ def cook_neo(rel, L):
     for bx in ((5, 16) if L == 1 else (5, 8, 13, 16)):           # booths against the glass front
         booth(d, bx, z1 + 1, y0, "birch")
         seats += 4
-    for x in (7, 15):
-        d.plant(x, y0, z1 + 1, "potted_bamboo")
+    for x in (7, 15):                                            # azalea planters between the booths
+        planter(d, x, z1 + 1, y0)
     xs = range(8, 13) if L == 1 else range(x1 + 2, x2 - 1)      # chef's counter: stools at the pass
     for x in xs:
         d.chair(x, y0, 10, "north", "mangrove")
