@@ -1159,7 +1159,6 @@ def uni_cascadia(rel, L):
             ["BB  BB", "B    B", "B    B", "", "", "    c", "    o", "", "", "B", "B   c", "B   o", "B   c",
              "B   o", "B   c", "BB  BB"],
             ["BB  BB", "B    B", "B    B", "", "", "", "", "", "", "B", "B", "B", "B", "B", "B", "BB  BB"],
-            [],
             ["", "", "   L", "", "", "", "", "   L", "", "", "", "", "   L"]], lg)
         bunk2 = L >= 5
         bk = shell(d, 38, 17, 46, 34, 2 if bunk2 else 1, "gable", "z", ties=(21, 29))
@@ -1171,19 +1170,19 @@ def uni_cascadia(rel, L):
             east = [".", " ", " ", " ", " ", " "]
         else:
             east = ["C", "C", "C", "X", "C", "p"]
-        rows = ["t....." + east[0], "< ...." + east[1], "t....." + east[2], "< ...." + east[3],
-                "t....." + east[4], "< ...." + east[5], "t......", ".......", "C.....X", "< .....",
+        rows = ["t....." + east[0], "< .nn." + east[1], "t..TT." + east[2], "< .TT." + east[3],
+                "t..ss." + east[4], "< ...." + east[5], "t......", "..===..", "C.....X", "< .....",
                 "t......", "< ..w. ", "t...w. ", "< ..w. ", "t......", "< ...XX"]
         bl = dict(lg, C=chest("east"))
         plan(d, 39, 18, Y0, [rows,
-                             ["k", "", "k", "", "k", "", "k", "", "", "", "k", "", "k", "", "k"],
+                             ["k", "", "k  c", "   o", "k", "", "k", "", "", "", "k", "", "k", "", "k"],
                              [],
                              ["", "", "", "   L", "", "", "", "", "", "", "", "   L"]], bl)
         if bunk2:
             plan(d, 39, 18, 7, [
-                ["B.t.t..", "B.s.s. ", "B....  ", "p....  ", "B....  ", "B..... ", "...... ", ".......",
-                 "< ....C", "t......", "< .....", "t......", "< .... ", "t......", "< .....", "t...XXC"],
-                ["B k o", "", "B", "", "B", "B", "", "", "", "k", "", "k", "", "k", "", "k"],
+                ["B.t.t..", "B.s.s. ", "B....  ", "p.wTe  ", "B.wTe  ", "B..... ", ".......", "..===..",
+                 "< ....C", "t.wTe..", "< wTe.C", "t.wTe..", "< ....X", "t......", "< ....C", "t...XXC"],
+                ["B k o", "", "B", "   c", "B  o", "B", "", "", "", "k  c", "   o", "k  c", "", "k", "", "k"],
                 [],
                 ["", "", "", "   L", "", "", "", "", "", "", "", "   L"]], bl)
 
@@ -1222,8 +1221,18 @@ def uni_cascadia(rel, L):
                 d.set(x, y, z, LOGY)
         d.set(tx1 + 2, 19, tz1 + 2, "spruce_planks")
         bell(d, tx1 + 2, 18, tz1 + 2)
-        d.set(tx1 + 2, Y0, tz1 + 2, "hay_block[axis=y]")              # water barrel & hay at its foot
+        for y in range(Y0, 15):                                       # ladder post up to the cab
+            d.set(tx1 + 2, y, tz1 + 3, LOGY)
+        for y in range(Y0, 16):
+            d.set(tx1 + 2, y, tz1 + 2, "ladder[facing=north,waterlogged=false]")
+        d.set(tx1 + 3, Y0, tz1 + 1, "hay_block[axis=y]")              # fire buckets, hay, barrel at its foot
         d.set(tx1 + 1, Y0, tz1 + 1, "barrel[facing=up,open=false]")
+        d.set(tx1 + 1, Y0, tz1 + 3, "water_cauldron[level=3]")
+        d.set(tx1 + 3, Y0, tz1 + 3, "potted_fern")
+        d.set(tx1 + 1, 6, tz1 + 2, "lantern[hanging=true,waterlogged=false]")
+        d.set(tx1 + 1, 7, tz1 + 2, "spruce_planks")
+        d.set(tx1 + 2, 16, tz1 + 1, "cartography_table")               # spotter's map table in the cab
+        d.set(tx1 + 1, 16, tz1 + 3, st("spruce_stairs", "west"))
         # faculty lodge: two studies either side of a board wall, common room with a fire, bedrooms above
         fl = shell(d, 40, 39, 52, 51, 2, "gable", "x", ties=(44, 48))
         entrance(d, 48, Y0, 39, "south")
@@ -1240,9 +1249,9 @@ def uni_cascadia(rel, L):
             ["     #", "     #", "", "     #", "     #", "     #"],
             ["     #", "     #", "     #", "  L  #  L", "     #", "     #", "", "     L"]], fw)
         plan(d, 41, 40, 7, [
-            ["Cht.ht.ht.h", ". .. .. .. ", "...........", ".=========.", "...........", "...........",
-             "te.........", "te.........", ".......... ", "X.   ......", "X      .BBp"],
-            ["  k  k  k", "", "", "", "", "", "o", "k", "", "", "        BB"],
+            ["Cht.ht.ht.h", ". .. .. .. ", "...........", ".=========.", "B.........B", "B..nnn....B",
+             "te.TTT....B", "te.sss..XXC", ".......... ", "X.   ......", "X      .BBp"],
+            ["  k  k  k", "", "", "", "B         B", "B         B", "o   co    B", "k", "", "", "        BB"],
             [],
             ["", "", "", "", "", "   L   L"]], fw)
         # covered boardwalk round the quad
