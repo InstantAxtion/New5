@@ -191,8 +191,108 @@ def woolfarm(pack, rel, L):
     d.set(14, 2, 3, "barrel[facing=up,open=false]")
     d.set(14, 2, 4, "hay_block[axis=y]")
     approach(d, cx, Z1, ["Wool Farm", "Bring: 4 sheep,", "4 hopper carts,", "4 shears"])
-    d.farm_test(expect={"minecraft:white_wool": 4}, ticks=8000,
+    d.farm_test(expect={"minecraft:white_wool": 4}, ticks=10000,
                 inputs={(c, 5, 8): [("minecraft:shears", 1)] for c in cells},
                 spawns=[("minecraft:sheep", c, 5, 7, 1) for c in cells]
                 + [("minecraft:hopper_minecart", c, 3, 7, 1) for c in cells])
+    return d
+
+
+# ================================================================================================ chicken
+@design("chickencooker")
+def chickencooker(pack, rel, L):
+    """Automatic cooked-chicken farm (the classic egg-dispenser + lava-blade cooker).
+
+    Breeder pen (y6): chickens stand on a floor of 14 hoppers (y5) that funnel every egg they lay into the hopper
+    R = (7,5,6) and down (7,4,6) -> (7,3,6) into the dispenser D = (7,3,7), facing south.
+    Trigger: comparator C = (7,5,7) reads R (facing north = its input side); each time an egg comes in or out of R
+    its output toggles, and the observer O = (7,4,7) (facing up: watches C) pulses down into D, which throws the
+    eggs it holds into the chick chamber. 1 in 8 eggs hatches.
+    Chick chamber (7,3,8..9): bottom slabs (chickens stand at y3.5) with lava sources at y4 right over them; the lava
+    cannot flow into the slab cells. Chicks (0.35 high) live under the lava; when one grows up (0.7 high, ~20 min)
+    its head reaches into the lava and it burns: cooked chicken + feathers fall on the slabs and the hoppers under
+    them (they pull items through slabs) carry them to the chest at (5,2,8)."""
+    d = Design(pack, rel, size=(17, 15, 14), gy=1, paving="grass_block")
+    X1, Z1, X2, Z2, top = 1, 2, 15, 11, 8
+    cx = 8
+    barn(d, X1, Z1, X2, Z2, top, cx, windows=[(3, Z1), (4, Z1), (12, Z1), (13, Z1), (X1, 8), (X2, 8)],
+         back_door_x=None)
+    # solid machine core under the pen and around the cooker
+    d.fill(3, 2, 4, 12, 4, 6, SB)
+    d.fill(6, 2, 7, 10, 5, 10, SB)
+    # breeder pen: hopper floor y5, glass walls y6..7
+    for x in range(4, 13):
+        d.set(x, 5, 5, hopper("south"))
+        d.set(x, 5, 6, hopper("east" if x < cx else "west"))
+    d.set(cx, 5, 6, hopper("down"))                       # R
+    d.set(cx, 4, 6, hopper("down"))
+    d.set(cx, 3, 6, hopper("south"))                      # into the dispenser
+    for x in range(3, 14):
+        for y in (6, 7):
+            d.set(x, y, 4, "glass")
+            d.set(x, y, 7, "glass")
+    for z in (5, 6):
+        for y in (6, 7):
+            d.set(3, y, z, "glass")
+            d.set(13, y, z, "glass")
+    for x in (3, 13):
+        for z in (4, 7):
+            d.set(x, 5, z, SB)
+    d.set(3, 5, 5, SB)
+    d.set(3, 5, 6, SB)
+    d.set(13, 5, 5, SB)
+    d.set(13, 5, 6, SB)
+    d.fill(3, 2, 4, 3, 4, 6, SB)
+    d.fill(13, 2, 4, 13, 4, 6, SB)
+    d.fill(4, 5, 4, 12, 5, 4, SB)
+    d.set(cx, 6, 4, "spruce_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
+    d.set(cx, 7, 4, AIR)
+    d.fill(4, 5, 7, 12, 5, 7, SB)
+    # trigger and dispenser
+    d.set(cx, 5, 7, "comparator[facing=north,mode=compare,powered=false]")
+    d.set(cx, 4, 7, observer("up"))
+    d.set(cx, 3, 7, dispenser("south"))
+    # chick chamber: slab floor, lava blade, glass on the east side, hoppers below to the chest
+    for z in (8, 9):
+        d.set(cx, 3, z, slab("stone_brick"))
+        d.set(cx, 4, z, LAVA)
+        d.set(cx + 1, 3, z, "glass")
+        d.set(cx + 1, 4, z, "glass")
+    d.set(cx, 2, 9, hopper("north"))
+    d.set(cx, 2, 8, hopper("west"))
+    d.set(cx - 1, 2, 8, hopper("west"))
+    d.set(cx - 2, 2, 8, chest("east"))
+    d.tag(cx - 2, 2, 8, "farm_output")
+    d.fill(cx - 2, 3, 7, cx - 2, 5, 10, AIR)
+    d.fill(cx - 2, 2, 9, cx - 2, 5, 10, AIR)
+    d.set(cx - 2, 2, 7, AIR)
+    d.fill(cx + 2, 2, 7, cx + 2, 5, 10, AIR)
+    # the cooker housing above the lava: stone, with a chimney-like cap
+    d.fill(cx - 1, 5, 8, cx + 1, 5, 10, SB)
+    d.set(cx, 6, 9, "chiseled_stone_bricks")
+    # gallery to the pen gate (y5 deck along z3) with stairs from the east
+    for x in range(3, 12):
+        d.set(x, 5, 3, "spruce_planks")
+    d.set(12, 4, 3, stair("spruce", "west"))
+    d.set(13, 3, 3, stair("spruce", "west"))
+    d.set(13, 2, 3, "spruce_planks")
+    d.set(14, 2, 3, stair("spruce", "west"))
+    lantern(d, 3, 6, 3, hanging=False)
+    # room furniture
+    d.set(2, 2, 9, chest("east"))
+    d.set(2, 2, 10, "barrel[facing=up,open=false]")
+    d.set(14, 2, 9, "hay_block[axis=y]")
+    d.set(14, 2, 10, "composter[level=0]")
+    d.set(2, 2, 3, "crafting_table")
+    for x in (4, 12):
+        lantern(d, x, top - 1, 9)
+    lantern(d, cx, top - 1, 5)
+    for x in (5, 11):
+        for z in range(Z1 + 1, Z2):
+            d.set(x, top, z, logb("z"))
+    approach(d, cx, Z1, ["Chicken Cooker", "Bring: chickens", "(10+) or eggs", "to throw in"])
+    d.farm_test(expect={"minecraft:cooked_chicken": 2}, ticks=3000,
+                inputs={(cx, 5, 6): [("minecraft:egg", 16)]},
+                spawns=[("minecraft:chicken", cx, 3, 8, 1), ("minecraft:chicken", cx, 3, 9, 2),
+                        ("minecraft:chicken", 6, 6, 5, 3)])
     return d

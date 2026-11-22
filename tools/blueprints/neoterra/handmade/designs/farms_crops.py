@@ -287,16 +287,12 @@ def kelp(pack, rel, L):
     d.set(KX2 + 1, 3, K, hopper("down"))
     output(d, KX2 + 1, 2, K)
     for z in range(Z1 + 1, Z2):                            # walkways round the tank
-        for x in (2, 17):
+        for x in (17,):
             d.set(x, 1, z, "spruce_planks")
             for y in (2, 3, 4, 5):
                 d.set(x, y, z, AIR)
-    for x in range(2, 18):
-        for z in (4, 10):
-            pass
     entrance(d, 17, Z1, "Kelp", "nothing", sign_side=-1)
-    d.set(2, 2, 10, "chest[facing=east,type=single,waterlogged=false]")
-    d.set(2, 2, 9, "smoker[facing=east,lit=false]")
+    d.set(17, 2, 10, "smoker[facing=north,lit=false]")
     for x in range(X1 + 1, X2):                            # tie beam with lanterns
         d.set(x, 7, 7, logb("x"))
     for x in (2, 6, 10, 14, 17):
@@ -386,4 +382,75 @@ def pumpkinmelon(pack, rel, L):
     for x in range(10, 18):
         d.set(x, 1, 2, "gravel")
     d.farm_test(expect={"minecraft:pumpkin": 8, "minecraft:melon_slice": 16}, ticks=12000)
+    return d
+
+
+def button(f):
+    return f"stone_button[face=wall,facing={f},powered=false]"
+
+
+# ================================================================================================ cocoa
+@design("cocoa")
+def cocoa(pack, rel, L):
+    """Push-button cocoa harvester. Cocoa cannot be replanted by any vanilla machine (dispensers do not plant it),
+    so this is the usual semi-automatic farm: a wall of jungle logs with pods on both faces, a row of pistons
+    facing each face. Pressing the button pushes every piston into its pod (cocoa breaks when pushed), the beans
+    drop into the hopper lines under the pod rows and run into the output barrel. Replant by hand from the
+    walkway side (right-click the logs with cocoa beans); pods ripen on their own (no light needed).
+    Wiring: the button powers the stone it sits on; the dust on that stone runs round both piston rows (y4), and
+    every dust powers the stone under it, which sits right behind a piston."""
+    d = Design(pack, rel, size=(19, 13, 14), gy=1, paving="grass_block")
+    X1, Z1, X2, Z2 = 1, 3, 17, 11
+    shell(d, X1, Z1, X2, Z2, 6, floor="spruce_planks", wall="glass")
+    x1, x2 = 3, 13
+    LOGZ = 7
+    sides = ((5, 6, 4, "south", "north"), (9, 8, 10, "north", "south"))   # piston row, pod row, back row
+    for x in range(2, 15):
+        for z in range(4, 11):
+            d.set(x, 2, z, SB)
+    for x in range(x1, x2 + 1):
+        d.set(x, 3, LOGZ, "jungle_log[axis=y]")
+        d.set(x, 4, LOGZ, "jungle_leaves[distance=1,persistent=true,waterlogged=false]")
+        for (pz, cz, bz, f, podf) in sides:
+            d.set(x, 2, cz, hopper("east"))
+            d.set(x, 3, cz, f"cocoa[age=2,facing={'south' if cz < LOGZ else 'north'}]")
+            d.set(x, 3, pz, piston(f))
+            d.set(x, 3, bz, SB)
+    for z in range(4, 11):                                  # west end: stone column carrying the dust round
+        d.set(2, 3, z, SB)
+    for x in range(2, 15):
+        e = "side" if x < 14 else "none"
+        d.set(x, 4, 4, dust(e=e, w="side" if x > 2 else "none", s="side" if x == 2 else "none"))
+        if x <= 13:
+            d.set(x, 4, 10, dust(e="side" if x < 13 else "none", w="side" if x > 2 else "none",
+                                 n="side" if x == 2 else "none"))
+    for z in range(5, 10):
+        d.set(2, 4, z, dust(n="side", s="side"))
+    d.set(14, 3, 4, SB)
+    d.set(15, 3, 4, button("east"))
+    for z in range(5, 10):
+        d.set(14, 3, z, GLASS)
+    # collector: pod-row hoppers run east into x=14, then south into the barrel
+    d.set(14, 2, 6, hopper("south"))
+    d.set(14, 2, 7, hopper("south"))
+    d.set(14, 2, 8, hopper("south"))
+    output(d, 14, 2, 9)
+    d.set(14, 3, 9, GLASS)
+    for z in range(Z1 + 1, Z2):
+        for x in (15, 16):
+            d.set(x, 1, z, "spruce_planks")
+    entrance(d, 16, Z1, "Cocoa", "cocoa beans", sign_side=-1)
+    d.set(16, 2, 10, "chest[facing=west,type=single,waterlogged=false]")
+    d.sign(15, 3, 5, "east", ["Press the", "button to", "harvest,", "then replant"], wood="spruce")
+    for x in range(X1 + 1, X2):
+        d.set(x, 6, 7, logb("x"))
+    for x in (4, 8, 12, 16):
+        lantern(d, x, 5, 7) if d.air(x, 5, 7) else None
+    roof(d, X1, Z1, X2, Z2, 7, axis="x")
+    controller(d, 9)
+    for z in (1, 2):
+        d.set(9, 1, z, "gravel")
+    for x in range(9, 17):
+        d.set(x, 1, 2, "gravel")
+    d.farm_test(expect={"minecraft:cocoa_beans": 30}, presses=[(15, 3, 4)], ticks=600)
     return d

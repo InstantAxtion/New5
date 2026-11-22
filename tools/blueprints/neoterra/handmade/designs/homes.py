@@ -3276,9 +3276,10 @@ def tower_rooms(W, which):
              (3, 0, 5, CHEST("north")), (2, 0, 5, BRL("north")), (4, 0, 5, BRL("north")), light],
             shelf(5, 2) + shelf(5, 3) + shelf(5, 4) + [(2, 0, 5, CHEST("north")), (3, 0, 5, CHEST("north")),
                                                      (4, 0, 5, CHEST("north")), (3, 0, 3, "brown_carpet"), light],
-            [(4, 0, 3, "cartography_table"), (4, 0, 4, stair(W, "south")),
+            [(4, 0, 3, "cartography_table"), (4, 0, 4, stair(W, "south")),        # map room: chart table, atlas
              (5, 0, 2, "lectern[facing=west,has_book=false,powered=false]"), (5, 1, 4, "blue_wall_banner[facing=west]"),
-             (2, 0, 5, "potted_fern"), (3, 0, 2, "white_carpet"), (3, 0, 3, "white_carpet"), light],
+             (2, 0, 5, "potted_fern"), (3, 0, 5, CHEST("north")), (5, 0, 5, BRL("west")),   # map chest, paper barrel
+             (3, 0, 2, "white_carpet"), (3, 0, 3, "white_carpet"), light],
             [(5, 0, 3, CAUL), (5, 0, 4, TS), (5, 1, 4, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]"),
              (2, 0, 5, BRL("north")), (3, 0, 5, BRL("north")), (4, 0, 5, "composter[level=5]"), light],
             [(3, 0, 3, fence(W)), (3, 1, 3, "end_rod[facing=south]"), (2, 0, 2, stair(W, "west")),

@@ -705,7 +705,6 @@ def nt_shaft(d, n):
         # wall lantern on each landing
         lz = 20 if s % 2 == 0 else 27
         d.set(31, y0 + 2, lz, AIR)
-        d.lamp(31, y0 + 3, lz, "lantern", hanging=True) if False else None
     for s in range(n + 1):
         y0 = 2 + 5 * s
         lz = 20 if s % 2 == 0 else 27
@@ -1086,7 +1085,6 @@ def nt_gardens(rel, L):
                 for z in (16, 17):
                     d.set(x, 6, z, "white_concrete")
                     d.set(x, 5, z, lantern(True)) if z == 16 else None
-            d.set(x, 7, 16, slab("smooth_quartz_slab")) if False else None
     place_wings(d, NT["res"], NT["wsize"], NT["whut"])
     connect_walls(d)
     return d
@@ -1485,7 +1483,6 @@ def hw_palm_house(d, L):
     for x in range(26, 29):
         d.set(x, 4, zn, AIR)
         d.set(x, 5, zn, AIR)
-    d.door(26, 4, zn, "north", "dark_oak", "left") if False else None
     d.door(27, 4, zn, "north", "birch", "left")
     d.set(26, 4, zn, "glass_pane")
     d.set(28, 4, zn, "glass_pane")
@@ -1716,8 +1713,6 @@ def hw_lodge(d, L):
     d.door(29, 2, 51, "east", "dark_oak")
     d.door(28, 7, 50, "east", "dark_oak")
     d.door(27, 2, z1, "north", "dark_oak")
-    d.sign(27, 4, z1 - 1, "north", ["", "Tea Room", "", ""], "dark_oak", hanging=False) if False else None
-    d.set(28, 4, z1 - 1, "dark_oak_wall_hanging_sign[facing=north,waterlogged=false]") if False else None
     # stair along the south wall: steps x23..26, landing on the upper floor at x27
     for i, x in enumerate(range(23, 27)):
         d.set(x, 2 + i, z2 - 1, stair("dark_oak_stairs", "east"))
@@ -1734,7 +1729,6 @@ def hw_lodge(d, L):
         for y in range(7, 19):
             d.set(33, y, z, "bricks") if y >= 11 else None
     d.set(33, 19, 51, "bricks")
-    d.set(32, 19, 51, slab("brick_slab")) if False else None
     # ground floor: tea room (west) and kitchen (east)
     gf = ["a.1.1.f",
           "..T.T..",
@@ -1751,7 +1745,6 @@ def hw_lodge(d, L):
         d.set(x, y, z, st)
     for x, z in ((25, 49), (24, 52), (31, 51)):
         lamp_chain(d, x, 4, z, 6)
-    d.rug(24, 50, 26, 51, 2, ("red_carpet", "orange_carpet"), "check") if False else None
     # upper floor: office (west) and bedroom (east)
     up = ["BB.Q.B",
           "......",
@@ -2109,8 +2102,6 @@ def hw_gatehouse(d):
     # ladder up from the porter's lodge
     for y in range(2, 7):
         d.set(22, y, 4, "ladder[facing=north,waterlogged=false]")
-    d.set(22, 7, 4, AIR) if False else None
-    d.door(23, 2, z2, "south", "dark_oak") if False else None
     d.door(24, 2, 3, "east", "dark_oak")
     d.door(30, 2, 3, "west", "dark_oak")
     # furnish: porter's lodge (west), tool store (east), garden office upstairs
@@ -2132,7 +2123,6 @@ def hw_gatehouse(d):
     plan(d, 22, 7, 1, up, HS, {"Q": "south"})
     for x, z in ((25, 2), (29, 3)):
         d.set(x, 10, z, lantern(True))
-    d.sign(27, 6, -1 + 1, "north", ["", "Hearthwood", "Palm House", ""], "dark_oak") if False else None
 
 
 def hw_gardens(rel, L):
@@ -2256,7 +2246,6 @@ def hw_gardens(rel, L):
                     d.set(x, y, z, "dark_oak_fence")
             for z in (14, 15, 16, 17):
                 d.set(x, 5, z, "dark_oak_planks" if z in (14, 17) else lv("flowering_azalea"))
-            d.set(x, 4, 15, "rose_bush[half=upper]") if False else None
     if L >= 4:
         hw_lodge(d, L)
         hw_kitchen_garden(d, L)
@@ -2632,7 +2621,6 @@ def ca_lodge(d, L):
         for x in range(32, 37):
             d.set(x, yb + 1, 19, "black_concrete" if x != 32 else "black_concrete")
             d.set(x, yb, 19, slab("spruce_slab", "top"))
-        d.set(32, yb, 19, "ladder[facing=east,waterlogged=false]") if False else None
         for x, z in ((34, 21), (39, 21)):
             d.set(x, yb + 3, z, lantern(True))
     if L >= 2:                                           # loft in the roof: bunk room for visiting gardeners
@@ -2663,7 +2651,6 @@ def ca_lodge(d, L):
         for z in range(18, 25):
             if z in (21,):
                 continue
-            d.set(30, 5, z, AIR) if False else None
         for x, z in ((27, 18), (27, 24)):
             for y in range(5, 9):
                 d.set(x, y, z, "spruce_log[axis=y]")
@@ -2756,10 +2743,8 @@ def ca_lookout(d):
     for i, y in enumerate(range(base, cab)):              # zig-zag stair inside the legs
         z = cz1 + 1 + (i % 4)
         x = 32 if (i // 4) % 2 == 0 else 33
-        d.set(x, y, z, "ladder[facing=north,waterlogged=false]") if False else None
     for y in range(base, cab + 1):
         d.set(32, y, cz2 - 1, "ladder[facing=north,waterlogged=false]")
-    d.set(32, base - 1, cz2 - 1, "cobblestone") if False else None
     # cab platform with catwalk
     for x in range(cx1 - 1, cx2 + 2):
         for z in range(cz1 - 1, cz2 + 2):
@@ -2860,7 +2845,6 @@ def ca_ranger(d):
         if x == x1:
             for yy in range(y, y + 3):
                 d.set(x, yy, z1 - 1, "spruce_fence")
-        d.set(x, y + 3, z1 - 1, stair("spruce_stairs", "south", "top")) if False else None
     d.chair(13, y, z1 - 1, "north", "spruce")
     d.chair(17, y, z1 - 1, "north", "spruce")
     cab = ["mb..O",
@@ -3133,7 +3117,6 @@ def ca_gardens(rel, L):
         for x, z in ((6, 26), (42, 26), (17, 31), (31, 26)):
             lamppost(d, x, z, 8, 2, "spruce_fence", lantern())
         bench(d, 13, 8, 26, "north", "spruce", 2)
-        bench(d, 34, 8, 26, "north", "spruce", 2) if False else None
     if L >= 3:                                           # third terrace: tea house east, rock garden west
         ca_teahouse(d)
     if L in (3, 4):
@@ -3165,13 +3148,11 @@ def ca_gardens(rel, L):
         for x1, x2 in ((7, 15), (32, 40)):               # hanging baskets in the bean tunnels
             for x in range(x1 + 2, x2 - 1, 3):
                 d.set(x, 10, 29, lv("flowering_azalea"))
-                d.set(x, 9, 29, "chain[axis=y,waterlogged=false]") if False else None
     if L >= 4:                                           # tea house veranda (engawa) on the north and west
         for x in range(30, 41):
             d.set(x, 10, 33, "spruce_planks")
         for z in range(34, 41):
             d.set(30, 10, z, "spruce_planks")
-        d.chair(31, 11, 33, "north", "spruce") if False else None
         d.set(32, 11, 33, "potted_bamboo")
         d.set(38, 11, 33, "potted_fern")
     if L >= 4:                                           # fourth terrace: fern house, orchard, rope bridge
@@ -3193,7 +3174,6 @@ def ca_gardens(rel, L):
             d.set(x, 18, 43, lantern())
         bench(d, 34, 14, 42, "north", "spruce", 2)
         d.set(18, 14, 42, "beehive[facing=north,honey_level=3]")
-        d.set(18, 13, 42, "spruce_planks") if False else None
     if L >= 5:
         ca_lookout(d)
         ca_ranger(d)
@@ -3213,7 +3193,6 @@ def ca_gardens(rel, L):
             for z in range(48, 56):
                 if (x in (29, 36) or z in (48, 55)) and d.air(x, 23, z):
                     d.set(x, 23, z, "spruce_planks")
-        ca_pergola(d, 7, 17, 26, 26, 8) if False else None
         for x, z in ((20, 33), (28, 39)):
             tree(d, x, 11, z, 6, "spruce_log", "spruce", r=2)
         for x, y, z, h in ((12, 17, 48, 12), (37, 17, 50, 11), (38, 14, 46, 10), (40, 11, 38, 9), (6, 8, 27, 9)):
@@ -3322,7 +3301,6 @@ def ca_wing(rel, L):
         for y in range(1, 10):
             d.set(10, y, 10, "cobblestone" if y % 3 else "mossy_cobblestone")
         d.set(10, 10, 10, "cobblestone_wall")
-        d.set(9, 1, 9, "furnace[facing=north,lit=false]") if False else None
     return d
 
 
