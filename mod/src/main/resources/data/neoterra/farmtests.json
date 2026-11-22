@@ -89,6 +89,62 @@
    ],
    "ticks": 1500
   },
+  "decorations/animalfarms/honeyfarm.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "expect": {
+    "minecraft:honeycomb": 3
+   },
+   "inputs": {
+    "-1,3,11": [
+     [
+      "minecraft:shears",
+      1
+     ]
+    ],
+    "-5,3,11": [
+     [
+      "minecraft:shears",
+      1
+     ]
+    ],
+    "3,3,11": [
+     [
+      "minecraft:shears",
+      1
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "-6,1,10"
+   ],
+   "presses": [],
+   "spawns": [
+    [
+     "minecraft:bee",
+     -5,
+     3,
+     6,
+     3
+    ],
+    [
+     "minecraft:bee",
+     -1,
+     3,
+     6,
+     3
+    ],
+    [
+     "minecraft:bee",
+     3,
+     3,
+     6,
+     3
+    ]
+   ],
+   "ticks": 11000
+  },
   "decorations/animalfarms/woolfarm.blueprint": {
    "blocks": [],
    "blocks_min": 0,

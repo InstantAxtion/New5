@@ -3623,6 +3623,8 @@ def _g_baker_neo(d, L):
 # Neoterra "NEOCRETE": a banded powder silo and bays (L2), a two-storey glass HQ (L3), a two-storey materials lab
 #   (L4), a six-storey batch tower, a row of silos and a conveyor bridge (L5).
 CMX = ["white_concrete_powder", "light_gray_concrete_powder", "gray_concrete_powder", "sand", "gravel"]
+# plan digits 6-8 with extra=CMX + BINS: a filled bin (barrel heaped with powder / sand / gravel)
+BINS = [("barrel[facing=up,open=false]", c) for c in ("white_concrete_powder", "sand", "gravel")]
 
 
 def bays(d, x1, z, n, w, wall, mats):
@@ -3673,6 +3675,7 @@ def _g_conc_hw(d, L):
                                                  "D.....D"]], "x", roofkind="hip", chimney=(49, 7), dormer=False,
             mwall="calcite", mroof="brick", lower="stone_bricks")
         put(d, torch(39, 4, 6, "west") + wbox(39, 5, "west", "poppy", "oak") + wbox(39, 11, "west", "dandelion", "oak"))
+        put(d, wbox(42, 2, "north", "red_tulip", "oak") + wbox(45, 2, "north", "allium", "oak"))   # street windows
         label(d, 39, 3, 9, "west", ["Works", "Office"])
     if L >= 4:                                                       # tall mason's shed
         bld(d, 3, 26, 23, 32, 1, ("north", 10), [["qqq.zgz..l..aga.qqq",
@@ -3682,6 +3685,14 @@ def _g_conc_hw(d, L):
                                                    "k1k.k2k.x.Y.k3k.k4k"]], "x", tall=True, chimney=False,
             dormer=False, mwall="stone_bricks", mroof="mud_brick", extra=CMX)
         put(d, torch(12, 4, 25, "north") + torch(14, 4, 25, "north"))
+        # under the eaves: window boxes, a banker stonecutter and grindstone by the door, lime barrels on the
+        # west end, a rain butt and more barrels along the back, a barrel by the east gable
+        put(d, wbox(5, 25, "north", "poppy", "oak") + wbox(20, 25, "north", "cornflower", "oak") +
+            [(8, 2, 25, "stonecutter[facing=north]"), (18, 2, 25, "grindstone[face=floor,facing=north]"),
+             (2, 2, 28, "barrel[facing=up,open=false]"), (2, 3, 28, "barrel[facing=up,open=false]"),
+             (2, 2, 29, "barrel[facing=up,open=false]"), (6, 2, 33, "water_cauldron[level=3]"),
+             (16, 2, 33, "barrel[facing=up,open=false]"), (17, 2, 33, "barrel[facing=up,open=false]"),
+             (24, 2, 30, "barrel[facing=up,open=false]")])
         label(d, 16, 3, 25, "north", ["Mason's", "Shed"])
         cart(d, 6, 36, "x", "gravel", "oak")
     if L >= 5:                                                       # batching tower with hopper + gantry
@@ -3692,19 +3703,19 @@ def _g_conc_hw(d, L):
                                                   "....l..",
                                                   ".......",
                                                   "kYk.kKk"],
-                                                 ["       ",
+                                                 ["       ",                # sand & gravel bins
                                                   ".......",
-                                                  "1111.22",
+                                                  "7k7.8k8",
                                                   ".......",
-                                                  "3333.44",
-                                                  ".......",
+                                                  "8k7.7k8",
+                                                  "...l...",
                                                   ".     ."],
-                                                 [".     .",
+                                                 [".     .",                # powder sacks and bins
                                                   ".......",
                                                   "kKk.kYk",
                                                   ".......",
-                                                  "5555.55",
-                                                  ".......",
+                                                  "6k6.KkK",
+                                                  "....l..",
                                                   "       "],
                                                  ["       ",
                                                   ".......",
@@ -3720,7 +3731,7 @@ def _g_conc_hw(d, L):
                                                   "...l...",
                                                   "k.....k",
                                                   "       "]], "x", roofkind="flat", chimney=False, dormer=False,
-            mwall="stone_bricks", mroof="brick", lower="cobblestone", extra=CMX, deck="stone_bricks",
+            mwall="stone_bricks", mroof="brick", lower="cobblestone", extra=CMX + BINS, deck="stone_bricks",
             parapet="cobblestone_wall",
             roofitems=[(3, 3, "hopper[enabled=true,facing=down]"), (4, 3, "hopper[enabled=true,facing=down]"),
                        (3, 4, "hopper[enabled=true,facing=down]"), (4, 4, "hopper[enabled=true,facing=down]"),
@@ -3764,7 +3775,7 @@ def _g_conc_cas(d, L):
                                                   "k.....k"]], "z", chimney=(28, 22), dormer=False,
             mlog="stripped_dark_oak_log", mroof="mangrove")
         porch_lean_z(d, 14, 20, 22, 24, 6, "spruce", "spruce_log", (14, 20), gap=(16, 17, 18))
-        put(d, torch(23, 4, 16, "west"))
+        put(d, torch(23, 4, 16, "west") + wbox(33, 15, "east", "cornflower") + wbox(33, 18, "east", "oxeye_daisy"))
         label(d, 23, 3, 19, "west", ["Office"])
     if L >= 4:                                                       # tall repair shop
         bld(d, 3, 28, 23, 34, 1, ("north", 10), [["aga.z.z...l...q.q.q",
@@ -3774,6 +3785,14 @@ def _g_conc_cas(d, L):
                                                    "k1k.k2k.YkY.k3k.k4k"]], "x", tall=True, chimney=(24, 31),
             dormer=False, mlog="spruce_log", mroof="cobbled_deepslate", lower="cobblestone", extra=CMX)
         put(d, torch(12, 4, 27, "north") + torch(14, 4, 27, "north"))
+        # under the eaves: window boxes, a saw horse and a grindstone out front, oil barrels at the west end,
+        # a rain butt and a stack of barrels behind, a chopping block by the east chimney
+        put(d, wbox(5, 27, "north", "cornflower") + wbox(20, 27, "north", "poppy") +
+            [(8, 2, 27, "grindstone[face=floor,facing=north]"), (17, 2, 27, sl("spruce", "top")),
+             (18, 2, 27, sl("spruce", "top")), (2, 2, 30, "barrel[facing=up,open=false]"),
+             (2, 3, 30, "barrel[facing=up,open=false]"), (2, 2, 31, "barrel[facing=up,open=false]"),
+             (6, 2, 35, "water_cauldron[level=3]"), (15, 2, 35, "barrel[facing=up,open=false]"),
+             (16, 2, 35, "barrel[facing=up,open=false]"), (24, 2, 33, lg("stripped_oak_log"))])
         label(d, 16, 3, 27, "north", ["Repair", "Shop"])
     if L >= 5:                                                       # gabled hopper tower + chute
         bld(d, 37, 3, 45, 11, 5, ("west", 4), [[".     .",
@@ -3790,19 +3809,19 @@ def _g_conc_cas(d, L):
                                                  "...l...",
                                                  "D......",
                                                  ".     ."],
-                                                [".     .",
+                                                [".     .",                 # bin floor
                                                  ".......",
-                                                 "4444.55",
+                                                 "6k8.7k6",
                                                  ".......",
-                                                 "1111.22",
-                                                 ".......",
+                                                 "7k6.8k7",
+                                                 "...l...",
                                                  "       "],
-                                                ["       ",
+                                                ["       ",                 # sack loft
                                                  ".......",
                                                  "kKk.kYk",
                                                  ".......",
-                                                 "3333.44",
-                                                 ".......",
+                                                 "KkK.6k8",
+                                                 "....l..",
                                                  ".     ."],
                                                 ["E.b...C",
                                                  ".......",
@@ -3811,7 +3830,7 @@ def _g_conc_cas(d, L):
                                                  "...l...",
                                                  "k.....k",
                                                  "       "]], "z", chimney=False, dormer=False,
-            mlog="stripped_dark_oak_log", mroof="dark_prismarine", lower="cobblestone", extra=CMX)
+            mlog="stripped_dark_oak_log", mroof="dark_prismarine", lower="cobblestone", extra=CMX + BINS)
         for i in range(8):                                           # plank chute stepping down to the yard
             x, y = 46 + i // 2, 16 - i
             if d.bp.inside(x, y, 7):
@@ -3883,12 +3902,12 @@ def _g_conc_neo(d, L):
                                                   "wT...Te",
                                                   ".......",
                                                   ".     ."],
-                                                 [".     .",
+                                                 [".     .",                # powder store: filled bins
                                                   ".......",
-                                                  "1111.22",
+                                                  "6k7.k8k",
                                                   ".......",
-                                                  "3333.44",
-                                                  ".......",
+                                                  "8k6.7k6",
+                                                  "...l...",
                                                   "       "],
                                                  ["       ",
                                                   ".......",
@@ -3910,7 +3929,8 @@ def _g_conc_neo(d, L):
                                                   ".......",
                                                   "..wTe..",
                                                   "...l...",
-                                                  "k.....k"]], mwall="light_gray_concrete", lower="glass", extra=CMX)
+                                                  "k.....k"]], mwall="light_gray_concrete", lower="glass",
+            extra=CMX + BINS)
         put(d, [(30, y, 13, "cyan_terracotta") for y in range(2, 33)])
         billboard(d, 27, 33, 18, 33, ["NEOCRETE"])
         label(d, 25, 3, 20, "west", ["BATCH"])
@@ -4548,8 +4568,8 @@ def _g_cookery_neo(d, L):
                                                    "..TTTT.....TTTT..",
                                                    "..ssss.....ssss..",
                                                    "........l........",
-                                                   "..nnnn.....nnnn..",
-                                                   "..TTTT.....TTTT..",
+                                                   "..wTe.wTe.wTe.wTe",
+                                                   ".................",
                                                    "p.UUUUUuUUUUUU..p"]], tall=True, wall="glass",
             roofitems=GREEN([2, 4, 6, 8, 10, 12, 14, 16], 11) + GREEN([2, 4, 6, 8, 10, 12, 14, 16], 3))
         label(d, 35, 8, 17, "north", ["STAFF", "CANTEEN"])
@@ -4663,6 +4683,11 @@ def _g_dyer_hw(d, L):
         put(d, torch(40, 4, 14, "north") + torch(42, 4, 14, "north")
             + [(x, 7, 14, f"{dy(d, i)}_wall_banner[facing=north]") for i, x in enumerate((33, 36, 46, 49))])
         label(d, 44, 3, 14, "north", ["Cloth", "Hall"], color="blue")
+        # back eaves toward the drying yard: mordant barrels, a rinse tub, a window box on the west end
+        put(d, [(34, 2, 26, "barrel[facing=up,open=false]"), (35, 2, 26, "barrel[facing=up,open=false]"),
+                (45, 2, 26, "water_cauldron[level=3]"), (46, 2, 26, "barrel[facing=up,open=false]"),
+                (52, 2, 22, "barrel[facing=up,open=false]"), (52, 3, 22, "barrel[facing=up,open=false]")]
+            + wbox(30, 23, "west", "cornflower", "oak"))
         for k, z in enumerate((30, 34, 38)):                         # drying lines
             drying_line(d, 30, 50, z, 5, "stripped_dark_oak_log", "dark_oak_log", k)
         vats(d, [(x, 42) for x in range(31, 50, 3)], 2, 0)
@@ -4693,6 +4718,12 @@ def _g_dyer_cas(d, L):
                                                  "WKWYkY.kYk.WKW.hWhp"]], "x", tall=True, chimney=False,
             dormer=False, mlog="stripped_spruce_log", mroof="cobbled_deepslate", lower="cobblestone")
         put(d, torch(24, 4, 17, "west") + torch(24, 4, 19, "west"))
+        # under the eaves: window boxes on the street side, fleece barrels and a wash tub at the back,
+        # bales by the east gable
+        put(d, wbox(30, 14, "north", "cornflower") + wbox(36, 14, "north", "allium") + wbox(42, 14, "north", "poppy")
+            + [(27, 2, 22, "barrel[facing=up,open=false]"), (28, 2, 22, "barrel[facing=up,open=false]"),
+               (40, 2, 22, "water_cauldron[level=3]"), (46, 2, 18, "hay_block[axis=y]"),
+               (46, 2, 19, "hay_block[axis=y]")])
         label(d, 24, 3, 16, "west", ["Loom", "House"])
     if L >= 4:                                                       # gabled drying tower with slatted loft
         bld(d, 35, 3, 43, 11, 4, ("west", 4), [[".     .",
@@ -4759,15 +4790,17 @@ def _g_dyer_cas(d, L):
                                                    "D.D..b..D.D"]], "z", chimney=(31, 40), dormer=False,
             mlog="stripped_spruce_log", mroof="deepslate_tile", lower="mossy_cobblestone")
         put(d, torch(33, 4, 24, "north") + torch(35, 4, 24, "north"))
+        put(d, wbox(24, 27, "west", "cornflower") + wbox(24, 33, "west", "allium") + wbox(38, 30, "east", "poppy")
+            + wbox(38, 36, "east", "oxeye_daisy") + [(24, 2, 30, "barrel[facing=up,open=false]")])
         label(d, 36, 3, 24, "north", ["Mill"])
-        for k, x in enumerate((42, 46, 50)):                         # drying frames with hanks of wool
-            for z in (16, 30):
+        for k, z in enumerate((25, 29, 33)):                         # drying frames with hanks of wool
+            for x in (40, 52):
                 for y in (2, 3, 4, 5):
                     d.set(x, y, z, lg("spruce_log"))
-            for z in range(17, 30):
-                d.set(x, 5, z, lg("stripped_spruce_log", "z"))
-                if z % 2 == 1:
-                    d.set(x, 4, z, f"{dy(d, z + k)}_wool")
+            for x in range(41, 52):
+                d.set(x, 5, z, lg("stripped_spruce_log", "x"))
+                if x % 2 == 1:
+                    d.set(x, 4, z, f"{dy(d, x + k)}_wool")
         vats(d, [(41, 36), (44, 36), (47, 36), (50, 36)], 2, 0)
         for x, z in ((8, 34), (14, 44), (44, 44), (51, 10)):
             spruce_tree(d, x, z)

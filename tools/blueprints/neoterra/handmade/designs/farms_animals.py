@@ -383,3 +383,100 @@ def cowbreeder(pack, rel, L):
     d.farm_test(expect={"minecraft:beef": 5, "minecraft:leather": 1}, ticks=1500,
                 spawns=[("minecraft:cow", c, 5, 9, 1) for c in stalls] + [("minecraft:cow", 7, 5, 6, 2)])
     return d
+
+
+# ================================================================================================ honey
+@design("honeyfarm")
+def honeyfarm(pack, rel, L):
+    """Automatic honeycomb farm: three beehives in the north wall of a honey house, facing a flower garden.
+
+    Per hive H = (a,4,10), front (north) open into a 1x1 niche (a,4,9) over a hopper (a,3,9):
+        observer O = (a+1,4,10) facing west (watches H)  -> pulses east into dust (a+2,4,10) -> (a+2,4,11)
+        -> (a+1,4,11) -> into the dispenser D = (a,4,11) behind the hive, facing north, loaded with shears.
+    Every honey level change makes D try to shear; shears only work on a full hive (honey_level 5): the hive drops
+    3 honeycomb (no bees angered - no player involved) and resets. The comb pops out of the hive into the only free
+    spaces: down into the hopper under H (a,3,10) or out of the front into the niche, onto the hopper (a,3,9).
+    Both run down into the hopper line (y2) west to the chest at (3,2,10)."""
+    d = Design(pack, rel, size=(19, 14, 17), gy=1, paving="grass_block")
+    X1, Z1, X2, Z2, top = 1, 10, 17, 15, 7
+    cx = 9
+    hives = (4, 8, 12)
+    barn(d, X1, Z1, X2, Z2, top, 16, windows=[(X1, 12), (X2, 12), (6, Z2), (12, Z2)])
+    # machine wall z9..11
+    d.fill(2, 2, 9, 16, 5, 11, SB)
+    d.fill(2, 2, 9, 16, 2, 9, "mossy_stone_bricks")
+    for x in range(4, 16):
+        d.set(x, 2, 10, hopper("west"))
+    for a in hives:
+        d.set(a, 4, 10, "beehive[facing=north,honey_level=0]")
+        d.set(a, 4, 9, AIR)                               # niche the bees fly out of
+        d.set(a, 5, 9, slab("spruce", "top"))
+        d.set(a, 3, 9, hopper("south"))
+        d.set(a, 3, 10, hopper("down"))
+        d.set(a + 1, 4, 10, observer("west"))
+        d.set(a + 2, 4, 10, DUST)
+        d.set(a + 2, 4, 11, DUST)
+        d.set(a + 1, 4, 11, DUST)
+        d.set(a, 4, 11, dispenser("north"))
+        d.set(a, 5, 11, AIR)
+        for x in (a + 1, a + 2):
+            d.set(x, 5, 11, "glass")                      # look onto the redstone
+    for x in range(2, 17):
+        d.set(x, 5, 10, logb("x"))
+        d.set(x, 6, 10, CB)
+        d.set(x, 6, 9, stair("spruce", "south"))           # little canopy over the hive niches
+    for x in (2, 16):
+        d.set(x, 6, 9, stair("spruce", "south"))
+    d.set(3, 2, 10, chest("south"))
+    d.tag(3, 2, 10, "farm_output")
+    for (x, z) in ((2, 11), (3, 11), (16, 11), (2, 10), (16, 10), (16, 9)):
+        d.clear(x, 2, z, x, 3, z)
+    d.door(16, 2, 9, "south", "spruce")
+    d.set(16, 4, 9, SB)
+    # inside: walkway z12..14, workbench, honey station
+    d.set(2, 2, 14, "crafting_table")
+    d.set(3, 2, 14, "barrel[facing=up,open=false]")
+    d.set(14, 2, 14, "cauldron")
+    d.set(15, 2, 14, chest("north"))
+    for x in (5, 9, 13):
+        lantern(d, x, top - 1, 13)
+    for x in (5, 9, 13):
+        for z in range(Z1 + 1, Z2):
+            d.set(x, top, z, logb("z"))
+    # flower garden z3..8, low wall with a gate at the north
+    flowers = ("poppy", "dandelion", "cornflower", "allium", "oxeye_daisy", "azure_bluet", "blue_orchid",
+               "lily_of_the_valley")
+    for z in range(3, 9):
+        for x in range(2, 17):
+            d.set(x, 1, z, "grass_block")
+            if x in (8, 9, 10) or z == 8 or x == 16:
+                d.set(x, 1, z, "gravel" if x == 9 or z == 8 or x == 16 else "grass_block")
+            elif (x + z) % 2 == 0:
+                d.set(x, 2, z, flowers[(x * 3 + z) % len(flowers)])
+    for x in range(1, 18):
+        d.set(x, 2, 2, "mossy_cobblestone_wall[east=low,north=none,south=none,up=false,waterlogged=false,west=low]")
+    for z in range(3, 10):
+        d.set(1, 2, z, "mossy_cobblestone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]")
+        d.set(17, 2, z, "mossy_cobblestone_wall[east=none,north=low,south=low,up=false,waterlogged=false,west=none]")
+    for x in (8, 9, 10):
+        d.set(x, 2, 2, AIR)
+    for x in (7, 11):
+        for y in (2, 3, 4):
+            d.set(x, y, 2, logb("y"))
+    for x in range(7, 12):
+        d.set(x, 5, 2, logb("x"))
+    lantern(d, 9, 4, 2)
+    for (x, z) in ((2, 3), (16, 3)):
+        d.set(x, 2, z, FENCE)
+        lantern(d, x, 3, z, hanging=False)
+    d.set(15, 2, 3, "composter[level=0]")
+    d.set(3, 2, 3, "barrel[facing=up,open=false]")
+    for z in (0, 1):
+        for x in (8, 9, 10):
+            d.set(x, 1, z, "gravel")
+    d.hut(cx, 1, 0)
+    d.sign(cx + 2, 3, 1, "north", ["Honey Farm", "Bring: 6+ bees", "(in a lead or", "nest), 3 shears"], "spruce")
+    d.farm_test(expect={"minecraft:honeycomb": 3}, ticks=11000,
+                inputs={(a, 4, 11): [("minecraft:shears", 1)] for a in hives},
+                spawns=[("minecraft:bee", a, 4, 6, 3) for a in hives])
+    return d
