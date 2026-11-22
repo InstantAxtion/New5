@@ -2220,7 +2220,8 @@ def playerhouse_hw(rel, L):
         # library: bookcases floor to ceiling, enchanting table, lecterns, brewing corner
         cols = [(x, 4) for x in range(15, 19)] + [(18, z) for z in range(5, 9)] + [(x, 11) for x in range(15, 19)]
         bookcases(d, cols, yu, 35)
-        d.item(16, yu, 6, "enchanting_table")
+        fit(d, [(16, yu, 6, slab(W, "top")), (16, yu + 1, 6, "candle[candles=3,lit=false,waterlogged=false]")])
+        # (reading desk; the enchanting table stands in the library tower with its 15 bookshelves)
         rugc(d, 15, 5, 17, 7, yu, "purple")
         d.item(15, yu, 8, "lectern", "south")
         d.item(17, yu, 8, "lectern", "south")
@@ -2408,7 +2409,7 @@ def playerhouse_ca(rel, L):
         cols = [(3, z) for z in range(5, 13)] + [(13, z) for z in range(5, 10)] + [(x, 12) for x in range(4, 7)] \
             + [(x, 5) for x in range(4, 8)] + [(x, 5) for x in range(9, 13)]
         bookcases_fit(d, cols, 7, 35)
-        d.item(8, 7, 7, "enchanting_table")
+        fit(d, [(8, 7, 7, slab(W, "top")), (8, 8, 7, "candle[candles=2,lit=false,waterlogged=false]")])  # reading desk
         rugc(d, 7, 6, 9, 8, 7, "green")
         d.item(6, 7, 7, "lectern", "east")
         d.item(10, 7, 7, "lectern", "west")
@@ -2607,7 +2608,7 @@ def playerhouse_nt(rel, L):
     if L >= 3:
         cols = [(x, 19) for x in range(5, 12)] + [(11, z) for z in range(15, 19)] + [(x, 12) for x in range(8, 12)]
         bookcases_fit(d, cols, 7, 35)
-        d.item(7, 7, 16, "enchanting_table")
+        fit(d, [(7, 7, 16, slab("smooth_quartz", "top")), (7, 8, 16, "potted_azure_bluet")])   # reading desk
         rugc(d, 6, 15, 8, 17, 7, "purple")
         d.item(5, 7, 16, "lectern", "east")
         d.item(9, 7, 16, "lectern", "west")
@@ -3246,12 +3247,9 @@ def tower_rooms(W, which):
     TS = slab(W, "top")
     light = (3, 2, 3, LANT)
     shelf = lambda dx, dz: [(dx, dy, dz, "bookshelf") for dy in (0, 1, 2)]
-    if which == "lore":           # library tower: library, still-room, study, star room
+    if which == "lore":           # library tower: enchanting room (enchant_room), still-room, study, star room
         return [
-            shelf(5, 1) + shelf(5, 2) + shelf(5, 4) + shelf(5, 5) + [
-                (5, 0, 3, "lectern[facing=west,has_book=false,powered=false]"), (2, 0, 3, TS), (2, 0, 4, stair(W, "south")),
-                (2, 1, 3, "candle[candles=3,lit=false,waterlogged=false]"), (3, 0, 5, "potted_fern"),
-                (3, 0, 2, "purple_carpet"), (3, 0, 3, "purple_carpet"), (4, 0, 3, "purple_carpet"), light],
+            [light],
             [(5, 0, 2, TS), (5, 1, 2, "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]"),
              (5, 0, 3, CAUL), (5, 0, 4, TS), (5, 1, 4, "brewing_stand[has_bottle_0=false,has_bottle_1=true,has_bottle_2=true]"),
              (5, 0, 5, BRL("west")), (3, 0, 5, "cauldron"), (2, 0, 5, BRL("north")), (4, 0, 5, POT),
@@ -3379,6 +3377,265 @@ def ph_vault(d, x1, z1, x2, z2, h=4):
     return d
 
 
+# ============================================================================================ player-house uses
+# Working vanilla mechanisms for the player's estate. Each is ONE piece drawn in its own local frame and placed at a
+# hand-chosen origin / rotation per pack (Frame). Local axes: u = east, v = south, y = up from the frame's origin;
+# rot = quarter turns clockwise seen from above (rot=1 turns local north to world east). Block states are written
+# in the local frame and turned with rot_state, so every facing below reads in local terms.
+DOT = "redstone_wire[east=side,north=side,power=0,south=side,west=side]"   # lone dust = cross: powers all 4 sides
+
+
+class Frame:
+    def __init__(self, d, ox, oy, oz, rot=0):
+        self.d, self.ox, self.oy, self.oz, self.rot = d, ox, oy, oz, rot % 4
+
+    def xz(self, u, v):
+        for _ in range(self.rot):
+            u, v = -v, u
+        return self.ox + u, self.oz + v
+
+    def face(self, f):
+        for _ in range(self.rot):
+            f = CW[f]
+        return f
+
+    def set(self, u, y, v, st, te=None):
+        x, z = self.xz(u, v)
+        self.d.set(x, self.oy + y, z, rot_state(st, self.rot) if st != AIR else AIR, te)
+
+    def item(self, u, y, v, st):
+        x, z = self.xz(u, v)
+        self.d.item(x, self.oy + y, z, rot_state(st, self.rot))
+
+    def sign(self, u, y, v, facing, lines, wood):
+        x, z = self.xz(u, v)
+        self.d.sign(x, self.oy + y, z, self.face(facing), lines, wood)
+
+
+def hopper(f):
+    """Hopper whose spout points `f` (down / north / east / south / west) – where it pushes its items."""
+    return f"hopper[enabled=true,facing={f}]"
+
+
+def dchest(d, x, y, z, facing, along):
+    """Double chest: the cell (x,z) and the next one along +x ('x') or +z ('z'), both opening toward `facing`.
+    type=left is the half whose partner lies clockwise of its facing (vanilla ChestBlock)."""
+    a, b = (x, z), ((x + 1, z) if along == "x" else (x, z + 1))
+    first_left = CW[facing] == ("east" if along == "x" else "south")
+    d.set(a[0], y, a[1], f"chest[facing={facing},type={'left' if first_left else 'right'},waterlogged=false]")
+    d.set(b[0], y, b[1], f"chest[facing={facing},type={'right' if first_left else 'left'},waterlogged=false]")
+
+
+def cane_farm(F, n, frame, cover, glass="glass", back=None):
+    """Automatic sugar-cane farm, n canes on every other column (u = 0, 2, .. 2n-2), output chest at the east end.
+    Per cane column (local; front = south):
+      y0  water channel (v-1) beside the sand (v0) the cane stands on
+      y1  cane base (v0); collection hopper (v+1) pointing east along the row into the chest at u = 2n-1
+      y2  cane 2nd block (v0); OBSERVER facing south (v-1) watching that 2nd block, its back (output) into a solid
+          relay block (v-2) which it strongly powers
+      y3  3rd-block cell (v0); PISTON facing south (v-1) pushing into it; redstone dust on the relay (v-2) – a lone
+          dot (cross) powered by the relay below it, pointing south into the piston
+    The top cane block changes its age every growth tick, so the observer pulses each time the 2nd block ticks and
+    when the 3rd block appears (the 2nd block's age resets to 0 in the same tick). The piston then fires into the
+    3rd cell: an empty cell is harmless, a 3rd block is broken and its item swept by the piston head one cell south
+    into the drop shaft (v+1), where it falls onto the hopper line. The observer never watches the cell the piston
+    moves through, so there is no observer-piston clock. Dust dots sit two columns apart (glass / air between) so
+    the columns do not join into a line (a line would no longer point into the pistons). Glass walls keep the items
+    in; the chest sits outside the east end wall."""
+    w = 2 * n - 1
+    for u in range(-1, w + 1):
+        cane = 0 <= u < w and u % 2 == 0
+        end = u in (-1, w)
+        F.set(u, 0, -2, frame)
+        F.set(u, 0, -1, frame if end else "water")
+        F.set(u, 0, 0, "sand" if cane else frame)
+        F.set(u, 0, 1, frame)
+        F.set(u, 0, 2, frame)
+        for y in (1, 2, 3):
+            F.set(u, y, -2, frame if y < 3 or end else (DOT if cane else AIR))
+            F.set(u, y, -1, "observer[facing=south,powered=false]" if cane and y == 2 else
+                  "piston[extended=false,facing=south]" if cane and y == 3 else frame)
+            F.set(u, y, 0, frame if end else ("sugar_cane[age=0]" if cane and y < 3 else AIR if cane else glass))
+            F.set(u, y, 2, frame if end else glass)
+        if u == -1:
+            for y in (1, 2, 3):
+                F.set(u, y, 1, frame)
+        elif u < w:
+            F.set(u, 1, 1, hopper("east"))
+            F.set(u, 2, 1, AIR)
+            F.set(u, 3, 1, AIR)
+        else:
+            F.set(u, 1, 1, "chest[facing=east,type=single,waterlogged=false]")
+            F.set(u, 2, 1, glass)
+            F.set(u, 3, 1, glass)
+        for v in (-2, -1, 2):
+            F.set(u, 4, v, cover)
+        F.set(u, 4, 0, glass if not end else cover)
+        F.set(u, 4, 1, glass if not end else cover)
+        if back:
+            for y in (1, 2, 3):
+                F.set(u, y, -3, back)
+
+
+def auto_smelter(F, wood):
+    """Auto-smelter, 2 wide (u0 chests, u1 furnace), front = north, y0 = walking level:
+      u1: input chest (y3) -> hopper pointing DOWN (y2) into the furnace top = input slot; furnace (y1) facing north;
+          hopper under the furnace (y0) pulls the result slot and points WEST into the output chest
+      u0: fuel chest (y2) -> hopper below it (y1) pointing EAST into the furnace side = fuel slot; output chest (y0)
+    Needs air above both top chests (a solid block on a chest keeps its lid shut)."""
+    F.set(0, 0, 0, CHEST("north"))
+    F.set(0, 1, 0, hopper("east"))
+    F.set(0, 2, 0, CHEST("north"))
+    F.set(1, 0, 0, hopper("west"))
+    F.set(1, 1, 0, "furnace[facing=north,lit=false]")
+    F.set(1, 2, 0, hopper("down"))
+    F.set(1, 3, 0, CHEST("north"))
+
+
+def hen_house(F, frame, wood, roof):
+    """Egg coop on a hopper floor (local, gate on the north): six hoppers (u0..2, v0..1) at y0 under the hens,
+    each pointing to the next – row v0 east then south at u2, row v1 east – into the egg chest at u3/v1 outside
+    the pen. Eggs drop where the hens stand (in the hopper bowls) and are pulled in. Fence pen on a frame
+    ring, gate on the north, slab roof on corner posts. The player brings the chickens (on a lead)."""
+    for u in range(-1, 4):
+        for v in range(-1, 3):
+            ring = u in (-1, 3) or v in (-1, 2)
+            if ring:
+                F.set(u, 0, v, frame)
+                F.set(u, 1, v, fence(wood) if (u, v) != (1, -1) else gate(wood, "north"))
+                F.set(u, 2, v, fence(wood) if u in (-1, 3) and v in (-1, 2) else AIR)
+            F.set(u, 3, v, slab(roof))
+    for u, v, f in ((0, 0, "east"), (1, 0, "east"), (2, 0, "south"), (0, 1, "east"), (1, 1, "east"), (2, 1, "east")):
+        F.set(u, 0, v, hopper(f))
+    F.set(3, 0, 1, "chest[facing=east,type=single,waterlogged=false]")
+    F.set(0, 1, 1, HAYY)                                          # a bale to peck at in the back corner
+
+
+def beacon(d, x, z, base="iron_block"):
+    """Beacon on a full 1-tier pyramid (3x3 iron blocks); the beam needs clear sky above (x, z)."""
+    y = d.gy + 1
+    for ax, az in cells(x - 1, z - 1, x + 1, z + 1):
+        d.set(ax, y, az, base)
+    d.set(x, y + 1, z, "beacon")
+
+
+def portal_frame(d, x, z, axis="x", block="obsidian"):
+    """Unlit nether portal frame: 4 wide x 5 high obsidian ring, 2x3 opening; the player lights it."""
+    y0 = d.gy + 1
+    for i in range(4):
+        for k in range(5):
+            if i in (0, 3) or k in (0, 4):
+                d.set(x + i if axis == "x" else x, y0 + k, z if axis == "x" else z + i, block)
+            else:
+                d.set(x + i if axis == "x" else x, y0 + k, z if axis == "x" else z + i, AIR)
+
+
+def crop_plot(d, x1, z1, x2, z2, water, crops, edge=None):
+    """Kitchen plot: hydrated farmland (moisture 7) with a water source at `water` (farmland within 4 blocks of it
+    stays wet), crops at harvest age, optional edging on the ground ring around it."""
+    y = d.gy
+    for x, z in cells(x1, z1, x2, z2):
+        if (x, z) == water:
+            d.set(x, y, z, "water")
+            d.set(x, y + 1, z, "lily_pad")
+            continue
+        d.set(x, y, z, "farmland[moisture=7]")
+        d.set(x, y + 1, z, crops[(x + z) % len(crops)])
+    if edge:
+        for x, z in cells(x1 - 1, z1 - 1, x2 + 1, z2 + 1):
+            if x in (x1 - 1, x2 + 1) or z in (z1 - 1, z2 + 1):
+                d.set(x, y, z, edge)
+
+
+CROPS = ("wheat[age=7]", "carrots[age=7]", "potatoes[age=7]", "beetroots[age=3]")
+
+
+def enchant_room(d, tx, tz):
+    """Ground floor of the library tower (interior dx/dz 1..5, ladder (1,1), door (3,0)): the enchanting table in
+    the middle (3,3) with exactly 15 bookshelves on the ring two blocks out – 13 on the floor ring (all but the
+    ladder corner (1,1), the ladder approach (2,1) and the door gap (3,1)) and two stacked on (5,2) / (5,4).
+    The 3x3 around the table stays air on both levels (carpet would block the power), nothing else is on the ring."""
+    y = d.gy + 1
+    ring = [(dx, dz) for dx in range(1, 6) for dz in range(1, 6) if dx in (1, 5) or dz in (1, 5)]
+    for dx, dz in ring:
+        if (dx, dz) not in ((1, 1), (2, 1), (3, 1)):
+            d.set(tx + dx, y, tz + dz, "bookshelf")
+        elif (dx, dz) != (1, 1):
+            d.set(tx + dx, y, tz + dz, AIR)
+    for dx, dz in ((5, 2), (5, 4)):
+        d.set(tx + dx, y + 1, tz + dz, "bookshelf")
+    for dx, dz in cells(2, 2, 4, 4):
+        d.set(tx + dx, y, tz + dz, AIR)
+        d.set(tx + dx, y + 1, tz + dz, AIR)
+    d.item(tx + 3, y, tz + 3, "enchanting_table")
+
+
+def storage_vault(d, V, W, frame, pack):
+    """The estate store (L4+) inside the vault shell V = (x1, z1, x2, z2), interior y 2..5, door in the north wall.
+    BULK LINE along the back wall: an input chest on top of the first hopper of a hopper line (y3, z2-1) running
+    east; under each line hopper a drop hopper (y2) pointing north into a double chest of the bulk row (z2-2). A
+    hopper pulls from the container above it, so every drop hopper takes items off the line while the line keeps
+    pushing east: items spread over the whole bulk row, and once a chest is full its drop hopper fills and stops,
+    the rest moves on; the last line hopper empties into the overflow chest at the east end. Above the bulk row,
+    an island of double chests down the middle (both faces) and chests along the side walls are labelled by
+    category with signs on the upper chests."""
+    x1, z1, x2, z2 = V
+    xa, xe = x1 + 1, x2 - 1
+    zb = z2 - 1                                                    # machine row (back)
+    for x in range(xa + 1, xe):
+        d.set(x, 3, zb, hopper("east"))                              # line
+    for x in range(xa + 1, xe - 1):
+        d.set(x, 2, zb, hopper("north"))                             # drops
+    d.set(xe - 1, 2, zb, frame)
+    d.set(xe, 2, zb, frame)
+    d.set(xe, 3, zb, CHEST("north"))                                # overflow
+    d.set(xa + 1, 4, zb, CHEST("north"))                            # input
+    for x in range(xa + 1, xe - 1, 2):
+        dchest(d, x, 2, zb - 1, "north", "x")                        # bulk row (fed)
+        dchest(d, x, 3, zb - 1, "north", "x")                        # manual row above
+    d.set(xe - 1, 2, zb - 1, frame)
+    d.set(xe - 1, 3, zb - 1, frame)
+    d.sign(xe - 1, 3, zb - 2, "north", ["Overflow", "chest at the", "east end ->"], W)
+    d.sign(xa, 3, zb, "east", ["INPUT", "drop items in", "the chest above", "the hopper line"], W)
+    labels = ["Stone", "Wood", "Ores", "Metals", "Food", "Farming", "Mob drops", "Redstone", "Building",
+              "Dyes & wool", "Nether", "Ocean", "Tools", "Potions", "Valuables", "Misc"]
+    for i, x in enumerate(range(xa + 1, xe - 1, 2)):
+        d.sign(x, 2, zb - 2, "north", ["Bulk", str(i + 1)], W)
+        d.sign(x, 3, zb - 2, "north", [labels[i % len(labels)]], W)
+    # island: double chests two high, facing both aisles
+    zi = (z1 + z2) // 2                                            # 40
+    k = 0
+    for x in range(xa + 3, xe - 3, 2):
+        for z, f in ((zi, "north"), (zi + 1, "south")):
+            dchest(d, x, 2, z, f, "x")
+            dchest(d, x, 3, z, f, "x")
+            d.sign(x if f == "north" else x + 1, 3, z + (-1 if f == "north" else 1), f,
+                   [labels[(k + 3) % len(labels)]], W)
+            k += 1
+    # side walls: three double chests two high each side, north part of the room
+    for x, f in ((xa, "east"), (xe, "west")):
+        for z in (z1 + 2, z1 + 4, z1 + 6):
+            dchest(d, x, 2, z, f, "z")
+            dchest(d, x, 3, z, f, "z")
+            d.sign(x + (1 if f == "east" else -1), 3, z, f, [labels[(k + 5) % len(labels)]], W)
+            k += 1
+    # sorting desk by the door: crafting table, a slab bench, light
+    dx = (x1 + x2) // 2
+    fit(d, [(dx - 3, 2, z1 + 1, "crafting_table"), (dx - 2, 2, z1 + 1, slab(W, "top")),
+            (dx + 4, 2, z1 + 1, slab(W, "top")), (dx + 5, 2, z1 + 1, "crafting_table")])
+    if pack == "Neoterra":
+        for x in (xa + 4, dx, xe - 4):
+            for z in (z1 + 3, zb - 3):
+                d.set(x, 6, z, "sea_lantern")
+    else:                                                          # lanterns stand on the upper chests
+        for x in (xa + 3, xe - 4):
+            d.set(x, 4, zi, LANTF)
+        d.set(xa, 4, z1 + 3, LANTF)
+        d.set(xe, 4, z1 + 3, LANTF)
+        d.set(dx - 2, 3, z1 + 1, LANTF)
+        d.set(dx + 4, 3, z1 + 1, LANTF)
+
+
 # ============================================================================================ compositions: PLAYER HOUSE
 def player_estate(rel, L):
     """The player's seat grows into an estate: the house with its stores and workshop (L1-2), then a library
@@ -3409,6 +3666,7 @@ def player_estate(rel, L):
         T1, G, HALL, VAULT, T2 = (32, 34), (40, 34, 62, 50), (32, 2, 62, 12), (2, 34, 26, 46), (32, 52)
     if L >= 3:
         ph_tower(d, T1[0], T1[1], tower_rooms(W, "lore"))
+        enchant_room(d, T1[0], T1[1])
         recolor(d, pal_tower, (T1[0] - 1, T1[1] - 1, T1[0] + 7, T1[1] + 7, 2))
         gx1, gz1, gx2, gz2 = G
         hedge(d, gx1, gz1, gx2, gz2, "oak" if pack != "Cascadia" else "spruce",
@@ -3448,19 +3706,8 @@ def player_estate(rel, L):
         for x in (HALL[0], HALL[2]):
             lamp_post(d, x, HALL[1] - 2 if HALL[1] > 3 else HALL[3] + 2, 1, lamp)
         ph_vault(d, *VAULT, h=4)
-        # shelving: a back bay of barrels three high (gap opposite the doors), an island bay down the middle,
-        # chests along the west wall, two lanterns over the aisles
-        xe = VAULT[2] - 1                                   # 23 (HW, CA) / 25 (NT)
-        dx = (VAULT[0] + VAULT[2]) // 2                     # door column 13 / 14
-        for x in [x for x in range(3, xe + 1) if abs(x - dx) > 1]:
-            for k in range(3):
-                d.set(x, 2 + k, 45, BRL("north"))
-        for x in range(5, xe - 1):
-            for k in range(3):
-                d.set(x, 2 + k, 40, BRL("north"))
-        fit(d, [(3, 2, z, CHEST("east")) for z in (36, 37, 38, 42, 43, 44)]
-            + ([(8, 5, 37, LANT), (18, 5, 37, LANT)] if pack != "Neoterra" else
-               [(8, 6, 37, "sea_lantern"), (18, 6, 37, "sea_lantern")]))
+        storage_vault(d, VAULT, W, {"Hearthwood": "stone_bricks", "Cascadia": "cobblestone",
+                                    "Neoterra": "white_concrete"}[pack], pack)
         recolor(d, pal_vault, (VAULT[0] - 1, VAULT[1] - 1, VAULT[2] + 1, VAULT[3] + 1, 2))
         for x in range(VAULT[0], VAULT[2] + 1, 6):
             lamp_post(d, x, VAULT[1] - 2, 1, lamp)
