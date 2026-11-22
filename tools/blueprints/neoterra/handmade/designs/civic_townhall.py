@@ -455,6 +455,59 @@ def hw_rooms(d, L):
         hw_square(d, L, leg)
     if L >= 2:
         hw_eaves(d, L)
+    if L >= 4:
+        hw_well_yard(d)
+    if L >= 5:
+        hw_tithe_barn(d)
+
+
+def hw_well_yard(d):
+    """North-east yard beside the stores wing (L4+): roofed town well, horse trough, two shade oaks."""
+    for x in range(49, 52):
+        for z in range(10, 13):
+            d.set(x, 1, z, "stone_bricks")
+            if (x, z) != (50, 11):
+                _put(d, x, Y0, z, "mossy_stone_bricks" if (x + z) % 3 == 0 else "stone_bricks")
+    d.set(50, 1, 11, "water[level=0]")
+    d.set(50, Y0, 11, "water[level=0]")
+    for x, z in ((49, 10), (51, 10), (49, 12), (51, 12)):
+        pts(d, Y0 + 1, [(x, z)], "dark_oak_fence")
+        pts(d, Y0 + 2, [(x, z)], "dark_oak_fence")
+    d.hip(49, 10, 51, 12, Y0 + 3, "deepslate_tile_stairs", "deepslate_tile_slab", overhang=1)
+    pts(d, Y0 + 2, [(50, 11)], "chain[axis=y,waterlogged=false]")      # well rope over the shaft
+    pts(d, Y0 + 1, [(50, 11)], "chain[axis=y,waterlogged=false]")
+    pts(d, Y0, [(47, 14), (48, 14)], "water_cauldron[level=3]")       # horse trough by the loading door
+    pts(d, Y0, [(52, 14)], "hay_block[axis=y]")
+    oak(d, 52, 20)
+    oak(d, 48, 21)
+
+
+def hw_tithe_barn(d):
+    """Brick tithe barn in the south-east corner (L5): town grain and produce store, barrels along the west wall,
+    hay bales and chests along the east wall, a tally table by the door."""
+    shell(d, 47, 38, 53, 50, 1, "gable", "z", win="ew", ws=4, mat="bricks", up="bricks", wh=5, ties=(42, 46))
+    edoor(d, 50, Y0, 38, "south")
+    plan(d, Y0, 48, 39, [
+        "..._t",      # z39 tally table
+        "e....",
+        "e...h",
+        "e...h",
+        "e...h",
+        "e...h",
+        "e...h",
+        "e....",
+        "e...c",
+        "e...c",
+        "kk.kk",      # z49 sacks of grain (composters) along the gable wall
+    ], {"_": slab("dark_oak_slab", "top"), "t": CH("east", "dark_oak", sit=False),
+        "e": STK("barrel[facing=east,open=false]", "barrel[facing=east,open=false]"),
+        "h": STK("hay_block[axis=y]", "hay_block[axis=y]"),
+        "c": "chest[facing=west,type=single,waterlogged=false]", "k": "composter[level=7]"})
+    pts(d, Y0 + 1, [(51, 39)], CAN(1))
+    hang(d, Y0, [(50, 42), (50, 46)], h=5)
+    d.sign(50, 5, 37, "north", ["TITHE", "BARN"], "dark_oak")
+    wtorch(d, 49, 4, 37, "north")
+    wtorch(d, 51, 4, 37, "north")
 
 
 def hw_eaves(d, L):
@@ -1429,7 +1482,7 @@ def th_cascadia(rel, L):
         shell(d, 36, 34, 46, 42, 1, "gable", "x", mat="cobblestone", up="cobblestone", gable_end="cobblestone",
               ties=(41,))
         edoor(d, 41, Y0, 34, "south")
-        shell(d, 2, 28, 12, 42, 1, "gable", "z", mat="stripped_spruce_log", ties=(33, 37))
+        shell(d, 2, 28, 12, 42, 2, "gable", "z", mat="stripped_spruce_log", ties=(33, 37))   # stable + hayloft
         edoor(d, 7, Y0, 28, "south", double=True)
     cs_rooms(d, L)
     return d
@@ -1493,10 +1546,60 @@ def cs_rooms(d, L):
         cs_back(d, L, leg)
     if loft:
         cs_loft(d, L, leg)
+    if loft:
+        cs_yard(d)
     if L >= 4:
         cs_mayor(d, L, leg)
+        cs_picnic(d)
     if L >= 5:
         cs_street(d, L, leg)
+
+
+def cs_yard(d):
+    """Back yard behind the grange hall (L3+): firewood lean-to, fire circle with log benches, a spruce."""
+    for x in range(15, 19):                                            # two cords of firewood, 3 high
+        for z in (40, 41):
+            for y in (Y0, Y0 + 1, Y0 + 2):
+                _put(d, x, y, z, log("spruce_log", "z"))
+    for x, z in ((14, 39), (19, 39), (14, 41), (19, 41)):
+        for y in (Y0, Y0 + 1, Y0 + 2):
+            _put(d, x, y, z, log("spruce_log"))
+    d.fill(13, 5, 38, 20, 5, 42, slab("spruce_slab"))
+    d.fill(21, 1, 37, 27, 1, 41, "coarse_dirt")
+    d.set(24, 1, 39, "cobblestone")
+    _put(d, 24, Y0, 39, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+    pts(d, Y0, [(23, 37), (24, 37), (25, 37), (23, 41), (24, 41), (25, 41)], log("stripped_spruce_log", "x"))
+    pts(d, Y0, [(27, 38), (27, 39), (27, 40)], log("stripped_spruce_log", "z"))
+    pts(d, Y0, [(21, 38)], log("stripped_spruce_log"))                    # chopping block
+    spruce(d, 30, 39)
+
+
+def cs_picnic(d):
+    """Picnic shelter east of the stores (L4+): open timber shelter with two tables, a log pile, rail fence."""
+    W = "spruce"
+    for x, z in ((48, 30), (53, 30), (48, 34), (53, 34), (48, 38), (53, 38)):
+        for y in (Y0, Y0 + 1, Y0 + 2):
+            _put(d, x, y, z, log("spruce_log"))
+    d.fill(48, 1, 30, 53, 1, 38, "spruce_planks")
+    d.gable(48, 30, 53, 38, 5, "z", "dark_oak_stairs", "dark_oak_slab", "spruce_planks", overhang=1)
+    for zt in (32, 36):
+        for x in range(49, 53):
+            _put(d, x, Y0, zt, slab("spruce_slab", "top"))
+            d.chair(x, Y0, zt - 1, "north", W, sit=False)
+            d.chair(x, Y0, zt + 1, "south", W, sit=False)
+    pts(d, Y0 + 1, [(50, 32), (51, 36)], CAN(2))
+    pts(d, Y0 + 1, [(52, 32)], "flower_pot")
+    hang(d, Y0, [(50, 34), (51, 34)], h=4)
+    for x in range(48, 54):                                            # log pile
+        for y in (Y0, Y0 + 1):
+            _put(d, x, y, 41, log("spruce_log", "x"))
+    for x in range(49, 53):
+        _put(d, x, Y0 + 2, 41, log("spruce_log", "x"))
+    for z in range(29, 43):                                            # rail fence round the picnic ground
+        _put(d, 47, Y0, z, "spruce_fence") if z not in (33, 34, 35) else None
+        _put(d, 54, Y0, z, "spruce_fence")
+    for x in range(48, 54):
+        _put(d, x, Y0, 42, "spruce_fence")
 
 
 def cs_back(d, L, leg):
@@ -1744,6 +1847,29 @@ def cs_street(d, L, leg):
               "e": "barrel[facing=north,open=false]"}, w=9)
     hang(d, Y0, [(7, 33), (7, 37)])
     d.sign(7, 5, 27, "north", ["LIVERY"], W)
+    # hayloft: ladder up through a hatch by the south wall, bales stacked under the eaves, sacks, hay door + hoist
+    for y in range(Y0, 7):
+        d.set(5, y, 41, "ladder[facing=north,waterlogged=false]")
+    plan(d, 7, 3, 29, [
+        "hh.....hh",
+        "hh.....hh",
+        "h.......h",
+        ".........",
+        "hh.....kk",
+        "hh.....kk",
+        ".........",
+        "h.......h",
+        "hh.....hh",
+        "h.......c",
+        ".........",
+        "e.......e",
+    ], {"h": STK("hay_block[axis=y]", "hay_block[axis=y]"), "k": "composter[level=7]",
+        "c": "chest[facing=west,type=single,waterlogged=false]", "e": "barrel[facing=up,open=false]"}, w=9)
+    hang(d, 7, [(7, 32), (7, 38)])
+    d.set(7, 8, 28, AIR)                                              # hay door with a rail and a hoist beam
+    d.set(7, 7, 28, "spruce_fence")
+    _put(d, 7, 10, 27, log("spruce_log", "z"))
+    _put(d, 7, 9, 27, "chain[axis=y,waterlogged=false]")
     # ---------------------------------------------------------------- boardwalk main street
     for x in range(0, 55):
         for z in range(0, 3):

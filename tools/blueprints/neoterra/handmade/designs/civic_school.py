@@ -484,8 +484,20 @@ def sch_hearthwood(rel, L):
             window_box(d, 18, 8, z, "west", "red_tulip" if z == 18 else "allium")
 
     # ------------------------------------------------------------------ D: schoolmaster's house (L4+)
+    if L >= 3:                                                          # shade oak and borders east of the art room
+        plant_tree(d, 28, 21, "oak")
+        for z, f in ((18, "red_tulip"), (19, "oxeye_daisy"), (23, "cornflower"), (24, "allium")):
+            d.set(27, 1, z, "grass_block[snowy=false]")
+            d.set(27, 2, z, f)
     if L >= 4:
         entry(d, 8, Y0, 6, "south", step="stone_bricks")
+        # schoolmaster's house, west side under the eaves: garden bench, pot, water butt, log basket, lamp
+        d.chair(1, Y0, 9, "east", OAK, sit=False)
+        d.chair(1, Y0, 10, "east", OAK, sit=False)
+        d.set(1, Y0, 7, "potted_red_tulip")
+        d.set(1, Y0, 13, "water_cauldron[level=3]")
+        d.set(1, Y0, 16, "barrel[facing=up,open=false]")
+        lamp_post(d, 1, 18, h=2)
         for z in (8, 14):                                               # hand-set west windows (fire wall)
             for y in (3, 4, 8, 9):
                 d.set(2, y, z, "glass_pane")
@@ -764,6 +776,40 @@ def sch_hearthwood(rel, L):
         d.set(41, 2, 35, "composter[level=7]")
         d.set(44, 1, 32, "gravel")
         lamp_post(d, 41, 31)
+        # games pavilion beside the field, reached through a gap in the hedge: changing bench, kit chests,
+        # ball barrel, tea urn on a side table, water butt
+        shell(d, 31, 42, 40, 47, 2, "gable", "x", win="ns", mat="calcite", up="calcite", beams=(35, 38))
+        for z in (44, 45):
+            d.set(29, 2, z, AIR)
+            d.set(30, 1, z, "gravel")
+        entry(d, 31, Y0, 44, "east", OAK, step="stone_bricks")
+        d.sign(30, 4, 44, "west", ["PAVILION"], OAK)
+        stairs(d, 34, 46, Y0, 7, "east")                                 # up to the tea room
+        rails(d, 7, [(34, 45), (35, 45), (36, 45), (37, 45), (38, 45)], "oak_fence")
+        plan(d, Y0, 32, 43, [
+            # 32..39
+            ".hhhhhh.",     # z43 changing bench along the north wall
+            "........",     # z44 (door at x31)
+            "c_.....U",     # z45 scorer's desk, water butt
+            "C.......",     # z46 kit chest (stair flight x34-38)
+        ], {"h": stool("north", OAK), "_": tslab("oak_slab"), "c": stool("west", OAK),
+            "C": "chest[facing=north,type=single,waterlogged=false]", "U": "water_cauldron[level=3]"})
+        d.set(33, 3, 45, candle(2))
+        d.set(36, 5, 44, LANT)
+        # tea room upstairs: table for four, tea urn on a side table, ball barrel, plant
+        plan(d, 7, 32, 43, [
+            # 32..39
+            "p.._.._b",     # z43
+            "..w__e..",     # z44
+        ], {"p": "potted_red_tulip", "_": tslab("oak_slab"), "w": seat("west", OAK), "e": seat("east", OAK),
+            "b": "barrel[facing=up,open=false]"})
+        d.set(35, 8, 43, "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]")
+        d.set(35, 8, 44, candle(1))
+        d.set(38, 8, 43, "flower_pot")
+        for x in (35, 38):
+            d.set(x, 10, 44, LANT)
+        d.set(29, 3, 43, "lantern[hanging=false,waterlogged=false]")   # lanterns on the hedge either side
+        d.set(29, 3, 46, "lantern[hanging=false,waterlogged=false]")
     return d
 
 
@@ -843,6 +889,12 @@ def sch_neoterra(rel, L):
     d.chair(5, Y0, 14, "east", B, sit=False)
     d.set(5, Y0, 15, "moss_block")
     d.set(5, Y0 + 1, 15, "flowering_azalea")
+    if L >= 3:                                                          # south side, under the upper floor's overhang
+        for x in (9, 17):
+            d.set(x, Y0, 17, "moss_block")
+            d.set(x, Y0 + 1, 17, "azalea")
+        d.chair(12, Y0, 17, "north", B, sit=False)
+        d.chair(13, Y0, 17, "north", B, sit=False)
     if pnf > 1:                                                         # upper floor: media and language room
         stairs(d, 14, 7, Y0, 7, "east")
         rails(d, 7, [(15, 8), (16, 8), (17, 8), (14, 7)])
@@ -966,6 +1018,16 @@ def sch_neoterra(rel, L):
         d.set(48, 2, 42, "moss_block")
         d.set(48, 3, 42, "flowering_azalea")
         lamp_post(d, 49, 29)
+        # sand pit with a quartz kerb, bucket (cauldron) and two shade birches outside the fence
+        for x in range(44, 48):
+            for z in range(39, 42):
+                if x in (44, 47) or z in (39, 41):
+                    d.set(x, 2, z, slab("smooth_quartz_slab", "bottom"))
+                else:
+                    d.set(x, 1, z, "sand")
+        d.set(45, 2, 40, "cauldron")
+        plant_tree(d, 37, 30, "birch")
+        plant_tree(d, 37, 41, "birch")
 
     # ------------------------------------------------------------------ sports hall (L4+)
     if L >= 4:
@@ -1000,6 +1062,13 @@ def sch_neoterra(rel, L):
             d.chair(x, Y0, 19, "south", B, sit=False)
         for z in range(22, 28):
             d.set(35, Y0, z, "iron_bars")
+        d.set(5, Y0, 26, "water_cauldron[level=3]")                     # drinking trough by the side path
+        for x, z in ((5, 22), (5, 30), (10, 33), (16, 33), (25, 33), (31, 33)):
+            d.set(x, Y0, z, "moss_block")
+            d.set(x, Y0 + 1, z, "azalea" if (x + z) % 2 else "flowering_azalea")
+        d.chair(20, Y0, 33, "north", B, sit=False)
+        d.chair(21, Y0, 33, "north", B, sit=False)
+        d.set(35, Y0, 30, "composter[level=0]")
         d.set(33, Y0, 31, "barrel[facing=up,open=false]")
         d.set(33, Y0, 30, "barrel[facing=up,open=false]")
         d.set(32, Y0, 31, "target[power=0]")
@@ -1258,6 +1327,12 @@ def sch_cascadia(rel, L):
         d.set(5, 4, 12, LANT_S)
         d.bed(13, Y0, 15, "south", "brown")
         d.set(12, 3, 15, candle(1))
+        for x in range(6, 11):                                          # firewood stacked against the back wall
+            for y in (2, 3):
+                d.set(x, y, 17, log("spruce_log", "x"))
+        d.set(12, 2, 18, log("stripped_spruce_log"))                    # chopping block
+        d.set(13, 2, 17, "water_cauldron[level=3]")                     # rain barrel
+        d.set(4, 2, 17, "barrel[facing=up,open=false]")
         d.set(9, 5, 12, LANT)
         chimney(d, 4, 12, Y0, 13)
         for x in range(3, 16):
@@ -1331,8 +1406,9 @@ def sch_cascadia(rel, L):
             d.set(x + (1 if x == 12 else -1), 5, 31, "iron_bars")
         for x in (15, 16, 17, 18, 32, 33, 34, 35):                      # benches along the north wall
             d.chair(x, Y0, 27, "north", S)
-        for x in (15, 16, 17, 18):
+        for x in (15, 16, 17, 18, 32, 33, 34, 35):
             d.chair(x, Y0, 35, "south", S)
+        d.rug(37, 28, 38, 34, Y0, ("green_carpet",), "plain")          # climbing mats under the wall ladders
         for z in (28, 30, 32, 34):                                      # climbing ropes / wall ladders
             for y in range(2, 8):
                 d.set(39, y, z, "ladder[facing=west,waterlogged=false]") if z in (28, 34) else None
@@ -1392,6 +1468,8 @@ def sch_cascadia(rel, L):
             d.set(x, 2, 33, "spruce_planks")
             d.chair(x, 2, 32, "north", S)
             d.chair(x, 2, 34, "south", S)
+        d.set(46, 3, 33, "flower_pot")
+        d.set(48, 3, 33, candle(2))
         for z in (29, 34):
             d.set(46, 6, z, LANT)
         chimney(d, 52, 28, Y0, 17)
@@ -1465,6 +1543,39 @@ def sch_cascadia(rel, L):
             d.set(16, y, 4, "spruce_fence")
         d.set(16, 14, 4, "red_wool")
         d.set(16, 13, 4, "white_wool")
+        # east yard: open horse shed for pupils who ride in, rail-fenced paddock, two privies at the back
+        for x, z in ((48, 8), (52, 8), (48, 13), (52, 13)):
+            for y in range(Y0, 5):
+                d.set(x, y, z, log("spruce_log"))
+        for x in range(49, 52):                                         # log back wall on the street side
+            for y in range(Y0, 5):
+                d.set(x, y, 8, log("spruce_log", "x"))
+        d.gable(48, 8, 52, 13, 5, "z", "dark_oak_stairs", "dark_oak_slab", "spruce_planks", overhang=1)
+        d.fill(49, 1, 9, 51, 1, 12, "spruce_planks")
+        for z in (9, 11):
+            d.set(49, 2, z, "hay_block[axis=y]")
+        d.set(51, 2, 9, "water_cauldron[level=3]")
+        d.set(51, 2, 10, "water_cauldron[level=3]")
+        d.set(50, 4, 11, LANT)
+        for x in range(47, 53):
+            for z in (15, 20):
+                if (x, z) != (50, 15):
+                    d.set(x, 2, z, "spruce_fence")
+        for z in range(16, 20):
+            d.set(47, 2, z, "spruce_fence")
+            d.set(52, 2, z, "spruce_fence")
+        d.set(50, 2, 15, "spruce_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
+        plant_tree(d, 49, 18, "spruce")                                 # shade spruce in the paddock
+        for px in (47, 50):                                             # privies: 3x3 plank huts, slab roof
+            for x in range(px, px + 3):
+                for z in range(22, 25):
+                    if x in (px, px + 2) or z in (22, 24):
+                        for y in (2, 3, 4):
+                            d.set(x, y, z, "spruce_planks")
+                    d.set(x, 5, z, slab("spruce_slab"))
+            d.door(px + 1, 2, 22, "south", S)
+            d.set(px + 1, 2, 23, "composter[level=0]")
+            d.set(px + 1, 4, 22, "spruce_trapdoor[facing=north,half=top,open=false,powered=false,waterlogged=false]")
     return d
 
 

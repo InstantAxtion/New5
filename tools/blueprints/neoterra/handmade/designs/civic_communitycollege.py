@@ -226,8 +226,9 @@ def col_hearthwood(rel, L):
     mnf = 2 if L >= 3 else 1
     # ---------------------------------------------------------------- shells
     M = shell(d, 16, 12, 30, 22, mnf, "gable", "z")
+    if L >= 3:
+        shell(d, 30, 13, 38, 21, 2 if L >= 4 else 1, "gable", "x", win="nes", mat="bricks", up="bricks")
     if L >= 2:
-        shell(d, 30, 13, 38, 21, 2 if L >= 3 else 1, "gable", "x", win="nes", mat="bricks", up="bricks")
         T = shell(d, 4, 13, 16, 23, 2 if L >= 5 else 1, "gable", "x", win="nws", mat="bricks", up="bricks")
     if L >= 4:
         shell(d, 14, 26, 36, 38, 1, "gable", "x", wh=7)
@@ -252,6 +253,7 @@ def col_hearthwood(rel, L):
     d.fill(21, 6, 10, 25, 6, 11, "smooth_stone")
     entry(d, 23, 12, "south", step="polished_andesite")
     d.sign(23, 5, 11, "north", ["MECHANICS'", "INSTITUTE"], W)
+    place(d, [(22, 2, 11, "potted_azure_bluet"), (24, 2, 11, "potted_azure_bluet"), (23, 5, 10, LH)])
     # outdoor class on the west lawn: speaker's plinth, two benches facing it, a chalk easel
     d.set(10, 1, 3, "polished_andesite")
     d.set(10, Y0, 3, slab("stone_brick_slab"))
@@ -270,9 +272,10 @@ def col_hearthwood(rel, L):
         d.set(28 + i, 2, 2, fl[ch])
         if ch == "r":
             d.set(28 + i, 3, 2, "rose_bush[half=upper]")
-    plant_tree(d, 36, 6)
-    place(d, [(34, 2, 7, st("dark_oak_stairs", "south")), (35, 2, 7, st("dark_oak_stairs", "south")),
-              (33, 2, 7, td(W, "west", "bottom", True)), (36, 2, 8, "potted_allium")])
+    if L >= 2:                                                          # the oak and its bench come with L2
+        plant_tree(d, 36, 6)
+        place(d, [(34, 2, 7, st("dark_oak_stairs", "south")), (35, 2, 7, st("dark_oak_stairs", "south")),
+                  (33, 2, 7, td(W, "west", "bottom", True)), (36, 2, 8, "potted_allium")])
     if L >= 3:                                                          # front beds along the wings
         for x, f in zip(range(4, 16), "dcodcodcodco"):
             d.set(x, 1, 10, "grass_block[snowy=false]")
@@ -333,8 +336,8 @@ def col_hearthwood(rel, L):
         carpet(d, [(23, z) for z in range(15, 21)], 7, "red")
         hang(d, [(21, 14), (25, 14), (21, 18), (25, 18)], 10)
 
-    # ---------------------------------------------------------------- reading room (L2+)
-    if L >= 2:
+    # ---------------------------------------------------------------- reading room (L3+)
+    if L >= 3:
         link(d, 30, Y0, 17, "east")
         d.sign(34, 4, 12, "north", ["READING", "ROOM"], W)
         shelf(d, [(31, 14), (33, 14), (34, 14), (36, 14), (37, 14)], Y0, 3)
@@ -354,12 +357,14 @@ def col_hearthwood(rel, L):
         place(d, [(39, 2, 15, "potted_red_tulip"), (39, 2, 18, "potted_allium"), (39, 2, 20, "barrel[facing=up,open=false]"),
                   (39, 3, 20, "potted_fern")])
         d.wall_torch(39, 4, 17, "east")
-        # under the street eaves of both wings: benches against the wall between flower tubs
-        for x in (6, 7, 33, 34):
+        d.chair(33, Y0, 22, "north", W, sit=False)                      # bench under the south eave
+        d.chair(34, Y0, 22, "north", W, sit=False)
+        place(d, [(32, 2, 22, "potted_red_tulip"), (35, 2, 22, "potted_fern")])
+        # under the street eave: a bench against the wall between flower tubs
+        for x in (33, 34):
             d.chair(x, Y0, 12, "south", W, sit=False)
-        place(d, [(5, 2, 12, "potted_red_tulip"), (8, 2, 12, "potted_cornflower"), (11, 2, 12, "potted_oxeye_daisy"),
-                  (32, 2, 12, "potted_allium"), (35, 2, 12, "potted_red_tulip"), (37, 2, 12, "potted_fern")])
-        if L >= 3:                                                      # seminar room upstairs
+        place(d, [(32, 2, 12, "potted_allium"), (35, 2, 12, "potted_red_tulip"), (37, 2, 12, "potted_fern")])
+        if L >= 4:                                                      # seminar room upstairs
             link(d, 30, 7, 17, "east")
             for x in range(33, 36):
                 for z in (16, 17):
@@ -377,6 +382,9 @@ def col_hearthwood(rel, L):
     if L >= 2:
         link(d, 16, Y0, 17, "west")
         d.sign(10, 4, 12, "north", ["TECHNICAL", "SCHOOL"], W)
+        for x in (6, 7):                                                # bench under the street eave
+            d.chair(x, Y0, 12, "south", W, sit=False)
+        place(d, [(5, 2, 12, "potted_red_tulip"), (8, 2, 12, "potted_cornflower"), (11, 2, 12, "potted_oxeye_daisy")])
         chimney(d, 4, 18, Y0, T["ridge"] + 1)
         d.hearth(5, Y0, 18, "east", 6, "bricks", "campfire")
         place(d, [(5, 2, 14, "barrel[facing=up,open=false]"), (5, 2, 15, "water_cauldron[level=3]"),
@@ -391,6 +399,8 @@ def col_hearthwood(rel, L):
             d.set(x, 4, 14, td(W, "south", "bottom", True))
         tops(d, [(9, 18), (10, 18), (11, 18)], Y0, "dark_oak_slab")     # demonstration bench
         place(d, [(9, 3, 18, cand(2)), (11, 3, 18, LS)])
+        d.item(13, Y0, 18, "lectern", "west")                           # instructor's lectern, manuals shelf
+        shelf(d, [(15, 21), (15, 22)], Y0, 2)
         seat(d, [(9, 19), (11, 19)], Y0, "south", W)
         seat(d, [(10, 17)], Y0, "north", W)
         place(d, [(6, 2, 22, log("stripped_oak_log", "x")), (7, 2, 22, log("stripped_oak_log", "x")),
@@ -641,7 +651,10 @@ def col_neoterra(rel, L):
         place(d, [(31, 2, 25, "barrel[facing=up,open=false]"), (31, 3, 25, "barrel[facing=up,open=false]"),
                   (32, 2, 25, "barrel[facing=up,open=false]"), (34, 2, 25, chest("north", "left")),
                   (35, 2, 25, chest("north", "right")), (37, 2, 25, "anvil[facing=east]"), (39, 2, 25, "potted_bamboo")])
-        shelf(d, [(36, 25), (38, 25)], Y0, 2)                           # manuals and pattern books
+        shelf(d, [(36, 25), (38, 25)], Y0, 3)                           # manuals and pattern books
+        place(d, [(33, 2, 25, "barrel[facing=up,open=false]"), (33, 3, 25, "potted_bamboo"),
+                  (31, 4, 17, td(B, "south", "bottom", True)), (39, 4, 17, td(B, "south", "bottom", True)),
+                  (32, 5, 23, LH), (38, 5, 19, LH), (39, 3, 20, cand(1, "orange"))])
         tops(d, [(39, 20), (39, 21), (39, 22)], Y0, "birch_slab")       # pegboard bench on the east wall
         for z in range(19, 24):
             d.set(39, 4, z, td(B, "west", "bottom", True))
@@ -827,9 +840,10 @@ def col_cascadia(rel, L):
     mnf = 2 if L >= 3 else 1
     # ---------------------------------------------------------------- shells
     H = shell(d, 12, 16, 30, 26, mnf, "gable", "x")
-    if L >= 2:
+    if L >= 3:                                                          # woodshop comes with L3
         shell(d, 30, 17, 38, 25, 1, "gable", "z", win="nes", mat="stripped_spruce_log", up="stripped_spruce_log")
-        shell(d, 2, 16, 12, 26, 2 if L >= 3 else 1, "gable", "z", win="nws", mat="stripped_dark_oak_log",
+    if L >= 2:                                                          # library lodge L2, its loft L4
+        shell(d, 2, 16, 12, 26, 2 if L >= 4 else 1, "gable", "z", win="nws", mat="stripped_dark_oak_log",
               up="stripped_dark_oak_log")
     if L >= 4:
         BK = shell(d, 36, 30, 50, 40, 2, "gable", "x", mat="mangrove_planks", up="mangrove_planks")
@@ -867,8 +881,10 @@ def col_cascadia(rel, L):
     if L >= 2:
         d.item(22, Y0, 9, "lectern", "north")
     place(d, [(16, 2, 9, log("spruce_log", "x")), (17, 2, 9, log("spruce_log", "x")), (16, 3, 9, log("spruce_log", "x"))])
-    lamppost(d, 16, 3, "cs")
-    lamppost(d, 26, 3, "cs")
+    if L >= 2:
+        lamppost(d, 16, 3, "cs")
+        lamppost(d, 26, 3, "cs")
+        place(d, [(25, 2, 9, "spruce_fence"), (25, 3, 9, "black_concrete"), (25, 4, 9, td(S, "north", "bottom"))])
 
     # ---------------------------------------------------------------- hall: lecture room (all levels)
     d.hut(13, Y0, 17, "north")
@@ -904,8 +920,8 @@ def col_cascadia(rel, L):
         place(d, [(29, 8, 20, cand(1)), (29, 7, 25, "potted_fern"), (14, 7, 21, "brown_carpet"), (14, 7, 23, "brown_carpet")])
         hang(d, [(18, 21), (26, 21), (22, 24)], 10)
 
-    # ---------------------------------------------------------------- woodshop (L2+)
-    if L >= 2:
+    # ---------------------------------------------------------------- woodshop (L3+)
+    if L >= 3:
         link(d, 30, Y0, 21, "east")
         d.sign(34, 4, 16, "north", ["WOOD", "SHOP"], S)
         place(d, [(37, 2, 18, "crafting_table"), (37, 2, 20, "stonecutter[facing=west]"),
@@ -931,8 +947,23 @@ def col_cascadia(rel, L):
     if L >= 2:
         entry(d, 7, 16, "south", step="cobblestone")
         d.sign(8, 4, 15, "north", ["LIBRARY", "LODGE"], S)
+        d.fill(3, 1, 13, 10, 1, 15, "spruce_planks")                    # entrance porch of the lodge
+        for x in (4, 10):
+            for y in range(Y0, 6):
+                d.set(x, y, 13, log("spruce_log"))
+        for x in range(3, 12):
+            d.set(x, 6, 12, st("spruce_stairs", "south"))
+            for z in range(13, 16):
+                d.set(x, 6, z, slab("spruce_slab"))
+        for x in (5, 6, 8, 9):
+            d.set(x, Y0, 13, "spruce_fence")
+        seat(d, [(5, 15), (9, 15)], Y0, "south", S, sit=False)
+        place(d, [(3, 2, 15, "barrel[facing=up,open=false]"), (3, 3, 15, "potted_fern"), (7, 5, 14, LH)])
         d.hearth(11, Y0, 22, "west", 6, "cobblestone", "campfire")
-        shelf(d, [(x, z) for z in (18, 20, 22, 24) for x in range(3, 7)], Y0, 2)
+        shelf(d, [(x, z) for z in (18, 20, 22, 24) for x in range(3, 7)], Y0, 3)
+        tops(d, [(8, 24), (9, 24)], Y0, "spruce_slab")                  # study table by the stacks
+        seat(d, [(8, 25), (9, 25)], Y0, "south", S)
+        d.set(8, 3, 24, cand(2))
         seat(d, [(9, 21), (9, 23)], Y0, "west", S)
         place(d, [(9, 2, 22, td(S, "north")), (9, 3, 22, LS)])
         carpet(d, [(10, 21), (10, 22), (10, 23)], Y0, "brown")
@@ -945,7 +976,7 @@ def col_cascadia(rel, L):
             d.set(1, 2, z, log("spruce_log", "z"))
             d.set(1, 3, z, log("spruce_log", "z"))
         d.set(1, 4, 21, LS)
-        if L >= 3:
+        if L >= 4:
             stair(d, 4, 25, Y0, 7, "east", [(4, 7, 25), (5, 7, 24), (6, 7, 24), (7, 7, 24)])
             for x in range(5, 9):
                 d.set(x, 7, 20, "spruce_planks")
@@ -1009,6 +1040,11 @@ def col_cascadia(rel, L):
         hang(d, [(41, 28), (46, 28)], 4)
         for x in range(36, 51):                                         # porch eave
             d.set(x, 5, 26, st("spruce_stairs", "north"))
+        place(d, [(37, 2, 41, "potted_fern"), (38, 2, 41, "barrel[facing=up,open=false]"),
+                  (39, 2, 41, "water_cauldron[level=3]"), (48, 2, 41, "barrel[facing=up,open=false]"),
+                  (38, 3, 41, "potted_fern")])                          # rain butt & stores under the back eave
+        d.wall_torch(42, 4, 41, "south")
+    if L >= 5:                                                          # work yard round the bunkhouse (L5)
         for x, z in ((30, 40), (34, 40), (30, 43), (34, 43)):          # woodshed behind the hall
             for y in (2, 3, 4):
                 d.set(x, y, z, log("spruce_log"))
@@ -1051,12 +1087,32 @@ def col_cascadia(rel, L):
         for x in (37, 39, 40, 42, 43):
             d.set(x, 3, 49, log("spruce_log", "x"))
         hang(d, [(40, 45), (46, 46), (43, 48)], 5)
+        for z in range(44, 49):                                         # lumber rack on the west wall
+            d.set(37, 2, z, log("stripped_spruce_log", "z"))
+            d.set(37, 3, z, log("stripped_spruce_log", "z"))
+        tops(d, [(44, 46), (45, 46)], Y0, "spruce_slab")                # planing bench
+        place(d, [(44, 3, 46, cand(1)), (45, 3, 46, log("stripped_spruce_log", "x")),
+                  (47, 2, 46, "barrel[facing=up,open=false]"), (47, 3, 46, "barrel[facing=up,open=false]"),
+                  (47, 2, 47, "barrel[facing=up,open=false]")])
+        d.chair(44, Y0, 45, "north", S, sit=False)
+        for z in range(46, 50):                                         # log deck waiting for the saw
+            for x in (33, 34):
+                d.set(x, 2, z, log("spruce_log", "z"))
+            d.set(33, 3, z, log("spruce_log", "z"))
+        for z in (45, 50):
+            d.set(33, 2, z, "spruce_fence")
+            d.set(34, 2, z, "spruce_fence")
+        for x in (41, 42, 43, 44, 45):                                  # tool wall over the bench line
+            d.set(x, 4, 43, td(S, "south", "bottom", True))
         for x in range(40, 45):                                         # study room upstairs
             d.set(x, 7, 46, "spruce_planks")
         seat(d, [(x, 45) for x in range(40, 45)], 7, "north", S)
         seat(d, [(x, 47) for x in range(40, 45)], 7, "south", S)
         place(d, [(41, 8, 46, cand(2)), (43, 8, 46, LS), (37, 7, 49, "potted_fern")])
-        shelf(d, [(x, 43) for x in (37, 39, 40, 42, 43, 45, 46)], 7, 2)
+        shelf(d, [(x, 43) for x in range(37, 47)], 7, 3)
+        tops(d, [(38, 49), (39, 49), (41, 49), (42, 49)], 7, "spruce_slab")     # drafting desks on the south wall
+        seat(d, [(38, 48), (39, 48), (41, 48), (42, 48)], 7, "north", S, sit=False)
+        place(d, [(38, 8, 49, cand(1)), (42, 8, 49, LS), (45, 7, 49, "cartography_table"), (46, 7, 49, chest("north"))])
         hang(d, [(38, 46), (42, 46), (46, 46)], 10)
         lamppost(d, 35, 44, "cs")
         lamppost(d, 51, 44, "cs")
@@ -1080,21 +1136,54 @@ def col_cascadia(rel, L):
             d.set(x, 2, 40, "sweet_berry_bush[age=2]" if x % 2 else "fern")
         place(d, [(10, 1, 36, "water"), (15, 2, 33, "water_cauldron[level=3]"), (5, 2, 33, "composter[level=4]"),
                   (5, 2, 41, "potted_blue_orchid"), (15, 2, 41, "barrel[facing=up,open=false]")])
+        place(d, [(6, 2, 33, slab("spruce_slab", "top")), (7, 2, 33, slab("spruce_slab", "top")), (8, 2, 33, "barrel[facing=up,open=false]"),
+                  (6, 3, 33, "potted_fern"), (7, 3, 33, "potted_blue_orchid"),
+                  (12, 2, 33, slab("spruce_slab", "top")), (13, 2, 33, slab("spruce_slab", "top")), (14, 2, 33, "barrel[facing=up,open=false]"),
+                  (12, 3, 33, "flower_pot"), (13, 3, 33, "potted_red_tulip")])
+        hang(d, [(7, 36), (13, 36), (7, 39), (13, 39)], 4)
+        place(d, [(6, 2, 41, "composter[level=2]"), (14, 2, 41, "cauldron"), (10, 4, 38, LH)])
         d.set(10, 2, 32, AIR)
         d.set(10, 3, 32, AIR)
         d.door(10, 2, 32, "south", S)
         # ag barn
         entry(d, 26, 32, "south", double=True, step="spruce_planks")
         d.sign(26, 5, 31, "north", ["AG BARN"], S)
-        place(d, [(21, 2, 34, "hay_block[axis=y]"), (21, 3, 34, "hay_block[axis=y]"), (21, 2, 35, "hay_block[axis=y]"),
-                  (21, 2, 40, "hay_block[axis=y]"), (31, 2, 34, "hay_block[axis=y]"), (31, 2, 37, "hay_block[axis=y]"),
-                  (31, 2, 43, "composter[level=6]"), (22, 2, 43, "barrel[facing=up,open=false]"),
-                  (23, 2, 43, "barrel[facing=up,open=false]"),
-                  (26, 2, 37, "spruce_fence"), (26, 2, 38, slab("spruce_slab", "top")),
-                  (26, 2, 39, slab("spruce_slab", "top")), (26, 3, 39, "hay_block[axis=y]"),
-                  (25, 2, 39, td(S, "west", "bottom", True)), (27, 2, 39, td(S, "east", "bottom", True)),
-                  (28, 2, 43, "cauldron"), (29, 2, 43, "cauldron")])
-        hang(d, [(24, 34), (28, 42), (26, 38)], 7)
+        # four pens off a centre aisle: fence fronts with gates, hay, water troughs, feed barrels
+        HAY = "hay_block[axis=y]"
+        for fx, gate_face in ((24, "east"), (28, "west")):
+            for z in (33, 35, 37, 39):
+                d.set(fx, Y0, z, "spruce_fence")
+            for z in (34, 38):
+                d.set(fx, Y0, z, f"spruce_fence_gate[facing={gate_face},in_wall=false,open=false,powered=false]")
+        for x in (21, 22, 23, 29, 30, 31):
+            d.set(x, Y0, 36, "spruce_fence")
+        place(d, [(21, 2, 33, HAY), (21, 3, 33, HAY), (21, 2, 35, "water_cauldron[level=3]"), (23, 2, 33, "hay_block[axis=x]"),
+                  (21, 2, 39, HAY), (22, 2, 39, HAY), (21, 2, 37, "water_cauldron[level=3]"),
+                  (31, 2, 33, HAY), (31, 2, 35, "water_cauldron[level=3]"), (29, 2, 33, "hay_block[axis=x]"),
+                  (31, 2, 39, HAY), (31, 3, 39, HAY), (31, 2, 37, "water_cauldron[level=3]")])
+        # work bay under the hay loft
+        place(d, [(31, 2, 43, "composter[level=6]"), (22, 2, 43, "barrel[facing=up,open=false]"),
+                  (23, 2, 43, "barrel[facing=up,open=false]"), (22, 3, 43, "barrel[facing=up,open=false]"),
+                  (28, 2, 43, "cauldron"), (29, 2, 43, chest("north")), (30, 2, 43, "grindstone[face=floor,facing=north]"),
+                  (21, 2, 41, slab("spruce_slab", "top")), (21, 2, 42, slab("spruce_slab", "top")), (21, 3, 41, "flower_pot"),
+                  (31, 2, 41, HAY)])
+        for x in range(21, 32):                                         # hay loft over the south bay
+            for z in range(40, 44):
+                d.set(x, 6, z, "spruce_planks")
+        for y in range(Y0, 6):                                          # ladder post
+            d.set(26, y, 41, log("spruce_log"))
+        for y in range(Y0, 7):
+            d.set(26, y, 40, "ladder[facing=north,waterlogged=false]")
+        for x in range(22, 31):
+            for z in (41, 42, 43):
+                if not (25 <= x <= 27 and z == 41):
+                    d.set(x, 7, z, HAY)
+        for x in range(23, 30):
+            d.set(x, 8, 43, HAY)
+        for x in (23, 24, 28, 29):
+            d.set(x, 8, 41, HAY)
+        hang(d, [(24, 34), (28, 34), (24, 38), (28, 38)], 7)
+        hang(d, [(23, 42), (29, 42)], 5)
     return d
 
 

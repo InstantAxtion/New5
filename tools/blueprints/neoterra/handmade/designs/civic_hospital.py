@@ -1348,6 +1348,50 @@ def cs_grounds(d):
                (21, 47, "fern"), (34, 48, "blue_orchid")])
 
 
+def cs_sun_garden(d):
+    """L5 south lawn: the kitchen garden for the infirmary cook and an open sun shelter where convalescent
+    patients lie out on cots, plus two spruces on the east lawn."""
+    y = Y0
+    # kitchen garden: rail fence with a gate, three crop rows between dirt paths, scarecrow, compost, water butt
+    for x in range(6, 19):
+        for z in (39, 45):
+            if (x, z) != (12, 39):
+                d.set(x, y, z, "spruce_fence")
+    for z in range(40, 45):
+        d.set(6, y, z, "spruce_fence")
+        d.set(18, y, z, "spruce_fence")
+    d.set(12, y, 39, "spruce_fence_gate[facing=north,in_wall=false,open=false,powered=false]")
+    for z, crop in ((40, "carrots[age=7]"), (42, "potatoes[age=7]"), (44, "beetroots[age=3]")):
+        for x in range(7, 18):
+            d.set(x, 1, z, "farmland[moisture=7]")
+            d.set(x, y, z, crop)
+    for z in (41, 43):
+        d.fill(7, 1, z, 17, 1, z, "coarse_dirt")
+    P(d, y, [(7, 41, "composter[level=4]"), (17, 41, "water_cauldron[level=3]"), (17, 43, "spruce_fence")])
+    d.set(17, y + 1, 43, "hay_block[axis=y]")                    # scarecrow
+    d.set(17, y + 2, 43, "carved_pumpkin[facing=north]")
+    # sun shelter: four log posts, hipped roof, a rail with a gap on the north, two pairs of cots
+    d.fill(20, 1, 39, 26, 1, 45, "spruce_planks")
+    for x, z in ((20, 39), (26, 39), (20, 45), (26, 45)):
+        for yy in range(y, 5):
+            d.set(x, yy, z, log("spruce_log"))
+    d.hip(20, 39, 26, 45, 5, "dark_oak_stairs", "dark_oak_slab", overhang=1)
+    for x in range(21, 26):
+        if x != 23:
+            d.set(x, y, 39, "spruce_fence")
+        d.set(x, y, 45, "spruce_fence")
+    for z in range(40, 45):
+        d.set(20, y, z, "spruce_fence")
+        d.set(26, y, z, "spruce_fence")
+    couch(d, [(22, 41), (22, 42), (24, 41), (24, 42)], y, "spruce_slab", "white_carpet")
+    stand(d, 23, y, 43, "spruce_slab", LAMP)
+    P(d, y, [(21, 44, "potted_fern"), (25, 44, "potted_blue_orchid")])
+    sit(d, [(25, 40)], y, "east", "spruce")
+    hang(d, [(23, 42)], 4)
+    for x, z in ((46, 30), (51, 34)):
+        plant_tree(d, x, z)
+
+
 def hosp_cascadia(rel, L):
     d = new("Cascadia", rel, (55, 30, 53), paving="coarse_dirt")
     cnf = 2 if L >= 3 else 1
@@ -1381,6 +1425,7 @@ def hosp_cascadia(rel, L):
     if L >= 5:
         cs_doctor(d)
         cs_grounds(d)
+        cs_sun_garden(d)
     return d
 
 
