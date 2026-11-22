@@ -140,7 +140,9 @@ def crafter_module(d, x0, y0, z0, need, front="down", top="north", lamp=True):
       need 9 only:
         K2 (x0+1,y0,z0-1)    comparator facing north reading the composter, output south into K's side (6)
         CP (x0+1,y0,z0-2)    composter[level=6] - the constant
-    Feed: a hopper on the west (x0-1,y0,z0) facing east (or north/south side). Keep air / plain blocks at
+    Feed: a hopper on the west (x0-1,y0,z0) facing east. Never a hopper UNDER a crafter: it would pull items back
+    out of the grid (the crafter does not refuse extraction) - results go into a barrel below or sideways into a
+    hopper. Keep air / plain blocks at
     (x0+3,y0+1,z0), (x0+1,y0,z0+1), (x0+2,y0,z0+-1), (x0+3,y0,z0), and nothing powered next to C."""
     d.set(x0, y0, z0, crafter(front, top))
     d.set(x0 + 1, y0, z0, comparator("west", "subtract" if need == 9 else "compare"))
@@ -214,8 +216,9 @@ def compactor(pack, rel, L):
     """Nugget compactor: two lines (iron, gold) of two crafters each that fire when all 9 slots are filled.
 
     Line at x = a (a = 2 iron, a = 10 gold):
-        nugget chest (a,5,6) -> hopper (a,4,6) -> crafter C1 (a+1,4,6) [9 nuggets -> ingot] down into the hopper
-        chain (a+1,3,6..9) -> crafter C2 (a+2,3,9) [9 ingots -> block] down into the block barrel (a+2,2,9),
+        nugget chest (a,5,6) -> hopper (a,4,6) -> crafter C1 (a+1,4,6) [9 nuggets -> ingot] facing south into the
+        hopper (a+1,4,7) -> chain (a+1,3,7..9) -> crafter C2 (a+2,3,9) [9 ingots -> block] down into the block
+        barrel (a+2,2,9),
         opened from the back aisle (z10). An ingot chest (a+1,4,9) over the last chain hopper feeds C2 directly.
     Each crafter has the subtract comparator + composter(level 6) circuit described at the top of the file."""
     d = Design(pack, rel, size=(19, 13, 14), gy=1, paving="grass_block")
