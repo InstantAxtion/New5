@@ -16,9 +16,11 @@ Clocks used:
   * torch clock (the one from the chicken cooker): block B, a redstone torch on B, dust + repeaters back into B.
     B is powered for 2 + 8*(k+1) game ticks, then unpowered for as long (k repeaters on the long side). It starts
     by itself when the blocks are placed and never burns out (it toggles far less than 8 times in 60 ticks).
-  * hopper clock (the classic two-hopper clock): hoppers A -> B and B -> A, a comparator out of each, boosted by a
-    repeater, locks the OTHER hopper (dust/repeater pointing into it). The items wander A -> B -> A, 8 ticks each,
-    so every half period is 8 * (number of items) game ticks. Used where the cycle must be minutes long.
+  * hopper clock (the classic two-hopper clock with a sticky-piston latch, see latch_clock): hoppers A -> B -> A,
+    a redstone block under one of them locks it; each hopper's comparator holds a sticky piston out, and when a
+    hopper runs empty its piston retracts and pulls the block under that hopper. The items wander A -> B -> A,
+    8 ticks each, so every half period is 8 * (number of items) game ticks. Used where the cycle must be minutes
+    long. (The plain version where each comparator locks the other hopper directly deadlocks after one cycle.)
 
 Push reactions (1.21.1 Blocks.java): moss carpet, azalea, flowering azalea, short grass, cave vines, glow lichen,
 pointed dripstone, mushrooms, sea pickles, chorus plant and chorus flower are all PushReaction.DESTROY: a piston
@@ -135,30 +137,66 @@ def torch_clock(d, bx, y, bz, k=1, south=False, sup=SB):
     return (tx, y, bz)
 
 
-def hopper_clock(d, hx, y, hz, sup=SB):
-    """Two-hopper clock. A = (hx, y, hz) feeds B = (hx+1, y, hz) and back. Comparators read them from the outside
-    (west of A, east of B), each followed by a repeater (delay 1) that restores full strength; A's line runs round
-    the south side into a repeater that locks B from the south, B's line round the north side locks A from the
-    north. While A holds items, A's line ("S", the output) is on.
-    Footprint x hx-3 .. hx+4, z hz-2 .. hz+2. Returns positions used by the farms."""
-    cells = {
-        (hx, hz): hopper("east"), (hx + 1, hz): hopper("west"),
-        (hx - 1, hz): comp("east"), (hx - 2, hz): rep("east", 1),
-        (hx + 2, hz): comp("west"), (hx + 3, hz): rep("west", 1),
-        # A's line -> lock B from the south
-        (hx - 3, hz): dust(e="side", s="side"), (hx - 3, hz + 1): DNS, (hx - 3, hz + 2): dust(n="side", e="side"),
-        (hx - 2, hz + 2): DEW, (hx - 1, hz + 2): DEW, (hx, hz + 2): DEW, (hx + 1, hz + 2): dust(w="side", n="side"),
-        (hx + 1, hz + 1): rep("south", 1),
-        # B's line -> lock A from the north
-        (hx + 4, hz): dust(w="side", n="side"), (hx + 4, hz - 1): DNS, (hx + 4, hz - 2): dust(s="side", w="side"),
-        (hx + 3, hz - 2): DEW, (hx + 2, hz - 2): DEW, (hx + 1, hz - 2): DEW, (hx, hz - 2): dust(e="side", s="side"),
-        (hx, hz - 1): rep("north", 1),
-    }
-    for (x, z), st in cells.items():
-        d.set(x, y, z, st)
-        support(d, x, y, z, sup)
-    return dict(A=(hx, y, hz), B=(hx + 1, y, hz), RA=(hx - 2, y, hz), RB=(hx + 3, y, hz),
-                S=(hx - 3, y, hz + 2))
+_ROT1 = {"east": "south", "south": "west", "west": "north", "north": "east", "up": "up", "down": "down"}
+
+
+def latch_clock(d, hx, y, hz, rot=0, sup=SB):
+    """Hopper clock with a sticky-piston latch (the classic hopper clock: no deadlock, starts when items are put
+    into either hopper, any number of items). Local layout (rot=0: u = +x, v = +z; rot=1: u = +z, v = -x):
+      y  : hopper A (0,0) -> hopper B (1,0) -> A.  Comparator CA (0,-1) reads A -> repeater (0,-2) -> dust round to
+           the dust (-1,-1) one level down, which points into piston SL.  Comparator CB (1,1) reads B -> repeater
+           (1,2) -> dust round to (2,1) one level down -> piston SR.
+      y-1: sticky piston SL (-1,0) facing +u, the redstone block under B (1,0) [under A (0,0) in the other phase],
+           sticky piston SR (2,0) facing -u. A redstone block under a hopper locks it.
+    A has items -> SL extended (head under A) -> the block stays under B -> B locked, A empties into B. B's piston
+    SR is powered too but cannot push (the block would have to go where SL's head is). A runs empty -> SL retracts
+    and pulls the block under A -> A locked, B unlocked; SR (B has items) extends under B. B runs empty -> SR
+    retracts and pulls the block back under B, and so on. Each half period is 8 gt per item.
+    Observer OS (1,-1) watches hopper B: it pulses (2 gt) every time the block arrives under B or leaves it, i.e.
+    once per half period - the clock's output, from OS's back into the dust (1,-2), (2,-2).
+    Returns world positions: A (put the items in), P (= (2,-2), end of the output dust, level y)."""
+    def W(u, v):
+        return (hx + u, hz + v) if rot == 0 else (hx - v, hz + u)
+
+    def F(f):
+        return f if rot == 0 else _ROT1[f]
+
+    def dl(**c):
+        return dust(**{F({"n": "north", "e": "east", "s": "south", "w": "west"}[k])[0]: v for k, v in c.items()})
+
+    def put(u, yy, v, st, needs_support=True):
+        x, z = W(u, v)
+        d.set(x, yy, z, st)
+        if needs_support:
+            support(d, x, yy, z, sup)
+
+    put(0, y, 0, hopper(F("east")), False)
+    put(1, y, 0, f"hopper[enabled=false,facing={F('west')}]", False)   # locked by the block from the start
+    put(-1, y - 1, 0, f"sticky_piston[extended=false,facing={F('east')}]", False)
+    put(0, y - 1, 0, AIR, False)
+    put(1, y - 1, 0, "redstone_block", False)
+    put(2, y - 1, 0, f"sticky_piston[extended=false,facing={F('west')}]", False)
+    # A's comparator line -> SL
+    put(0, y, -1, comp(F("south")))
+    put(0, y, -2, rep(F("south"), 1))
+    put(0, y, -3, dl(s="side", w="side"))
+    put(-1, y, -3, dl(e="side", s="side"))
+    put(-1, y, -2, dl(n="side", s="side"))
+    put(-1, y - 1, -1, dl(n="up", s="side"))
+    # B's comparator line -> SR
+    put(1, y, 1, comp(F("north")))
+    put(1, y, 2, rep(F("north"), 1))
+    put(1, y, 3, dl(n="side", e="side"))
+    put(2, y, 3, dl(w="side", n="side"))
+    put(2, y, 2, dl(s="side", n="side"))
+    put(2, y - 1, 1, dl(s="up", n="side"))
+    # output
+    put(1, y, -1, observer(F("south")))
+    put(1, y, -2, dl(s="side", e="side"))
+    put(2, y, -2, dl(w="side", e="side"))
+    ax, az = W(0, 0)
+    px, pz = W(2, -2)
+    return dict(A=(ax, y, az), P=(px, y, pz))
 
 
 # --------------------------------------------------------------------------------------------- building kit
@@ -299,7 +337,7 @@ def mossfarm(pack, rel, L):
         lantern(d, x, top - 1, z)
     roof(d, X1, Z1, X2, Z2, top + 1, axis="x")
     entrance(d, c, Z1, ["Moss Farm", "Bring:", "bone meal,", "5 hopper carts"])
-    d.farm_test(expect={"minecraft:moss_carpet": 20, "minecraft:azalea": 3},
+    d.farm_test(expect={"minecraft:moss_carpet": 40, "minecraft:azalea": 10},
                 inputs={(c, 3, mz - 1): [("minecraft:bone_meal", 192)]},
                 spawns=[("minecraft:hopper_minecart", x, 2, mz, 1) for x in range(a, b + 1)], ticks=6000)
     return d
@@ -316,9 +354,11 @@ def glowberry(pack, rel, L):
     A cave vine head grows one block down on a random tick (10 %): the new head appears in K. Torch clock
     B = (4,5,7): B on -> the dust on top of the dispensers powers them -> 4 gt later every dispenser bone-meals its
     K (CaveVinesBlock: bone meal on a vine without berries gives it berries; on air nothing happens and nothing is
-    used) -> repeater RP (4,5,8, delay 4, input from B) -> dust on the back blocks -> 8 gt after B the pistons break
-    K (cave vines are PushReaction.DESTROY) and K drops its glow berries onto the hopper. T turns back into a vine
-    head with a fresh random age (0..24 < 25), so it always grows again: one glow berry per growth, no waste."""
+    used) -> repeater RP (4,5,8, delay 4, input from B) -> dust on the back blocks -> 10 gt after B the pistons break
+    K (cave vines are PushReaction.DESTROY) and K drops its glow berries onto the hopper. The pistons are driven by
+    an observer (4,5,9) watching RP, so they only make a short stroke (2 gt pulse, on RP's rising and falling edge)
+    and K is free to grow most of the time. T turns back into a vine head with a fresh random age (0..24 < 25), so
+    it always grows again: one glow berry per growth, no waste."""
     d = Design(pack, rel, size=(15, 14, 14), gy=1, paving="grass_block")
     X1, Z1, X2, Z2, top = 1, 2, 13, 12, 8
     shell(d, X1, Z1, X2, Z2, top, windows=[(3, Z1), (4, Z1), (10, Z1), (11, Z1), (X1, 6), (X1, 10), (X2, 5),
@@ -345,7 +385,7 @@ def glowberry(pack, rel, L):
     # clock and the delayed line to the pistons
     torch_clock(d, a - 1, 5, kz - 1, k=1)
     d.set(a - 1, 5, kz, rep("north"))                          # RP, input from B
-    d.set(a - 1, 5, kz + 1, DNS)
+    d.set(a - 1, 5, kz + 1, observer("north"))                 # pulses on RP's edges -> short piston strokes
     d.set(a - 1, 5, kz + 2, dust(n="side", e="side"))
     # aisles: north aisle (z3..6) in front of the dispensers, west aisle, east aisle to the barrel
     d.set(12, 2, 11, chest("west"))
@@ -356,7 +396,7 @@ def glowberry(pack, rel, L):
         lantern(d, x, top - 1, z)
     roof(d, X1, Z1, X2, Z2, top + 1, axis="x")
     entrance(d, 8, Z1, ["Glow Berries", "Bring:", "bone meal for", "6 dispensers"], cx=7)
-    d.farm_test(expect={"minecraft:glow_berries": 15},
+    d.farm_test(expect={"minecraft:glow_berries": 8},
                 inputs={(x, 4, kz - 1): [("minecraft:bone_meal", 64)] for x in range(a, b + 1)}, ticks=12000)
     return d
 
@@ -376,6 +416,8 @@ def seapickle(pack, rel, L):
     later; repeater RP (8,5,6, input from B) -> dust along the east wall, down to the line z11 -> pistons fire 10 gt
     after B, break every new pickle (PushReaction.DESTROY: the cell keeps its water, it refills as a source from the
     two source cells beside it) and push the drops north.
+    Live coral dies when no water touches it; the pad cell above it holds a piston head part of the time, so a
+    sealed row of water sources (y2, z9) under the pistons keeps every coral block wet.
     North row (z7, y3): FLOW - water from the pad flows over a row of hoppers (y2), so the pad sources have a lower
     neighbour to the north and their current carries the pickles onto the hoppers: west half -> barrel (2,2,7),
     east half -> barrel (12,2,7). No hopper under D (it would empty the dispenser)."""
@@ -397,6 +439,8 @@ def seapickle(pack, rel, L):
     # coral row, pad, mother, dispenser
     for x in range(5, 10):
         d.set(x, 2, pz, "tube_coral_block")
+    for x in range(4, 11):                                     # keeps the coral alive while a piston head
+        d.set(x, 2, pz + 1, WATER)                             # stands in the cell above it (sealed row)
     for x in range(4, 11):
         d.set(x, 3, pz, WATER)
         if x != c:
@@ -452,7 +496,7 @@ def seapickle(pack, rel, L):
         lantern(d, x, top - 1, z)
     roof(d, X1, Z1, X2, Z2, top + 1, axis="x")
     entrance(d, c, Z1, ["Sea Pickles", "Bring:", "bone meal", "(dispenser ahead)"])
-    d.farm_test(expect={"minecraft:sea_pickle": 20},
+    d.farm_test(expect={"minecraft:sea_pickle": 60},
                 inputs={(c, 3, pz - 1): [("minecraft:bone_meal", 192)]}, ticks=6000)
     return d
 
@@ -534,7 +578,7 @@ def dripstonefarm(pack, rel, L):
         lantern(d, x, top - 1, z)
     roof(d, X1, Z1, X2, Z2, top + 1, axis="x")
     entrance(d, 8, Z1, ["Dripstone", "Farmworks", "Bring:", "nothing"], cx=9)
-    d.farm_test(expect={"minecraft:pointed_dripstone": 8}, ticks=18000)
+    d.farm_test(expect={"minecraft:pointed_dripstone": 12}, ticks=18000)
     return d
 
 
@@ -544,80 +588,86 @@ def mushroomfarm(pack, rel, L):
     """Mushroom spreading farm: mother mushrooms on podzol islands spread over a dark mud floor, a timed water flush
     breaks the young mushrooms, hoppers under the whole floor collect.
 
-    Dark chamber (walls x3..9, z4..10, y2..5, tinted-glass windows, ceiling y5): mud floor x4..8, z5..9 (y2) on a
-    floor of hoppers (y1, rows east -> column x9 -> barrel (9,1,11)). Six podzol islands (y3) carry the mother
-    mushrooms (y4): brown on (5,6) (7,8) (6,5), red on (7,6) (5,8) (6,9).
+    Dark chamber (walls x3..9, z4..14, y2..5, tinted-glass windows, ceiling y5): mud floor x4..8, z5..13 (y2) on a
+    floor of hoppers (y1, rows east -> column x9 -> barrel (9,1,15)). Eight podzol islands (y3) carry the mother
+    mushrooms (y4): brown on (5,6) (7,8) (5,10) (7,12), red on (7,6) (5,8) (7,10) (5,12).
     MushroomBlock.randomTick (1/25): if fewer than 5 of its kind are within 4 blocks (y +-1) it walks up to 4 random
     steps (+-1) through empty cells it could live in and places a mushroom there. A mother can reach the mud one
-    block down (mud is a full, solid-render block; light < 13 in the chamber); the islands themselves cannot be
-    reached and the water never reaches them (it flows on the floor level only), so the mothers stay forever.
-    Flush: water dispenser Dw = (3,3,7) in the west wall (facing east, water bucket) puts a source on (4,3,7);
-    the water reaches every floor cell (at most 6 blocks of flow), breaks all young mushrooms (they cannot hold
-    water) and the drops land on the mud over the hoppers. The next pulse picks the water up again.
-    Timer (attic, y6): hopper clock with 40 items (half period 320 gt); the observer (4,6,12) on its repeater pulses
-    on every change; the pulse reaches Dw quickly (2 repeaters) - water on - and again 56 gt later through seven
-    repeaters - water off. So the floor is dry ~85 % of the time and flushed every 16 s.
-    Dw is powered from the dust (3,5,7) on the wall block above it, fed from the attic through (2,6,7)."""
+    block down (mud is a full, solid-render block; light < 13 in the sealed chamber); nothing can grow on the
+    islands, and the water never reaches the mothers (it flows on the floor level only), so they stay forever.
+    Flush: water dispensers Dw (3,3,7) and (3,3,11) in the west wall (facing east, a water bucket each) put sources
+    on (4,3,7) / (4,3,11); the water reaches every floor cell (at most 6 blocks of flow), breaks the young mushrooms
+    (they cannot hold water) and the drops land on the mud over the hoppers. The next pulse picks the water up.
+    Timer (attic, y6/7): sticky-piston hopper clock with 60 items (half period 480 gt); its observer pulses on every half
+    period; the pulse reaches the dispensers at once (quick path along z3) - water on - and again 56 gt later
+    through seven repeaters (slow path along z5) - water off. Both paths end in repeaters pointing into the dust
+    (2,6,5), which steps down onto the dust (3,5,6..12) on the west wall top; that dust powers the wall blocks over
+    the dispensers. So the floor is dry ~90 % of the time and flushed every 24 s."""
     d = Design(pack, rel, size=(15, 17, 18), gy=1, paving="grass_block")
     X1, Z1, X2, Z2, top = 1, 2, 13, 16, 8
-    shell(d, X1, Z1, X2, Z2, top, windows=[(3, Z1), (4, Z1), (9, Z1), (10, Z1), (X1, 12), (X2, 6), (X2, 12),
+    shell(d, X1, Z1, X2, Z2, top, windows=[(3, Z1), (4, Z1), (9, Z1), (10, Z1), (X2, 6), (X2, 12),
                                            (4, Z2), (7, Z2), (10, Z2)])
-    # ceiling over the whole ground floor (attic floor = deck for the timer)
-    d.fill(2, 5, 3, 12, 5, 15, PLANK)
-    # chamber
-    for x in range(3, 10):
-        for z in range(4, 11):
-            edge = x in (3, 9) or z in (4, 10)
+    d.fill(2, 5, 3, 12, 5, 15, PLANK)                          # ceiling = attic floor (deck for the timer)
+    for x in range(3, 10):                                     # chamber
+        for z in range(4, 15):
+            edge = x in (3, 9) or z in (4, 14)
             for y in (2, 3, 4):
                 d.set(x, y, z, SB if edge and y == 2 else (CB if edge else AIR))
             d.set(x, 5, z, SB)
     for x in range(4, 9):
-        for z in range(5, 10):
+        for z in range(5, 14):
             d.set(x, 1, z, hopper("east"))
             d.set(x, 2, z, "mud")
-    for z in range(5, 11):
+    for z in range(5, 15):
         d.set(9, 1, z, hopper("south"))
-    output(d, 9, 1, 11)
-    for (x, z, kind) in ((5, 6, "brown"), (7, 8, "brown"), (6, 5, "brown"), (7, 6, "red"), (5, 8, "red"),
-                         (6, 9, "red")):
+    output(d, 9, 1, 15)
+    for (x, z, kind) in ((5, 6, "brown"), (7, 8, "brown"), (5, 10, "brown"), (7, 12, "brown"),
+                         (7, 6, "red"), (5, 8, "red"), (7, 10, "red"), (5, 12, "red")):
         d.set(x, 3, z, "podzol[snowy=false]")
         d.set(x, 4, z, f"{kind}_mushroom")
-    for (x, y, z) in ((5, 3, 4), (7, 3, 4), (9, 3, 6), (9, 3, 8), (6, 4, 10)):
+    for (x, y, z) in ((5, 3, 4), (7, 3, 4), (9, 3, 7), (9, 3, 11), (5, 3, 14), (7, 3, 14)):
         d.set(x, y, z, TGLASS)
-    d.set(3, 3, 7, dispenser("east"))                          # Dw
-    d.set(3, 5, 7, dust(w="up"))                               # powers (3,4,7) -> Dw
-    # timer in the attic (y6)
-    hopper_clock(d, 6, 6, 13, sup=PLANK)
-    d.set(4, 6, 12, observer("south"))                         # watches RA (4,6,13)
-    d.set(4, 6, 11, dust(s="side", w="side", n="side"))        # P
-    d.set(3, 6, 11, DEW)
-    d.set(2, 6, 11, dust(e="side", s="side"))
-    d.set(2, 6, 10, DNS)
-    d.set(2, 6, 9, rep("south", 1))
-    d.set(2, 6, 8, rep("south", 1))
-    d.set(2, 6, 7, dust(n="side", s="side", e="side"))        # X: down to (3,5,7)
-    for z in (10, 9, 8, 7, 6):
-        d.set(4, 6, z, rep("south", 4))
-    d.set(4, 6, 5, dust(s="side", w="side"))
+    for z in (7, 11):
+        d.set(3, 3, z, dispenser("east"))                      # Dw
+    for z in range(6, 13):
+        d.set(3, 5, z, DNS)                                    # powers the wall blocks above the dispensers
+    # timer in the attic (y6/7): latch hopper clock, output pulse P = (11,6,10) on every half period
+    hc = latch_clock(d, 8, 7, 10, sup=SB)                      # hoppers y7, latch y6; output ends at (10,7,8)
+    d.set(11, 6, 8, DEW)                                       # steps down from (10,7,8)
+    d.set(12, 6, 8, dust(w="side", n="side"))
+    for z in (6, 7):
+        d.set(12, 6, z, DNS)
+    d.set(12, 6, 5, dust(s="side", n="side", w="side"))      # split
+    d.set(12, 6, 4, DNS)
+    d.set(12, 6, 3, dust(s="side", w="side"))                 # quick path along z3
+    for x in range(3, 12):
+        d.set(x, 6, 3, rep("east", 1) if x == 7 else DEW)
+    d.set(2, 6, 3, dust(e="side", s="side"))
+    d.set(2, 6, 4, rep("north", 1))
+    d.set(11, 6, 5, DEW)                                       # slow path along z5: seven repeaters
+    for x in range(5, 11):
+        d.set(x, 6, 5, rep("east", 4))
+    d.set(4, 6, 5, DEW)
     d.set(3, 6, 5, rep("east", 4))
-    d.set(2, 6, 5, dust(e="side", s="side"))
-    d.set(2, 6, 6, rep("north", 4))
-    # ladder to the attic, rails round the stair hole
+    d.set(2, 6, 5, dust(n="side", e="side", s="side"))       # both paths meet here
+    d.set(2, 6, 6, dust(n="side", e="side"))                  # steps down onto the wall dust (3,5,6)
+    # ladder to the attic
     for y in (2, 3, 4, 5):
-        d.set(12, y, 14, "ladder[facing=west,waterlogged=false]")
-    lantern(d, 11, 7, 14)
-    lantern(d, 8, 7, 8)
+        d.set(12, y, 15, "ladder[facing=west,waterlogged=false]")
+    for x, z in ((11, 14), (6, 8), (5, 12)):
+        lantern(d, x, 6, z, hanging=False)
     # ground floor furniture and light (lanterns only in the aisles)
     d.set(12, 2, 3, chest("west"))
     d.set(11, 2, 3, barrel())
     d.set(2, 2, 15, "crafting_table")
-    for x, z in ((2, 3), (11, 6), (11, 11), (6, 12), (2, 12)):
+    for x, z in ((2, 3), (11, 6), (11, 11), (6, 15), (2, 12)):
         lantern(d, x, 4, z)
     roof(d, X1, Z1, X2, Z2, top + 1, axis="z")
-    entrance(d, 6, Z1, ["Mushrooms", "Bring: water", "bucket, 40 cobble", "(attic timer)"])
+    entrance(d, 6, Z1, ["Mushrooms", "Bring: 2 water", "buckets, 60 cobble", "(attic timer)"])
     d.farm_test(expect={"minecraft:brown_mushroom": 2, "minecraft:red_mushroom": 2},
-                inputs={(3, 3, 7): [("minecraft:water_bucket", 1)], (6, 6, 13): [("minecraft:cobblestone", 40)]},
-                ticks=30000)
+                inputs={(3, 3, 7): [("minecraft:water_bucket", 1)], (3, 3, 11): [("minecraft:water_bucket", 1)],
+                        hc["A"]: [("minecraft:cobblestone", 60)]},
+                ticks=36000)
     return d
 
 
@@ -673,9 +723,9 @@ def chorusfarm(pack, rel, L):
     empty). Its fruit falls onto the end stone (a HOPPER MINECART on the rail under it pulls it through) or onto the
     mud ring round it (hoppers under the mud). Piston (cx+1,4,13) facing west next to the base; the observer under
     it (cx+1,3,13, facing down) watches the dust (cx+1,2,13) of the timer line in the cellar.
-    Timer: hopper clock in the hall (256 items, half period ~34 min of game time / 2048 gt); on every change of its
-    line the observers pulse, the pistons break the base block and the whole plant falls apart (chorus plants that
-    lose their support break on the next tick and drop 0-1 chorus fruit each). The chorus flower drops nothing
+    Timer: sticky-piston hopper clock in the hall (256 items, half period 2048 gt = 1 min 42 s); its output pulse runs down
+    into the cellar line, every pad observer pulses, the pistons break the base block and the whole plant falls
+    apart (chorus plants that lose their support break on the next tick and drop 0-1 chorus fruit each). The chorus flower drops nothing
     when broken by a piston (its loot needs an entity) - REPLANT a chorus flower on each end stone after a harvest:
     chorus cannot be replanted by any vanilla machine, so this farm is semi-automatic.
     Collection: cellar hoppers -> west pad: barrel (2,1,9); middle + east pads: line z11 -> barrel (18,1,9)."""
@@ -732,14 +782,16 @@ def chorusfarm(pack, rel, L):
     for cx in pads:
         d.set(cx + 2, 2, cz + 2, dust(n="side", e="side" if cx + 2 < 18 else "none", w="side"))
     # hall: timer (hopper clock at y2) and the branch down into the cellar
-    hc = hopper_clock(d, 10, 2, 5, sup="end_stone_bricks")
-    d.set(7, 2, 7, dust(n="side", e="side", w="side"))
+    hc = latch_clock(d, 6, 3, 4, rot=1, sup="end_stone_bricks")   # hoppers y3, latch y2; output ends at (8,3,6)
+    d.set(8, 2, 7, dust(n="up", w="side"))
+    d.set(7, 2, 7, DEW)
     d.set(6, 2, 7, dust(e="side", s="side"))
     for z in (8, 9, 10):
         d.set(6, 2, z, DNS)
     d.set(6, 2, 11, rep("north", 1))
     d.set(6, 1, 11, GLASS)
     d.set(6, 2, 12, DNS)
+    d.set(6, 1, 12, GLASS)                                     # not a conductor: the hopper (5,1,12) stays unlocked
     d.set(6, 2, 13, dust(w="side", n="side", s="side"))
     # shafts: glass walls y4..14, log posts, glass roof
     for x in range(1, 20):
@@ -757,14 +809,13 @@ def chorusfarm(pack, rel, L):
         d.door(cx, 4, 10, facing="north", wood="spruce")
     # hall furniture and light
     d.set(18, 2, 3, chest("west"))
-    d.set(2, 2, 3, "crafting_table")
-    for x, z in ((3, 5), (17, 5), (10, 8)):
-        lantern(d, x, top - 1, z)
+    d.set(17, 2, 3, "crafting_table")
+    beams(d, X1, X2, Z1 + 1, Z2 - 1, top, (5, 10, 15), lamps=True)
     for x in (4, 10, 16):
         lantern(d, x, 14, 13)
     d.gable(X1, Z1, X2, Z2, top + 1, axis="x", stairs="purpur_stairs", ridge="purpur_slab", end="purpur_block",
             overhang=0)
-    entrance(d, 5, Z1, ["Chorus Farm", "Bring: chorus", "flowers, 3 hopper", "carts, 256 cobble"], cx=10)
+    entrance(d, 13, Z1, ["Chorus Farm", "Bring: chorus", "flowers, 3 hopper", "carts, 256 cobble"], cx=10)
     d.farm_test(expect={"minecraft:chorus_fruit": 6},
                 inputs={hc["A"]: [("minecraft:cobblestone", 256)]},
                 spawns=[("minecraft:hopper_minecart", cx, 2, cz, 1) for cx in pads], ticks=2500, dimension="end")

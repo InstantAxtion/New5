@@ -585,10 +585,10 @@ def ironfarm(pack, rel, L):
     blinds = [((6, 8), "south"), ((8, 6), "east"), ((12, 8), "south")]
     for ((x, z), f) in blinds:
         dx, dz = {"south": (0, 1), "east": (1, 0)}[f]
-        d.set(x, Y + 2, z, f"sticky_piston[extended=false,facing={f}]")
+        d.set(x, Y + 2, z, "spruce_planks")  # PROBE: blinds fixed closed
         d.set(x + dx, Y + 2, z + dz, "spruce_planks")                  # the blind (in the sight line at night)
         d.set(x + 2 * dx, Y + 2, z + 2 * dz, AIR)                       # niche it is pushed into by day
-        d.set(x, CEIL, z, "daylight_detector[inverted=false,power=0]")
+        d.set(x, CEIL, z, GLASS)
     # iron doors (villagers cannot open them) with a button on the gallery side
     doors = [((4, 9), "west", (4, 10)), ((9, 4), "north", (8, 4)), ((14, 9), "east", (14, 10)),
              ((9, 10), "south", (10, 10))]
@@ -645,10 +645,20 @@ def ironfarm(pack, rel, L):
     # (run tick ~11000) and from the morning (~23000) the zombie makes them spawn golems.
     # PROBE (temporary): night detector
     d.set(20, 2, 15, "daylight_detector[inverted=false,power=0]")
-    d.set(20, 2, 16, hopper("south"))
-    d.set(20, 3, 16, chest("north"))
+    d.set(20, 2, 16, "dropper[facing=south,triggered=false]")
     d.set(20, 2, 17, chest("north"))
-    d.farm_test(expect={"minecraft:iron_ingot": 6}, inputs={(20, 3, 16): [("minecraft:stick", 64)]},
+    d.tag(20, 2, 17, "farm_output")
+    for (x, z) in ((8, 9), (9, 8), (10, 9)):
+        d.set(x, 16, z, "stone")      # PROBE seal
+    d.set(4, 15, 8, "observer[facing=east,powered=false]")
+    d.set(3, 15, 8, "dropper[facing=down,triggered=false]")
+    d.set(3, 14, 8, chest("north"))
+    d.tag(3, 14, 8, "farm_output")
+    d.set(6, 17, 11, "observer[facing=north,powered=false]")
+    d.set(6, 17, 12, "dropper[facing=down,triggered=false]")
+    d.set(6, 16, 12, chest("north"))
+    d.tag(6, 16, 12, "farm_output")
+    d.farm_test(expect={"minecraft:iron_ingot": 6, "minecraft:stick": 1, "minecraft:bone": 1, "minecraft:feather": 1}, inputs={(20, 2, 16): [("minecraft:stick", 64)], (3, 15, 8): [("minecraft:bone", 64)], (6, 17, 12): [("minecraft:feather", 64)]},
                 spawns=[("minecraft:villager", x, Y, z, 1) for (x, z) in (S1, S2, S3)] +
                        [("minecraft:zombie", A[0], Y, A[1], 1)], ticks=27000,
                 blocks=[(9, 10, 9, "minecraft:lava"), (10, 10, 10, "minecraft:lava"), (9, 9, 9, "minecraft:crimson_wall_sign"),
