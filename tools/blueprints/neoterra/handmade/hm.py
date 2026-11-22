@@ -590,6 +590,63 @@ class Design:
             self.set(x, y, z, f"{self.req['hut']}[facing={facing}]")
         self.hut_pos = (x, y, z)
 
+    # ------------------------------------------------------------------------------------------- entities
+    _FACING_BYTE = {"down": 0, "up": 1, "north": 2, "south": 3, "west": 4, "east": 5}
+    _YAW = {"south": 0.0, "west": 90.0, "north": 180.0, "east": 270.0}
+
+    @staticmethod
+    def _item(item):
+        if not item:
+            return T.Compound({})
+        return T.Compound({"id": T.String(_mc(item)), "count": T.Int(1)})
+
+    @staticmethod
+    def _uuid():
+        import random
+        return T.IntArray([random.getrandbits(32) - 2 ** 31 for _ in range(4)])
+
+    def item_frame(self, x, y, z, facing, item=None, glow=False, rotation=0):
+        """An item frame hanging in cell (x, y, z) on the block behind it; `facing` = the way the frame looks
+        (away from the wall), e.g. "south" for a frame on a north wall; "up" = lying on the floor. The builder
+        places it with its item (a label for a chest row, a tool on a workshop wall, a map...)."""
+        b = self._FACING_BYTE[facing]
+        e = 0.03125
+        px, py, pz = x + 0.5, y + 0.5, z + 0.5
+        if facing == "south":
+            pz = z + e
+        elif facing == "north":
+            pz = z + 1 - e
+        elif facing == "east":
+            px = x + e
+        elif facing == "west":
+            px = x + 1 - e
+        elif facing == "up":
+            py = y + e
+        else:
+            py = y + 1 - e
+        pitch = -90.0 if facing == "up" else (90.0 if facing == "down" else 0.0)
+        self.bp.entities.append(T.Compound({
+            "id": T.String("minecraft:glow_item_frame" if glow else "minecraft:item_frame"),
+            "Pos": T.List[T.Double]([T.Double(px), T.Double(py), T.Double(pz)]),
+            "TileX": T.Int(x), "TileY": T.Int(y), "TileZ": T.Int(z), "Facing": T.Byte(b),
+            "Rotation": T.List[T.Float]([T.Float(self._YAW.get(facing, 0.0)), T.Float(pitch)]),
+            "ItemRotation": T.Byte(rotation), "Item": self._item(item), "Fixed": T.Byte(0), "Invisible": T.Byte(0),
+            "UUID": self._uuid(),
+        }))
+
+    def armor_stand(self, x, y, z, facing="south", head=None, chest=None, legs=None, feet=None, mainhand=None,
+                    offhand=None, arms=True):
+        """An armour stand standing on the floor of cell (x, y, z), looking `facing`, wearing the given items."""
+        self.bp.entities.append(T.Compound({
+            "id": T.String("minecraft:armor_stand"),
+            "Pos": T.List[T.Double]([T.Double(x + 0.5), T.Double(y), T.Double(z + 0.5)]),
+            "Rotation": T.List[T.Float]([T.Float(self._YAW.get(facing, 0.0)), T.Float(0.0)]),
+            "ArmorItems": T.List[T.Compound]([self._item(feet), self._item(legs), self._item(chest), self._item(head)]),
+            "HandItems": T.List[T.Compound]([self._item(mainhand), self._item(offhand)]),
+            "ShowArms": T.Byte(1 if arms else 0), "NoBasePlate": T.Byte(0), "Small": T.Byte(0),
+            "Invisible": T.Byte(0), "UUID": self._uuid(),
+        }))
+
     def farm_test(self, expect, inputs=None, spawns=None, ticks=6000, min_count=1, light=None, mine=None,
                   blocks=None, blocks_min=None, presses=None):
         """Farmworks: how the in-game farm test runs this farm (python handmade.py writes it for the mod's test).

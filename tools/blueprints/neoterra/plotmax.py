@@ -129,6 +129,8 @@ def pad(bp, box):
                     dst[x + dx] = src[x]
     nb.tile_entities = {(x + dx, y + dy, z + dz): t for (x, y, z), t in bp.tile_entities.items()
                         if 0 <= x + dx < sx and 0 <= z + dz < sz}
+    from blueprint import shift_entities
+    nb.entities = shift_entities(getattr(bp, "entities", []), dx, dy, dz, sx, sy, sz)
     nb.primary_offset = (hx + dx, hy + dy, hz + dz)
     nb.architects = getattr(bp, "architects", [])
     hut = nb.tile_entities[nb.primary_offset]

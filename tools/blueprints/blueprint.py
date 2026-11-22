@@ -57,6 +57,9 @@ class Blueprint:
         self.architects: list[str] = []
         # (x, y, z) -> block entity compound (x/y/z are added on save)
         self.tile_entities: dict[tuple[int, int, int], nbtlib.Compound] = {}
+        # entities (item frames, armour stands...): NBT compounds with "Pos" relative to the blueprint origin
+        # (and TileX/Y/Z for hanging entities), as Structurize stores them
+        self.entities: list[nbtlib.Compound] = []
 
     # ---- editing helpers -------------------------------------------------
     def inside(self, x, y, z):
@@ -130,7 +133,7 @@ class Blueprint:
             "palette": T.List[T.Compound](pal_tags),
             "blocks": T.IntArray(ints),
             "tile_entities": T.List[T.Compound](self._te_list()),
-            "entities": T.List[T.Compound]([]),
+            "entities": T.List[T.Compound](list(getattr(self, "entities", []))),
             "required_mods": T.List[T.String](sorted({
                 parse_state(s)[0].split(":")[0] for s in palette
             } - {"minecraft", "structurize"})),
@@ -184,7 +187,25 @@ def load(path) -> Blueprint:
                 i += 1
     for te in root.get("tile_entities", []):
         bp.tile_entities[(int(te["x"]), int(te["y"]), int(te["z"]))] = te
+    bp.entities = [e for e in root.get("entities", [])]
     po = root.get("optional_data", {}).get("structurize", {}).get("primary_offset")
     if po is not None:
         bp.primary_offset = (int(po["x"]), int(po["y"]), int(po["z"]))
     return bp
+
+
+def shift_entities(entities, dx, dy, dz, sx=None, sy=None, sz=None):
+    """Entities moved by (dx, dy, dz); with a size given, those that end up outside are dropped."""
+    out = []
+    for e in entities:
+        e = T.Compound(dict(e))
+        px, py, pz = (float(v) for v in e["Pos"])
+        px, py, pz = px + dx, py + dy, pz + dz
+        if sx is not None and not (0 <= px < sx and 0 <= py < sy and 0 <= pz < sz):
+            continue
+        e["Pos"] = T.List[T.Double]([T.Double(px), T.Double(py), T.Double(pz)])
+        for k, d in (("TileX", dx), ("TileY", dy), ("TileZ", dz)):
+            if k in e:
+                e[k] = T.Int(int(e[k]) + d)
+        out.append(e)
+    return out
