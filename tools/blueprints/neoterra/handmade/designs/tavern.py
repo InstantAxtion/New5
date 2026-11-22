@@ -338,9 +338,9 @@ def cascadia(rel, L):
         d.bed(x1 + 2, yl, z, "west", bc)
         d.bed(x2 - 2, yl, z, "east", bc)
     # back of the loft: footlockers, a rug by the ladder hatch, lanterns on chains from the ridge
-    d.keg(x1 + 2, yl, z1 + 10, "east")
-    d.keg(x1 + 2, yl, z1 + 11, "east")
-    d.plant(x1 + 2, yl + 1, z1 + 10, "potted_fern")
+    d.keg(x1 + 3, yl, z1 + 10, "east")
+    d.keg(x1 + 3, yl, z1 + 11, "east")
+    d.plant(x1 + 3, yl + 1, z1 + 10, "potted_fern")
     d.rug(mid - 1, z1 + 9, mid + 1, z1 + 11, yl, ({1: "green_carpet", 2: "brown_carpet"}.get(L, "red_carpet"),), "plain")
     for z in (z1 + 3, z1 + 10):
         for y in range(yl + 3, ridge):

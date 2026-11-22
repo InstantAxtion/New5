@@ -29,7 +29,8 @@ BOARDWALK (boardwalkstraight 5x10x8 anchor (2,2,0); boardwalkcorner 5x5 anchor (
   Cross-section x 0..4: railing | 3 wide walkway | railing; the deck is ONE layer at the anchor level y = 2 (stand
   on y = 3); piles y 0..1 under the railing lines at z = 1 and z = 6 (corner: its four corners) with a cap beam;
   everything else below the deck is 'keep' (water and sand stay).  Straights join every 8; corner north -> east,
-  next straight = corner anchor + (3, 0, 2), 3 quarter turns.  Lamps stand on the railing line, alternating sides.
+  next straight = corner anchor + (3, 0, 2), 3 quarter turns.  One lamp per straight (west rail, first bent),
+  one on the corner's outer corner; plain posts over the other piles.
   PIER: controller moved from (4,2,0) to (4,3,0) – the decoration controller is invisible and has no collision,
   so in the deck layer it would be a hole in the walkway; one higher it stands on the deck (facing down) where a
   player walks through it.  The pier's neck (z 0..4, x 2..6) has the boardwalk cross-section; a boardwalk end at
@@ -38,10 +39,11 @@ BOARDWALK (boardwalkstraight 5x10x8 anchor (2,2,0); boardwalkcorner 5x5 anchor (
   Neoterra   mangrove decking between light-gray concrete edge beams, glass balustrade, slim lamp posts with light
              cubes, concrete piles; pier head with a white canopy on concrete fins, viewing scope, moss planters.
   Hearthwood Victorian seaside promenade: oak boards, dark-oak fascia, white-painted (birch) railings between
-             dark posts, black lamp standards; pier head with a tiled hip-roof shelter on dark-oak posts,
-             benches, life-ring board and a fishing corner (barrel, rod rack).
+             dark posts with finials, black lamp standards; pier head with a deepslate-tile hip-roof shelter on
+             dark-oak posts over back-to-back benches, lantern, name board, bait barrels in the end corners.
   Cascadia   log dock: spruce planks on log stringers, log piles running up through the deck as posts, rail fence,
-             lanterns on the posts; pier head with a fishing shack lean-to, crates, barrels, log benches.
+             lanterns on the posts; pier head with a board-and-log fishing shack under a shingled lean-to
+             (barrels, crab-trap composter, "Bait & Tackle" sign), log benches along the rail and at the end.
 
 CLIFF CLIMB (cliffclimbbase 7x10x7, cliffclimbsegment 7x9x7, cliffclimblanding 7x7x7; anchor (3,0,0)).
   A square switchback stair tower: outer ring (x / z = 0, 6) = corner posts and stringers with a railing, lane
@@ -55,7 +57,8 @@ CLIFF CLIMB (cliffclimbbase 7x10x7, cliffclimbsegment 7x9x7, cliffclimblanding 7
   Neoterra   white stair on light-gray concrete stringers, glass balustrade, concrete frame posts, light panels in
              the spine; landing = viewing deck with a cantilevered canopy, benches, planters.
   Hearthwood stone steps (stone-brick stairs and landings, mossy stringers), dark-oak handrail fence, stone piers,
-             lanterns on the rail posts; landing = stone terrace with a little tiled lych-gate shelter and bench.
+             lanterns on the rail posts; landing = stone terrace with a tiled lych-gate over the way out, bench,
+             lanterns and flower pots on stone piers.
   Cascadia   timber trail stairs: spruce treads on log stringers, rail fence, log posts, river-rock spine,
              lanterns; landing = log lookout deck with a lean-to roof, bench and a trail sign.
 """
@@ -867,27 +870,21 @@ def cas_pier(d):
     for z in range(8, 12):
         for yy in range(y, y + 4):
             d.set(8, yy, z, "spruce_planks")
-    for x in range(5, 9):
+    for x in range(5, 8):
         for yy in range(y, y + 3):
             d.set(x, yy, 11, "spruce_planks")
     for (x, z) in ((8, 8), (8, 11), (5, 11), (5, 8)):
-        for yy in range(BW_DECK_Y, y + 3):
+        for yy in range(BW_DECK_Y, y + 2):
             d.set(x, yy, z, log("stripped_spruce_log"))
     for z in range(7, 12):
         d.set(4, y + 2, z, slab("spruce"))
-        d.set(5, y + 2, z, stairs("spruce", "east")) if z not in (8, 11) else None
-        d.set(5, y + 3, z, slab("spruce")) if z in (8, 11) else None
+        d.set(5, y + 2, z, stairs("spruce", "east"))
         d.set(6, y + 2, z, slab("spruce", "top"))
         d.set(7, y + 3, z, slab("spruce"))
-        d.set(6, y + 3, z, AIR)
-    for z in (8, 11):
-        d.set(5, y + 2, z, log("stripped_spruce_log"))
-    d.set(8, y + 1, 10, "glass_pane")
     d.set(7, y, 10, "barrel[facing=up,open=false]")
     d.set(7, y + 1, 10, "barrel[facing=up,open=false]")
     d.set(7, y, 9, "composter[level=0]")
-    d.set(6, y + 1, 10, HANGING) if False else None
-    d.set(7, y + 2, 9, "lantern[hanging=false,waterlogged=false]") if False else None
+    d.set(6, y + 1, 9, HANGING)
     wall_sign(d, 7, y + 1, 9, "west", ["Bait", "& Tackle"], "spruce")
     # log benches along the west rail looking out, and one at the end
     for z in (6, 7, 8):

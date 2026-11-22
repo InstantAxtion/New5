@@ -917,8 +917,8 @@ def uni_neoterra(rel, L):
         _ceiling(d, 11, [(42, 21), (42, 27), (42, 31)])
         plan(d, 39, 18, 12, [                                         # 2nd: student flat – kitchen & dorm
             [".tZtU.p", " .....t", " ..nn.t", " .wTTe.", " ..ss..", " ......", ".......", "t....XC",
-             "h .....", "t.==...", "h .==  ", "t.==.  ", "h ...  ", "t..... ", "h ....p", "t..BBX."],
-            ["  o d", "      o", "", "   co", "", "", "", "k", "", "k", "", "k", "", "k", "", "k  BB"]], tw)
+             "h .....", "t.==...", "h ==.  ", "t.==.  ", "h ...  ", "t....  ", "h .... ", "t..BBX."],
+            [" o d", "      o", "", "   co", "", "", "", "k", "", "k", "", "k", "", "k", "", "k  BB"]], tw)
         _ceiling(d, 16, [(42, 20), (42, 25), (42, 30)])
         plan(d, 39, 18, 17, [                                         # 3rd: computer lab & seminar table
             ["ptttttp", " .ssss.", "  .....", "  ....B", "  ....B", " .....B", ".......", ".nnnnn.",
@@ -926,14 +926,12 @@ def uni_neoterra(rel, L):
             [" MMMMM ", "", "", "      B", "      B", "      B", "", "", " c o c", " o c o", "", "", "B",
              "B", "", "BBB"],
             ["", "", "", "      B", "      B", "      B", "", "", "", "", "", "", "B", "B", "", "BBB"]], tw)
-        for z in range(25, 31):                                       # projection wall at the south end
-            d.set(39, 19, z, "black_concrete") if z in (29, 30) else None
         _ceiling(d, 21, [(42, 19), (42, 26), (42, 31)])
         plan(d, 39, 18, 22, [                                         # 4th: graduate flat – lounge & 2 rooms
             [".pBBBp.", " ......", " .nnn..", " .=t=..", " .sss..", " ......", ".......", "III.III",
-             "C.....X", "C......", "te.... ", "....=  ", "te..=  ", "......  ", ".  .   ", "tHHtHHt"],
-            ["  BBB", "", "", "   o", "", "", "", "III III", "", "", " l", "", " l", "", "", "k  k  k"],
-            ["", "", "", "", "", "", "", "III III"]], tw)
+             "C.....X", "C......", "te.... ", "....=  ", "te..=  ", ".....  ", ".  .   ", "tHHtHHt"],
+            ["  BBB", "", "", "   o", "", "", "", "III III", "", "", "l", "", "l", "", "", "k  k  k"],
+            ["", "", "", "", "", "", "", "III III"], ["", "", "", "", "", "", "", "III III"]], tw)
         _ceiling(d, 26, [(42, 21), (41, 29), (44, 29)])
         plan(d, 39, 18, 27, [                                         # 5th: sky lounge with a bar
             ["XtttttX", " .sss..", "  .....", "  ....A", "  .....", " ......", ".......", "A.nnn.A",

@@ -231,6 +231,11 @@ def hc_wing(rel, L):
                       stair("stone_brick_stairs", OPP[f], "top"))
     d.fill(1, T - 1, 3, n - 1, T - 1, 3, log("dark_oak_log", "x"))
     d.item(3, T - 2, 3, "bell[attachment=ceiling,facing=north,powered=false]")
+    for x in (1, 5):                                 # a ring of three: two smaller bells, the ringers' bench
+        d.set(x, T - 2, 3, "bell[attachment=ceiling,facing=north,powered=false]")
+    d.set(1, bf + 1, 5, stair("dark_oak_stairs", "west"))
+    d.set(5, bf + 1, 1, "barrel[facing=up,open=false]")
+    d.set(5, bf + 2, 1, lantern(False))
     d.fill(1, T, 1, n - 1, T, n - 1, "stone_bricks")
     # crown of the tower
     if L <= 3:                                     # temporary tiled pyramid cap
@@ -447,6 +452,11 @@ def hc_cathedral(rel, L):
                     d.set(15 + dx, ct + 8, 22 + dz, "lightning_rod[facing=up,powered=false,waterlogged=false]")
                 spire(d, 15, 22, ct + 7, 3, "deepslate_tiles", "deepslate_tile_stairs", step=3, needle=7,
                       cross=True, top="end_rod[facing=up]", broach=False)
+                d.fill(13, ct + 4, 22, 17, ct + 4, 22, log("dark_oak_log", "x"))   # bell frame, ring of three
+                for x in (14, 15, 16):
+                    d.set(x, ct + 3, 22, "bell[attachment=ceiling,facing=north,powered=false]")
+                for x in (13, 17):
+                    d.fill(x, ct + 1, 22, x, ct + 3, 22, log("dark_oak_log"))
         # interior: choir stalls, altar, lectern, organ pipes
         for z in range(27, 30):
             d.chair(12, 2, z, "west", "dark_oak")
@@ -821,10 +831,15 @@ def hc_chapter_house(d, L):
     d.fill(cx - r, 11, cz - r, cx + r, 11, cz + r, AIR)
     for dx in range(-r, r + 1):
         for dz in range(-r, r + 1):
-            if _oct(dx, dz, r):
-                d.set(cx + dx, 11, cz + dz, S if not _oct(dx, dz, r - 1) else "dark_oak_planks")
+            if _oct(dx, dz, r) and not _oct(dx, dz, r - 1):
+                d.set(cx + dx, 11, cz + dz, S)          # the vault is open into the tall lantern spire
     spire(d, cx, cz, 12, 5, "deepslate_tiles", "deepslate_tile_stairs", step=2, needle=2,
           broach=False, top="lightning_rod[facing=up,powered=false,waterlogged=false]")
+    for y in range(12, 17):                                        # corona: a lantern ring on chains
+        d.set(cx, y, cz, CHAIN)
+    for ox, oz in ((1, 1), (-1, 1), (1, -1), (-1, -1)):
+        d.set(cx + ox, 12, cz + oz, lantern(True))
+    d.set(cx, 11, cz, "chiseled_stone_bricks")
     # passage from the cloister south walk
     d.fill(37, 1, 16, 39, 1, 21, "polished_andesite")
     for z in range(17, 22):
@@ -2101,6 +2116,8 @@ def nc_wing(rel, L):
     d.set(2, 3, 2, "sea_lantern")
     d.fill(1, 3, 1, 3, 3, 3, "smooth_quartz_slab[type=top,waterlogged=false]")
     d.set(2, 3, 2, "sea_lantern")
+    for x, z in ((1, 1), (3, 1), (1, 3), (3, 3)):   # potted azaleas on the lobby roof round the mast
+        d.set(x, 5, z, "potted_azalea_bush")
     for y in range(8, T - 3, 4):                     # tie rings
         for i in range(1, n):
             for x, z in ((i, 0), (i, n), (0, i), (n, i)):
@@ -2282,6 +2299,115 @@ def nc_baptistery(d, L):
             d.fill(x, 2, z, x, 5, z, "white_concrete")
 
 
+def nc_sanctuary_extras(d, L, cx, cz, Rb):
+    """Furniture on the four axes of the round nave (the aisles between the pew quadrants): the baptismal font on
+    the west axis, a votive stand with candles on the east axis, the organ console and pipes on the south axis
+    behind the altar (L3+), planters where the aisles meet the glass, candles on the altar dais."""
+    k = int(Rb - 2)
+    wx, ex, sz = cx - k, cx + k, cz + k
+    d.set(wx, 2, cz, "smooth_quartz")                                 # font: quartz basin with a light
+    d.set(wx, 3, cz, "water_cauldron[level=3]")
+    d.set(wx, 2, cz - 1, slab("smooth_quartz_slab"))
+    d.set(wx, 2, cz + 1, slab("smooth_quartz_slab"))
+    d.set(ex, 2, cz, "smooth_quartz")                                 # votive stand
+    d.candle(ex, 3, cz, 4, "white")
+    for dz in (-1, 1):
+        d.set(ex, 2, cz + dz, slab("smooth_quartz_slab", "top"))
+        d.candle(ex, 3, cz + dz, 2 + dz % 2, "white")
+    d.set(cx - 2, 3, cz, "candle[candles=3,lit=false,waterlogged=false]")   # candles on the dais
+    d.set(cx + 2, 3, cz, "candle[candles=3,lit=false,waterlogged=false]")
+    if L >= 3:                                                       # organ behind the altar
+        for dx, h in ((-1, 3), (0, 4), (1, 3)):
+            d.set(cx + dx, 2, sz, "note_block[instrument=flute,note=0,powered=false]")
+            for y in range(3, 3 + h):
+                d.set(cx + dx, y, sz, "iron_bars")
+            d.set(cx + dx, 3 + h, sz, slab("smooth_quartz_slab"))
+        d.chair(cx, 2, sz - 1, "south", "birch", sit=False)
+    else:
+        d.set(cx, 2, sz, "potted_bamboo")
+    for x, z in ((wx, cz - 2), (ex, cz + 2), (cx - 2, sz), (cx + 2, sz)):
+        if d.air(x, 2, z):
+            d.set(x, 2, z, "potted_bamboo")
+
+
+def nc_sacristy(d, L):
+    """Sacristy and choir room (x4..16, z35..41, L3+): white block with a glass north front. West room = vestry
+    (vestment chests and wardrobe, robes hanging, wash basin, candle store, bench); east room = choir room /
+    office (music stands, practice organ, desk with the parish books, chairs for the choir). Doors in the end
+    walls; a moss roof with planters from L4, a roof garden bench at L5."""
+    x1, z1, x2, z2 = 4, 35, 16, 41
+    d.fill(x1, 1, z1, x2, 1, z2, "polished_diorite")
+    d.box(x1, 2, z1, x2, 5, z2, "white_concrete")
+    for x in range(x1 + 1, x2):
+        if x != 10:
+            d.window(x, 3, z1, x, 4, z1, "light_blue_stained_glass_pane")
+    d.fill(x1, 5, z1, x2, 5, z1, "cyan_terracotta")
+    d.fill(x1, 6, z1, x2, 6, z2, "smooth_stone")
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            if x in (x1, x2) or z in (z1, z2):
+                d.set(x, 7, z, slab("smooth_quartz_slab"))
+    d.fill(10, 2, z1 + 1, 10, 5, z2 - 1, "white_concrete")         # partition with a door
+    d.door(10, 2, 38, "east", "birch")
+    d.door(x1, 2, 38, "west", "birch")
+    d.door(x2, 2, 38, "east", "birch")
+    # vestry
+    d.set(5, 2, 40, "chest[facing=north,type=single,waterlogged=false]")
+    d.set(6, 2, 40, "chest[facing=north,type=single,waterlogged=false]")
+    d.set(7, 2, 40, "barrel[facing=north,open=false]")
+    d.set(7, 3, 40, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
+    d.set(8, 3, 40, "white_wall_banner[facing=north]")
+    d.set(9, 3, 40, "purple_wall_banner[facing=north]")
+    d.set(9, 2, 40, "water_cauldron[level=3]")
+    d.set(5, 2, 36, "barrel[facing=up,open=false]")
+    d.candle(5, 3, 36, 4, "white")
+    d.chair(7, 2, 36, "north", "birch", sit=False)
+    d.set(8, 2, 36, "potted_bamboo")
+    d.set(7, 5, 38, "end_rod[facing=down]")
+    # choir room / office
+    d.set(12, 2, 40, slab("birch_slab", "top"))
+    d.set(13, 2, 40, slab("birch_slab", "top"))
+    d.chair(12, 2, 39, "north", "birch", sit=False)
+    d.set(13, 3, 40, "candle[candles=2,lit=false,waterlogged=false]")
+    d.set(11, 2, 40, "chiseled_bookshelf[facing=north,slot_0_occupied=true,slot_1_occupied=true,"
+          "slot_2_occupied=false,slot_3_occupied=true,slot_4_occupied=true,slot_5_occupied=false]")
+    d.set(15, 2, 40, "chiseled_bookshelf[facing=north,slot_0_occupied=false,slot_1_occupied=true,"
+          "slot_2_occupied=true,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
+    d.set(15, 2, 36, "note_block[instrument=harp,note=0,powered=false]")      # practice organ
+    d.set(14, 2, 36, "note_block[instrument=harp,note=5,powered=false]")
+    d.set(13, 2, 36, "lectern[facing=south,has_book=true,powered=false]")
+    d.set(11, 2, 36, "lectern[facing=south,has_book=true,powered=false]")
+    d.chair(11, 2, 37, "south", "birch", sit=False)
+    d.chair(13, 2, 37, "south", "birch", sit=False)
+    d.set(13, 5, 38, "end_rod[facing=down]")
+    if L >= 4:
+        for x in (6, 9, 12, 15):
+            d.set(x, 7, 38, "moss_block")
+            d.set(x, 8, 38, "azalea" if x % 2 else "flowering_azalea")
+
+
+def nc_garden(d):
+    """Memorial garden south of the crown (x18..31, z36..41, L5): columbarium wall with candle niches along the
+    back, a quartz walk, benches facing the wall, azalea beds, one cherry tree, light bollards."""
+    for x in range(18, 32):
+        d.set(x, 1, 38, "smooth_quartz")
+        d.set(x, 1, 39, "smooth_quartz")
+    for x in range(19, 31):
+        d.set(x, 2, 41, "chiseled_quartz_block" if x % 3 == 0 else "smooth_quartz")
+        d.set(x, 3, 41, "smooth_quartz" if x % 3 else "chiseled_quartz_block")
+        d.set(x, 4, 41, slab("smooth_quartz_slab"))
+        if x % 3 == 0:
+            d.candle(x, 2, 40, 2, "white")
+    for x in (20, 21, 28, 29):
+        d.chair(x, 2, 39, "north", "birch", sit=False)
+    for x, z in ((18, 36), (18, 37), (31, 36), (31, 37), (24, 36), (25, 36)):
+        d.set(x, 1, z, "moss_block")
+        d.set(x, 2, z, "flowering_azalea" if (x + z) % 2 else "azalea")
+    for x in (18, 31):
+        d.set(x, 2, 40, "smooth_quartz")
+        d.set(x, 3, 40, "end_rod[facing=up]")
+
+
 def nc_cathedral(rel, L):
     d = Design("Neoterra", rel, NC_SIZE, gy=1, paving="smooth_stone")
     cx, cz = NC_C
@@ -2389,8 +2515,9 @@ def nc_cathedral(rel, L):
             used.add((x, z))
             back = ("east" if dx > 0 else "west") if abs(dx) >= abs(dz) else ("south" if dz > 0 else "north")
             d.chair(x, 2, z, back, "birch")
-    d.rug(cx, zf + 1, cx, cz - 3, 2, ("light_blue_carpet",), "plain")
+    d.rug(cx, zf + 1, cx, cz - 4, 2, ("light_blue_carpet",), "plain")
     d.hut(14, 2, 13)
+    nc_sanctuary_extras(d, L, cx, cz, Rb)
     # hanging lights: rings of lights on chains from the glass roof
     for a in ((0, 90, 180, 270) if L < 4 else (0, 45, 90, 135, 180, 225, 270, 315)):   # pendant ring
         rr = Rb * 0.45
@@ -2423,11 +2550,22 @@ def nc_cathedral(rel, L):
             d.set(x, 2, 1, "white_concrete")
             d.set(x, 3, 1, "iron_bars")
             d.set(x, 4, 1, "sea_lantern")
+    if L >= 2:                                                       # forecourt benches between planters
+        for x0 in (6, 22):
+            d.set(x0, 1, 1, "moss_block")
+            d.set(x0, 2, 1, "flowering_azalea")
+            d.set(x0 + 4, 1, 1, "moss_block")
+            d.set(x0 + 4, 2, 1, "azalea")
+        for x in (7, 8, 24, 25):
+            d.chair(x, 2, 1, "north", "birch", sit=False)
+    if L >= 3:
+        nc_sacristy(d, L)
     if L >= 4:
         nc_parish_centre(d, L)
     if L >= 5:
         nc_baptistery(d, L)
-        for x, z in ((33, 2), (33, 24), (48, 24), (48, 40), (2, 38), (10, 40), (22, 40)):
+        nc_garden(d)
+        for x, z in ((33, 24), (48, 24)):
             cherry_tree(d, x, z)
         for z in (26, 30, 34, 38):                                   # benches along the garden walk
             d.chair(33, 2, z, "west", "birch", sit=False)
