@@ -222,7 +222,16 @@ def lib_hearthwood(rel, L):
         d.set(x, 7, 5, st("sandstone_stairs", "south"))
     d.fill(21, 1, 4, 25, 1, 7, "cut_sandstone")
     hang(d, [(23, 6)], 5)                                             # porch lantern over the door
-    # --- street front: lamp posts, low hedges and two flower beds
+    # --- street front (L3+): lamp posts, low hedges and two flower beds
+    if L >= 3:
+        street_front(d)
+
+    # --- reading hall, ground floor (x17-29, z9-19)
+    hall_ground(d, L, hh, W)
+    return lib_hearthwood_rest(d, L, h, hh, W, SS)
+
+
+def street_front(d):
     post_lamp(d, 14, 5)
     post_lamp(d, 32, 5)
     for x in list(range(16, 21)) + list(range(26, 31)):
@@ -234,7 +243,8 @@ def lib_hearthwood(rel, L):
                (30, 3, "red_tulip"), (26, 4, "cornflower"), (27, 4, None), (28, 4, "allium"), (29, 4, None),
                (30, 4, "cornflower")])
 
-    # --- reading hall, ground floor (x17-29, z9-19)
+
+def hall_ground(d, L, hh, W):
     d.hut(17, Y0, 9)
     tops(d, [(26, 11), (27, 11), (28, 11)], Y0, f"{W}_slab")         # librarian's issue desk by the door
     d.chair(27, Y0, 10, "north", W)
@@ -300,6 +310,31 @@ def lib_hearthwood(rel, L):
         for x in (18, 19, 27, 28):                                    # benches under the porch-side windows
             d.chair(x, Y0, 6, "south", W, sit=False)
 
+
+def lib_hearthwood_rest(d, L, h, hh, W, SS):
+    if L >= 3:
+        # --- fellows' garden east of the stacks wing: lawn, yew hedge, bench under the eave, bed, a young oak
+        d.fill(43, 1, 8, 47, 1, 20, GRASS)
+        for z in range(8, 21):
+            d.set(47, 2, z, LEAF)
+        seats(d, [(43, 13, "west"), (43, 14, "west")], Y0, W, sit=False)
+        d.set(43, Y0, 12, "potted_red_tulip")
+        d.set(43, Y0, 15, "potted_cornflower")
+        d.set(43, Y0, 19, "water_cauldron[level=3]")
+        d.wall_torch(43, 4, 16, "east")
+        bed_of(d, [(45, 9, "red_tulip"), (46, 9, "oxeye_daisy"), (45, 10, "allium"), (46, 10, "cornflower"),
+                   (45, 11, "oxeye_daisy"), (46, 11, "red_tulip")])
+        plant_tree(d, 45, 17)
+        post_lamp(d, 45, 13)
+        for z in (12, 15):                                             # rose arbour over the bench
+            for y in (2, 3, 4):
+                d.set(44, y, z, "dark_oak_fence")
+        for x in (44,):
+            for z in range(12, 16):
+                d.set(x, 5, z, slab("dark_oak_slab"))
+                d.set(x, 6, z, "flowering_azalea_leaves[distance=1,persistent=true,waterlogged=false]")
+        hang(d, [(44, 13)], 4)
+        bed_of(d, [(45, 14, "allium"), (46, 14, "red_tulip"), (45, 15, "cornflower"), (46, 15, "allium")])
     if L >= 2:
         # --- stacks wing (x31-41, z10-18)
         swnf = 2 if L >= 4 else 1
@@ -326,6 +361,10 @@ def lib_hearthwood(rel, L):
             seats(d, [(31, 15, "west"), (31, 17, "west")], y, W)
             d.table(31, y, 16, W)
             hang(d, [(36, 15), (33, 11)], 10)
+            for z, fl in ((11, "red_tulip"), (14, "cornflower"), (17, "allium")):   # window boxes, east front
+                sill(d, 43, 7, z, "east", fl)
+            for x, col in ((33, "blue"), (39, "red")):                  # county maps hung on the south wall
+                d.banner(x, 9, 18, "north", col)
     if L >= 4:
         # --- the rotunda: domed round reading room behind the hall
         cx, cz, R = 23, 30, 7
@@ -363,10 +402,22 @@ def lib_hearthwood(rel, L):
             for x in range(cx - 2, cx + 3):
                 d.set(x, 6, z, "cut_sandstone")
         hang(d, [(23, 21)], 5)
+        for x in range(cx - 10, cx + 11):                             # clipped hedge ring round the rotunda
+            for z in range(cz - 10, cz + 11):
+                dd = (x - cx) ** 2 + (z - cz) ** 2
+                if 8.5 ** 2 <= dd <= 9.5 ** 2 and abs(x - cx) > 2 and d.air(x, 2, z):
+                    d.set(x, 1, z, GRASS)
+                    d.set(x, 2, z, LEAF)
+        for (x, z) in ((17, 24), (29, 24), (17, 36), (29, 36)):
+            d.set(x, 2, z, AIR)
+            post_lamp(d, x, z)
         # radial presses in six alcoves (N and S kept for the doors)
         cases(d, [(27, 30), (28, 30), (29, 30), (17, 30), (18, 30), (19, 30),
                   (26, 27), (27, 26), (27, 27), (20, 27), (19, 26), (19, 27),
-                  (26, 33), (27, 34), (27, 33), (20, 33), (19, 34), (19, 33)], Y0, 3)
+                  (26, 33), (27, 34), (27, 33), (20, 33), (19, 34), (19, 33)], Y0, 5)
+        for (x, z) in ((21, 26), (25, 26), (21, 34), (25, 34)):       # four library globes
+            d.set(x, Y0, z, "dark_oak_fence")
+            d.set(x, Y0 + 1, z, "light_blue_stained_glass")
         d.item(cx, Y0, cz, "enchanting_table")
         tops(d, [(21, 28), (25, 28), (21, 32), (25, 32)], Y0, f"{W}_slab")   # four study desks round the table
         seats(d, [(20, 28, "west"), (26, 28, "east"), (20, 32, "west"), (26, 32, "east")], Y0, W)
@@ -375,8 +426,11 @@ def lib_hearthwood(rel, L):
         for y in range(9, 18):                                        # chandelier from the dome
             d.set(cx, y, cz, "chain[axis=y,waterlogged=false]")
         d.set(cx, 8, cz, "lantern[hanging=true,waterlogged=false]")
-        for (x, z) in ((29, 30), (17, 30)):
-            d.set(x, 5, z, "lantern[hanging=false,waterlogged=false]")
+        for (x, z) in ((29, 30), (17, 30)):                           # lamps & ferns on the tall presses
+            d.set(x, 7, z, "lantern[hanging=false,waterlogged=false]")
+        for (x, z) in ((28, 30), (18, 30), (27, 26), (19, 26), (27, 34), (19, 34), (26, 27), (20, 27), (26, 33),
+                       (20, 33)):
+            d.set(x, 7, z, "potted_fern")
     if L >= 5:
         # --- scriptorium wing (x5-15, z10-20), two storeys
         shell(d, 4, 9, 16, 21, 2, "gable", "z", win="nsw", mat=SS, up="calcite")
@@ -396,12 +450,25 @@ def lib_hearthwood(rel, L):
         d.set(8, Y0, 20, "cartography_table")
         door_out(d, 10, Y0, 21, "north", stoop="gravel")                # garden door
         hang(d, [(10, 15), (7, 19)], 5)
+        seats(d, [(3, 12, "east"), (3, 13, "east")], Y0, W, sit=False)   # bench under the west eave
+        d.set(3, Y0, 11, "potted_allium")
+        d.set(3, Y0, 14, "potted_red_tulip")
+        d.set(3, Y0, 19, "water_cauldron[level=3]")
+        d.wall_torch(3, 4, 16, "west")
         y = 7                                                          # manuscript gallery
         cases(d, [(5, 10), (5, 12), (5, 13), (5, 15), (5, 16), (5, 18), (5, 19), (5, 20),
                   (7, 10), (8, 10), (10, 10), (11, 10), (13, 10), (14, 10)], y, 3)
         for x in (8, 10, 12):                                          # glass display cases
             d.set(x, y, 14, "dark_oak_planks")
             d.set(x, y + 1, 14, "glass")
+        for x in (7, 8, 9):                                            # collation table
+            d.table(x, y, 12, W, "block", "dark_oak_planks")
+            d.chair(x, y, 11, "north", W)
+            d.chair(x, y, 13, "south", W)
+        d.candle(8, y + 1, 12, 3)
+        d.set(12, y, 12, "lectern[facing=west,has_book=false,powered=false]")   # manuscript stands
+        d.set(12, y, 16, "lectern[facing=west,has_book=false,powered=false]")
+        d.set(7, y, 17, "potted_fern")
         tops(d, [(10, 18)], y, f"{W}_slab")                            # archivist's desk
         d.chair(10, y, 19, "south", W)
         d.candle(10, y + 1, 18, 3)
@@ -445,6 +512,13 @@ def lib_hearthwood(rel, L):
         d.table(40, Y0, 41, W)
         seats(d, [(38, 41, "west"), (41, 41, "east"), (39, 40, "north"), (40, 40, "north")], Y0, W)
         hang(d, [(39, 38), (39, 41)], 5)
+        for x in (35, 36, 37):                                          # firewood & rain butt, back eave
+            d.set(x, 2, 45, log("oak_log", "x"))
+            d.set(x, 3, 45, log("oak_log", "x"))
+        d.set(36, 4, 45, "lantern[hanging=false,waterlogged=false]")
+        d.set(39, 2, 45, "water_cauldron[level=3]")
+        seats(d, [(41, 45, "north"), (42, 45, "north")], Y0, W, sit=False)
+        d.set(43, 2, 45, "potted_red_tulip")
         y = 7                                                           # bedrooms upstairs
         d.bed(43, y, 36, "east", "red")
         d.bed(43, y, 41, "east", "blue")
@@ -552,12 +626,14 @@ def lib_neoterra(rel, L):
                 d.fill(x1, 12, z1, x1 + 6, 12, z1 + 1, "daylight_detector[inverted=false,power=0]")
     if L >= 4:
         # --- media tower (x17-27, z19-31), five floors
-        shell(d, 16, 18, 28, 32, 5, "flat", glassy=True, win="esw")
+        tall = L >= 5                                                 # three storeys at L4, five at L5
+        mt = shell(d, 16, 18, 28, 32, 5 if tall else 3, "flat", glassy=True, win="esw")
         link(d, 22, Y0, 18, "south")
         stair(d, 17, 20, Y0, 7, "south", [(18, 21), (18, 22), (18, 23), (17, 20)])
         stair(d, 27, 30, 7, 12, "north", [(26, 27), (26, 28), (26, 29), (27, 30)])
-        stair(d, 17, 20, 12, 17, "south", [(18, 21), (18, 22), (18, 23), (17, 20)])
-        stair(d, 27, 30, 17, 22, "north", [(26, 27), (26, 28), (26, 29), (27, 30)])
+        if tall:
+            stair(d, 17, 20, 12, 17, "south", [(18, 21), (18, 22), (18, 23), (17, 20)])
+            stair(d, 27, 30, 17, 22, "north", [(26, 27), (26, 28), (26, 29), (27, 30)])
         # ground: enchanting alcove – shelves ring the table at two blocks, gaps north and south
         d.item(22, Y0, 25, "enchanting_table")
         cases(d, [(20, 23), (21, 23), (23, 23), (24, 23), (20, 27), (21, 27), (23, 27), (24, 27),
@@ -573,6 +649,17 @@ def lib_neoterra(rel, L):
         tops(d, [(21, 26)], y, "smooth_quartz_slab")
         d.chair(24, y, 26, "east", B)
         d.set(19, y, 30, "potted_bamboo")
+        press(d, 20, 24, 20, y + 2, 1)                                  # (top course of the magazine wall)
+        for z in (22, 24):                                              # magazine racks: low cases, papers on top
+            press(d, 20, 23, z, y, 1)
+            for x in (20, 22):
+                d.set(x, y + 1, z, "white_carpet")
+        seats(d, [(20, 26, "west")], y, B)
+        d.set(21, y + 1, 26, "potted_white_tulip")
+        tops(d, [(24, 28), (24, 29)], y, "smooth_quartz_slab")           # newspaper reading counter
+        seats(d, [(25, 28, "east"), (25, 29, "east")], y, M)
+        d.set(24, y + 1, 28, "lantern[hanging=false,waterlogged=false]")
+        d.set(25, y, 31, "potted_bamboo")
         panel(d, [(22, 24)], 11)
         # floor 2: music & media room
         y = 12
@@ -581,8 +668,17 @@ def lib_neoterra(rel, L):
         d.set(22, y, 20, "note_block[instrument=harp,note=0,powered=false]")
         seats(d, [(20, 22, "south"), (24, 22, "south")], y, M)
         press(d, 19, 23, 28, y, 3)
-        d.rug(19, 23, 25, 25, y, ("cyan_carpet", "light_gray_carpet"))   # listening area in front of the jukeboxes
+        d.rug(21, 23, 23, 25, y, ("cyan_carpet", "light_gray_carpet"))   # listening area in front of the jukeboxes
+        seats(d, [(20, 25, "west"), (24, 25, "east")], y, B)            # listening armchairs
+        d.set(22, y, 26, slab("smooth_quartz_slab", "top"))
+        d.set(22, y + 1, 26, "potted_bamboo")
+        for x in (19, 21, 23):                                          # record shelves along the south glass
+            d.set(x, y, 30, "chiseled_bookshelf[facing=north,slot_0_occupied=true,slot_1_occupied=true,"
+                            "slot_2_occupied=true,slot_3_occupied=false,slot_4_occupied=true,slot_5_occupied=true]")
+        d.set(25, y, 30, "note_block[instrument=bass,note=0,powered=false]")
+        seats(d, [(25, 29, "south")], y, M)
         panel(d, [(22, 24)], 16)
+    if L >= 5:
         # floor 3: quiet study carrels
         y = 17
         tops(d, [(17, 27), (17, 29), (17, 31)], y, "smooth_quartz_slab")
@@ -600,16 +696,23 @@ def lib_neoterra(rel, L):
         tops(d, [(20, 30), (22, 30)], y, "smooth_quartz_slab")
         press(d, 18, 26, 19, y, 1)
         d.set(18, y, 30, "potted_bamboo")
-        d.rug(19, 24, 24, 27, y, ("orange_carpet", "white_carpet"))
+        d.rug(20, 25, 23, 27, y, ("orange_carpet", "white_carpet"))
+        tops(d, [(21, 26), (22, 26)], y, "smooth_quartz_slab")           # coffee table on the rug, two loungers
+        d.set(21, y + 1, 26, "potted_azure_bluet")
+        d.set(22, y + 1, 26, "lantern[hanging=false,waterlogged=false]")
+        seats(d, [(19, 26, "west"), (24, 26, "east")], y, B)
+        press(d, 19, 21, 32 - 1, y, 2)                                  # low book wall on the south glass
         seats(d, [(25, 21, "west"), (25, 23, "west")], y, B)          # armchairs facing the east glass
         tops(d, [(25, 22)], y, "smooth_quartz_slab")
         d.set(25, y + 1, 22, "potted_azure_bluet")
         d.set(18, y, 24, "potted_bamboo")
         panel(d, [(22, 25)], 26)
-        for (x, z) in ((19, 21), (20, 21), (25, 29), (25, 30)):        # roof planters
-            d.set(x, 27, z, "moss_block")
-        d.set(19, 28, 21, "flowering_azalea")
-        d.set(25, 28, 30, "azalea")
+    if L >= 4:
+        ry = mt["top"] + 2                                            # roof planters
+        for (x, z) in ((19, 21), (20, 21), (25, 29), (25, 30)):
+            d.set(x, ry, z, "moss_block")
+        d.set(19, ry + 1, 21, "flowering_azalea")
+        d.set(25, ry + 1, 30, "azalea")
     if L >= 5:
         # --- auditorium (x31-45, z21-31), lecture hall + study commons above
         shell(d, 30, 20, 46, 32, 2, "flat", wh=6, win="e")
@@ -708,7 +811,7 @@ def lib_cascadia(rel, L):
             d.table(tx, Y0, z, S, "post")
             d.chair(tx - 1, Y0, z, "west", S)
             d.chair(tx + 1, Y0, z, "east", S)
-    d.rug(24, 8, 27, 15, Y0, ("brown_carpet", "green_carpet"))
+    d.rug(25, 9, 26, 15, Y0, ("brown_carpet", "green_carpet"))
     for z in (8, 12, 16):                                             # collar beams with lanterns
         for x in range(X1 + 7, X2 - 6):
             d.set(x, 9, z, log("stripped_spruce_log", "x"))
@@ -722,7 +825,7 @@ def lib_cascadia(rel, L):
         d.set(44, 1, 7, "spruce_planks")
         for (x, hgt) in ((39, 1), (40, 2), (49, 1), (48, 2)):
             pressz(d, x, 9, 15, Y0, hgt)
-        d.rug(42, 10, 46, 14, Y0, ("lime_carpet", "yellow_carpet"))
+        d.rug(42, 11, 46, 13, Y0, ("lime_carpet", "yellow_carpet"))
         d.chair(44, Y0, 15, "south", S)                                # storyteller's chair facing the rug
         d.set(42, Y0, 15, "potted_fern")
         d.set(46, Y0, 15, "potted_fern")
@@ -763,29 +866,67 @@ def lib_cascadia(rel, L):
         for z in (8, 11, 14, 17):
             press(d, 3, 9, z, 7, 2)
         hang(d, [(6, 12), (6, 16)], 10)
+        for z in range(9, 17):                                         # firewood under the west eave
+            d.set(1, 2, z, log("spruce_log", "z"))
+            d.set(1, 3, z, log("spruce_log", "z"))
+        d.set(1, 4, 12, "lantern[hanging=false,waterlogged=false]")
+        # the sheltered gap between archive and lodge: book-return chest, bench, rain butt
+        d.set(13, Y0, 8, "barrel[facing=up,open=false]")
+        d.set(13, Y0 + 1, 8, "lantern[hanging=false,waterlogged=false]")
+        d.set(13, Y0, 9, "water_cauldron[level=3]")
+        d.set(13, Y0, 14, "chest[facing=east,type=single,waterlogged=false]")
+        seats(d, [(15, 11, "east"), (15, 12, "east")], Y0, S, sit=False)
+        d.set(15, Y0, 10, "potted_fern")
+        d.set(15, Y0, 13, "potted_fern")
     if L >= 4:
         # --- long stacks hall (x9-43, z25-33)
-        shell(d, 8, 24, 44, 34, 2, "gable", "x", ws=3)
+        hall2 = L >= 5                                                # reading gallery storey added at L5
+        shell(d, 8, 24, 44, 34, 2 if hall2 else 1, "gable", "x", ws=3)
         door_out(d, 26, Y0, 24, "south", double=True)
         d.fill(26, 1, 19, 27, 1, 23, "spruce_planks")
-        stair(d, 10, 33, Y0, 7, "east", [(11, 32), (12, 32), (13, 32), (10, 33)])
+        if hall2:
+            stair(d, 10, 33, Y0, 7, "east", [(11, 32), (12, 32), (13, 32), (10, 33)])
         for x in (12, 13, 16, 17, 20, 21, 24, 29, 32, 33, 36, 37, 40, 41):
             pressz(d, x, 26, 32, Y0, 3)
         d.item(26, Y0, 30, "enchanting_table")
         seats(d, [(26, 28, "north"), (26, 32, "south")], Y0, S)
         hang(d, [(26, 30), (18, 25), (34, 25), (18, 33), (34, 33)], 5)
-        y = 7
-        press(d, 9, 43, 25, y, 1)
-        press(d, 15, 43, 33, y, 1)
-        for x0 in (16, 30):
-            for x in range(x0, x0 + 5):
-                d.table(x, y, 29, S, "block", "spruce_planks")
-                d.chair(x, y, 28, "north", S)
-                d.chair(x, y, 30, "south", S)
-            d.candle(x0 + 1, y + 1, 29, 3)
-            d.candle(x0 + 3, y + 1, 29, 2)
-        hang(d, [(18, 29), (30, 29), (26, 26)], 10)
+        if hall2:
+            y = 7
+            press(d, 9, 43, 25, y, 1)
+            press(d, 15, 43, 33, y, 1)
+            for x0 in (16, 30):
+                for x in range(x0, x0 + 5):
+                    d.table(x, y, 29, S, "block", "spruce_planks")
+                    d.chair(x, y, 28, "north", S)
+                    d.chair(x, y, 30, "south", S)
+                d.candle(x0 + 1, y + 1, 29, 3)
+                d.candle(x0 + 3, y + 1, 29, 2)
+            hang(d, [(18, 29), (30, 29), (26, 26)], 10)
+            for x in (15, 22, 29, 36, 42):                            # bookcase bays off the centre aisle
+                pressz(d, x, 26, 27, y, 2)
+                if x != 15:
+                    pressz(d, x, 31, 32, y, 2)
+            d.set(26, y, 29, "spruce_fence")                           # globe between the two tables
+            d.set(26, y + 1, 29, "light_blue_stained_glass")
+            seats(d, [(24, 26, "north"), (25, 26, "north"), (39, 26, "north"), (40, 26, "north")], y, S, sit=False)
+            tops(d, [(24, 27), (39, 27)], y, "spruce_slab")
+            d.set(24, y + 1, 27, "lantern[hanging=false,waterlogged=false]")
+            d.set(39, y + 1, 27, "potted_fern")
+            for (x, z) in ((19, 32), (33, 32), (40, 32)):
+                d.set(x, y, z, "potted_fern")
+            d.rug(38, 29, 41, 31, y, ("green_carpet", "brown_carpet"))
+            seats(d, [(42, 30, "east")], y, S, sit=False)
+            hang(d, [(40, 30), (12, 27)], 10)
         d.sign(26, 6, 23, "north", ["THE STACKS"], S)
+        for zz, face, back in ((23, "north", "south"), (35, "south", "north")):   # both long eaves
+            for x in (12, 20, 32, 40):
+                d.wall_torch(x, 4, zz, face)
+            seats(d, [(15, zz, back), (16, zz, back), (36, zz, back), (37, zz, back)], Y0, S, sit=False)
+            for x in (14, 17, 35, 38):
+                d.set(x, Y0, zz, "potted_fern")
+            d.set(9, Y0, zz, "barrel[facing=up,open=false]")
+            d.set(43, Y0, zz, "barrel[facing=up,open=false]")
     if L >= 5:
         # --- librarian's cabin (x45-51, z41-49)
         shell(d, 44, 40, 52, 50, 2, "gable", "z", mat="mangrove_planks", up="mangrove_planks")
@@ -814,6 +955,15 @@ def lib_cascadia(rel, L):
         d.rug(47, 44, 48, 46, y, ("green_carpet", "brown_carpet"))
         d.set(51, y, 49, "chest[facing=west,type=single,waterlogged=false]")
         hang(d, [(48, 46)], 10)
+        for z in (41, 42, 43, 47, 48, 49):                             # cabin firewood under the west eave
+            d.set(43, 2, z, log("spruce_log", "z"))
+            d.set(43, 3, z, log("spruce_log", "z"))
+        d.set(43, 4, 42, "lantern[hanging=false,waterlogged=false]")
+        d.set(43, 2, 45, log("stripped_spruce_log"))
+        d.wall_torch(43, 4, 46, "west")
+        for z, b in ((42, "barrel[facing=up,open=false]"), (43, "barrel[facing=up,open=false]"),
+                     (45, "potted_fern"), (48, "water_cauldron[level=3]")):
+            d.set(53, 2, z, b)                                         # stores under the east eave
         # --- bookbindery & print shop (x3-15, z39-51)
         shell(d, 2, 38, 16, 52, 2, "gable", "z", mat="stripped_dark_oak_log", up="stripped_dark_oak_log")
         door_out(d, 9, Y0, 38, "south", double=True)
@@ -840,6 +990,13 @@ def lib_cascadia(rel, L):
             d.chair(x, y, 44, "north", S)
             d.chair(x, y, 46, "south", S)
         hang(d, [(11, 42), (11, 46)], 10)
+        for z in range(44, 49):                                         # paper-mill logs & barrels, west eave
+            d.set(1, 2, z, log("spruce_log", "z"))
+            d.set(1, 3, z, log("spruce_log", "z"))
+        d.set(1, 4, 46, "lantern[hanging=false,waterlogged=false]")
+        for z in (40, 41):
+            d.set(1, 2, z, "barrel[facing=up,open=false]")
+        d.set(1, 2, 50, "water_cauldron[level=3]")
         # --- reading garden with the lookout deck
         for x in range(18, 43):
             if x not in (24, 30, 31):
@@ -859,6 +1016,12 @@ def lib_cascadia(rel, L):
                 d.set(x, 4, z, "spruce_planks")
                 if (x in (dk[0], dk[2]) or z in (dk[1], dk[3])) and (x, z) != (24, 40):
                     d.set(x, 5, z, "spruce_fence")
+        for x in range(dk[0], dk[2] + 1):                              # rubble-stone terrace under the deck
+            for z in range(dk[1], dk[3] + 1):
+                edge = x in (dk[0], dk[2]) or z in (dk[1], dk[3])
+                for y in (Y0, Y0 + 1):
+                    d.set(x, y, z, ("mossy_cobblestone" if (x + z + y) % 4 == 0 else "cobblestone") if edge
+                          else "dirt")
         for x, z in ((dk[0], dk[1]), (dk[2], dk[1]), (dk[0], dk[3]), (dk[2], dk[3])):
             for y in range(Y0, 4):
                 d.set(x, y, z, log("spruce_log"))
