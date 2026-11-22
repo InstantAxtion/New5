@@ -564,6 +564,8 @@ def site(d, L):
             d.wall_torch(5, 4, 36, S)
             d.wall_torch(14, 4, 36, S)
             d.clear(21, 2, 37, 34, d.sy - 1, 42)                        # lone lamp, bench and tree at the plot edge
+            d.clear(34, 2, 28, 38, d.sy - 1, 32)                        # yard tree one step in from the edge
+            tree(d, 35, 30)
     elif d.pack == "Cascadia":
         if L >= 2:                                   # wood yard behind the bunk house
             for x in (26, 27, 28):

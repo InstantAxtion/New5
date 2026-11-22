@@ -862,26 +862,33 @@ def cas_pier(d):
     for (x, z) in ((0, 5), (8, 5), (0, 8)):
         bw_post(d, "Cascadia", x, z)
     bw_lamp(d, "Cascadia", 0, 11)
-    # fishing shack in the south-east corner: plank walls, log corner posts, lean-to roof, door opening west
+    # fishing shack in the south-east corner: board walls on a stripped-log frame, open to the west and north,
+    # shallow lean-to roof falling to the west (slab / stair / slab courses, shingled by the Cascadia roof pass)
     for z in range(8, 12):
-        for yy in range(y, y + 3):
+        for yy in range(y, y + 4):
             d.set(8, yy, z, "spruce_planks")
     for x in range(5, 9):
         for yy in range(y, y + 3):
             d.set(x, yy, 11, "spruce_planks")
     for (x, z) in ((8, 8), (8, 11), (5, 11), (5, 8)):
         for yy in range(BW_DECK_Y, y + 3):
-            d.set(x, yy, z, log("spruce_log"))
+            d.set(x, yy, z, log("stripped_spruce_log"))
     for z in range(7, 12):
-        d.set(4, y + 3, z, slab("spruce"))
-        for x in range(5, 9):
-            d.set(x, y + 3, z, "spruce_planks" if x == 8 else slab("spruce", "top"))
+        d.set(4, y + 2, z, slab("spruce"))
+        d.set(5, y + 2, z, stairs("spruce", "east")) if z not in (8, 11) else None
+        d.set(5, y + 3, z, slab("spruce")) if z in (8, 11) else None
+        d.set(6, y + 2, z, slab("spruce", "top"))
+        d.set(7, y + 3, z, slab("spruce"))
+        d.set(6, y + 3, z, AIR)
+    for z in (8, 11):
+        d.set(5, y + 2, z, log("stripped_spruce_log"))
     d.set(8, y + 1, 10, "glass_pane")
-    d.set(6, y, 10, "barrel[facing=up,open=false]")
     d.set(7, y, 10, "barrel[facing=up,open=false]")
     d.set(7, y + 1, 10, "barrel[facing=up,open=false]")
     d.set(7, y, 9, "composter[level=0]")
-    d.set(6, y + 2, 9, HANGING)
+    d.set(6, y + 1, 10, HANGING) if False else None
+    d.set(7, y + 2, 9, "lantern[hanging=false,waterlogged=false]") if False else None
+    wall_sign(d, 7, y + 1, 9, "west", ["Bait", "& Tackle"], "spruce")
     # log benches along the west rail looking out, and one at the end
     for z in (6, 7, 8):
         seat(d, 1, y, z, "spruce", "east")
