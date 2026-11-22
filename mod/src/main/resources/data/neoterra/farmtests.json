@@ -1,5 +1,51 @@
 {
  "farms": {
+  "decorations/cropfarms/bamboo.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "expect": {
+    "minecraft:bamboo": 32
+   },
+   "inputs": {},
+   "mine": [],
+   "outputs": [
+    "6,0,10"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 6000
+  },
+  "decorations/cropfarms/kelp.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "expect": {
+    "minecraft:kelp": 12
+   },
+   "inputs": {},
+   "mine": [],
+   "outputs": [
+    "-7,1,7",
+    "7,1,7"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 12000
+  },
+  "decorations/cropfarms/sugarcane.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "expect": {
+    "minecraft:sugar_cane": 20
+   },
+   "inputs": {},
+   "mine": [],
+   "outputs": [
+    "6,0,10"
+   ],
+   "presses": [],
+   "spawns": [],
+   "ticks": 9000
+  },
   "decorations/resourcefarms/basaltgen.blueprint": {
    "blocks": [],
    "blocks_min": 0,
