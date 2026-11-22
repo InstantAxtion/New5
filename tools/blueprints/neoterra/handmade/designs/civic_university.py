@@ -904,23 +904,42 @@ def uni_neoterra(rel, L):
             [".......", " ......", " .nnn.p", " ..t...", " .sss..", " ......", ".......", ".......",
              ".......", ".ttt...", "..s....", "XXX..BB", "......B", ".....pB", ".......", "p.....p"],
             ["", "", "", "   o", "", "", "", "", "", " Mko", "", "     BB", "      B"]], lg)
-        odd = [" .....t", " .... >", "  ....t", "  ... >", "  ....t", " .... >", " .....t", "..... >",
-               "C.....t", "C......"]
-        even = ["......t", " .... >", " .....t", " .... >", " .....t", " .... >", "......t", "..... >",
-                "C.....t", "C..... "]
-        for k in range(1, 6):
-            y = Y0 + 5 * k
-            if k % 2:
-                rows = ["p.....t"] + odd[1:]
-                tail = ["te.... ", "...... ", "te.... ", "...... ", "te.... ", "p......"] if k < 5 else \
-                    ["te....B", "......B", "te....p", "......B", "te....B", "p......"]
-            else:
-                rows = list(even)
-                tail = ["te.... ", ".....  ", "te...  ", ".....  ", "te.... ", "p......"]
-            plan(d, 39, 18, y, [rows + tail,
-                                ["      k", "", "      k", "", "      k", "", "      k", "", "      k", "",
-                                 "k", "", "o", "", "k"]], lg)
-            _ceiling(d, y + 4, [(42, 22), (42, 29)])
+        # five upper storeys, each its own use (stairs alternate west / east, so holes differ per floor)
+        tw = dict(lg, H=_bed("south", "yellow"), h=_bed("west", "lime"), I="white_stained_glass_pane",
+                  G="gray_concrete")
+        plan(d, 39, 18, 7, [                                          # 1st: quiet study library
+            ["pBBBBBp", " ......", "  .wTe.", "  .....", "  .wTe.", " ......", ".......", "BB...BB",
+             "p.nnn.B", "..TTT.B", "..sss. ", "B..... ", "Bw=t=e ", "B.===. ", "B..... ", "BBp...."],
+            [" BBBBB ", "", "    l", "", "    l", "", "", "BB   BB", "      B", "  coc B", "", "B", "B  k",
+             "B", "B", "BB"],
+            [" BBBBB ", "", "", "", "", "", "", "BB   BB", "      B", "      B", "", "B", "B", "B", "B", "BB"]],
+            tw)
+        _ceiling(d, 11, [(42, 21), (42, 27), (42, 31)])
+        plan(d, 39, 18, 12, [                                         # 2nd: student flat – kitchen & dorm
+            [".tZtU.p", " .....t", " ..nn.t", " .wTTe.", " ..ss..", " ......", ".......", "t....XC",
+             "h .....", "t.==...", "h .==  ", "t.==.  ", "h ...  ", "t..... ", "h ....p", "t..BBX."],
+            ["  o d", "      o", "", "   co", "", "", "", "k", "", "k", "", "k", "", "k", "", "k  BB"]], tw)
+        _ceiling(d, 16, [(42, 20), (42, 25), (42, 30)])
+        plan(d, 39, 18, 17, [                                         # 3rd: computer lab & seminar table
+            ["ptttttp", " .ssss.", "  .....", "  ....B", "  ....B", " .....B", ".......", ".nnnnn.",
+             "wTTTTTe", "wTTTTTe", ".sssss ", "...... ", "B..... ", "B..XX. ", "p..... ", "BBBp..."],
+            [" MMMMM ", "", "", "      B", "      B", "      B", "", "", " c o c", " o c o", "", "", "B",
+             "B", "", "BBB"],
+            ["", "", "", "      B", "      B", "      B", "", "", "", "", "", "", "B", "B", "", "BBB"]], tw)
+        for z in range(25, 31):                                       # projection wall at the south end
+            d.set(39, 19, z, "black_concrete") if z in (29, 30) else None
+        _ceiling(d, 21, [(42, 19), (42, 26), (42, 31)])
+        plan(d, 39, 18, 22, [                                         # 4th: graduate flat – lounge & 2 rooms
+            [".pBBBp.", " ......", " .nnn..", " .=t=..", " .sss..", " ......", ".......", "III.III",
+             "C.....X", "C......", "te.... ", "....=  ", "te..=  ", "......  ", ".  .   ", "tHHtHHt"],
+            ["  BBB", "", "", "   o", "", "", "", "III III", "", "", " l", "", " l", "", "", "k  k  k"],
+            ["", "", "", "", "", "", "", "III III"]], tw)
+        _ceiling(d, 26, [(42, 21), (41, 29), (44, 29)])
+        plan(d, 39, 18, 27, [                                         # 5th: sky lounge with a bar
+            ["XtttttX", " .sss..", "  .....", "  ....A", "  .....", " ......", ".......", "A.nnn.A",
+             "w.=t=.e", "w.===.e", "..sss..", ".......", ".......", ".wTe..A", ".......", "AB.p.BA"],
+            [" oqdo", "", "", "", "", "", "", "", "   o", "", "", "", "", "  l", "", " B   B"]], tw)
+        _ceiling(d, 31, [(42, 21), (42, 27), (42, 32)])
         _ceiling(d, 6, [(42, 22), (42, 29)])
         ry = dt["top"] + 2
         for z in (19, 20, 22, 23, 25, 26, 28, 29, 31, 32):

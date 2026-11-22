@@ -2903,6 +2903,12 @@ def bld(d, x1, z1, x2, z2, n, door, plans, axis="x", roofkind="gable", tall=Fals
     return ridge
 
 
+def bldL(d, L, n3, x1, z1, x2, z2, n, door, plans, *a, **kw):
+    """An add-on that first goes up at level 3 with only n3 storeys and gets its full height at level 4."""
+    k = n3 if L == 3 else n
+    return bld(d, x1, z1, x2, z2, k, door, plans[:k], *a, **kw)
+
+
 def grow(d, L, base):
     """Add the type's add-on buildings and site dressing for this level (hand-written per type and pack)."""
     fn = GROW.get((base, d.pack))
@@ -3378,7 +3384,7 @@ def _g_baker_hw(d, L):
         put(d, torch(26, 4, 6, "west"))
         label(d, 26, 3, 9, "west", ["Flour"])
     if L >= 3:                                                       # baker's narrow three-storey house
-        bld(d, 36, 3, 44, 11, 3, ("north", 7), [[".     .",
+        bldL(d, L, 2, 36, 3, 44, 11, 3, ("north", 7), [[".     .",
                                                  ".......",
                                                  "o..wTe.",
                                                  "U..wTe.",
@@ -3610,7 +3616,7 @@ def _g_baker_neo(d, L):
                                                                                  "waterlogged=false]")])
         label(d, 30, 3, 2, "north", ["FLOUR"])
     if L >= 3:                                                       # two-storey patisserie lab
-        bld(d, 3, 15, 21, 23, 2, ("north", 9), [[".     ....p..AVA.",
+        bldL(d, L, 1, 3, 15, 21, 23, 2, ("north", 9), [[".     ....p..AVA.",
                                                   ".................",
                                                   "UUoUU..wTe..wTe.p",
                                                   ".................",
@@ -4062,7 +4068,7 @@ def _g_cook_hw(d, L):
         put(d, wbox(29, 2, "north", "red_tulip", "crimson") + torch(30, 4, 2, "north"))
         label(d, 32, 3, 2, "north", ["Pantry"])
     if L >= 3:                                                       # staff house closing the street range
-        bld(d, 38, 3, 50, 11, 2, ("north", 9), [[".     ....b",
+        bldL(d, L, 1, 38, 3, 50, 11, 2, ("north", 9), [[".     ....b",
                                                   "o.........b",
                                                   "m..wte.....",
                                                   "U..wte..l..",
@@ -4297,8 +4303,12 @@ def _g_cook_neo(d, L):
         planter(d, 22, 4, 2)
         planter(d, 22, 8, 2)
         label(d, 22, 3, 5, "west", ["COLD", "STORE"])
+        canopy(d, 24, 10, 30, 11, 5, [(24, 11), (30, 11)])             # delivery bay behind the store
+        put(d, [(x, 2, 10, "barrel[facing=up,open=false]") for x in (25, 26, 27, 28, 29)]
+            + [(x, 3, 10, "barrel[facing=up,open=false]") for x in (25, 26, 28)])
+        lamp_post(d, 32, 10, 3)
     if L >= 3:                                                       # staff block with green roof
-        bld(d, 34, 3, 44, 11, 2, ("west", 5), [[".     .bE",
+        bldL(d, L, 1, 34, 3, 44, 11, 2, ("west", 5), [[".     .bE",
                                                  ".........",
                                                  "..wTe.wTe",
                                                  "..wTe.wTe",
@@ -4737,6 +4747,10 @@ def _g_dyer_hw(d, L):
         put(d, [(28, 2, 7, "red_wool"), (29, 2, 7, "yellow_wool"), (36, 2, 7, "blue_wool"),
                 (34, 2, 7, "barrel[facing=up,open=false]")])
         label(d, 32, 4, 2, "north", ["Vat", "Shed"], color="blue")
+        woodpile(d, 26, 33, 13, 2, "dark_oak")                          # fuel for the vat fires
+        put(d, [(x, 2, 13, "barrel[facing=up,open=false]") for x in (35, 36, 37)]
+            + [(35, 3, 13, "barrel[facing=up,open=false]")])
+        cart(d, 45, 12, "x", "red_wool", "dark_oak")
     if L >= 3:                                                       # long weavers' range with dormers
         bld(d, 3, 24, 27, 30, 1, ("north", 12), [["M.M.M.M.........M.M.M.M",
                                                    "s.s.s.s.........s.s.s.s",
@@ -4937,7 +4951,7 @@ def _g_dyer_neo(d, L):
         planter(d, 24, 9, 2)
         label(d, 24, 3, 8, "west", ["YARN"])
     if L >= 3:                                                       # two-storey studio
-        bld(d, 3, 17, 23, 23, 2, ("north", 10), [[".     .............",
+        bldL(d, L, 1, 3, 17, 23, 23, 2, ("north", 10), [[".     .............",
                                                    "...................",
                                                    "M.M.M..wTe.wTe..M.M",
                                                    "........l..........",
@@ -5046,6 +5060,10 @@ def _g_florist_hw(d, L):
                 d.set(x, 2, z, "oak_fence")
         put(d, [(28, 2, 13, "oak_fence_gate[facing=south,in_wall=false,open=false,powered=false]"),
                 (32, 2, 4, "composter[level=4]"), (32, 2, 5, "barrel[facing=up,open=false]")])
+        for z in range(4, 9):                                         # potting bench + water butts beside the shed
+            put(d, [(34, 2, z, sl("spruce", "top")), (34, 3, z, "potted_" + flower(d, z)),
+                    (35, 2, z, "barrel[facing=up,open=false]")])
+        put(d, [(35, 3, z, "composter[level=6]") for z in (5, 7)])
         put(d, [(x, 2, 12, td("spruce", "north", "bottom", True)) for x in range(25, 32)]
             + torch(24, 4, 5, "west"))
         label(d, 24, 3, 8, "west", ["Potting", "Shed"])
@@ -5495,6 +5513,8 @@ def _g_glass_cas(d, L):
                 (33, 2, 4, "red_sand"), (35, 2, 5, "oak_log[axis=y]"), (35, 2, 6, "oak_log[axis=y]")])
         label(d, 30, 4, 2, "north", ["Sand", "Shed"])
         woodpile(d, 27, 33, 11, 2)                                      # furnace wood
+        woodpile(d, 37, 42, 4, 3)                                       # cordwood stacks for the glory hole
+        woodpile(d, 37, 42, 5, 2)
         cart(d, 48, 13, "x", "sand")
     if L >= 3:                                                       # porch gallery
         bld(d, 3, 19, 23, 25, 1, ("north", 10), [["56.78....l....87.65",

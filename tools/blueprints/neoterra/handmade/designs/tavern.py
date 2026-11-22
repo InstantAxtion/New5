@@ -129,8 +129,12 @@ def hearthwood(rel, L):
     need = {1: 8, 2: 18, 3: 22}[L]
     if L == 3:
         d.item(x1 + 1, y0, z1 + 1, "jukebox")
-    sets = {1: [(9, 6, "n")], 2: [(9, 6, "nsew"), (12, 6, "nse")]}.get(L, [(9, 6, "nsew"), (12, 6, "nsew"),
-                                                                          (15, 6, "nse")])
+    sets = {1: [(10, 6, "we")], 2: [(9, 6, "nsew"), (12, 6, "nse")]}.get(L, [(9, 6, "nsew"), (12, 6, "nsew"),
+                                                                           (15, 6, "nse")])
+    if L == 1:                                                       # settle under the front window
+        d.chair(7, y0, 5, "north", "dark_oak", True)
+        d.chair(8, y0, 5, "north", "dark_oak", True)
+        seats += 2
     for tx, tz, sides in sets:                                       # taproom tables
         d.dining(tx, y0, tz, 1, "x", "dark_oak", tuple(sides))
         seats += len(sides)
@@ -139,15 +143,33 @@ def hearthwood(rel, L):
     # ---- guest rooms upstairs: 8 beds, rooms off a central corridor ----
     yb = y1 + 1
     bx = list(range(x1 + 2, x1 + 2 + 4 * 2, 2))
+    bc = {1: "red", 2: "blue", 3: "green"}[L]
     for x in bx:
-        d.bed(x, yb, uz1 + 1, "north")
-        d.bed(x, yb, z2 - 1, "south")
+        d.bed(x, yb, uz1 + 1, "north", bc)
+        d.bed(x, yb, z2 - 1, "south", bc)
     for x in bx:
         d.set(x + 1, yb, uz1 + 1, f"dark_oak_slab[type=top,waterlogged=false]")
         d.candle(x + 1, yb + 1, uz1 + 1, 2)
         d.set(x + 1, yb, z2 - 1, f"dark_oak_slab[type=top,waterlogged=false]")
         d.candle(x + 1, yb + 1, z2 - 1, 1)
-    d.rug(x1 + 1, (uz1 + z2) // 2 - 1 + 1, X2 - 3, (uz1 + z2) // 2 + 1 - 1, yb, ("red_carpet", "red_carpet"), "plain")
+    d.rug(x1 + 1, (uz1 + z2) // 2, x1 + 9, (uz1 + z2) // 2, yb, ("red_carpet",), "plain")   # runner, 9 cells
+    d.keg(x1 + 1, yb, (uz1 + z2) // 2 - 1, "east")                    # luggage cask and a fern at the west end
+    d.plant(x1 + 1, yb + 1, (uz1 + z2) // 2 - 1, "potted_fern")
+    if L == 1:                                                       # wash stand and trunk by the stairs
+        d.set(X2 - 2, yb, z2 - 1, "water_cauldron[level=3]")
+        d.keg(X2 - 1, yb, z2 - 1, "west")
+    else:                                                            # east end: landlord's parlour / card corner
+        d.rug(X2 - 5, z2 - 4, X2 - 3, z2 - 2, yb, ({2: "brown_carpet"}.get(L, "green_carpet"),), "plain")
+        d.table(X2 - 4, yb, z2 - 3, "dark_oak")
+        d.chair(X2 - 5, yb, z2 - 3, "west", "dark_oak", True, arms=False)
+        d.chair(X2 - 3, yb, z2 - 3, "east", "dark_oak", True, arms=False)
+        d.chair(X2 - 4, yb, z2 - 2, "south", "dark_oak", True, arms=False)
+        if L == 3:
+            d.chair(X2 - 4, yb, z2 - 4, "north", "dark_oak", True, arms=False)
+            d.set(X2 - 6, yb, z2 - 1, "lectern[facing=north,has_book=true,powered=false]")
+        else:
+            d.set(X2 - 6, yb, z2 - 1, "water_cauldron[level=3]")
+            d.plant(X2 - 6, yb, uz1 + 1, "potted_red_tulip")
     for x in range(x1 + 2, X2 - 2, 4):
         d.lamp(x, 10, (uz1 + z2) // 2)
     # railing round the stair well
@@ -184,6 +206,15 @@ def hearthwood(rel, L):
         d.set(wx1 + 1, y0, wz1 + 2, "furnace[facing=east,lit=false]")
         d.set(wx1 + 1, y0, wz1 + 3, "smoker[facing=east,lit=false]")
         d.lamp(wx1 + 3, 5, wz1 + 3)
+        d.set(wx1 + 3, y0, wz1 + 3, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+        d.set(wx1 + 3, y0 + 1, wz1 + 3, "water_cauldron[level=3]")     # brew kettle over the fire
+        d.set(wx1 + 4, y0, wz1 + 1, "hay_block[axis=y]")                # malt sacks by the door
+        d.set(wx1 + 5, y0, wz1 + 1, "hay_block[axis=x]")
+        d.set(wx1 + 4, y0 + 1, wz1 + 1, "hay_block[axis=x]")
+        d.keg(wx2 - 1, y0, wz1 + 4, "west")                             # finished casks
+        d.keg(wx2 - 1, y0, wz1 + 5, "west")
+        d.keg(wx2 - 1, y0 + 1, wz1 + 4, "west")
+        d.set(wx1 + 1, y0, wz1 + 4, "crafting_table")
         # beer garden
         gx1, gx2, gz1, gz2 = 3, 10, 14, 21
         d.fill(gx1, 1, gz1, gx2, 1, gz2, "grass_block[snowy=false]")
@@ -291,7 +322,7 @@ def cascadia(rel, L):
     for y in range(y0, 8):
         d.set(mid, y, z2 - 1, "ladder[facing=north,waterlogged=false]")
     need = {1: 8, 2: 18, 3: 22}[L]
-    sets = {1: [], 2: [(6, 11, "nsew"), (9, 11, "nsew"), (6, 14, "ns")]}.get(
+    sets = {1: [(7, 11, "nsew"), (7, 14, "ew")], 2: [(6, 11, "nsew"), (9, 11, "nsew"), (6, 14, "ns")]}.get(
         L, [(6, 11, "nsew"), (9, 11, "nsew"), (6, 14, "nsew"), (9, 14, "ns")])
     for tx, tz, sides in sets:                                       # saloon tables
         d.dining(tx, y0, tz, 1, "x", "spruce", tuple(sides))
@@ -302,27 +333,54 @@ def cascadia(rel, L):
         d.lamp(mid, 6, z)
     # loft: 8 bunks under the roof slope
     yl = 8
+    bc = {1: "brown", 2: "green", 3: "red"}[L]
     for i, z in enumerate(range(z1 + 2, z1 + 2 + 2 * 4, 2)):
-        d.bed(x1 + 2, yl, z, "west")
-        d.bed(x2 - 2, yl, z, "east")
+        d.bed(x1 + 2, yl, z, "west", bc)
+        d.bed(x2 - 2, yl, z, "east", bc)
+    # back of the loft: footlockers, a rug by the ladder hatch, lanterns on chains from the ridge
+    d.keg(x1 + 2, yl, z1 + 10, "east")
+    d.keg(x1 + 2, yl, z1 + 11, "east")
+    d.plant(x1 + 2, yl + 1, z1 + 10, "potted_fern")
+    d.rug(mid - 1, z1 + 9, mid + 1, z1 + 11, yl, ({1: "green_carpet", 2: "brown_carpet"}.get(L, "red_carpet"),), "plain")
+    for z in (z1 + 3, z1 + 10):
+        for y in range(yl + 3, ridge):
+            d.set(mid, y, z, "chain[axis=y,waterlogged=false]")
+        d.set(mid, yl + 2, z, "lantern[hanging=true,waterlogged=false]")
+    if L >= 2:                                                       # a table for cards in the gable end
+        d.table(x2 - 4, yl, z1 + 10, "spruce")
+        d.chair(x2 - 4, yl, z1 + 9, "north", "spruce", True)
+        d.chair(x2 - 4, yl, z1 + 11, "south", "spruce", True)
+    if L == 3:
+        d.set(x2 - 4, yl, z1 + 12, "water_cauldron[level=3]")         # wash stand
+        d.keg(x2 - 2, yl, z1 + 10, "west")
+        d.keg(x2 - 2, yl, z1 + 11, "west")
     # ---- L2: side lean-to (store room); L3: back deck with tables ----
     if L >= 2:
         lx1, lx2 = x2, x2 + 5
-        d.box(lx1, y0, z1 + 4, lx2, 5, z1 + 11, "spruce_planks", floor="spruce_planks")
-        for z in range(z1 + 4, z1 + 12):
+        d.box(lx1, y0, z1 + 4, lx2, 5, z1 + 13, "spruce_planks", floor="spruce_planks")
+        for z in range(z1 + 4, z1 + 14):
             d.set(lx2, 1, z, "cobblestone")
             d.set(lx2, 6, z, "spruce_slab[type=bottom,waterlogged=false]")
             for x in range(lx1 + 1, lx2):
                 d.set(x, 6, z, "spruce_slab[type=bottom,waterlogged=false]")
-        for z in range(z1 + 5, z1 + 11, 2):
+        for z in range(z1 + 5, z1 + 13, 2):
             d.set(lx2, 3, z, "glass_pane")
-        for z in range(z1 + 6, z1 + 9):
-            d.set(x2, y0, z, AIR)
-            d.set(x2, y0 + 1, z, AIR)
+        d.door(x2, y0, z1 + 12, "east", "spruce")                    # door from the saloon, past the back bar
+        d.set(lx2, 3, z1 + 8, "target[power=0]")                       # dartboard on the end wall
         # back room: card tables
         d.dining(lx1 + 2, y0, z1 + 7, 1, "x", "dark_oak", ("n", "s", "e", "w"))   # card table
         seats += 4
         d.lamp(lx1 + 2, 5, z1 + 7)
+        d.lamp(lx1 + 2, 5, z1 + 11)
+        if L == 2:
+            d.keg(lx2 - 1, y0, z1 + 12, "north")
+            d.keg(lx2 - 1, y0, z1 + 11, "north")
+            d.keg(lx2 - 1, y0 + 1, z1 + 12, "north")
+        else:                                                        # a settle along the back wall
+            d.chair(lx2 - 2, y0, z1 + 12, "south", "spruce", True)
+            d.chair(lx2 - 1, y0, z1 + 12, "south", "spruce", True)
+            seats += 2
+            d.keg(lx2 - 1, y0, z1 + 5, "west")
     if L == 3:
         dz1 = z2 + 1
         d.fill(x1 - 1, 1, dz1, x2 + 1, 1, dz1 + 6, "spruce_planks")
@@ -393,26 +451,37 @@ def neoterra(rel, L):
     need = {1: 8, 2: 18, 3: 22}[L]
     if L == 3:
         d.item(x2 - 1, y0, z1 + 2, "jukebox")
-    for tx, tz in {1: [], 2: [(9, 6)]}.get(L, [(9, 6), (13, 6)]):     # lounge tables on rugs
-        d.rug(tx - 1, tz - 1, tx + 1, tz + 1, y0, ("cyan_carpet",), "plain")
+    for tx, tz in {1: [(10, 7)], 2: [(9, 6)]}.get(L, [(9, 6), (13, 6)]):     # lounge tables on rugs
+        d.rug(tx - 1, tz - 1, tx + 1, tz + 1, y0, ({1: "cyan_carpet", 2: "light_blue_carpet"}.get(L, "cyan_carpet"),),
+              "plain")
         d.dining(tx, y0, tz, 1, "x", "birch", ("n", "s", "e", "w"))
         seats += 4
     for x in range(x1 + 2, x2 - 1, 3):
         d.set(x, 6, z1 + 6, "sea_lantern")
     d.plant(x1 + 1, y0, z2 - 1, "potted_bamboo")
+    d.plant(x1 + 1, y0, z1 + 1, "potted_bamboo")                      # plants either side of the entrance
+    if L >= 2:
+        d.plant(mid + 3, y0, z1 + 1, "potted_azalea_bush")
+    # drinks on the bar top
+    d.set(bx1 + 1, y0 + 1, z2 - 3, "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=false]")
+    d.candle(bx1 + 3, y0 + 1, z2 - 3, 3, "white")
+    d.set(bx2 - 2, y0 + 1, z2 - 3, "brewing_stand[has_bottle_0=false,has_bottle_1=true,has_bottle_2=true]")
     # stair core in the south-east corner (straight flight along x)
     for i in range(6):
         x = x2 - 6 + i
         d.set(x, y0 + i, z2 - 2, "smooth_quartz_stairs[facing=east,half=bottom,shape=straight,waterlogged=false]")
-    for x in range(x2 - 4, x2):
+    for x in range(x2 - 4, x2 - 1):
         d.set(x, 7, z2 - 2, AIR)
-    # upper floor: capsule rooms (8 beds) along both long walls, glass corridor
+    # upper floor: capsule rooms (8 beds), heads against the walls, glass partition to the stair landing
     yb = 8
+    bed_c = {1: "cyan", 2: "light_gray", 3: "blue"}[L]
     for x in range(x1 + 1, x1 + 9, 2):
-        d.bed(x, yb, z1 + 1, "north")
-        d.bed(x, yb, z2 - 4, "south")
-        d.set(x + 1, yb, z1 + 1, "white_concrete")
-        d.set(x + 1, yb + 1, z1 + 1, "white_concrete")
+        d.bed(x, yb, z1, "north", bed_c)                              # north capsules (cantilevered front)
+        d.set(x + 1, yb, z1, "white_concrete")
+        d.set(x + 1, yb + 1, z1, "white_concrete")
+        d.bed(x, yb, z2 - 4, "south", bed_c)                          # south capsules with a bedside shelf
+        d.set(x + 1, yb, z2 - 4, "birch_slab[type=top,waterlogged=false]")
+        d.candle(x + 1, yb + 1, z2 - 4, 1, "light_gray")
     for x in range(x1 + 1, x1 + 10):
         d.set(x, yb, z2 - 3, "light_gray_concrete")
         d.set(x, yb + 1, z2 - 3, "light_gray_stained_glass_pane")
@@ -420,7 +489,36 @@ def neoterra(rel, L):
     d.set(x1 + 9, yb + 1, z2 - 3, "birch_door[facing=south,half=upper,hinge=left,open=false,powered=false]")
     for x in range(x1 + 2, x2 - 1, 4):
         d.set(x, 11, z1 + 5, "sea_lantern")
-    d.rug(x1 + 1, z1 + 3, x2 - 1, z1 + 4, yb, ("light_gray_carpet",), "plain")
+    d.rug(x1 + 2, z1 + 3, x1 + 7, z1 + 4, yb, ({1: "cyan_carpet", 2: "gray_carpet"}.get(L, "light_blue_carpet"),),
+          "plain")                                                     # runner, 12 cells
+    d.plant(x1 + 1, yb, z1 + 3, "potted_bamboo")
+    # landing strip behind the glass: wash basins and lockers, lit
+    d.set(x1 + 1, yb, z2 - 1, "water_cauldron[level=3]")
+    d.set(x1 + 2, yb, z2 - 1, "water_cauldron[level=3]")
+    d.set(x1 + 1, yb + 2, z2 - 1, "light_gray_stained_glass")          # mirror strip over the basins
+    d.set(x1 + 2, yb + 2, z2 - 1, "light_gray_stained_glass")
+    d.keg(x1 + 4, yb, z2 - 1, "north")
+    d.keg(x1 + 5, yb, z2 - 1, "north")
+    d.set(x1 + 3, 11, z2 - 2, "sea_lantern")
+    if L >= 2:
+        # guest lounge at the east end of the upper floor
+        d.chair(x1 + 11, yb, z1, "north", "birch")
+        d.chair(x1 + 12, yb, z1, "north", "birch")
+        d.chair(x1 + 13, yb, z1, "north", "birch")
+        d.table(x1 + 12, yb, z1 + 2, "birch", "slab", "smooth_quartz_slab")
+        d.chair(x1 + 12, yb, z1 + 4, "south", "birch")
+        d.rug(x1 + 11, z1 + 1, x1 + 13, z1 + 3, yb, ({2: "orange_carpet"}.get(L, "cyan_carpet"),), "plain")
+        d.plant(x1 + 10, yb, z1, "potted_azalea_bush")
+        d.plant(x1 + 14, yb, z1, "potted_bamboo")
+        if L == 2:
+            for z in range(z1 + 5, z1 + 8):
+                d.set(x2 - 1, yb, z, "bookshelf")
+            d.set(x2 - 1, yb + 1, z1 + 6, "potted_fern")
+        else:
+            for z in (z1 + 5, z1 + 6):
+                d.set(x2 - 1, yb, z, "bookshelf")
+            d.keg(x2 - 1, yb, z1 + 7, "west")                       # bar cart
+            d.set(x2 - 1, yb + 1, z1 + 7, "brewing_stand[has_bottle_0=true,has_bottle_1=false,has_bottle_2=true]")
     if L == 3:                                                      # roof terrace bar
         for x in range(x1 + 1, x2):
             for z in range(z1, z2):
@@ -436,9 +534,76 @@ def neoterra(rel, L):
     return d
 
 
+# ----------------------------------------------------------------------------------------------- site dressing
+# Runs after the add-on buildings (designs/shops.py growth) are drawn: hand-placed dressing for the covered strips
+# behind them, the ballroom dance floor, and trees moved in from the plot edge so the yard stays inside the
+# buildings' footprint. Coordinates are fixed per pack and level.
+def site(d, L):
+    from designs.shops import tree, spruce_tree
+    S = "south"
+    if d.pack == "Hearthwood":
+        if L >= 2:                                   # yard behind the coach house, under its eaves
+            d.set(25, 2, 12, "water_cauldron[level=3]")                 # rain butt
+            d.set(26, 2, 12, "barrel[facing=up,open=false]")
+            for x in (29, 30, 31):                                       # log pile
+                d.set(x, 2, 12, "oak_log[axis=x]")
+            d.set(30, 3, 12, "oak_log[axis=x]")
+            d.chair(34, 2, 12, "north", "dark_oak", sit=False)          # bench against the back wall
+            d.chair(35, 2, 12, "north", "dark_oak", sit=False)
+            d.wall_torch(27, 4, 12, S)
+            d.wall_torch(33, 4, 12, S)
+        if L == 3:                                   # stable yard behind the stables
+            d.set(3, 2, 36, "hay_block[axis=y]")
+            d.set(4, 2, 36, "hay_block[axis=x]")
+            d.set(3, 3, 36, "hay_block[axis=x]")
+            d.set(7, 2, 36, "water_cauldron[level=3]")                  # horse trough
+            d.set(8, 2, 36, "water_cauldron[level=3]")
+            d.set(11, 2, 36, "composter[level=7]")                      # muck heap
+            d.set(15, 2, 36, "barrel[facing=up,open=false]")
+            d.set(16, 2, 36, "barrel[facing=up,open=false]")
+            d.wall_torch(5, 4, 36, S)
+            d.wall_torch(14, 4, 36, S)
+            d.clear(21, 2, 37, 34, d.sy - 1, 42)                        # lone lamp, bench and tree at the plot edge
+    elif d.pack == "Cascadia":
+        if L >= 2:                                   # wood yard behind the bunk house
+            for x in (26, 27, 28):
+                d.set(x, 2, 12, "spruce_log[axis=x]")
+            d.set(27, 3, 12, "spruce_log[axis=x]")
+            d.set(30, 2, 12, "stripped_spruce_log[axis=y]")             # chopping block
+            d.set(32, 2, 12, "water_cauldron[level=3]")                 # wash basin
+            d.set(33, 2, 12, "barrel[facing=up,open=false]")
+            d.chair(35, 2, 12, "north", "spruce", sit=False)
+            d.chair(36, 2, 12, "north", "spruce", sit=False)
+            d.wall_torch(29, 4, 12, S)
+            d.wall_torch(35, 4, 12, S)
+        if L == 3:                                   # livery yard behind the livery barn
+            d.set(26, 2, 26, "hay_block[axis=y]")
+            d.set(27, 2, 26, "hay_block[axis=x]")
+            d.set(26, 3, 26, "hay_block[axis=x]")
+            d.set(30, 2, 26, "water_cauldron[level=3]")
+            d.set(31, 2, 26, "water_cauldron[level=3]")
+            d.set(34, 2, 26, "composter[level=7]")
+            d.set(38, 2, 26, "barrel[facing=up,open=false]")
+            d.set(39, 2, 26, "barrel[facing=up,open=false]")
+            d.wall_torch(29, 4, 26, S)
+            d.wall_torch(41, 4, 26, S)
+            d.clear(43, 2, 6, 47, d.sy - 1, 10)                         # tree at the plot edge moves in
+            spruce_tree(d, 41, 8)
+    else:
+        if L == 3:
+            for x in range(6, 19):                   # ballroom: checkered dance floor instead of a 52-cell rug
+                for z in range(22, 26):
+                    if "carpet" in d.get(x, 2, z):
+                        d.set(x, 2, z, AIR)
+                    d.set(x, 1, z, "light_gray_concrete" if (x + z) % 2 else "white_concrete")
+            d.clear(24, 2, 30, 28, d.sy - 1, 34)                        # tree at the plot edge moves in
+            tree(d, 27, 27, "birch")
+
+
 @design("tavern")
 def tavern(pack, rel, L):
     from designs.shops import grow
     d = {"Hearthwood": hearthwood, "Cascadia": cascadia, "Neoterra": neoterra}[pack](rel, L)
     grow(d, L, "tavern")
+    site(d, L)
     return d
