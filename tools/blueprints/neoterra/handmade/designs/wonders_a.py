@@ -1633,7 +1633,7 @@ def cg_bunkhouse(d):
     d.set(38, 7, 40, "chest[facing=west,type=single,waterlogged=false]")
     d.set(38, 7, 43, "chest[facing=west,type=single,waterlogged=false]")
     d.bed(32, 7, 44, "west", "yellow")
-    d.rug(34, 40, 36, 43, 7, ("red_carpet", "black_carpet"))
+    d.rug(34, 40, 35, 43, 7, ("red_carpet", "black_carpet"), "check")
     d.lamp(35, 10, 41)
     d.lamp(35, 10, 44)
     d.chair(32, 2, 36, "south", "spruce", sit=False)
@@ -2659,14 +2659,151 @@ def hall_box(x1, z1, x2, z2):
     return x1 + 1, z1 + 1, x2 - 1, z2 - 1
 
 
+def hk_hall5(d, x1, z1, x2, z2, ph):
+    """L5 plinth of the Old King (interior 13..31 x 17..33), two storeys. Ground floor = Hall of the Old King: red
+    runner to the crowned model, relic cases and a warden's desk by the door, the armoury gallery (weapon racks,
+    shields) on the west, the map room on the east, a throne replica on a dais at the back. Upper floor (walk y6)
+    = the royal library: book walls, two reading tables, the great map table, scribe's desk, the state bed."""
+    ix1, iz1, ix2, iz2 = hall_box(x1, z1, x2, z2)                     # 13, 17, 31, 33
+    cx = (x1 + x2) // 2                                              # 22
+    TS = slab("oak_slab", "top")
+    d.fill(ix1, 1, iz1, ix2, 1, iz2, "polished_granite")
+    # ---- structure: upper floor, windows for it, stair on the west wall
+    d.fill(ix1, 5, iz1, ix2, 5, iz2, "spruce_planks")
+    for z in range(z1 + 2, z2 - 1, 3):
+        for x in (x1, x2):
+            d.set(x, 6, z, "glass_pane")
+    for i, z in enumerate((27, 28, 29, 30)):
+        d.set(ix1, 2 + i, z, stair("oak_stairs", "south"))
+        if i:
+            d.fill(ix1, 2, z, ix1, 1 + i, z, "oak_planks")
+    d.clear(ix1, 5, 27, ix1, 5, 29)
+    for z in (27, 28, 29):
+        d.set(ix1 + 1, 6, z, fence("dark_oak_fence"))
+    # ================================================================ ground floor
+    d.rug(cx, iz1, cx, iz1 + 5, 2, ("red_carpet",), "plain")
+    d.set(cx, 2, 26, HS["carve"])                                    # crowned model on its pedestal
+    d.set(cx, 3, 26, "gold_block")
+    d.set(cx - 1, 2, 26, "lectern[facing=north,has_book=true,powered=false]")
+    d.set(cx + 1, 2, 26, "lectern[facing=north,has_book=true,powered=false]")
+    d.rug(cx - 2, 24, cx + 2, 24, 2, ("yellow_carpet",), "plain")
+    d.set(cx, 4, 26, lantern(True))
+    # warden's desk and relic cases by the door
+    d.set(25, 2, iz1, TS)
+    d.set(26, 2, iz1, TS)
+    d.candle(26, 3, iz1, 2)
+    d.chair(25, 2, iz1 + 1, "south", "oak", sit=False)
+    d.set(19, 2, iz1, HS["carve"])
+    d.set(19, 3, iz1, "white_stained_glass")
+    d.set(ix1, 2, iz1, "potted_red_tulip")
+    d.set(ix2, 2, iz1, "potted_flowering_azalea_bush")
+    # armoury gallery, west: weapon racks (bars), shield banners, a suit of armour on a stand, chests
+    for z in (19, 21, 23):
+        d.set(ix1, 2, z, HS["carve"])
+        d.set(ix1, 3, z, "iron_bars")
+        d.set(ix1, 3, z + 1, ("red_wall_banner", "yellow_wall_banner", "red_wall_banner")[(z - 19) // 2] + "[facing=east]")
+    d.set(ix1, 2, 20, "chest[facing=east,type=single,waterlogged=false]")
+    d.set(ix1, 2, 22, "chest[facing=east,type=single,waterlogged=false]")
+    d.set(16, 2, 20, "smithing_table")
+    d.set(16, 3, 20, "iron_bars")
+    d.set(16, 2, 23, "anvil[facing=north]")
+    d.set(17, 2, 21, "lectern[facing=west,has_book=true,powered=false]")
+    # map room, east
+    for z in (20, 23):
+        d.set(28, 2, z, "cartography_table")
+        d.chair(29, 2, z, "east", "oak", sit=False)
+        d.chair(27, 2, z, "west", "oak", sit=False)
+    d.bookshelf(ix2, 2, 19, 2)
+    d.bookshelf(ix2, 2, 22, 2)
+    d.set(ix2, 2, 20, "chiseled_bookshelf[facing=west,slot_0_occupied=true,slot_1_occupied=true,"
+          "slot_2_occupied=false,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
+    d.set(ix2, 2, 21, "barrel[facing=west,open=false]")
+    d.set(ix2, 3, 21, "potted_red_tulip")
+    d.rug(27, 21, 29, 22, 2, ("blue_carpet",), "plain")
+    # relic cases down the middle aisles
+    for x, z, top in ((18, 26, "decorated_pot[cracked=false,facing=north,waterlogged=false]"),
+                      (26, 26, "white_stained_glass"), (18, 29, "white_stained_glass"),
+                      (26, 29, "decorated_pot[cracked=false,facing=north,waterlogged=false]")):
+        d.set(x, 2, z, HS["carve"])
+        d.set(x, 3, z, top)
+    # throne replica on a dais, back wall, with banners and bookcases
+    d.fill(cx - 2, 2, iz2 - 1, cx + 2, 2, iz2, slab(HS["sl"], "top"))
+    d.chair(cx, 3, iz2, "south", "dark_oak", sit=False)
+    d.set(cx - 1, 3, iz2, stair(HS["sst"], "east"))
+    d.set(cx + 1, 3, iz2, stair(HS["sst"], "west"))
+    for x in (cx - 3, cx + 3):
+        d.set(x, 3, iz2, "red_wall_banner[facing=north]")
+        d.set(x, 2, iz2, "potted_flowering_azalea_bush")
+    d.set(cx, 4, iz2, "yellow_wall_banner[facing=north]")
+    d.chair(cx - 1, 2, 30, "north", "oak", sit=False)               # benches before the throne
+    d.chair(cx + 1, 2, 30, "north", "oak", sit=False)
+    d.bookshelf(ix2, 2, 31, 2)
+    d.bookshelf(ix2, 2, 32, 2)
+    d.set(ix2, 2, iz2, "barrel[facing=up,open=false]")
+    d.set(ix1, 2, 32, "chest[facing=east,type=single,waterlogged=false]")
+    d.set(ix1, 2, iz2, "potted_red_tulip")
+    for x, z in ((16, 19), (28, 19), (16, 31), (28, 31), (cx, 21)):
+        d.set(x, 4, z, lantern(True))
+    for z in (25, 28):
+        d.set(ix2, 4, z, "wall_torch[facing=west]")
+    # ================================================================ upper floor: the royal library
+    y = 6
+    for x in list(range(14, 20)) + list(range(25, 31)):           # book walls along the street side
+        d.set(x, y, iz1, "bookshelf")
+        d.set(x, y + 1, iz1, "bookshelf" if x % 3 else "chiseled_bookshelf[facing=south,slot_0_occupied=true,"
+              "slot_1_occupied=true,slot_2_occupied=true,slot_3_occupied=false,slot_4_occupied=true,"
+              "slot_5_occupied=false]")
+    for z in range(19, 26):
+        d.set(ix2, y, z, "bookshelf")
+        d.set(ix2, y + 1, z, "bookshelf")
+    for x0 in (15, 26):                                              # two reading tables
+        for x in range(x0, x0 + 3):
+            d.set(x, y, 21, TS)
+            d.chair(x, y, 20, "north", "oak", sit=False)
+            d.chair(x, y, 22, "south", "oak", sit=False)
+        d.candle(x0 + 1, y + 1, 21, 3)
+    d.set(cx, y, 25, "cartography_table")                            # the great map table
+    d.set(cx - 1, y, 25, TS)
+    d.set(cx + 1, y, 25, TS)
+    d.chair(cx, y, 24, "north", "oak", sit=False)
+    d.chair(cx - 2, y, 25, "west", "oak", sit=False)
+    d.chair(cx + 2, y, 25, "east", "oak", sit=False)
+    d.set(cx, y + 1, 25, lantern(False))
+    d.rug(cx - 1, 27, cx + 1, 29, y, ("red_carpet", "yellow_carpet"))
+    for x in (16, 17):                                               # scribe's desk, back-west
+        d.set(x, y, iz2, TS)
+    d.chair(16, y, iz2 - 1, "north", "oak", sit=False)
+    d.set(17, y + 1, iz2, "candle[candles=2,lit=false,waterlogged=false]")
+    d.set(18, y, iz2, "lectern[facing=north,has_book=true,powered=false]")
+    d.set(15, y, iz2, "chest[facing=north,type=single,waterlogged=false]")
+    d.set(ix1, y, iz2, "barrel[facing=up,open=false]")
+    d.set(29, y, iz2, "red_bed[facing=south,occupied=false,part=head]")   # the state bed (display)
+    d.set(29, y, iz2 - 1, "red_bed[facing=south,occupied=false,part=foot]")
+    for x in (28, 30):
+        d.set(x, y, iz2, TS)
+        d.candle(x, y + 1, iz2, 1)
+    d.rug(28, 29, 30, 30, y, ("yellow_carpet",), "plain")
+    d.set(ix2, y, 28, "chest[facing=west,type=single,waterlogged=false]")
+    d.set(ix2, y, 27, "potted_flowering_azalea_bush")
+    d.set(24, y, iz2, "potted_red_tulip")
+    for x in (21, 22, 23):
+        d.set(x, y + 1, iz2, ("red_wall_banner", "yellow_wall_banner", "red_wall_banner")[x - 21] + "[facing=north]")
+    for z in (19, 23, 31):
+        d.set(ix1, y + 1, z, "wall_torch[facing=east]")
+    for z in (27, 31):
+        d.set(ix2, y + 1, z, "wall_torch[facing=west]")
+
+
 def hk_hall(d, x1, z1, x2, z2, ph, L):
     """Hall of the Old King (hand-placed): red runner from the door to a crowned model on a pedestal at the back,
     lecterns with the chronicle either side, benches facing the model, bookcases and relic cases in the corners,
     banners and torches on the walls; grows a guest-book desk, relic cases and a chandelier."""
+    if L >= 5:
+        return hk_hall5(d, x1, z1, x2, z2, ph)
     ix1, iz1, ix2, iz2 = hall_box(x1, z1, x2, z2)
     cx, cz = (x1 + x2) // 2, (z1 + z2) // 2
     d.fill(ix1, 1, iz1, ix2, 1, iz2, "polished_granite")
-    d.rug(cx, iz1, cx, iz2 - 1, 2, ("red_carpet",), "plain")
+    d.rug(cx, iz1, cx, (cz - 3 if L >= 4 else iz2 - 1), 2, ("red_carpet",), "plain")
     d.set(cx, 2, iz2, "chiseled_sandstone")                              # pedestal with the crowned model
     d.set(cx, 3, iz2, "gold_block" if L >= 3 else "yellow_terracotta")
     d.set(cx - 1, 2, iz2, "lectern[facing=north,has_book=true,powered=false]")
@@ -2727,10 +2864,121 @@ def hk_hall(d, x1, z1, x2, z2, ph, L):
         d.rug(cx + 3, cz + 2, cx + 5, cz + 4, 2, ("yellow_carpet",), "plain")
 
 
+def cg_hall5(d, x1, z1, x2, z2, ph):
+    """L5 crib of the Timber Giant (interior 12..30 x 17..33), two storeys. Ground floor = the camp hall: stone
+    hearth with armchairs on the west wall, two long mess tables, the cook's corner, a tool wall with grindstone
+    and anvil on the east, the map table, the giant's carved model at the back; stair up on the west wall.
+    Upper floor (walk y6) = the bunk loft: bunks with footlockers along the back and east walls, a card table,
+    the wash corner, a reading nook, lanterns on the lockers."""
+    ix1, iz1, ix2, iz2 = hall_box(x1, z1, x2, z2)                     # 12, 17, 30, 33
+    cx = (x1 + x2) // 2                                              # 21
+    TS = slab("spruce_slab", "top")
+    d.fill(ix1, 1, iz1, ix2, 1, iz2, "spruce_planks")
+    # ---- structure
+    d.fill(ix1, 5, iz1, ix2, 5, iz2, "spruce_planks")
+    for z in range(z1 + 2, z2 - 1, 3):
+        for x in (x1, x2):
+            d.set(x, 6, z, "glass_pane")
+    for i, z in enumerate((18, 19, 20, 21)):
+        d.set(ix1, 2 + i, z, stair("spruce_stairs", "south"))
+        if i:
+            d.fill(ix1, 2, z, ix1, 1 + i, z, "spruce_planks")
+    d.clear(ix1, 5, 18, ix1, 5, 20)
+    for z in (18, 19, 20):
+        d.set(ix1 + 1, 6, z, fence("spruce_fence"))
+    # ================================================================ ground floor
+    d.hearth(ix1, 2, 26, "east", ph + 1, "cobblestone", "campfire")
+    d.chair(14, 2, 25, "east", "spruce", sit=False)
+    d.chair(14, 2, 27, "east", "spruce", sit=False)
+    d.rug(13, 25, 13, 27, 2, ("brown_carpet",), "plain")
+    d.set(ix1, 2, 24, "barrel[facing=up,open=false]")
+    d.set(ix1, 3, 24, "potted_fern")
+    for x in (17, 25):                                               # two mess tables
+        d.dining(x, 2, 20, 4, "z", "spruce", chairs=("e", "w"), sit=False)
+        d.set(x, 4, 21, lantern(True))
+    for x, b in ((26, "barrel[facing=up,open=false]"), (27, "smoker[facing=south,lit=false]"),
+                 (28, "water_cauldron[level=3]"), (29, "crafting_table"), (30, "barrel[facing=up,open=false]")):
+        d.set(x, 2, iz1, b)                                          # cook's corner along the street wall
+    d.set(ix2, 2, 18, TS)
+    d.set(ix2, 3, 18, "decorated_pot[cracked=false,facing=west,waterlogged=false]")
+    d.set(ix2, 2, 19, "barrel[facing=west,open=false]")
+    d.set(28, 3, iz1, "spruce_trapdoor[facing=south,half=top,open=true,powered=false,waterlogged=false]")
+    # tool wall, east
+    d.item(ix2, 2, 23, "grindstone", "west")
+    d.set(ix2, 2, 24, "anvil[facing=north]")
+    d.set(ix2, 2, 26, "smithing_table")
+    d.set(ix2, 2, 27, "barrel[facing=up,open=false]")
+    for z in (23, 24, 25, 26, 27):
+        d.set(ix2, 3, z, "spruce_trapdoor[facing=west,half=top,open=true,powered=false,waterlogged=false]")
+    d.set(ix2, 2, 25, "chest[facing=west,type=single,waterlogged=false]")
+    # map table and giant model at the back
+    d.set(26, 2, 30, "cartography_table")
+    d.chair(25, 2, 30, "west", "spruce", sit=False)
+    d.chair(26, 2, 31, "south", "spruce", sit=False)
+    d.set(cx, 2, iz2, log("stripped_spruce_log"))
+    d.set(cx, 3, iz2, "red_wool")
+    d.set(cx, 4, iz2, "black_wool")
+    d.set(cx + 1, 2, iz2, "lectern[facing=north,has_book=true,powered=false]")
+    d.set(cx - 1, 2, iz2, "potted_fern")
+    d.rug(cx - 1, 30, cx + 1, 31, 2, ("green_carpet",), "plain")
+    d.set(ix1, 2, iz2, "hay_block[axis=y]")                         # the watchman's cot in the corner
+    d.bed(ix1 + 2, 2, iz2, "south", "green")
+    d.set(ix1 + 1, 2, iz2, TS)
+    d.candle(ix1 + 1, 3, iz2, 2)
+    d.set(ix2, 2, iz2, "barrel[facing=up,open=false]")
+    d.set(ix2, 2, iz2 - 1, "barrel[facing=up,open=false]")
+    for x, z in ((14, 21), (cx, 26), (28, 22), (16, 31), (28, 31)):
+        d.set(x, 4, z, lantern(True))
+    d.set(cx, 2, 27, "stripped_spruce_wood[axis=y]")                 # a giant log round on its cradle
+    d.set(cx, 3, 27, "moss_carpet")
+    d.set(cx - 1, 2, 27, log("spruce_log", "x"))
+    d.set(cx + 1, 2, 27, log("spruce_log", "x"))
+    d.set(cx + 1, 3, 27, "lightning_rod[facing=up,powered=false,waterlogged=false]")   # the bucking saw handle
+    d.chair(19, 2, iz1, "north", "spruce", sit=False)                # boot benches by the door
+    d.chair(23, 2, iz1, "north", "spruce", sit=False)
+    d.set(18, 2, iz1, "barrel[facing=up,open=false]")
+    # ================================================================ upper floor: the bunk loft
+    y = 6
+    for x in (14, 17, 20, 23):                                       # bunks along the back wall
+        d.bed(x, y, iz2, "south", ("red", "green", "yellow", "blue")[(x - 14) // 3])
+        d.set(x + 1, y, iz2, "chest[facing=north,type=single,waterlogged=false]")
+        d.set(x + 1, y + 1, iz2, lantern(False))
+    for z in (21, 24, 27):                                           # and along the east wall
+        d.bed(ix2, y, z, "east", ("brown", "red", "green")[(z - 21) // 3])
+        d.set(ix2, y, z + 1, "chest[facing=west,type=single,waterlogged=false]")
+    d.set(ix2, y + 1, 22, lantern(False))
+    d.table(cx, y, 25, "spruce")                                     # card table
+    for side, (ddx, ddz) in (("north", (0, -1)), ("south", (0, 1)), ("west", (-1, 0)), ("east", (1, 0))):
+        d.chair(cx + ddx, y, 25 + ddz, side, "spruce", sit=False)
+    d.rug(cx - 2, 23, cx + 2, 23, y, ("brown_carpet",), "plain")
+    d.set(ix2, y, iz1, "water_cauldron[level=3]")                   # wash corner
+    d.set(ix2 - 1, y, iz1, "barrel[facing=up,open=false]")
+    d.set(ix2 - 2, y, iz1, TS)
+    d.set(ix2 - 2, y + 1, iz1, "decorated_pot[cracked=false,facing=south,waterlogged=false]")
+    for x in (26, 27):
+        d.set(x, y + 1, iz1, "spruce_trapdoor[facing=south,half=top,open=true,powered=false,waterlogged=false]")
+    d.bookshelf(15, y, iz1, 2)                                       # reading nook by the stair
+    d.set(16, y, iz1, "bookshelf")
+    d.chair(16, y, iz1 + 2, "south", "spruce", sit=False)
+    d.set(17, y, iz1 + 2, TS)
+    d.set(17, y + 1, iz1 + 2, lantern(False))
+    d.set(ix1, y, iz2 - 2, "barrel[facing=up,open=false]")
+    d.set(ix1, y, iz2 - 3, "potted_fern")
+    d.set(cx, y + 1, iz1, "green_wall_banner[facing=south]")
+    d.set(26, y, 29, TS)                                             # mending table by the east windows
+    d.chair(26, y, 30, "south", "spruce", sit=False)
+    d.chair(25, y, 29, "west", "spruce", sit=False)
+    d.set(26, y + 1, 29, "white_wool")
+    d.set(18, y, 28, "hay_block[axis=x]")                            # spare straw ticks
+    d.set(18, y, 29, "hay_block[axis=x]")
+
+
 def cg_hall(d, x1, z1, x2, z2, ph, L):
     """Camp hall in the giant's plinth (hand-placed): stone hearth on the west wall with a bench before it, a
     cook's corner (barrels, smoker shelf), the axe-grinding bench, a carved model of the giant at the back,
     a map table, lanterns; later a bunk alcove and a tool wall."""
+    if L >= 5:
+        return cg_hall5(d, x1, z1, x2, z2, ph)
     ix1, iz1, ix2, iz2 = hall_box(x1, z1, x2, z2)
     cx, cz = (x1 + x2) // 2, (z1 + z2) // 2
     d.fill(ix1, 1, iz1, ix2, 1, iz2, "spruce_planks")
@@ -3140,9 +3388,149 @@ def hk_pavilion(d, x1, z1, x2, z2, kind):
         d.set(cx + 2, y, z2 - 1, "candle[candles=3,lit=false,waterlogged=false]")
         d.set(cx, 5, z2, "yellow_stained_glass_pane")
         d.set(x1 + 1, y, z1 + 1, "water_cauldron[level=3]")
-        d.rug(cx, z1 + 1, cx, z2 - 2, y, ("red_carpet",), "plain")
+        d.fill(cx, 1, z1 + 1, cx, 1, z2 - 2, "bricks")                 # brick aisle inlaid in the floor
     for z in (z1 + 3, z1 + 7):
         chandelier(d, cx, z, rd - 1, 6)
+
+
+def hw_cottage(d, x1, z1, x2, z2, door_x):
+    """Structure only: Tudor estate cottage on a stone-brick sill, calcite panels in a dark-oak frame, leaded
+    windows, deepslate gable roof (ridge along x) with a dark-oak tie beam across the middle, north door."""
+    d.fill(x1, 1, z1, x2, 1, z2, "stone_bricks")
+    d.fill(x1 + 1, 1, z1 + 1, x2 - 1, 1, z2 - 1, "spruce_planks")
+    d.box(x1, 2, z1, x2, 5, z2, "calcite")
+    for x in range(x1, x2 + 1):
+        for z in (z1, z2):
+            d.set(x, 2, z, "stone_bricks")
+            d.set(x, 5, z, log("dark_oak_log", "x"))
+            if (x - x1) % 4 == 0:
+                d.fill(x, 3, z, x, 4, z, log("dark_oak_log"))
+    for z in range(z1, z2 + 1):
+        for x in (x1, x2):
+            d.set(x, 2, z, "stone_bricks")
+            d.set(x, 5, z, log("dark_oak_log", "z"))
+            if z in (z1, z2):
+                d.fill(x, 3, z, x, 4, z, log("dark_oak_log"))
+    for x in range(x1 + 2, x2 - 1, 4):
+        for z in (z1, z2):
+            if x != door_x:
+                d.window(x, 3, z, x, 4, z, "glass_pane")
+    zm = (z1 + z2) // 2
+    for x in (x1, x2):
+        d.window(x, 3, zm, x, 4, zm, "glass_pane")
+    d.door(door_x, 2, z1, "south", "dark_oak")
+    d.set(door_x, 1, z1 - 1, "stone_bricks")
+    rd = d.gable(x1, z1, x2, z2, 6, "x", "deepslate_tile_stairs", "deepslate_tile_slab", "calcite", 1)
+    d.fill(x1 + 1, 6, zm, x2 - 1, 6, zm, log("dark_oak_log", "x"))      # tie beam
+    return rd
+
+
+def hk_gardener(d):
+    """Head gardener's cottage (x1..9, z36..43): potting bench with seedlings and a composter by the door, seed
+    barrels, tool rack on the back wall, hearth with an armchair on the east, table for two, bed in the
+    south-west corner; vegetable rows and a water butt outside."""
+    hw_cottage(d, 1, 36, 9, 43, 5)
+    d.hearth(8, 2, 40, "west", 10, "bricks", "campfire")
+    d.chair(6, 2, 40, "west", "dark_oak", sit=False)
+    d.rug(5, 41, 6, 41, 2, ("green_carpet",), "plain")
+    d.bed(2, 2, 42, "south", "green")
+    d.set(3, 2, 42, slab("dark_oak_slab", "top"))
+    d.candle(3, 3, 42, 1)
+    d.table(3, 2, 38, "dark_oak")
+    d.chair(2, 2, 38, "west", "dark_oak", sit=False)
+    d.chair(3, 2, 39, "south", "dark_oak", sit=False)
+    d.set(6, 2, 37, slab("spruce_slab", "top"))                       # potting bench
+    d.set(7, 2, 37, slab("spruce_slab", "top"))
+    d.set(6, 3, 37, "potted_fern")
+    d.set(7, 3, 37, "potted_poppy")
+    d.set(8, 2, 37, "composter[level=4]")
+    d.set(8, 2, 38, "barrel[facing=up,open=false]")
+    d.set(2, 2, 37, "barrel[facing=up,open=false]")
+    d.set(5, 2, 42, "chest[facing=north,type=single,waterlogged=false]")
+    for x in (5, 6, 7):                                              # tool rack on the back wall
+        d.set(x, 3, 42, "spruce_trapdoor[facing=north,half=top,open=true,powered=false,waterlogged=false]")
+    d.set(7, 2, 42, "grindstone[face=floor,facing=north]")
+    d.set(5, 5, 39, lantern(True))
+    d.set(3, 5, 39, lantern(True))
+    for x, f in ((3, "red_tulip"), (7, "allium")):                    # window boxes on the street side
+        d.set(x, 2, 35, trap("dark_oak_trapdoor", "north", "top"))
+        d.set(x, 3, 35, f"potted_{f}")
+    d.set(4, 2, 35, "barrel[facing=up,open=false]")                  # water butt by the door
+    for x in range(1, 10):                                           # vegetable rows behind
+        d.set(x, 1, 45, "farmland[moisture=7]")
+        d.set(x, 2, 45, ("carrots[age=7]", "potatoes[age=7]", "beetroots[age=3]")[x % 3])
+        if x % 4 == 1:
+            d.set(x, 2, 44, "sweet_berry_bush[age=3]")
+    d.set(0, 1, 45, "water")
+
+
+def hk_tearoom(d):
+    """Tea room (x35..43, z36..43): serving counter with the cake stand, stove, sink and dresser behind it,
+    three tables for two by the windows, flowers; a tea garden with two tables outside the back."""
+    hw_cottage(d, 35, 36, 43, 43, 39)
+    for x in range(37, 41):
+        d.set(x, 2, 41, slab("spruce_slab", "top"))
+    d.set(38, 3, 41, "cake[bites=0]")
+    d.set(40, 3, 41, "candle[candles=3,lit=false,waterlogged=false]")
+    d.item(37, 2, 42, "smoker", "north")
+    d.set(38, 2, 42, "water_cauldron[level=3]")
+    d.set(39, 2, 42, "barrel[facing=up,open=false]")
+    d.set(40, 2, 42, "chiseled_bookshelf[facing=north,slot_0_occupied=true,slot_1_occupied=false,"
+          "slot_2_occupied=true,slot_3_occupied=true,slot_4_occupied=false,slot_5_occupied=true]")
+    d.set(39, 3, 42, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
+    d.chair(41, 2, 42, "south", "oak", sit=False)
+    for tx, tz, chairs in ((37, 38, (("west", -1, 0), ("south", 0, 1))), (41, 38, (("east", 1, 0), ("south", 0, 1)))):
+        d.table(tx, 2, tz, "oak")
+        for f, ox, oz in chairs:
+            d.chair(tx + ox, 2, tz + oz, f, "oak", sit=False)
+    d.set(36, 2, 37, "potted_azure_bluet")
+    d.set(42, 2, 37, "potted_red_tulip")
+    d.set(36, 2, 42, "barrel[facing=up,open=false]")
+    d.set(36, 3, 42, "potted_allium")
+    d.rug(38, 38, 40, 39, 2, ("pink_carpet",), "plain")
+    d.set(39, 5, 39, lantern(True))
+    d.set(37, 5, 39, lantern(True))
+    d.set(41, 5, 39, lantern(True))
+    for x, f in ((37, "pink_tulip"), (41, "cornflower")):
+        d.set(x, 2, 35, trap("dark_oak_trapdoor", "north", "top"))
+        d.set(x, 3, 35, f"potted_{f}")
+    d.sign(40, 4, 35, "north", ["TEA ROOM"], "dark_oak")
+    for tx in (37, 41):                                              # tea garden behind
+        d.table(tx, 2, 45, "oak")
+        d.chair(tx - 1, 2, 45, "west", "oak", sit=False)
+        d.chair(tx + 1, 2, 45, "east", "oak", sit=False)
+        d.set(tx, 1, 44, "gravel")
+    d.set(39, 2, 45, "rose_bush[half=lower]")
+    d.set(39, 3, 45, "rose_bush[half=upper]")
+
+
+def hk_parterre(d, x1, z1, x2, z2, open_x):
+    """Box-hedge parterre: clipped hedge frame with an opening on the path side, gravel cross walks, four flower
+    quarters and a sandstone fountain basin in the middle."""
+    H = "oak_leaves[distance=1,persistent=true,waterlogged=false]"
+    cx, cz = (x1 + x2) // 2, (z1 + z2) // 2
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            edge = x in (x1, x2) or z in (z1, z2)
+            if edge:
+                if not (x == open_x and z == cz):
+                    d.set(x, 2, z, H)
+                d.set(x, 1, z, "grass_block")
+            elif x == cx or z == cz:
+                d.set(x, 1, z, "gravel")
+            else:
+                d.set(x, 1, z, "coarse_dirt")
+                d.set(x, 2, z, ("poppy", "cornflower", "oxeye_daisy", "allium", "red_tulip")[(x * 3 + z) % 5])
+    d.set(open_x, 1, cz, "gravel")
+    for ddx in (-1, 0, 1):
+        for ddz in (-1, 0, 1):
+            d.set(cx + ddx, 1, cz + ddz, "water" if (ddx or ddz) else HS["carve"])
+            d.set(cx + ddx, 2, cz + ddz, AIR)
+    for ddx, ddz, f in ((-2, 0, "east"), (2, 0, "west"), (0, -2, "south"), (0, 2, "north")):
+        d.set(cx + ddx, 2, cz + ddz, stair(HS["sst"], f))            # basin kerb
+    d.set(cx, 2, cz, HS["carve"])
+    d.set(cx, 3, cz, "sandstone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
+    d.set(cx, 4, cz, "potted_flowering_azalea_bush")
 
 
 def hk_colossus(rel, L):
@@ -3213,6 +3601,8 @@ def hk_colossus(rel, L):
                 d.set(x, 1, z, "bricks" if (x + 2 * z) % 4 == 0 else "cut_sandstone")
         for x in (cx - 6, cx + 6):
             d.chair(x, 2, z1 - 4, "west" if x < cx else "east", "oak", sit=False)
+        hk_parterre(d, 1, 2, 7, 14, 7)
+        hk_parterre(d, 37, 2, 43, 14, 37)
     # ---- L4: exedra (curved colonnade) behind the statue with benches and urns
     if L >= 4:
         ecz = z2 + 1
@@ -3239,6 +3629,7 @@ def hk_colossus(rel, L):
         for x in (cx - 3, cx + 3):
             d.set(x, 2, ecz + 3, HS["carve"])
             d.set(x, 3, ecz + 3, "potted_flowering_azalea_bush")
+        hk_gardener(d)
     # ---- L5: museum and chapel pavilions, avenue of trees, boundary wall with gate piers
     if L >= 5:
         hk_pavilion(d, 1, 19, 9, 31, "museum")
@@ -3252,8 +3643,7 @@ def hk_colossus(rel, L):
         for x in (cx - 3, cx + 3):
             d.fill(x, 2, 0, x, 4, 0, HS["quoin"])
             d.set(x, 5, 0, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
-        for x, z in ((5, 35), (39, 35), (3, 42), (41, 42), (22, 44)):
-            yew(d, x, z, 2, "oak_leaves", "oak_log")
+        hk_tearoom(d)
     for px in HK_PX:
         d.reserve(px, 1, HK_PZ, px + HK_PW - 1, 30, HK_PZ + HK_PW - 1)
         d.child_hut(px + HK_WHUT[0], 1 + HK_WHUT[1], HK_PZ + HK_WHUT[2], COLO_WING)

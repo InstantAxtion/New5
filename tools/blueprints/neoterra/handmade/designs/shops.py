@@ -1219,6 +1219,8 @@ def cookery_cas(rel, L):
     d.set(8, 3, 10, "lantern[hanging=false,waterlogged=false]")
     d.hut(x1 + 1, y0, z1 + 1)
     d.set(x1 + 1, y0, 12, "hay_block[axis=y]")
+    d.dining(7, y0, 14, 2, "x", "spruce", ("n", "s"), sit=False)   # cooks' mess table in the back half
+    d.set(x2 - 1, y0, 13, "barrel[facing=up,open=false]")
     for z in (8, 12):
         d.set(8, 5, z, lant())
     # L2+: open smokehouse shed to the east with smoking fires and hanging meat
@@ -1568,6 +1570,9 @@ def florist_cas(rel, L):
         else:
             d.set(x1 + 1, y0, z, "potted_" + flower(d, i))
     d.item(x2 - 1, y0, z2 - 1, "barrel")
+    for z in (12, 13):                                          # display table of potted flowers mid-shop
+        d.set(7, y0, z, sl("spruce", "top"))
+        d.set(7, 3, z, "potted_" + flower(d, z + 3))
     for z in (9, 10, 11):
         d.set(x2 - 1, y0, z, sl("spruce", "top"))
         d.set(x2 - 1, 3, z, "potted_" + flower(d, z))
@@ -2496,6 +2501,13 @@ def concretemixer_neo(rel, L):
     for i in range(L):
         d.rack(x1 + 2 + i, y0, z2 - 1, "north")
     d.set(x1 + 1, y0, z1 + 2, "smooth_quartz")
+    d.set(x1 + 1, 3, z1 + 2, "potted_bamboo")
+    for z in (6, 7):                                            # control desk at the window over the yard
+        d.set(x2 - 1, y0, z, sl("birch", "top"))
+    d.set(x2 - 1, 3, 6, "potted_azalea_bush")
+    d.chair(x2 - 2, y0, 6, "west", "birch", sit=False)
+    d.set(x1 + 1, y0, 6, "barrel[facing=up,open=false]")         # sample barrels
+    d.set(x1 + 1, y0, 7, "barrel[facing=up,open=false]")
     for x in (5, 8):
         d.set(x, 6, 6, "sea_lantern")
     d.sign(8, 6, z1 - 1, "north", ["NEOCRETE"], "birch", glow=True, color="cyan")
@@ -2896,12 +2908,47 @@ def grow(d, L, base):
     fn = GROW.get((base, d.pack))
     if fn:
         fn(d, L)
+    if L >= 5 and base in SHOP_TYPES:
+        yard_wall(d)
     reskin(d)
     if L <= 3:
         plain(d)
 
 
 GROW = {}
+SHOP_TYPES = ("baker", "concretemixer", "cook", "cookery", "dyer", "florist", "glassblower")
+
+
+def yard_wall(d):
+    """L5: the finished complex gets a boundary along the back and sides of its yard (the street side stays
+    open): a stone garden wall with coping (Hearthwood), a split-rail fence on log posts (Cascadia), a white
+    planter wall with a clipped hedge (Neoterra). It runs round the outermost built cells and steps round
+    anything already standing there (trees, posts, buildings), leaving gaps by doors."""
+    bp = d.bp
+    xs, zs = [], []
+    for x, y, z, stt in bp.blocks():
+        if y >= d.gy + 1 and stt != AIR and "substitution" not in stt:
+            xs.append(x)
+            zs.append(z)
+    x1, x2, z1, z2 = min(xs), max(xs), min(zs), max(zs)
+    cells = [(x1, z) for z in range(z1 + 4, z2 + 1)] + [(x, z2) for x in range(x1 + 1, x2)] + \
+            [(x2, z) for z in range(z1 + 4, z2 + 1)]
+    y = d.gy + 1
+    for i, (x, z) in enumerate(cells):
+        if not (d.air(x, y, z) and d.air(x, y + 1, z)) or "water" in d.get(x, d.gy, z):
+            continue
+        if any("door" in d.get(x + a, yy, z + b) for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1)) for yy in (y, y + 1)):
+            continue
+        if d.pack == "Hearthwood":
+            d.set(x, y, z, "mossy_stone_bricks" if (x * 7 + z * 3) % 5 == 0 else "stone_bricks")
+            d.set(x, y + 1, z, sl("stone_brick"))
+        elif d.pack == "Cascadia":
+            post = (x + z) % 4 == 0 or (x, z) in ((x1, z2), (x2, z2))
+            for yy in (y, y + 1):
+                d.set(x, yy, z, lg("spruce_log") if post else "spruce_fence")
+        else:
+            d.set(x, y, z, "white_concrete")
+            d.set(x, y + 1, z, "azalea_leaves[distance=1,persistent=true,waterlogged=false]")
 
 
 def growth(base, pack):
@@ -3291,6 +3338,16 @@ def stack(d, x, z, top, mat, y0=2):
     d.set(x, top, z, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
 
 
+def bed_colour(d, x1, z1, x2, z2, y, colour):
+    """Re-dye the beds of one storey (x1..x2 / z1..z2 at standing level y) so stacked bedroom floors differ."""
+    for x in range(x1, x2 + 1):
+        for z in range(z1, z2 + 1):
+            stt = d.get(x, y, z)
+            if stt.split("[")[0].endswith("_bed"):
+                d.set(x, y, z, "minecraft:" + colour + "_bed[" + stt.split("[", 1)[1],
+                      d.bp.tile_entities.get((x, y, z)))
+
+
 def bed_row(d, cells, flower_i=0):
     """Flower / herb bed: grass with a plant on each of the listed (x, z) cells."""
     for i, (x, z) in enumerate(cells):
@@ -3634,6 +3691,12 @@ def _g_baker_neo(d, L):
                                                   "kYk.Z.AAp"]], tall=True, wall="glass",
             roofitems=GREEN([2, 4, 6, 8], 26) + GREEN([2, 4, 6, 8], 3))
         canopy(d, 35, 8, 37, 24, 6, [(35, 8), (35, 12), (35, 20), (35, 24)])
+        for tz in (10, 22):                                          # terrace tables under the canopy
+            d.table(36, 2, tz, "birch", "slab", "smooth_quartz_slab")
+            d.chair(36, 2, tz - 1, "north", "birch", sit=False)
+            d.chair(36, 2, tz + 1, "south", "birch", sit=False)
+        planter(d, 36, 14, 2)
+        planter(d, 36, 18, 2)
         billboard(d, 40, 46, 16, 12, ["LUMEN", "CAFE"])
         stall(d, 26, 28, "north", "birch", ("yellow_concrete", "white_concrete"), ("hay_block[axis=x]", "cake[bites=0]", "decorated_pot[cracked=false,facing=north,waterlogged=false]"))
         stall(d, 31, 28, "north", "birch", ("white_concrete", "yellow_concrete"), ("hay_block[axis=x]", "honey_block", "hay_block[axis=x]"))
@@ -4309,19 +4372,19 @@ def _g_cook_neo(d, L):
                                                   "...l...",
                                                   "D.wT..D",
                                                   "       "],
-                                                 ["       ",
+                                                 ["       ",                # twin room, beds to the north
                                                   ".......",
-                                                  "Hf...fH",
-                                                  "N.....N",
+                                                  "H.N.N.H",
+                                                  "f.....f",
                                                   "..wTe..",
-                                                  ".......",
+                                                  "D.....p",
                                                   ".     ."],
-                                                 [".     .",
+                                                 [".     .",                # suite: double bed + sofa corner
                                                   ".......",
-                                                  "Hf...fH",
-                                                  "N.....N",
-                                                  "..wTe..",
-                                                  "D.....D",
+                                                  "HH...bb",
+                                                  "ff.....",
+                                                  ".....wT",
+                                                  "D.l..p.",
                                                   "       "],
                                                  ["       ",
                                                   ".....HN",
@@ -4330,6 +4393,8 @@ def _g_cook_neo(d, L):
                                                   "wTe.l..",
                                                   "..rrr..",
                                                   "D.p.p.D"]], mwall="light_gray_concrete", lower="glass")
+        bed_colour(d, 40, 34, 46, 40, 17, "white")
+        bed_colour(d, 40, 34, 46, 40, 22, "lime")
         billboard(d, 40, 46, 37, 33, ["ORBIT", "HOTEL"])
         put(d, [(38, 5, z, "smooth_stone_slab[type=bottom,waterlogged=false]") for z in (36, 37, 38)])
         label(d, 38, 3, 35, "west", ["HOTEL"])

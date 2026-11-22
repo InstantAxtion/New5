@@ -1530,6 +1530,36 @@ def netherworker_design(pack, rel, L):
             bench(d, ex1 + 2, Z + 14, "south", 2)
             flowerbed(d, ex1 + 6, Z + 14, ex1 + 9, Z + 14, ("crimson_roots", "poppy", "red_tulip") if pack != "Neoterra"
                       else ("allium", "white_tulip", "azure_bluet"))
+        # ---- L4: smithy for portal ironwork south-west of the hall (lodging storey on top at L5) ----
+        if L >= 4 and skin:
+            fx1, fz1 = X - 13, Z + 17
+            bld(d, fx1, fz1, fx1 + 8, fz1 + 7, floors=1 if L == 4 else 2, roof=roof, axis="x",
+                doors=[(fx1 + 4, fz1, "n")], chimney=(fx1, fz1 + 3),
+                pal={"Hearthwood": dict(wall="polished_blackstone_bricks", end="polished_blackstone_bricks", framing=False,
+                                        roof="deepslate_tile"),
+                     "Cascadia": dict(wall="spruce_log", siding="dark_oak_planks", end="dark_oak_planks",
+                                      roof="cobbled_deepslate")}[pack])
+            d.hearth(fx1 + 1, 2, fz1 + 3, "east", 5, S["chimney"], "campfire")
+            pl(d, 2, [(fx1 + 1, fz1 + 1, "barrel[facing=up,open=false]"), (fx1 + 2, fz1 + 1, "polished_blackstone_slab[type=top,waterlogged=false]"),
+                      (fx1 + 3, fz1 + 3, "anvil[facing=north]"), (fx1 + 2, fz1 + 5, "water_cauldron[level=3]"),
+                      (fx1 + 7, fz1 + 1, "smithing_table"), (fx1 + 7, fz1 + 2, "grindstone[face=floor,facing=west]"),
+                      (fx1 + 7, fz1 + 3, "chest[facing=west,type=single,waterlogged=false]"), (fx1 + 7, fz1 + 4, BARREL),
+                      (fx1 + 7, fz1 + 6, "lava_cauldron"), (fx1 + 6, fz1 + 1, "blast_furnace[facing=south,lit=true]")])
+            pl(d, 3, [(fx1 + 2, fz1 + 1, "lantern[hanging=false,waterlogged=false]"), (fx1 + 7, fz1 + 4, CHAIN),
+                      (fx1 + 1, fz1 + 1, "coal_block")])
+            hang(d, 4, [(fx1 + 4, fz1 + 3), (fx1 + 5, fz1 + 5)])
+            if L == 4:
+                pl(d, 2, [(fx1 + 3, fz1 + 6, BARREL), (fx1 + 4, fz1 + 6, "barrel[facing=north,open=false]"),
+                          (fx1 + 5, fz1 + 6, "iron_bars")])
+            else:                                                     # the smith's lodging upstairs
+                stairs_up(d, fx1 + 2, fz1 + 6, "east", 2, rail=False)
+                d.bed(fx1 + 1, 6, fz1 + 1, "north", "black")
+                pl(d, 6, [(fx1 + 2, fz1 + 1, "chest[facing=south,type=single,waterlogged=false]"), (fx1 + 7, fz1 + 1, BARREL),
+                          (fx1 + 7, fz1 + 2, BOOKS.replace("{in}", "west")), (fx1 + 1, fz1 + 5, "polished_blackstone_slab[type=top,waterlogged=false]")])
+                pl(d, 7, [(fx1 + 1, fz1 + 5, "candle[candles=3,lit=false,waterlogged=false]"), (fx1 + 7, fz1 + 1, BARREL)])
+                d.dining(fx1 + 4, 6, fz1 + 3, 2, "x", W, chairs=("n", "s"), sit=False)
+                d.rug(fx1 + 2, fz1 + 3, fx1 + 3, fz1 + 4, 6, ("red_carpet", "black_carpet"))
+                hang(d, 8, [(fx1 + 4, fz1 + 2)])
         # ---- L5: watch tower over the gate and an ember garden ----
         if L >= 5:
             # west wing: guest cells and refectory around a small court
@@ -1563,8 +1593,9 @@ def netherworker_design(pack, rel, L):
                 pl(d, 3, [(wx1 + 8, Z, "lantern[hanging=false,waterlogged=false]")])
                 woodpile(d, wx1 - 1, Z + 2, 3, "z")
                 pl(d, 2, [(wx1 + 2, Z + 13, "water_cauldron[level=3]"), (wx1 + 7, Z + 13, BARREL)])
-            for x in (wx1 + 1, wx1 + 4, wx1 + 7):
-                tree(d, x, Z + 18, 4, None, None, 1)
+            if not skin:
+                for x in (wx1 + 1, wx1 + 4, wx1 + 7):
+                    tree(d, x, Z + 18, 4, None, None, 1)
             tx = x2 + 2
             tw = bld(d, tx, Z + 15, tx + 5, Z + 20, floors=6, roof="hip" if pack != "Neoterra" else "flat", axis="x",
                      doors=[(tx, Z + 17, "w")], win=2,
@@ -1610,6 +1641,31 @@ def netherworker_design(pack, rel, L):
                 nw_brazier(d, x, gz1 + 2, pack)
             d.set(gx1 + 7, 2, gz1 + 2, "lodestone")
             d.set(gx1 + 7, 2, gz1, AIR)
+            if skin:
+                # timber pergola over the ember garden, lanterns hung from its beams
+                post_b = "dark_oak_log[axis=y]" if pack == "Hearthwood" else "spruce_log[axis=y]"
+                beam_w = "dark_oak" if pack == "Hearthwood" else "spruce"
+                for x, z in ((gx1, gz1), (gx1 + 14, gz1), (gx1, gz1 + 4), (gx1 + 14, gz1 + 4), (gx1 + 7, gz1 + 4)):
+                    posts(d, [(x, z)], 3, 5, post_b)
+                for x in range(gx1, gx1 + 15):
+                    for z in (gz1, gz1 + 4):
+                        d.set(x, 6, z, f"stripped_{beam_w}_log[axis=x]")
+                    if x % 2 == 0:
+                        for z in range(gz1 + 1, gz1 + 4):
+                            d.set(x, 6, z, f"{beam_w}_slab[type=bottom,waterlogged=false]")
+                hang(d, 5, [(gx1 + 3, gz1 + 1), (gx1 + 11, gz1 + 1), (gx1 + 7, gz1 + 3)])
+                # fuel store east of the tower: coal, soul sand and netherrack bins for the portal work
+                fx = tx + 7
+                bld(d, fx, Z + 16, fx + 4, Z + 23, floors=1, roof=roof, axis="z", doors=[(fx, Z + 19, "w")], win=9,
+                    pal={"Hearthwood": dict(wall="stone_bricks", end="stone_bricks", framing=False, roof="deepslate_tile"),
+                         "Cascadia": dict(wall="spruce_log", siding="spruce_planks", end="spruce_planks", roof="cobbled_deepslate")}[pack])
+                for z, b in ((Z + 17, "coal_block"), (Z + 18, "soul_sand"), (Z + 20, "netherrack"), (Z + 21, "magma_block")):
+                    pl(d, 2, [(fx + 3, z, b)])
+                    pl(d, 3, [(fx + 3, z, f"{beam_w}_trapdoor[facing=west,half=bottom,open=true,powered=false,waterlogged=false]")])
+                pl(d, 2, [(fx + 1, Z + 17, BARREL), (fx + 1, Z + 22, "chest[facing=east,type=single,waterlogged=false]"),
+                          (fx + 2, Z + 22, BARREL), (fx + 3, Z + 22, "barrel[facing=west,open=false]")])
+                pl(d, 3, [(fx + 1, Z + 17, BARREL)])
+                hang(d, 4, [(fx + 2, Z + 19)])
             for x in (gx1 - 2, gx1 + 16):
                 if 0 <= x < d.sx:
                     lamp_post(d, x, gz1 + 2)
@@ -1668,11 +1724,12 @@ def fisherman_neoterra(rel, L):
     ceil_light(d, 5, [(13, 8), (16, 10)])
     d.sign(14, 5, 4, "north", ["HARBOUR", "MASTER"], B, glow=True, color="cyan")
     hood(d, 14, 5, 5, "n")
-    lamp_post(d, 9, 3)
-    lamp_post(d, 19, 3)
-    bench(d, 11, 2, "north", 2)
     for x in (11, 13, 15, 17, 19):                                    # paving bands along the street
         d.set(x, 1, 3, "light_gray_concrete")
+    if L >= 2:                                                        # street lamps and bench come with the upgrade
+        lamp_post(d, 9, 3)
+        lamp_post(d, 19, 3)
+        bench(d, 11, 2, "north", 2)
     if fl == 2:
         # harbourmaster's room upstairs: chart desk at the window, spare gear racks, lounge chairs
         pl(d, 6, [(12, 6, "lectern[facing=south,has_book=true,powered=false]"), (13, 6, "cartography_table"),
