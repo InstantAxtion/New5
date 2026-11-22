@@ -224,7 +224,8 @@ def roof_box(d, w, y):
 
 
 # ------------------------------------------------------------------------------------------------ the base
-def base_room(d, X1, Z1, X2, Z2, top, door_x, floor="smooth_stone", windows=()):
+def base_room(d, X1, Z1, X2, Z2, top, door_x, floor="smooth_stone", windows=(), roof="gable", beams=(6, 13),
+              lamps_z=(7, 14)):
     """Stone-brick plinth, cobble walls with spruce-log posts and a log beam on top, spruce gable roof,
     door in the north wall."""
     gy = 1
@@ -255,7 +256,15 @@ def base_room(d, X1, Z1, X2, Z2, top, door_x, floor="smooth_stone", windows=()):
     for (x, y, z) in windows:
         d.set(x, y, z, "glass_pane")
     d.door(door_x, gy + 1, Z1, "south", "spruce")
-    d.gable(X1, Z1, X2, Z2, top + 1, axis="x", end="spruce_planks")
+    for x in beams:                                       # tie beams with lanterns hanging under them
+        for z in range(Z1 + 1, Z2):
+            d.set(x, top, z, logb("z"))
+        for z in lamps_z:
+            lantern(d, x, top - 1, z)
+    if roof == "gable":
+        d.gable(X1, Z1, X2, Z2, top + 1, axis="x", end="spruce_planks")
+    else:
+        d.flat(X1, Z1, X2, Z2, top + 1, slab="spruce_slab[type=bottom,waterlogged=false]")
 
 
 def approach(d, door_x, Z1, lines):
@@ -331,7 +340,7 @@ def collector(d, cx1, cz1, cx2, cz2, ytop, y_hop=3, landing="hopper"):
                 d.set(x, y, z, logb())
 
 
-def tower(d, w, shaft, y_shaft, y_platform, door_x=10, top=5, lines=(), windows=None, ytop_glass=5):
+def tower(d, w, shaft, y_shaft, y_platform, door_x=10, top=5, lines=(), windows=None, ytop_glass=5, with_piers=True):
     """Ground part shared by the tower farms: base room around the glass landing, approach, yard, piers, shaft.
     shaft = (cx1, cz1, cx2, cz2) inner cells of the drop shaft below the platform."""
     BX1, BZ1, BX2, BZ2 = 4, 5, 15, 16
@@ -345,11 +354,8 @@ def tower(d, w, shaft, y_shaft, y_platform, door_x=10, top=5, lines=(), windows=
     approach(d, door_x, BZ1, list(lines))
     X1, Z1, X2, Z2 = outer(w)
     yard(d, w, [(2, 4), (X2 - 2, 4), (2, Z2 - 2), (X2 - 2, Z2 - 2), (2, 11), (X2 - 2, 11)])
-    piers(d, w, y_platform - 1)
-    # room furniture: lanterns from the beams, a bench and a barrel
-    for x in (6, 13):
-        lantern(d, x, top - 1, 7)
-        lantern(d, x, top - 1, 14)
+    if with_piers:
+        piers(d, w, y_platform - 1)
     d.set(14, 2, 15, "barrel[facing=up,open=false]")
     d.set(5, 2, 15, "crafting_table")
     return BX1, BZ1, BX2, BZ2
@@ -371,7 +377,7 @@ def creeperfarm(pack, rel, L):
     the 2x2 hole. They fall 25 blocks onto the hoppers (23 damage, 20 hp) in the glass landing of the base room;
     the hoppers feed two double chests. Dark inside (no light on the floors); roof slabbed and lit."""
     w = 2
-    d = Design(pack, rel, size=(20, 39, 22), gy=1, paving="grass_block")
+    d = Design(pack, rel, size=(20, 40, 22), gy=1, paving="grass_block")
     shaft = (HX, HZ, HX + 1, HZ + 1)
     floors = (28, 32)
     tower(d, w, shaft, 3, floors[0],
@@ -379,7 +385,6 @@ def creeperfarm(pack, rel, L):
     y = floors[0]
     for y0 in floors:
         y = water_floor(d, w, y0, "creeper")
-        band(d, w, y0)
     roof_box(d, w, y)
     # test: creepers stand on the strips where they would have spawned (both floors, all four quadrants)
     cells = [(4, 10), (6, 8), (14, 6), (16, 10), (3, 13), (7, 15), (13, 17), (15, 13)]
@@ -400,7 +405,7 @@ def spiderfarm(pack, rel, L):
     horizontal collision, which resets the fall). 22-block fall -> 19 damage (16 hp). A spider that does climb
     ends up under the platform ceiling and falls the full height later. 16 hoppers -> four chests."""
     w = 2
-    d = Design(pack, rel, size=(20, 37, 22), gy=1, paving="grass_block")
+    d = Design(pack, rel, size=(20, 38, 22), gy=1, paving="grass_block")
     shaft = (HX - 1, HZ - 1, HX + 2, HZ + 2)
     floors = (25, 28, 31)
     windows = [(5, 3, 5), (6, 3, 5), (13, 3, 5), (14, 3, 5), (4, 3, 12), (15, 3, 12), (7, 3, 16), (12, 3, 16)]
@@ -409,10 +414,12 @@ def spiderfarm(pack, rel, L):
     y = floors[0]
     for y0 in floors:
         y = water_floor(d, w, y0, "spider")
-        band(d, w, y0)
     roof_box(d, w, y)
     cells = [(3, 5), (6, 8), (13, 5), (16, 8), (3, 15), (6, 18), (13, 15), (16, 18)]
     spawns = strip_spawns("minecraft:spider", 27, cells) + strip_spawns("minecraft:spider", 30, cells[::2])
+    import os
+    if os.environ.get("XPDBG"):
+        spawns = [("minecraft:spider", x, y0 + 1, z, 1) for y0 in floors for (x, z) in ((9, 5), (16, 11), (10, 18), (3, 12))]
     d.farm_test(expect={"minecraft:string": 3}, spawns=spawns, ticks=6000)
     return d
 
@@ -454,8 +461,6 @@ def xpgrinder(pack, rel, L):
         d.set(14, y, 15, "ladder[facing=west,waterlogged=false]")
     d.set(14, 7, 15, "ladder[facing=west,waterlogged=false]")
     d.set(14, 8, 15, "ladder[facing=west,waterlogged=false]")
-    d.set(13, 8, 15, FENCE)
-    d.set(14, 8, 14, FENCE)
     d.set(14, 2, 15, AIR)                                   # (barrel spot of the shared base)
     d.set(14, 2, 15, "ladder[facing=west,waterlogged=false]")
     d.set(13, 2, 15, "barrel[facing=up,open=false]")
@@ -486,17 +491,16 @@ def xpgrinder(pack, rel, L):
     wire(HX + 2, HZ + 2, 9, west="side", north="side")
     wire(HX + 2, HZ + 1, 8, north="side", south="side")
     wire(HX + 2, HZ, 7, north="side", south="side")
-    d.set(HX - 1, c, HZ - 2, "stone_brick_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]")
     d.set(HX - 1, c, HZ - 2, SB)
     d.set(HX - 1, c + 1, HZ - 2, "lever[face=floor,facing=north,powered=true]")
-    d.sign(HX + 2, c + 1, HZ - 1, "north", ["Lever ON: auto", "Lever OFF: XP", "hit their feet", "through the slot"],
+    d.sign(HX, c + 1, BZ1 + 1, "south", ["Lever ON: auto", "Lever OFF: XP", "hit their feet", "through the slot"],
            "spruce")
     # cover over the chamber ring (y=10) and the shaft column up to the platform
     column(d, HX, HZ, HX + 1, HZ + 1, c + 2, y0 - 1)
-    # kill room lights
+    # ground-floor lights hang from the plank floor
     for x in (6, 13):
-        lantern(d, x, 10, 7)
-        lantern(d, x, 10, 14)
+        lantern(d, x, 6, 7)
+        lantern(d, x, 6, 14)
     # the spawning floor
     yc = water_floor(d, w, y0, "xp")
     band(d, w, y0)
@@ -504,6 +508,9 @@ def xpgrinder(pack, rel, L):
     cells = [(3, 5), (6, 8), (13, 5), (16, 8), (3, 15), (6, 18), (13, 15), (16, 18)]
     spawns = (strip_spawns("minecraft:zombie", y0 + 2, cells[:4]) + strip_spawns("minecraft:skeleton", y0 + 2, cells[4:])
               + strip_spawns("minecraft:zombie", y0 + 2, cells[4:]) + strip_spawns("minecraft:skeleton", y0 + 2, cells[:4]))
+    import os
+    if os.environ.get("XPDBG"):
+        spawns = [("minecraft:zombie", x, y0 + 1, z, 2) for (x, z) in ((9, 5), (16, 11), (10, 18), (3, 12))]
     d.farm_test(expect={"minecraft:rotten_flesh": 1, "minecraft:bone": 1}, spawns=spawns, ticks=6000)
     return d
 
@@ -524,7 +531,7 @@ def goldfarm(pack, rel, L):
     shaft = (HX, HZ, HX + 1, HZ + 1)
     floors = (28, 31, 34)
     tower(d, w, shaft, 3, floors[0],
-          lines=["Gold Farm", "build in Nether", "Wastes. Bring:", "nothing"])
+          lines=["Gold Farm", "build in Nether", "Wastes. Bring:", "nothing"], with_piers=False)
     # magma arms, trapdoor centre (each trapdoor against the outer edge of its cell)
     for y0 in floors:
         def arm(x, y, z, dist):
@@ -561,17 +568,15 @@ def drownedfarm(pack, rel, L):
     shaft = (HX, HZ, HX + 1, HZ + 1)
     floors = (28, 32)
     tower(d, w, shaft, 3, floors[0],
-          lines=["Drowned Farm", "build in a", "river biome", "Bring: nothing"])
+          lines=["Drowned Farm", "build in a", "river biome", "Bring: nothing"], with_piers=False)
     for y0 in floors:
         def arm(x, y, z, dist, y0=y0):
             d.set(x, y, z, WATER if y <= y0 + 2 else AIR)
 
         def centre(x, y, z, y0=y0):
-            if y == y0 + 1:
+            if y in (y0 + 1, y0 + 2):
                 face = "east" if x == HX else "west"
                 d.set(x, y, z, trapdoor(face, "bottom", True, False))
-            elif y == y0 + 2:
-                d.set(x, y, z, WATER)
             else:
                 d.set(x, y, z, AIR)
         cross_floor(d, w, y0, 4, "stone", arm, centre, wall=CB)
@@ -600,13 +605,10 @@ def slimefarm(pack, rel, L):
     door_x = 10
     windows = [(6, 3, BZ1), (7, 3, BZ1), (13, 3, BZ1), (14, 3, BZ1), (BX1, 3, 9), (BX2, 3, 9), (BX1, 3, 13),
                (BX2, 3, 13)]
-    base_room(d, BX1, BZ1, BX2, BZ2, 6, door_x, windows=windows)
+    base_room(d, BX1, BZ1, BX2, BZ2, 6, door_x, windows=windows, roof="flat", beams=(6, 14), lamps_z=(8, 15))
     collector(d, HX, HZ, HX + 2, HZ + 2, 6, landing="campfire")
     column(d, HX, HZ, HX + 2, HZ + 2, 7, floors[0] - 1)
     approach(d, door_x, BZ1, ["Slime Farm", "slime chunk,", "floors below", "Y=40!"])
-    for x in (6, 14):
-        lantern(d, x, 5, 8)
-        lantern(d, x, 5, 15)
     d.set(15, 2, 16, "barrel[facing=up,open=false]")
     d.set(5, 2, 16, "crafting_table")
     X1, Z1, X2, Z2 = outer(w)

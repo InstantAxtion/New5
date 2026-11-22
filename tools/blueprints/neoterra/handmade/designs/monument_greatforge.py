@@ -1746,24 +1746,38 @@ def ca_main(rel, L):
     return d
 
 
+NT_AT = dict(stacks=2, ironrow=3, coalrow=4, tower=3, galleries=3, rolling=4, gantry=5, battery=4, stoves=5,
+             hq=5, power=5, monitor=5)
+
+
 def nt_main(rel, L):
     d = Design("Neoterra", rel, NT_SIZE, gy=1, paving="smooth_stone")
     for x in range(26, 35):                                # entrance plaza
         for z in range(0, 10):
             d.set(x, 1, z, "polished_diorite" if (x + z) % 2 else "polished_andesite")
+    at = NT_AT
     nt_hall(d, L)
-    if L >= 2:
+    if L >= at["stacks"]:
         nt_stacks(d, L)
+    if L >= at["ironrow"]:
         nt_stockyard(d, L)
-    if L >= 3:
+    if L >= at["tower"]:
         nt_control_tower(d, L)
+    if L >= at["galleries"]:
         nt_galleries(d, L)
-    if L >= 4:
+    if L >= at["rolling"]:
         nt_rolling_mill(d, L)
+    if L >= at["gantry"]:
         nt_gantry(d, L)
-    if L >= 5:
+    if L >= at["stoves"]:
         nt_stoves(d, L)
-        nt_pavilion(d, L)
+    if L >= at["hq"]:
+        nt_hq(d, L)
+    if L >= at["power"]:
+        nt_power(d, L)
+    if L >= at["monitor"]:
+        nt_monitor(d, L)
+        nt_plaza(d, L)
     place_wings(d, NT_WX, NT_WZ, NT_WSIZE, NT_WHUT)
     connect_walls(d)
     return d
@@ -2285,7 +2299,7 @@ def ca_storefronts(d, L):
 # the observation crown on the control tower and the rail siding. Converters 2..5 are added along the hall.
 NT_SIZE = (61, 48, 50)
 NT_WX, NT_WZ, NT_WSIZE, NT_WHUT = (3, 47), 9, (11, 44, 11), (3, 1, 3)
-NT_H = {1: 11, 2: 15, 3: 20, 4: 25, 5: 30}
+NT_H = {1: 11, 2: 15, 3: 20, 4: 25, 5: 32}
 
 
 def disc(r, cx, cz):
@@ -2529,7 +2543,7 @@ def nt_stacks(d, L):
         d.set(cx, top + 1, 27, "lantern[hanging=false,waterlogged=false]" if L < 4 else "redstone_lamp[lit=true]")
         for x in range(cx - 1, cx + 2):
             for z in (26, 30):
-                d.set(x, top, z, stair("smooth_stone_stairs" if L < 4 else "smooth_quartz_stairs", "north" if z == 26 else "south", "top"))
+                d.set(x, top, z, stair("polished_andesite_stairs" if L < 4 else "smooth_quartz_stairs", "north" if z == 26 else "south", "top"))
         # access ladder and a platform half way up
         for y in range(4, 22):
             d.set(cx, y, 26, "ladder[facing=north,waterlogged=false]")
@@ -2582,9 +2596,9 @@ def nt_stockyard(d, L):
     for z in range(35, 40):
         d.set(sx, 7 - (z - 35) // 2, z, slab("smooth_stone_slab", "top"))
         d.set(sx, 8 - (z - 35) // 2, z, "iron_bars") if z < 38 else None
-    if L >= 3:
+    if L >= NT_AT["coalrow"]:
         nt_windrow(d, 42, 12, 48, ("coal_block", "black_concrete_powder", "coal_block", "gray_concrete_powder"))
-    if L >= 4:
+    if L >= NT_AT["battery"]:
         # coke-oven battery z 45..48: brick oven block in a concrete frame, chargers' rail on top, quench tower
         for x in range(12, 49):
             for z in range(45, 49):
@@ -2699,25 +2713,32 @@ def nt_galleries(d, L):
     """L3 conveyor bridges: from transfer towers in the stockyard up to the furnace tops (x 7..9 and 51..53)."""
     Y = 16
     for cx in (8, 52):
-        # transfer tower x cx-2..cx+2, z 31..35
-        for y in range(2, Y + 5):
-            for x in range(cx - 2, cx + 3):
-                for z in range(31, 36):
-                    if x in (cx - 2, cx + 2) or z in (31, 35):
-                        d.set(x, y, z, "light_gray_concrete" if (y % 5) else "cyan_concrete")
+        # transfer tower x cx-2..cx+2, z 31..35: open steel frame, deck with the head house, chute to the reclaimer
+        for x, z in ((cx - 2, 31), (cx + 2, 31), (cx - 2, 35), (cx + 2, 35)):
+            for y in range(2, Y + 5):
+                d.set(x, y, z, "gray_concrete")
         for x in range(cx - 2, cx + 3):
             for z in range(31, 36):
-                d.set(x, Y + 5, z, "smooth_stone")
-        for z in (32, 34):
-            d.window(cx - 2, Y + 1, z, cx - 2, Y + 2, z, "light_gray_stained_glass_pane")
-            d.window(cx + 2, Y + 1, z, cx + 2, Y + 2, z, "light_gray_stained_glass_pane")
-        for x in range(cx - 1, cx + 2):                    # sealed interior: hopper floor and chute
-            for z in range(32, 35):
-                for y in range(2, Y + 5):
-                    d.set(x, y, z, "gray_concrete" if y < Y else AIR)
                 d.set(x, Y, z, "smooth_stone")
-        put(d, [(cx, Y, 33, "hopper[enabled=true,facing=down]"), (cx - 1, Y + 1, 32, "barrel[facing=up,open=false]"),
-                (cx + 1, Y + 1, 34, lantern(False))])
+                if x in (cx - 2, cx + 2) or z in (31, 35):
+                    d.set(x, Y + 4, z, "light_gray_concrete")
+                    if not (x in (cx - 2, cx + 2) and z in (31, 35)):
+                        d.set(x, Y + 1, z, "iron_bars")
+            for z in (31, 35):
+                d.set(x, 9, z, "light_gray_concrete")
+        for z in range(31, 36):
+            d.set(cx - 2, 9, z, "light_gray_concrete")
+            d.set(cx + 2, 9, z, "light_gray_concrete")
+        for x in range(cx - 1, cx + 2):                    # head house: glazed box over the transfer chute
+            for z in range(32, 35):
+                for y in (Y + 1, Y + 2, Y + 3):
+                    if x != cx or z != 33:
+                        d.set(x, y, z, "light_gray_stained_glass_pane" if (x != cx and z != 33) or y == Y + 3 else AIR)
+                d.set(x, Y + 4, z, "smooth_stone")
+        for y in range(2, Y):
+            d.set(cx, y, 33, "light_gray_concrete")
+        put(d, [(cx, Y + 1, 33, "hopper[enabled=true,facing=down]"), (cx + 1, Y + 1, 32, AIR), (cx + 1, Y + 2, 32, AIR),
+                (cx + 2, Y + 3, 33, lantern(False)) if False else (cx - 2, Y + 2, 33, AIR)])
         # the covered gallery z 20..30: deck, belt, glazed sides, roof, two trestle columns
         for z in range(20, 31):
             for x in (cx - 1, cx, cx + 1):
@@ -2756,8 +2777,7 @@ def nt_rolling_mill(d, L):
                 d.set(x, 10, z, stair("smooth_quartz_stairs", "north"))
             if k == 0 and Z1 < z < Z2:
                 d.set(x, 10, z, "glass")
-    d.double_door(X1, 2, 29, "z", "west", "birch")
-    d.double_door(X2, 2, 29, "z", "east", "birch")
+    d.double_door(29, 2, Z2, "x", "south", "birch")
     d.sign(30, 7, Z1 - 1, "north", ["ROLLING", "MILL", "", ""], "birch", glow=True, color="cyan") if False else None
     # roll stands along the centre line, the run-out table, cooling bed, coil store, crane runway
     for x in (24, 28, 32):
@@ -2826,47 +2846,183 @@ def nt_stoves(d, L):
         d.set(x, 18, 20, "light_gray_concrete")
 
 
-def nt_pavilion(d, L):
-    """L5 visitor pavilion on the west plaza (x 14..24, z 1..7): exhibition below, cafe above, roof garden."""
+def nt_hq(d, L):
+    """L5 the headquarters tower west of the entrance (x 14..24, z 1..7), twin of the control tower in spirit:
+    exhibition, cafe, open-plan office, boardroom, design studio, executive floor, roof garden."""
     X1, X2, Z1, Z2 = 14, 24, 1, 7
+    top = 26
     rect(d, X1, Z1, X2, Z2, 1, "polished_diorite")
-    for y in range(2, 11):
+    floors = (6, 10, 14, 18, 22)
+    for y in range(2, top + 1):
         for x in range(X1, X2 + 1):
             for z in range(Z1, Z2 + 1):
                 if x in (X1, X2) or z in (Z1, Z2):
-                    corner = x in (X1, X2) and z in (Z1, Z2)
-                    d.set(x, y, z, "smooth_quartz" if corner or y in (6, 10) else "light_blue_stained_glass_pane")
-    for x in range(X1 + 1, X2):
-        for z in range(Z1 + 1, Z2):
-            d.set(x, 6, z, "smooth_quartz")
-            d.set(x, 10, z, "moss_block" if (x + z) % 3 else "smooth_quartz")
-    ring(d, X1, Z1, X2, Z2, 11, "glass_pane")
+                    post = (x in (X1, X2) and z in (Z1, Z2)) or (z in (Z1, Z2) and x == 19)
+                    d.set(x, y, z, "smooth_quartz" if post else ("cyan_terracotta" if y in floors else "light_blue_stained_glass_pane"))
+    for yf in floors:
+        rect(d, X1 + 1, Z1 + 1, X2 - 1, Z2 - 1, yf, "polished_diorite")
+    rect(d, X1, Z1, X2, Z2, top, "smooth_quartz")
+    ring(d, X1, Z1, X2, Z2, top + 1, "glass_pane")
+    for y in range(2, top + 1):
+        d.set(23, y, 6, "ladder[facing=west,waterlogged=false]")
     d.door(19, 2, Z1, "north", "birch")
     d.set(19, 4, Z1, "smooth_quartz")
-    d.sign(19, 5, Z1 - 1, "north", ["VISITOR", "CENTRE", "", ""], "birch", glow=True, color="cyan")
-    # exhibition: display plinths with a cast ingot, a model ladle, an anvil, info lecterns, benches
+    d.sign(19, 5, Z1 - 1, "north", ["NEOTERRA", "STEEL HQ", "Visitors", "welcome"], "birch", glow=True, color="cyan")
+    # G: exhibition – a cast ingot, a model ladle, an anvil and a gold casting on plinths, info lecterns, benches
     put(d, [(16, 2, 3, "polished_andesite"), (16, 3, 3, "iron_block"), (16, 2, 5, "polished_andesite"), (16, 3, 5, "lava_cauldron"),
             (22, 2, 3, "polished_andesite"), (22, 3, 3, "anvil[facing=east]"), (22, 2, 5, "polished_andesite"),
             (22, 3, 5, "gold_block"), (17, 2, 4, "lectern[facing=west,has_book=true,powered=false]"),
-            (21, 2, 4, "lectern[facing=east,has_book=true,powered=false]"), (19, 2, 6, stair("quartz_stairs", "south")),
-            (18, 2, 6, stair("quartz_stairs", "south")), (20, 2, 6, stair("quartz_stairs", "south")),
-            (19, 2, 3, "cyan_carpet"), (19, 2, 4, "cyan_carpet"), (19, 2, 5, "cyan_carpet"), (15, 2, 6, "potted_bamboo"),
-            (23, 2, 6, "potted_bamboo")])
+            (21, 2, 4, "lectern[facing=east,has_book=true,powered=false]"), (18, 2, 6, stair("quartz_stairs", "south")),
+            (20, 2, 6, stair("quartz_stairs", "south")), (19, 2, 3, "cyan_carpet"), (19, 2, 4, "cyan_carpet"),
+            (19, 2, 5, "cyan_carpet"), (15, 2, 6, "potted_bamboo"), (15, 2, 2, "potted_bamboo")])
     for x in (16, 22):
         d.set(x, 5, 4, "sea_lantern")
-    for y in range(2, 6):
-        d.set(23, y, 2, "ladder[facing=west,waterlogged=false]")
-    d.set(23, 6, 2, "ladder[facing=west,waterlogged=false]")
-    # cafe: counter, tables and chairs, plants
+    # F1 (y 7): cafe – counter with the coffee machine, two tables, plants
     put(d, [(15, 7, 2, slab("smooth_quartz_slab", "top")), (16, 7, 2, slab("smooth_quartz_slab", "top")),
             (17, 7, 2, slab("smooth_quartz_slab", "top")), (15, 8, 2, "brewing_stand[has_bottle_0=true,has_bottle_1=true,has_bottle_2=true]"),
-            (16, 8, 2, "cake[bites=2]"), (16, 7, 3, stair("birch_stairs", "north")) if False else (15, 7, 3, "barrel[facing=up,open=false]")])
+            (16, 8, 2, "cake[bites=2]"), (15, 7, 3, "barrel[facing=up,open=false]"),
+            (20, 7, 2, "potted_azalea_bush"), (21, 7, 2, "potted_fern"), (19, 7, 4, "light_blue_carpet"), (20, 7, 4, "light_blue_carpet")])
     for tx in (17, 21):
         put(d, [(tx, 7, 5, "birch_fence"), (tx, 8, 5, plate("birch")), (tx - 1, 7, 5, stair("birch_stairs", "west")),
                 (tx + 1, 7, 5, stair("birch_stairs", "east"))])
-    put(d, [(20, 7, 3, "potted_azalea_bush"), (21, 7, 2, "potted_fern"), (19, 7, 4, "light_blue_carpet"), (20, 7, 4, "light_blue_carpet")])
     for x in (16, 21):
         d.set(x, 9, 4, "sea_lantern")
-    # roof garden: shrubs and a bench
-    put(d, [(16, 11, 3, "azalea_leaves[distance=1,persistent=true,waterlogged=false]"),
-            (22, 11, 5, "flowering_azalea_leaves[distance=1,persistent=true,waterlogged=false]")])
+    # F2 (y 11): open-plan office – two desk rows with screens and chairs, printer, water cooler
+    for x in (15, 16, 17, 19, 20, 21):
+        put(d, [(x, 11, 3, slab("birch_slab", "top")), (x, 12, 3, "daylight_detector[inverted=false,power=0]" if x % 2 else "potted_bamboo"),
+                (x, 11, 4, stair("birch_stairs", "north"))])
+    put(d, [(15, 11, 6, "dispenser[facing=north,triggered=false]"), (17, 11, 6, "water_cauldron[level=3]"),
+            (21, 11, 6, "barrel[facing=up,open=false]"), (19, 11, 6, "light_gray_carpet"), (20, 11, 5, "light_gray_carpet")])
+    for x in (16, 20):
+        d.set(x, 13, 4, "sea_lantern")
+    # F3 (y 15): boardroom – long table with chairs, screen wall
+    for x in (17, 18, 19, 20, 21):
+        put(d, [(x, 15, 4, "birch_fence"), (x, 16, 4, plate("birch")), (x, 15, 3, stair("birch_stairs", "north")),
+                (x, 15, 5, stair("birch_stairs", "south"))])
+    put(d, [(16, 15, 4, stair("quartz_stairs", "west")), (15, 15, 4, "black_concrete"), (15, 16, 4, "black_stained_glass"),
+            (22, 15, 2, "potted_bamboo"), (22, 15, 6, "potted_bamboo"), (15, 15, 2, "lectern[facing=east,has_book=true,powered=false]")])
+    d.set(19, 17, 4, "sea_lantern")
+    # F4 (y 19): design studio – drafting tables, model shelves, a smithing bench for prototypes
+    put(d, [(15, 19, 2, "cartography_table"), (16, 19, 2, "cartography_table"), (15, 19, 3, stair("birch_stairs", "north")),
+            (16, 19, 3, stair("birch_stairs", "north")), (19, 19, 2, shelf("south")), (20, 19, 2, shelf("south")),
+            (19, 20, 2, shelf("south")), (20, 20, 2, shelf("south")), (22, 19, 4, "crafting_table"),
+            (22, 19, 5, slab("smooth_quartz_slab", "top")), (22, 20, 5, pot("west")), (17, 19, 5, "white_carpet"),
+            (18, 19, 5, "white_carpet"), (17, 19, 4, "white_carpet")])
+    for x in (16, 21):
+        d.set(x, 21, 4, "sea_lantern")
+    # F5 (y 23): executive floor – desk, book wall, lounge sofa round a rug, view over the works
+    put(d, [(16, 23, 3, slab("dark_oak_slab", "top")), (17, 23, 3, slab("dark_oak_slab", "top")), (16, 24, 3, cand(3, "white")),
+            (16, 23, 4, stair("dark_oak_stairs", "north")), (15, 23, 2, "bookshelf"), (15, 24, 2, "bookshelf"),
+            (16, 23, 2, "bookshelf"), (16, 24, 2, "bookshelf"),
+            (20, 23, 5, stair("quartz_stairs", "south")), (21, 23, 5, stair("quartz_stairs", "south")),
+            (22, 23, 4, stair("quartz_stairs", "east")), (20, 23, 4, "red_carpet"), (21, 23, 4, "red_carpet"),
+            (20, 23, 3, "red_carpet"), (21, 23, 3, "red_carpet"), (22, 23, 2, "potted_azalea_bush")])
+    for x in (17, 21):
+        d.set(x, 25, 4, "sea_lantern")
+    # roof garden
+    for x in range(X1 + 1, X2):
+        for z in range(Z1 + 1, Z2):
+            if (x + z) % 3 == 0:
+                d.set(x, top + 1, z, "moss_carpet")
+    put(d, [(16, 27, 3, "azalea_leaves[distance=1,persistent=true,waterlogged=false]"),
+            (21, 27, 5, "flowering_azalea_leaves[distance=1,persistent=true,waterlogged=false]"),
+            (18, 27, 5, stair("birch_stairs", "south")), (19, 27, 5, stair("birch_stairs", "south"))])
+
+
+def nt_plaza(d, L):
+    """L5 entrance plaza: the giant-ladle sculpture on its plinth, flag masts, planters with trees, ore wagons
+    on the siding."""
+    for x in range(28, 33):
+        for z in range(1, 5):
+            d.set(x, 2, z, "polished_andesite" if x in (28, 32) or z in (1, 4) else "smooth_quartz")
+    for x in range(29, 32):                                # the ladle: a tilted bowl pouring a glowing stream
+        for z in (2, 3):
+            for y in (3, 4, 5):
+                d.set(x, y, z, "gray_concrete" if y < 5 or x != 30 else "magma_block")
+    put(d, [(29, 6, 2, "gray_concrete"), (31, 6, 3, "gray_concrete"), (32, 5, 3, "orange_stained_glass"),
+            (32, 4, 3, "orange_stained_glass"), (32, 3, 3, "shroomlight")])
+    for x in (26, 34):
+        for y in range(2, 12):
+            d.set(x, y, 0, "iron_bars" if y < 11 else "light_gray_concrete")
+        d.set(x, 9, 1, "cyan_wall_banner[facing=south]")
+    for x, z in ((14, 9), (24, 9), (36, 9), (46, 9)):
+        for dx in (-1, 0, 1):
+            for dz in (-1, 0, 1):
+                if d.bp.inside(x + dx, 2, z + dz) and d.air(x + dx, 2, z + dz):
+                    d.set(x + dx, 2, z + dz, "smooth_quartz_slab[type=bottom,waterlogged=false]")
+        d.set(x, 2, z, "moss_block")
+        for y in range(3, 6):
+            d.set(x, y, z, logb("birch_log"))
+        for dx in (-1, 0, 1):
+            for dz in (-1, 0, 1):
+                for y in (6, 7):
+                    if d.bp.inside(x + dx, y, z + dz) and d.air(x + dx, y, z + dz):
+                        d.set(x + dx, y, z + dz, "azalea_leaves[distance=1,persistent=true,waterlogged=false]")
+    for x0 in (14, 22, 30, 40):                            # ore wagons on the siding
+        for x in range(x0, x0 + 3):
+            d.set(x, 3, 49, "hopper[enabled=true,facing=down]" if x == x0 + 1 else "gray_concrete")
+
+
+def nt_monitor(d, L):
+    """L5 roof monitor on the melt shop: a glazed clerestory lantern along the ridge, roof vents."""
+    for x in range(22, 39):
+        for z in range(15, 20):
+            edge = x in (22, 38) or z in (15, 19)
+            for y in (15, 16, 17):
+                if edge:
+                    d.set(x, y, z, "light_blue_stained_glass" if y < 17 and (x - 22) % 4 else "smooth_quartz")
+            d.set(x, 18, z, "smooth_quartz_slab[type=bottom,waterlogged=false]")
+    for x in (24, 28, 32, 36):
+        d.set(x, 15, 12, "cut_copper")
+        d.set(x, 16, 12, "cut_copper_slab[type=bottom,waterlogged=false]")
+
+
+def nt_power(d, L):
+    """L5 the works power station: hyperbolic cooling tower (west end of the stockyard) and the turbine house
+    with its switch room (east end)."""
+    # cooling tower centred (5, 43): radius pinches from 5 to 3.6 at two thirds of the height, flares to the lip
+    for y in range(2, 28):
+        t = (y - 2) / 25
+        r = 5.2 - 2.4 * (1 - (1 - t / 0.7) ** 2) if t < 0.7 else 2.8 + 1.4 * ((t - 0.7) / 0.3)
+        cells = ring_of(disc(r, 5, 43))
+        for x, z in cells:
+            if d.bp.inside(x, y, z):
+                d.set(x, y, z, "white_concrete" if y % 6 else "light_gray_concrete")
+    for x, z in ring_of(disc(5.2, 5, 43)):                 # open legs at the foot
+        if (x + z) % 3 == 0:
+            d.set(x, 2, z, AIR)
+    for x, z in disc(4.2, 5, 43):
+        d.set(x, 1, z, WATER)
+        d.set(x, 0, z, "structurize:blocksolidsubstitution")
+        if (x + z) % 2 == 0:
+            d.set(x, 4, z, "iron_bars")                    # the fill lattice over the pond
+
+    # turbine house x 54..60, z 36..48: glass clerestory, turbine sets, switch gallery
+    X1, X2, Z1, Z2 = 54, 60, 36, 48
+    rect(d, X1, Z1, X2, Z2, 1, "polished_andesite")
+    for x in range(X1, X2 + 1):
+        for z in range(Z1, Z2 + 1):
+            if x in (X1, X2) or z in (Z1, Z2):
+                for y in range(2, 12):
+                    rib = z in (Z1, Z2) and x in (X1, X2) or (x in (X1, X2) and (z - Z1) % 4 == 0)
+                    d.set(x, y, z, "gray_concrete" if rib else ("white_concrete" if y < 8 else
+                                                                 "light_blue_stained_glass_pane" if y < 11 else "smooth_quartz"))
+    rect(d, X1, Z1, X2, Z2, 12, "smooth_quartz")
+    ring(d, X1, Z1, X2, Z2, 13, "white_concrete")
+    d.double_door(X1, 2, 41, "z", "west", "birch")
+    d.sign(X1 - 1, 9, 42, "west", ["POWER", "STATION", "", ""], "birch", glow=True, color="cyan")
+    for z0 in (38, 44):                                    # two turbine-generator sets
+        for z in range(z0, z0 + 3):
+            put(d, [(56, 2, z, "polished_andesite"), (57, 2, z, "polished_andesite"), (58, 2, z, "polished_andesite"),
+                    (57, 3, z, "smooth_quartz" if z != z0 + 1 else "cyan_terracotta")])
+        put(d, [(56, 3, z0 + 1, "iron_bars"), (58, 3, z0 + 1, "iron_bars"), (57, 4, z0 + 1, "lightning_rod[facing=up,powered=false,waterlogged=false]")])
+    put(d, [(59, 2, 42, slab("smooth_quartz_slab", "top")), (59, 2, 41, slab("smooth_quartz_slab", "top")),
+            (59, 3, 42, "daylight_detector[inverted=false,power=0]"), (59, 3, 41, "lever[face=floor,facing=west,powered=false]"),
+            (58, 2, 42, stair("birch_stairs", "east")), (55, 2, 37, "barrel[facing=up,open=false]"),
+            (55, 2, 47, "barrel[facing=up,open=false]"), (59, 2, 37, "water_cauldron[level=3]"),
+            (55, 2, 43, "yellow_carpet"), (56, 2, 43, "yellow_carpet"), (57, 2, 43, "yellow_carpet"), (58, 2, 43, "yellow_carpet"),
+            (55, 2, 42, "yellow_carpet"), (55, 2, 39, "yellow_carpet"), (55, 2, 40, "yellow_carpet"), (59, 2, 47, "chest[facing=west,type=single,waterlogged=false]")])
+    for z in (39, 42, 45):
+        d.set(57, 11, z, "sea_lantern")
+    for x in range(54, 61):                                # cable gantry towards the works
+        pass

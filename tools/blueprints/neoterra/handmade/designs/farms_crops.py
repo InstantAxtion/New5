@@ -311,7 +311,7 @@ def kelp(pack, rel, L):
     d.door(16, 2, Z1, facing="north", wood="spruce")
     for z in (0, 1, 2):
         d.set(16, 1, z, "gravel")
-    d.set(16, 2, 4, "chest[facing=west,type=single,waterlogged=false]")
+    d.set(16, 2, 9, "chest[facing=west,type=single,waterlogged=false]")
     d.set(16, 2, 10, "smoker[facing=west,lit=false]")
     for x in range(X1 + 1, X2):                            # tie beam with lanterns over the tank
         d.set(x, 9, 7, logb("x"))
@@ -323,5 +323,84 @@ def kelp(pack, rel, L):
         d.set(9, 1, z, "gravel")
     for x in range(2, 10):
         d.set(x, 1, 2, "gravel")
-    d.farm_test(expect={"minecraft:kelp": 10}, ticks=12000)
+    d.farm_test(expect={"minecraft:kelp": 10}, ticks=12000,
+                blocks=[(x, 6, z, "minecraft:water") for x in (3, 15) for z in (A, K, B)], blocks_min=99)
+    return d
+
+
+def collect(d, x1, x2, zs, y=1):
+    """Hopper lines under the rows `zs` (x1..x2, running east) and a collector column at x2+1 running south into
+    the output barrel just south of the last row. Returns the barrel position."""
+    cx = x2 + 1
+    for z in zs:
+        for x in range(x1, x2 + 1):
+            d.set(x, y, z, hopper("east"))
+    zs = sorted(zs)
+    for z in range(zs[0], zs[-1] + 1):
+        d.set(cx, y, z, hopper("south"))
+    output(d, cx, y, zs[-1] + 1)
+    return cx, y, zs[-1] + 1
+
+
+# ================================================================================================ pumpkin & melon
+@design("pumpkinmelon")
+def pumpkinmelon(pack, rel, L):
+    """Observer + piston pumpkin / melon farm (the classic: stems on hydrated farmland, each with exactly one free
+    fruit cell; an observer watches the fruit cell, a piston breaks the fruit). Pumpkin stems north of a water row,
+    melon stems south of it. The fruit cells are MUD over hoppers, the stem farmland is on hoppers too, so whatever
+    the piston pushes around ends up in the hopper lines.
+    Per stem x: piston (y3) facing the fruit cell, observer above the fruit cell facing DOWN (watches it); its
+    output (up) strongly powers the stone brick on top of it, which powers the dust line next to it (y5, over the
+    piston row); the dust powers the brick under it, which sits on the piston -> the piston fires. (Dust cannot
+    climb over an observer: observers are not redstone conductors.) Stems are placed full grown (age 7)."""
+    d = Design(pack, rel, size=(21, 14, 15), gy=1, paving="grass_block")
+    X1, Z1, X2, Z2 = 1, 3, 19, 11
+    shell(d, X1, Z1, X2, Z2, 7, floor="spruce_planks", wall="glass")
+    x1, x2 = 3, 13
+    W = 7
+    sides = ((4, 5, 6, "south", "pumpkin_stem[age=7]"), (10, 9, 8, "north", "melon_stem[age=7]"))
+    for x in range(x1, x2 + 1):
+        d.set(x, 2, W, WATER)
+        for (pz, fz, sz, f, stem) in sides:
+            d.set(x, 2, fz, MUD)
+            d.set(x, 2, sz, "farmland[moisture=7]")
+            d.set(x, 3, sz, stem)
+            d.set(x, 2, pz, SB)
+            d.set(x, 3, pz, piston(f))
+            d.set(x, 4, fz, observer("down"))
+            d.set(x, 5, fz, SB)                       # strongly powered by the observer below it
+            d.set(x, 4, pz, SB)                       # sits on the piston; powered by the dust on it
+            d.set(x, 5, pz, dust(e="side" if x < x2 else "none", w="side" if x > x1 else "none"))
+    for xe in (x1 - 1, x2 + 1):                     # glass ends keep fruit cells closed and items in
+        for z in range(4, 11):
+            for y in (2, 3, 4, 5):
+                d.set(xe, y, z, GLASS)
+    cx, cy, cz = collect(d, x1, x2 + 1, (5, 6, 7, 8, 9))
+    for z in (5, 6, 7, 8, 9):
+        d.set(x2 + 1, 2, z, GLASS)
+    for z in range(Z1 + 1, Z2):
+        for x in (16, 17, 18):
+            d.set(x, 1, z, "spruce_planks")
+    d.set(15, 1, 4, "spruce_planks")
+    entrance(d, 17, Z1, "Pumpkins+Melons", "nothing", sign_side=1)
+    d.set(18, 2, 10, "chest[facing=west,type=single,waterlogged=false]")
+    d.set(18, 2, 9, "crafting_table")
+    for x in range(X1 + 1, X2):
+        d.set(x, 7, 7, logb("x"))
+    for x in (4, 9, 13, 17):
+        lantern(d, x, 6, 7)
+    # glass gable: sky light for the stems (they need light >= 9)
+    roof(d, X1, Z1, X2, Z2, 8, axis="x")
+    for x in range(X1 + 1, X2):
+        for z in range(Z1, Z2 + 1):
+            for y in range(8, 14):
+                st = d.get(x, y, z)
+                if "spruce_stairs" in st and x % 4 != 1:
+                    d.set(x, y, z, st.replace("spruce_stairs", "glass").split("[")[0])
+    controller(d, 10)
+    for z in (1, 2):
+        d.set(10, 1, z, "gravel")
+    for x in range(10, 18):
+        d.set(x, 1, 2, "gravel")
+    d.farm_test(expect={"minecraft:pumpkin": 8, "minecraft:melon_slice": 16}, ticks=12000)
     return d

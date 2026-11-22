@@ -3392,7 +3392,6 @@ def ph_vault(d, x1, z1, x2, z2, h=4):
 # hand-chosen origin / rotation per pack (Frame). Local axes: u = east, v = south, y = up from the frame's origin;
 # rot = quarter turns clockwise seen from above (rot=1 turns local north to world east). Block states are written
 # in the local frame and turned with rot_state, so every facing below reads in local terms.
-DOT = "redstone_wire[east=side,north=side,power=0,south=side,west=side]"   # lone dust = cross: powers all 4 sides
 
 
 class Frame:
@@ -3437,54 +3436,59 @@ def dchest(d, x, y, z, facing, along):
 
 
 def cane_farm(F, n, frame, cover, glass="glass", back=None):
-    """Automatic sugar-cane farm, n canes on every other column (u = 0, 2, .. 2n-2), output chest at the east end.
-    Per cane column (local; front = south):
-      y0  water channel (v-1) beside the sand (v0) the cane stands on
-      y1  cane base (v0); collection hopper (v+1) pointing east along the row into the chest at u = 2n-1
-      y2  cane 2nd block (v0); OBSERVER facing south (v-1) watching that 2nd block, its back (output) into a solid
-          relay block (v-2) which it strongly powers
-      y3  3rd-block cell (v0); PISTON facing south (v-1) pushing into it; redstone dust on the relay (v-2) – a lone
-          dot (cross) powered by the relay below it, pointing south into the piston
-    The top cane block changes its age every growth tick, so the observer pulses each time the 2nd block ticks and
-    when the 3rd block appears (the 2nd block's age resets to 0 in the same tick). The piston then fires into the
-    3rd cell: an empty cell is harmless, a 3rd block is broken and its item swept by the piston head one cell south
-    into the drop shaft (v+1), where it falls onto the hopper line. The observer never watches the cell the piston
-    moves through, so there is no observer-piston clock. Dust dots sit two columns apart (glass / air between) so
-    the columns do not join into a line (a line would no longer point into the pistons). Glass walls keep the items
-    in; the chest sits outside the east end wall."""
-    w = 2 * n - 1
-    for u in range(-1, w + 1):
-        cane = 0 <= u < w and u % 2 == 0
-        end = u in (-1, w)
-        F.set(u, 0, -2, frame)
-        F.set(u, 0, -1, frame if end else "water")
-        F.set(u, 0, 0, "sand" if cane else frame)
-        F.set(u, 0, 1, frame)
-        F.set(u, 0, 2, frame)
-        for y in (1, 2, 3):
-            F.set(u, y, -2, frame if y < 3 or end else (DOT if cane else AIR))
-            F.set(u, y, -1, "observer[facing=south,powered=false]" if cane and y == 2 else
-                  "piston[extended=false,facing=south]" if cane and y == 3 else frame)
-            F.set(u, y, 0, frame if end else ("sugar_cane[age=0]" if cane and y < 3 else AIR if cane else glass))
-            F.set(u, y, 2, frame if end else glass)
-        if u == -1:
+    """Automatic sugar-cane farm: one row of the Farmworks cane module (designs/farms_crops.py cane_module, which
+    passes the in-game farm test), n canes at u = 0..n-1. Local frame, front = south, y0 = ground layer:
+      v-2  back: frame y0..y3, redstone dust y4 running along the row (points south into the observers)
+      v-1  frame y1..y2, PISTON y3 facing south (pushes the 2nd cane block), OBSERVER y4 facing south (watches the
+           3rd cane cell; pulses out of its back into the dust)
+      v0   hopper y0 (east), MUD y1, cane y2 (base) and y3 (2nd block)
+      v+1  hopper y0 (east), water source y1 (keeps the cane alive)
+      v+2  glass front
+    When any cane grows its 3rd block (y4) the observer pulses its back into the dust line; dust powers the block
+    under it (v-2, y3), which sits right behind the piston row, so every piston fires and breaks the 2nd blocks
+    (the 3rd pop off with them). The items fall onto the mud (14/16 high, so inside the pick-up box of the hopper
+    under it) or into the water over the second hopper line. Both lines run east; at u = n the cane line turns
+    south into the water line, which empties into the output barrel sunk in the ground at u = n+1. Glass ends and
+    a glass roof over the plant rows keep the items in."""
+    for u in range(-1, n + 1):
+        end = u in (-1, n)
+        if not end:
+            F.set(u, 0, -2, frame)
             for y in (1, 2, 3):
-                F.set(u, y, 1, frame)
-        elif u < w:
-            F.set(u, 1, 1, hopper("east"))
-            F.set(u, 2, 1, AIR)
-            F.set(u, 3, 1, AIR)
+                F.set(u, y, -2, frame)
+            F.set(u, 4, -2, f"redstone_wire[east={'side' if u < n - 1 else 'none'},north=none,power=0,south=side,"
+                            f"west={'side' if u > 0 else 'none'}]")
+            F.set(u, 0, -1, frame)
+            F.set(u, 1, -1, frame)
+            F.set(u, 2, -1, frame)
+            F.set(u, 3, -1, "piston[extended=false,facing=south]")
+            F.set(u, 4, -1, "observer[facing=south,powered=false]")
+            F.set(u, 0, 0, hopper("east"))
+            F.set(u, 1, 0, "mud")
+            F.set(u, 2, 0, "sugar_cane[age=0]")
+            F.set(u, 3, 0, "sugar_cane[age=0]")
+            F.set(u, 4, 0, AIR)
+            F.set(u, 0, 1, hopper("east"))
+            F.set(u, 1, 1, "water")
+            for y in (2, 3, 4):
+                F.set(u, y, 1, AIR)
+            F.set(u, 0, 2, frame)
+            for y in (1, 2, 3, 4):
+                F.set(u, y, 2, glass)
         else:
-            F.set(u, 1, 1, "chest[facing=east,type=single,waterlogged=false]")
-            F.set(u, 2, 1, glass)
-            F.set(u, 3, 1, glass)
-        for v in (-2, -1, 2):
-            F.set(u, 4, v, cover)
-        F.set(u, 4, 0, glass if not end else cover)
-        F.set(u, 4, 1, glass if not end else cover)
+            for v in (-2, -1, 2):
+                F.set(u, 0, v, frame)
+            for v in range(-2, 3):
+                for y in (1, 2, 3, 4):
+                    F.set(u, y, v, glass)
+            F.set(u, 0, 0, frame if u == -1 else hopper("south"))
+            F.set(u, 0, 1, frame if u == -1 else hopper("east"))
+        for v in range(-2, 3):
+            F.set(u, 5, v, glass if v in (0, 1) and not end else cover)
         if back:
-            for y in (1, 2, 3):
+            for y in range(0, 5):
                 F.set(u, y, -3, back)
+    F.set(n + 1, 0, 1, BRL("up"))                                # output barrel, lid flush with the ground
 
 
 def auto_smelter(F, wood):
@@ -3519,6 +3523,56 @@ def hen_house(F, frame, wood, roof):
         F.set(u, 0, v, hopper(f))
     F.set(3, 0, 1, "chest[facing=east,type=single,waterlogged=false]")
     F.set(0, 1, 1, HAYY)                                          # a bale to peck at in the back corner
+
+
+def smeltery(F, n, post, roof, wood):
+    """Bulk smelting bank of n furnaces under an open shed (local, front = north, y0 = walking level).
+    INPUT: chest (y4) on the first hopper of a line (y3) running east; under every line hopper a drop hopper (y2)
+    pointing DOWN into its furnace's top (input slot) – each drop hopper pulls from the line above it, so ore is
+    shared out along the bank; the last line hopper points down into the last drop hopper.
+    FUEL: chest (y3, v1) on the first hopper of a fuel line (y2, v1) running east; under every fuel-line hopper a
+    hopper (y1, v1) pointing NORTH into the back of its furnace (fuel slot); the last fuel-line hopper points down.
+    OUTPUT: a hopper under every furnace (y0) pulls the result slot and passes it east to the output chest (u = n).
+    The fuel chest is reached from the open west end (u -1)."""
+    for u in range(n):
+        F.set(u, 0, 0, hopper("east"))
+        F.set(u, 1, 0, "furnace[facing=north,lit=false]")
+        F.set(u, 1, 1, hopper("north"))
+        F.set(u, 2, 0, hopper("down"))
+        F.set(u, 2, 1, hopper("east" if u < n - 1 else "down"))
+        F.set(u, 3, 0, hopper("east" if u < n - 1 else "down"))
+        F.set(u, 0, 1, post)                                     # plinth under the fuel row
+    F.set(n, 0, 0, CHEST("north"))
+    F.set(0, 3, 1, CHEST("north"))
+    F.set(0, 4, 0, CHEST("north"))
+    for u in range(-1, n + 1):                                   # back wall and open-sided shed roof
+        for y in range(0, 5):
+            F.set(u, y, 2, post if u in (-1, n) or y == 0 else f"{wood}_planks")
+        F.set(u, 6, -1, slab(roof))
+        F.set(u, 6, 0, slab(roof))
+        F.set(u, 6, 1, slab(roof))
+        F.set(u, 6, 2, slab(roof))
+    for u in (-1, n):
+        for y in range(0, 6):
+            F.set(u, y, -1, post)
+    F.set(n, 1, 0, LANTF)
+
+
+def paddock(d, x1, z1, x2, z2, wood, gate_at, gate_face, trough, hay, lamp=None):
+    """Fenced paddock for animals the player brings (cows, sheep, pigs): fence ring with one gate, a water
+    trough (cauldron) and a hay bale; grass floor."""
+    y = d.gy + 1
+    for x, z in cells(x1, z1, x2, z2):
+        d.set(x, d.gy, z, "grass_block[snowy=false]")
+        if x in (x1, x2) or z in (z1, z2):
+            d.set(x, y, z, fence(wood))
+        else:
+            d.set(x, y, z, AIR)
+    d.set(gate_at[0], y, gate_at[1], gate(wood, gate_face))
+    d.set(trough[0], y, trough[1], CAUL)
+    d.set(hay[0], y, hay[1], HAYY)
+    if lamp:
+        d.set(lamp[0], y + 1, lamp[1], LANTF)
 
 
 def beacon(d, x, z, base="iron_block"):
@@ -3701,13 +3755,13 @@ def player_estate(rel, L):
     if L >= 3:
         # L3: automatic sugar-cane farm (cane_farm) and an unlit nether portal frame, hand-placed per pack
         if pack == "Hearthwood":     # farm along the lane west of the hall (front east), portal by the library tower
-            cane_farm(Frame(d, 28, d.gy, 45, rot=3), 5, "stone_bricks", slab("dark_oak"), back="stone_bricks")
+            cane_farm(Frame(d, 28, d.gy, 45, rot=3), 8, "stone_bricks", slab("dark_oak"), back="stone_bricks")
             portal_frame(d, 44, 4, "x")
         elif pack == "Cascadia":     # farm beside the kitchen plot (front south), portal west of the tower lawn
-            cane_farm(Frame(d, 25, d.gy, 29), 4, "cobblestone", slab("spruce"), back="spruce_planks")
+            cane_farm(Frame(d, 25, d.gy, 29), 6, "cobblestone", slab("spruce"), back="spruce_planks")
             portal_frame(d, 27, 36, "x")
         else:                        # farm in the service lane behind the storage hall, portal on the court
-            cane_farm(Frame(d, 18, d.gy, 31), 5, "white_concrete", slab("polished_diorite"))
+            cane_farm(Frame(d, 18, d.gy, 31), 8, "white_concrete", slab("polished_diorite"))
             portal_frame(d, 58, 17, "x", "obsidian")
     if pack == "Cascadia" and L >= 3:                    # spruce stands: north meadow (L3), east of the garden
         trees = [(37, 19), (47, 18), (57, 18), (30, 40), (61, 20)]  # (L4), round the watch tower and chapel (L5)
@@ -3750,6 +3804,19 @@ def player_estate(rel, L):
         T3 = {"Hearthwood": (42, 50), "Cascadia": (50, 50), "Neoterra": (50, 54)}[pack]
         ph_tower(d, T3[0], T3[1], tower_rooms(W, "watch"))
         ph_hall(d, 12, 50, 30, 61, h=5, hearths=False)
+        # L5: smeltery shed (4-furnace bank, see smeltery) and a paddock for the player's animals
+        if pack == "Hearthwood":     # smeltery by the terrace, front north; paddock under the hall's south wall
+            smeltery(Frame(d, 29, d.gy + 1, 6), 4, "stone_bricks", "dark_oak", W)
+            paddock(d, 50, 45, 58, 48, "spruce", (50, 47), "west", (57, 46), (51, 46))
+            crop_plot(d, 42, 45, 47, 48, (44, 46), ("wheat[age=7]", "wheat[age=5]", "carrots[age=7]"), "coarse_dirt")
+        elif pack == "Cascadia":     # smeltery south of the guard tower, paddock between tower and garden
+            smeltery(Frame(d, 33, d.gy + 1, 53), 6, "cobblestone", "spruce", W)
+            paddock(d, 42, 42, 48, 48, "spruce", (42, 45), "west", (47, 47), (43, 43))
+            crop_plot(d, 42, 50, 48, 53, (45, 51), ("wheat[age=7]", "wheat[age=5]", "carrots[age=7]"), "coarse_dirt")
+        else:                        # smeltery east of the store, paddock beside the guard tower
+            smeltery(Frame(d, 29, d.gy + 1, 43), 6, "white_concrete", "polished_diorite", W)
+            paddock(d, 40, 52, 47, 57, "birch", (43, 52), "north", (46, 56), (41, 56))
+            crop_plot(d, 40, 59, 47, 61, (43, 60), ("wheat[age=7]", "wheat[age=5]", "carrots[age=7]"), "polished_andesite")
         # estate chapel: pews either side of the aisle facing the altar, candles, banners
         for z in (53, 55, 57):
             for x in (14, 15, 16, 17, 18, 19, 24, 25, 26, 27, 28, 29):
