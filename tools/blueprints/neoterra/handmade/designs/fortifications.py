@@ -1114,6 +1114,8 @@ def hw_bar(rel, L):
         d.chair(x, 2, 25, "south", "dark_oak", sit=False)
     d.set(15, 3, 24, "candle[candles=3,lit=false,waterlogged=false]")
     d.set(18, 3, 24, "candle[candles=2,lit=false,waterlogged=false]")
+    d.set(16, 3, 24, "cake[bites=1]")                     # supper on the mess table
+    d.set(17, 3, 24, "decorated_pot[cracked=false,facing=north,waterlogged=false]")
     # hearth on the east wall, chimney through the roof
     d.hearth(21, 2, 24, "west", ridge + 3, "bricks", "campfire")
     for y in range(2, ridge + 3):
