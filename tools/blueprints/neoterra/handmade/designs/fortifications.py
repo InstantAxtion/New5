@@ -450,6 +450,100 @@ HW_BED_SLOTS = [(3, 1, "north"), (5, 7, "south"), (5, 1, "north"), (3, 7, "south
                 (7, 5, "east")]
 
 
+HWS = {"N1": (3, 1, "north"), "N2": (5, 1, "north"), "S1": (3, 7, "south"), "S2": (5, 7, "south"),
+       "E1": (7, 3, "east"), "E2": (7, 5, "east")}
+
+
+def hw_tower_storey(d, k, y, m):
+    """One bunk storey of the Hearthwood round tower; k = storey number, each has its own use."""
+    BARU = "barrel[facing=up,open=false]"
+    CHS = lambda f: f"chest[facing={f},type=single,waterlogged=false]"
+    if k == 1:                                  # men-at-arms dormitory: footlockers, weapon rack, red rug
+        order, col = ("N1", "N2", "S1", "S2", "E1", "E2"), "red"
+    elif k == 2:                                # mess room with bunks: table, stove and kegs
+        order, col = ("E1", "E2", "S1", "S2", "N1", "N2"), "blue"
+    elif k == 3:                                # archers' loft: fletching bench, practice target, arrow barrels
+        order, col = ("N1", "N2", "E1", "E2", "S1", "S2"), "green"
+    else:                                       # sergeant's floor: map table, lectern, bookshelf
+        order, col = ("S1", "S2", "E1", "E2", "N1", "N2"), "white"
+    used = order[:m]
+    for s in used:
+        d.bed(HWS[s][0], y, HWS[s][1], HWS[s][2], col)
+    free = lambda s: s not in used
+    if k == 1:
+        d.set(4, y, 1, CHS("south"))
+        d.set(4, y, 7, CHS("north"))
+        weapon_rack(d, [(7, 4)], y, "spruce")
+        if free("E1"):
+            d.set(7, y, 3, BARU)
+            d.set(7, y, 5, CHS("west"))
+        d.set(2, y, 2, BARU)
+        d.set(6, y, 2, SL("spruce", "top"))
+        d.candle(6, y + 1, 2, 2)
+        d.set(2, y, 6, SL("spruce", "top"))
+        d.set(2, y + 1, 6, "potted_red_tulip")
+        d.rug(3, 3, 5, 5, y, ["red_carpet", "white_carpet"])
+        d.banner(1, y + 2, 3, "east", "red")
+        d.banner(1, y + 2, 5, "east", "white")
+        d.lamp(4, y + 2, 4)
+    elif k == 2:
+        d.table(4, y, 4, "spruce")
+        d.chair(4, y, 3, "north", "spruce", sit=False)
+        d.chair(4, y, 5, "south", "spruce", sit=False)
+        d.keg(2, y, 2, "east")
+        d.set(2, y + 1, 2, BARU)
+        d.keg(2, y, 6, "east")
+        d.set(6, y, 6, SL("spruce", "top"))
+        d.set(6, y + 1, 6, "cake[bites=0]")
+        d.set(1, y, 3, CHS("east"))
+        if free("N1"):
+            d.set(3, y, 1, BARU)
+            d.set(4, y, 1, "smoker[facing=south,lit=false]")
+            d.set(5, y, 1, BARU)
+            d.set(4, y + 2, 1, "stone_bricks")
+        else:
+            d.set(4, y, 1, "smoker[facing=south,lit=false]")
+        d.set(6, y, 2, SL("spruce", "top"))
+        d.set(6, y + 1, 2, "decorated_pot[cracked=false,facing=south,waterlogged=false]")
+        d.rug(3, 3, 5, 5, y, ["blue_carpet"], "plain")
+        d.banner(1, y + 2, 5, "east", "blue")
+        d.lamp(4, y + 2, 4)
+    elif k == 3:
+        d.set(4, y, 7, "fletching_table")
+        if free("S2"):
+            d.set(5, y, 7, "hay_block[axis=y]")
+            d.set(5, y + 1, 7, "target")
+        d.set(2, y, 6, BARU)
+        d.set(6, y, 6, BARU)
+        d.set(6, y + 1, 6, "barrel[facing=north,open=false]")
+        d.set(2, y, 2, CHS("east"))
+        d.set(6, y, 2, SL("spruce", "top"))
+        d.set(6, y + 1, 2, "potted_fern")
+        weapon_rack(d, [(1, 3)], y, "spruce")
+        d.set(1, y, 5, CHS("east"))
+        d.rug(3, 3, 5, 5, y, ["green_carpet", "lime_carpet"], "check")
+        d.banner(1, y + 2, 3, "east", "green")
+        d.banner(1, y + 2, 5, "east", "yellow")
+        d.lamp(3, y + 2, 3)
+        d.lamp(5, y + 2, 5)
+    else:
+        d.set(4, y, 1, "cartography_table")
+        d.chair(4, y, 2, "south", "dark_oak", sit=False)
+        if free("N2"):
+            d.set(5, y, 1, "lectern[facing=south,has_book=true,powered=false]")
+        d.set(6, y, 2, "bookshelf")
+        d.set(6, y + 1, 2, "potted_azure_bluet")
+        d.set(2, y, 2, CHS("east"))
+        d.set(2, y, 6, BARU)
+        d.set(6, y, 6, SL("dark_oak", "top"))
+        d.candle(6, y + 1, 6, 3)
+        d.set(1, y, 3, CHS("east"))
+        d.rug(3, 3, 5, 5, y, ["purple_carpet", "light_gray_carpet"])
+        d.banner(1, y + 2, 3, "east", "blue")
+        d.banner(1, y + 2, 5, "east", "purple")
+        d.lamp(4, y + 2, 4)
+
+
 def bt_hearthwood(rel, L):
     n = HW_TST[L]
     top = 4 * n
@@ -496,32 +590,10 @@ def bt_hearthwood(rel, L):
     d.keg(2, 2, 6, "north")
     d.banner(7, 3, 4, "west", "red")
     d.lamp(4, 3, 4)
-    # bunk floors
+    # bunk floors: every storey has its own use, bed colour and furniture (hand-placed per storey)
     per = split(4 * L, n - 1, 6)
     for k in range(1, n):
-        y = 4 * k + 1
-        m = per[k - 1]
-        beds(d, y, HW_BED_SLOTS, m, "red")
-        d.set(1, y, 3, "chest[facing=east,type=single,waterlogged=false]")
-        if m <= 4:
-            weapon_rack(d, [(7, 3), (7, 5)], y, "spruce")
-            d.banner(7, y + 2, 4, "west", "white" if k % 2 else "red")
-        else:
-            d.set(7, y, 4, SL("spruce", "top"))
-            d.candle(7, y + 1, 4, 2)
-        carpet(d, y, [(x, z) for x in range(3, 5 + 1) for z in range(3, 5 + 1)], "red")
-        d.lamp(4, y + 2, 4)
-        # footlockers, shelves, banners
-        for x, z in ((4, 1), (4, 7), (1, 5)):
-            if d.air(x, y, z):
-                d.set(x, y, z, "chest[facing=%s,type=single,waterlogged=false]" % ("south" if z == 1 else "north" if z == 7 else "east"))
-        for x, z in ((6, 2), (2, 2)):
-            if d.air(x, y, z):
-                d.set(x, y, z, SL("spruce", "top"))
-                d.set(x, y + 1, z, "decorated_pot[cracked=false,facing=south,waterlogged=false]" if x == 6 else "potted_red_tulip")
-        put(d, 2, y, 6, "barrel[facing=north,open=false]")
-        for z in (3, 5):
-            put(d, 1, y + 2, z, f"{'red' if z == 3 else 'white'}_wall_banner[facing=east]")
+        hw_tower_storey(d, k, 4 * k + 1, per[k - 1])
     # ground floor: rug and a small table
     carpet(d, 1, [(x, z) for x in range(3, 5 + 1) for z in range(3, 4 + 1)], "red")
     d.table(4, 1, 6, "spruce")
@@ -553,6 +625,80 @@ RIVER = ["cobblestone", "mossy_cobblestone", "andesite", "cobblestone", "tuff", 
 
 def rock(x, y, z):
     return RIVER[(x * 5 + z * 3 + y * 7) % len(RIVER)]
+
+
+def cs_tower_storey(d, k, y, m):
+    """One log storey of the Cascadia blockhouse; beds along the side walls, aisles x=3 / x=5 kept clear,
+    the middle column (x=4) and the gaps between the bed heads hold each storey's own furniture."""
+    BARU = "barrel[facing=up,open=false]"
+    CHS = lambda f: f"chest[facing={f},type=single,waterlogged=false]"
+    col = {1: "brown", 2: "green", 3: "light_gray"}[k]
+    beds(d, y, CS_BED_SLOTS, m, col)
+    used = {(x, z) for x, z, _f in CS_BED_SLOTS[:m]}
+    if k == 1:                                  # bunkhouse: pot-belly stove, washstand, footlockers
+        d.set(4, y, 1, "blast_furnace[facing=south,lit=false]")
+        d.set(4, y + 1, 1, "stone_bricks")
+        d.set(4, y + 2, 1, "cobblestone_wall")
+        d.set(4, y, 7, "water_cauldron[level=3]")
+        d.set(4, y, 6, SL("spruce", "top"))
+        d.set(4, y + 1, 6, "lantern[hanging=false,waterlogged=false]")
+        for x, z in ((1, 2), (1, 6)):
+            d.set(x, y, z, CHS("east"))
+        d.set(7, y, 4, CHS("west"))
+        for x, z in ((7, 2), (7, 6), (1, 4)):
+            d.set(x, y, z, SL("spruce", "top"))
+            d.candle(x, y + 1, z, 1)
+        for x in (3, 5):
+            for z in range(1, 8):
+                put(d, x, y, z, "brown_carpet" if z % 2 else "green_carpet")
+        d.set(3, y + 2, 4, LANT)
+        d.set(5, y + 2, 4, LANT)
+    elif k == 2:                                # gear loft: drying rack of hides, grindstone, coats, barrels
+        d.set(4, y, 1, "grindstone[face=floor,facing=south]")
+        d.set(4, y, 2, BARU)
+        weapon_rack(d, [(4, 6)], y, "spruce")
+        d.set(4, y, 7, "barrel[facing=north,open=false]")
+        d.set(4, y + 1, 7, BARU)
+        for x, z in ((1, 2), (7, 2), (1, 6), (7, 6)):
+            d.set(x, y, z, BARU if (x + z) % 4 else CHS("east" if x == 1 else "west"))
+        d.set(1, y, 4, CHS("east"))
+        d.set(7, y, 4, "smithing_table") if (7, 5) in used else d.set(7, y, 4, BARU)
+        for x, z in ((1, 5), (7, 5)):
+            if (x, z) not in used:
+                d.set(x, y, z, "hay_block[axis=x]")
+        for z in (1, 3, 5, 7):
+            put(d, 3, y, z, "green_carpet")
+            put(d, 5, y, z, "green_carpet")
+        for z in (2, 6):
+            d.set(3, y + 2, z, "white_wool")             # hides hung from the joists
+            d.set(5, y + 2, z, "brown_wool")
+        d.set(4, y + 2, 3, LANT)
+    else:                                       # lookout quarters: map table, spyglass desk, bookshelf
+        d.set(4, y, 1, "cartography_table")
+        d.chair(4, y, 2, "south", "spruce", sit=False)
+        d.set(4, y, 6, "lectern[facing=north,has_book=true,powered=false]")
+        d.set(4, y, 7, "bookshelf")
+        d.set(4, y + 1, 7, "bookshelf")
+        for x, z in ((1, 2), (7, 2)):
+            d.set(x, y, z, CHS("east" if x == 1 else "west"))
+        d.set(1, y, 4, SL("spruce", "top"))
+        d.set(1, y + 1, 4, "potted_fern")
+        d.set(7, y, 4, "bell[attachment=floor,facing=west,powered=false]")
+        for x, z in ((1, 6), (7, 6)):
+            d.set(x, y, z, SL("dark_oak", "top"))
+            d.candle(x, y + 1, z, 2)
+        for x, z in ((1, 5), (7, 5)):
+            if (x, z) not in used:
+                d.set(x, y, z, BARU)
+        for z in range(1, 8):
+            put(d, 3, y, z, "blue_carpet" if z in (1, 7) else "white_carpet")
+            put(d, 5, y, z, "blue_carpet" if z in (1, 7) else "white_carpet")
+        d.set(4, y + 2, 3, LANT)
+        d.set(4, y + 2, 7, LANT) if False else None
+        d.set(3, y + 2, 6, LANT)
+        d.set(5, y + 2, 6, LANT)
+    put(d, 4, y + 2, 7, "green_wall_banner[facing=north]") if k != 3 else None
+    put(d, 4, y + 2, 1, "white_wall_banner[facing=south]") if k == 2 else None
 
 
 def bt_cascadia(rel, L):
@@ -622,23 +768,10 @@ def bt_cascadia(rel, L):
     put(d, 6, 2, 4, "decorated_pot[cracked=false,facing=west,waterlogged=false]")
     put(d, 5, 3, 6, "green_wall_banner[facing=north]") if False else None
     weapon_rack(d, [(2, 4)], 1, "spruce") if d.air(2, 1, 4) else None
-    # bunk rooms
+    # bunk rooms: every storey its own use
     per = split(4 * L, nu, 8)
     for k in range(1, nu + 1):
-        y = 4 * k + 1
-        beds(d, y, CS_BED_SLOTS, per[k - 1], "brown")
-        for x, z in ((1, 2), (1, 6), (7, 4)):                    # footlockers between the bunks
-            d.set(x, y, z, "chest[facing=%s,type=single,waterlogged=false]" % ("east" if x == 1 else "west"))
-        d.set(3, y + 2, 4, LANT)
-        d.set(5, y + 2, 6, LANT)
-        for x in (3, 5):
-            for z in (1, 2, 3, 6, 7):
-                put(d, x, y, z, "brown_carpet" if z % 2 else "green_carpet")
-        put(d, 4, y, 1, "green_carpet")
-        put(d, 4, y + 2, 7, "green_wall_banner[facing=north]")
-        put(d, 4, y + 2, 1, "white_wall_banner[facing=south]")
-        put(d, 4, y + 1, 6, "spruce_trapdoor[facing=south,half=top,open=true,powered=false,waterlogged=false]") \
-            if False else None
+        cs_tower_storey(d, k, 4 * k + 1, per[k - 1])
     return d
 
 

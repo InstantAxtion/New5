@@ -1,5 +1,49 @@
 {
  "farms": {
+  "decorations/animalfarms/chickencooker.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "expect": {
+    "minecraft:cooked_chicken": 2
+   },
+   "inputs": {
+    "0,4,6": [
+     [
+      "minecraft:egg",
+      16
+     ]
+    ]
+   },
+   "mine": [],
+   "outputs": [
+    "-2,1,8"
+   ],
+   "presses": [],
+   "spawns": [
+    [
+     "minecraft:chicken",
+     0,
+     2,
+     8,
+     1
+    ],
+    [
+     "minecraft:chicken",
+     0,
+     2,
+     9,
+     2
+    ],
+    [
+     "minecraft:chicken",
+     -2,
+     5,
+     5,
+     3
+    ]
+   ],
+   "ticks": 3000
+  },
   "decorations/animalfarms/woolfarm.blueprint": {
    "blocks": [],
    "blocks_min": 0,
@@ -95,7 +139,7 @@
      1
     ]
    ],
-   "ticks": 8000
+   "ticks": 10000
   },
   "decorations/cropfarms/bamboo.blueprint": {
    "blocks": [],
@@ -112,96 +156,37 @@
    "spawns": [],
    "ticks": 6000
   },
-  "decorations/cropfarms/kelp.blueprint": {
-   "blocks": [
-    [
-     -6,
-     5,
-     7,
-     "minecraft:water"
-    ],
-    [
-     -5,
-     5,
-     7,
-     "minecraft:water"
-    ],
-    [
-     -4,
-     5,
-     7,
-     "minecraft:water"
-    ],
-    [
-     -3,
-     5,
-     7,
-     "minecraft:water"
-    ],
-    [
-     -2,
-     5,
-     7,
-     "minecraft:water"
-    ],
-    [
-     -1,
-     5,
-     7,
-     "minecraft:water"
-    ],
-    [
-     0,
-     5,
-     7,
-     "minecraft:water"
-    ],
-    [
-     1,
-     5,
-     7,
-     "minecraft:water"
-    ],
-    [
-     2,
-     5,
-     7,
-     "minecraft:water"
-    ],
-    [
-     3,
-     5,
-     7,
-     "minecraft:water"
-    ],
-    [
-     4,
-     5,
-     7,
-     "minecraft:water"
-    ],
-    [
-     5,
-     5,
-     7,
-     "minecraft:water"
-    ],
-    [
-     6,
-     5,
-     7,
-     "minecraft:water"
-    ]
-   ],
-   "blocks_min": 99,
+  "decorations/cropfarms/cocoa.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
    "expect": {
-    "minecraft:kelp": 10
+    "minecraft:cocoa_beans": 30
    },
    "inputs": {},
    "mine": [],
    "outputs": [
-    "-6,1,7",
-    "6,1,7"
+    "5,1,9"
+   ],
+   "presses": [
+    [
+     6,
+     2,
+     4
+    ]
+   ],
+   "spawns": [],
+   "ticks": 600
+  },
+  "decorations/cropfarms/kelp.blueprint": {
+   "blocks": [],
+   "blocks_min": 0,
+   "expect": {
+    "minecraft:kelp": 20
+   },
+   "inputs": {},
+   "mine": [],
+   "outputs": [
+    "7,1,7"
    ],
    "presses": [],
    "spawns": [],

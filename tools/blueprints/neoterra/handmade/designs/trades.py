@@ -1325,7 +1325,12 @@ def saw_neo(rel, L):
         [("s", 4, 11, "chest[facing=east,type=single,waterlogged=false]"), ("s", 4, 12, pot(3)),
          ("G", 7, 7, FL, 6), ("G", 11, 7, FL, 6), ("G", 7, 11, FL, 6), ("G", 11, 11, FL, 6)] +
         ([("G", 16, 7, FL, 6), ("G", 16, 11, FL, 6), ("s", 18, 12, lg("birch_log", "x")),
-          ("s", 19, 12, lg("birch_log", "x")), ("o", 18, 12, lg("birch_log", "x"))] if L >= 2 else []), "mangrove")
+          ("s", 19, 12, lg("birch_log", "x")), ("o", 18, 12, lg("birch_log", "x")),
+          # blade-sharpening corner and sawdust bins at the out-feed end
+          ("s", 20, 5, "grindstone[face=floor,facing=west]"), ("s", 19, 5, "anvil[facing=north]"),
+          ("s", 17, 5, "chest[facing=south,type=single,waterlogged=false]"),
+          ("s", 20, 12, "barrel[facing=up,open=false]"), ("s", 17, 12, "barrel[facing=up,open=false]")]
+         if L >= 2 else []), "mangrove")
     for x in range(6, 8 + n):
         d.set(x, 1, 8, "orange_concrete")
         d.set(x, 1, 10, "orange_concrete")
@@ -1389,12 +1394,23 @@ def saw_neo(rel, L):
             [("s", x, 21, "birch_planks") for x in (26, 27, 28, 29)] +
             [("o", x, 21, sl("birch")) for x in (26, 27, 28, 29)] +
             [("s", x, 23, lg("stripped_birch_log", "x")) for x in (26, 27, 28)] +
-            [("G", 27, 19, "pearlescent_froglight[axis=y]"), ("G", 29, 22, "pearlescent_froglight[axis=y]")])
-        for s_ in range(1, k.storeys):
-            yy = k.stand(s_)
-            fit(d, yy, [("s", x, z, "birch_planks") for x in (26, 27, 28, 29) for z in (20, 23)] +
-                [("o", x, z, "stripped_birch_wood[axis=x]") for x in (26, 28) for z in (20, 23)] +
-                [("G", 27, 22, "pearlescent_froglight[axis=y]")])
+            # kiln heaters on the back wall, moisture-log barrels, chest of finished boards
+            [("s", 24, 24, "blast_furnace[facing=north,lit=false]"), ("s", 26, 24, "blast_furnace[facing=north,lit=false]"),
+             ("s", 25, 24, sl("smooth_stone", "top")), ("s", 31, 18, "chest[facing=west,type=single,waterlogged=false]"),
+             ("s", 31, 19, "barrel[facing=west,open=false]"),
+             ("G", 27, 19, "pearlescent_froglight[axis=y]"), ("G", 29, 22, "pearlescent_froglight[axis=y]")])
+        # drying floor 1: two long board racks (boards on stickers) across the room
+        fit(d, k.stand(1), [("s", x, z, sl("birch", "top")) for x in range(25, 31) for z in (19, 22)] +
+            [("o", x, z, "birch_planks" if x % 2 else sl("birch")) for x in range(25, 31) for z in (19, 22)] +
+            [("s", 31, 24, "barrel[facing=up,open=false]"), ("s", 24, 24, "barrel[facing=up,open=false]"),
+             ("G", 27, 20, "pearlescent_froglight[axis=y]"), ("G", 28, 23, "pearlescent_froglight[axis=y]")])
+        if k.storeys > 2:                                            # drying floor 2: short racks along z, fans
+            fit(d, k.stand(2), [("s", x, z, sl("mangrove", "top")) for x in (26, 29) for z in range(18, 24)] +
+                [("o", x, z, "mangrove_planks" if z % 2 else sl("mangrove")) for x in (26, 29) for z in range(18, 24)] +
+                [("s", 31, 18, "iron_trapdoor[facing=west,half=bottom,open=true,powered=false,waterlogged=false]"),
+                 ("s", 31, 23, "iron_trapdoor[facing=west,half=bottom,open=true,powered=false,waterlogged=false]"),
+                 ("s", 24, 24, "chest[facing=north,type=single,waterlogged=false]"),
+                 ("G", 27, 21, "pearlescent_froglight[axis=y]")])
         for x in (23, 26, 29):                                        # roof vents
             d.set(x, k.yr + 1, 20, "campfire[facing=north,lit=false,signal_fire=false,waterlogged=false]")
             d.set(x, k.yr + 1, 22, tr("iron", "north", "bottom"))
@@ -1417,7 +1433,13 @@ def saw_neo(rel, L):
             d.set(10, y, 21, CHAIN)
         d.set(10, 5, 21, lg("birch_log", "x"))
         log_pile(d, 3, 21, 9, 25, y0, 3, "birch_log", "x")
-        log_pile(d, 11, 21, 18, 25, y0, 2, "dark_oak_log", "x")
+        log_pile(d, 11, 21, 18, 25, y0, 3, "dark_oak_log", "x")
+        wagon(d, 6, 27, y0, "mangrove", lg("birch_log", "x"))          # log wagon in the loading lane
+        sawhorse(d, 13, 27, y0, "birch")
+        d.set(18, y0, 27, "barrel[facing=up,open=false]")
+        for x in (6, 14):
+            for z in (19, 27):
+                d.set(x, 9, z, SLANT)
         for z in (28, 31):
             for x in (24, 30):
                 d.set(x, y0, z, "moss_block")
@@ -1480,8 +1502,18 @@ def saw_hw(rel, L):
         ("s", 6, zz, "chest[facing=north,type=single,waterlogged=false]"), ("s", 10, zz, "oak_planks"),
         ("o", 10, zz, sl("oak")), ("s", 11 if sto == 1 else 13, 5 if sto == 1 else 14, pot(2)),
         ("L", 9, 6), ("L", 9, 10)], "oak")
+    if L >= 2:                                                       # under the eaves: rain butt, firewood, bins
+        d.set(3, y0, 6, "water_cauldron[level=3]")
+        for z in (10, 11):
+            d.set(3, y0, z, lg("oak_log", "z"))
+            d.set(3, y0 + 1, z, lg("oak_log", "z"))
+        d.set(3, y0, 14, "barrel[facing=up,open=false]")
+        for z in (6, 13, 14):                                        # sawdust bins on the race bank
+            d.set(15, y0, z, "barrel[facing=up,open=false]")
     if sto >= 2:                                                     # sack floor over the saws
         fit(d, 6, [("r", 5, z, 1) for z in (6, 7)[:L - racks]] + [
+            ("s", 6, 5, "barrel[facing=south,open=false]"), ("s", 7, 5, "barrel[facing=south,open=false]"),
+            ("o", 6, 5, "barrel[facing=up,open=false]"), ("s", 11, zz, "barrel[facing=north,open=false]"),
             ("s", 6, zz, "white_wool"), ("s", 7, zz, "brown_wool"), ("o", 6, zz, "white_wool"),
             ("s", 9, zz, "hay_block[axis=y]"), ("s", 5, zz, "chest[facing=east,type=single,waterlogged=false]"),
             ("L", 8, 10)])
@@ -1489,7 +1521,10 @@ def saw_hw(rel, L):
         racks = L
     if sto >= 3:                                                     # grain & sack loft
         fit(d, 10, [("s", 6, zz, "hay_block[axis=y]"), ("o", 6, zz, "hay_block[axis=y]"), ("s", 7, zz, "white_wool"),
-                    ("s", 5, 9, "brown_wool"), ("s", 5, 10, "white_wool"), ("L", 8, 10)])
+                    ("s", 5, 9, "brown_wool"), ("s", 5, 10, "white_wool"), ("L", 8, 10),
+                    ("s", 5, 5, "barrel[facing=up,open=false]"), ("s", 6, 5, "barrel[facing=up,open=false]"),
+                    ("s", 9, 7, "oak_fence"), ("o", 9, 7, "oak_pressure_plate[powered=false]"),
+                    ("c", 9, 8, "south", False), ("s", 10, zz, "chest[facing=north,type=single,waterlogged=false]")], "oak")
     if L >= 4:
         spot_trees(d, [(1, 18), (1, 24), (14, 27)], "oak", 4)
     if L >= 5:
@@ -1529,14 +1564,20 @@ def saw_hw(rel, L):
     if L >= 4:
         c = build(d, 20, 15, 30, 25, 2, roof="gable", axis="z", core=(28, 17))
         c.opening(24, 15, 26, 15, 3, lg("stripped_oak_log", "x"))
-        for z in (16, 20, 24, 28):
+        for z in ((16, 20, 24, 28) if L < 5 else (28,)):
             lamp_post(d, 32, z, y0, P)
         # drying barn: plank stacks on bearers in two rows each floor
         fit(d, y0, [("i", 21, 24, "domum_ornamentum:architectscutter", "east")] +
             [("s", x, 20, "oak_planks") for x in (22, 23, 24, 25)] + [("o", x, 20, "oak_planks") for x in (22, 24)] +
-            [("s", x, 23, lg("stripped_oak_log", "x")) for x in (23, 24, 25)] + [("L", 25, 18), ("L", 25, 22)])
+            [("s", x, 23, lg("stripped_oak_log", "x")) for x in (23, 24, 25)] + [("L", 25, 18), ("L", 25, 22),
+             ("s", 21, 18, "barrel[facing=east,open=false]"), ("s", 21, 19, "barrel[facing=east,open=false]")])
+        # drying loft: boards on stickers in three racks, a pulley over the hatch
         fit(d, 6, [("s", x, 23, "oak_planks") for x in (22, 23, 24, 25)] + [("o", x, 23, sl("oak")) for x in (22, 23)] +
-            [("s", x, 19, "spruce_planks") for x in (23, 24, 25)] + [("L", 25, 21)])
+            [("s", x, 19, "spruce_planks") for x in (23, 24, 25)] +
+            [("s", x, 21, sl("oak", "top")) for x in range(22, 27)] +
+            [("o", x, 21, "oak_planks" if x % 2 else sl("spruce")) for x in range(22, 27)] +
+            [("s", 21, 17, "barrel[facing=up,open=false]"), ("s", 29, 24, "chest[facing=west,type=single,waterlogged=false]"),
+             ("L", 25, 21)])
     if L >= 5:
         e = build(d, 3, 19, 13, 27, 2, roof="gable", axis="x", core=(4, 21))
         e.opening(7, 19, 9, 19, 3, lg("stripped_oak_log", "x"))
@@ -1548,6 +1589,24 @@ def saw_hw(rel, L):
                    ("s", 11, 26, "oak_planks"), ("o", 11, 26, sl("oak")), ("s", 9, 23, lg("stripped_oak_log", "x")),
                    ("s", 10, 23, lg("stripped_oak_log", "x")), ("s", 12, 21, pot(2)), ("L", 9, 24)], "oak")
     if L >= 5:
+        # log lean-to on the drying barn's east wall
+        for z in range(15, 26):
+            d.set(31, 6, z, sl("oak", "top"))
+            d.set(32, 6, z, sl("oak"))
+        for z in (15, 20, 25):
+            d.fill(32, y0, z, 32, 5, z, lg("stripped_oak_log", "y"))
+        log_pile(d, 31, 16, 32, 19, y0, 3, "oak_log", "z")
+        log_pile(d, 31, 21, 32, 24, y0, 3, "birch_log", "z")
+        d.set(31, 5, 20, LANT)
+        # roofed footbridge over the race between the mill yard and the cart shed
+        for z in (17, 18):
+            for x in (15, 16, 17, 18):
+                d.set(x, y0, z, sl("oak", "top") if x in (16, 17) else "oak_planks")
+                d.set(x, 6, z, sl("oak"))
+        for x in (15, 18):
+            for z in (17, 18):
+                d.fill(x, y0 + 1, z, x, 5, z, "oak_fence" if z == 18 else lg("stripped_oak_log", "y"))
+        d.set(16, 5, 17, LANT)
         for x in (19, 22, 25, 28):
             lamp_post(d, x, 27, y0, P)
         lamp_post(d, 13, 29, y0, P)
@@ -1605,7 +1664,8 @@ def saw_cas(rel, L):
                         d.set(cx + dx, y, cz + dz, b_)
         for k in (0, 1):
             d.set(cx, y0 + k, cz - 3, AIR)
-        d.set(cx, y0, cz, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
+        for fx, fz in ((cx, cz), (cx - 1, cz), (cx + 1, cz), (cx, cz + 1)):   # the fire bed
+            d.set(fx, y0, fz, "campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]")
         for z in range(z1 + 4, cz - 3):                               # sawdust conveyor on trestles
             d.set(24, 4, z, "smooth_stone_slab[type=bottom,waterlogged=false]")
         log_pile(d, 1, 17, 8, 19, y0, 3, "spruce_log", "x")
@@ -1639,9 +1699,23 @@ def saw_cas(rel, L):
                     ("s", 8, 25, "spruce_planks"), ("s", 9, 25, lg("stripped_spruce_log", "x")),
                     ("s", 10, 25, "grindstone[face=floor,facing=north]"), ("s", 11, 25, lg("stripped_spruce_log", "x")),
                     ("s", 12, 25, "spruce_planks"), ("s", 12, 28, "spruce_planks"), ("o", 12, 28, sl("spruce")),
-                    ("s", 11, 28, "dark_oak_planks"), ("L", 9, 23), ("L", 10, 27)], "spruce")
+                    ("s", 11, 28, "dark_oak_planks"), ("L", 9, 23), ("L", 10, 27),
+                    ("s", 5, 23, "barrel[facing=east,open=false]"), ("o", 5, 23, "barrel[facing=up,open=false]"),
+                    ("s", 5, 24, "barrel[facing=east,open=false]"), ("s", 5, 26, "grindstone[face=floor,facing=east]"),
+                    ("s", 8, 28, "spruce_planks"), ("o", 8, 28, sl("spruce")),
+                    ("s", 9, 28, "chest[facing=north,type=single,waterlogged=false]")], "spruce")
+        d.set(3, y0, 23, "water_cauldron[level=3]")                  # rain barrel and firewood under the eaves
+        for z in (25, 26, 27):
+            d.set(3, y0, z, lg("spruce_log", "z"))
+            d.set(3, y0 + 1, z, lg("spruce_log", "z")) if z != 27 else None
+        crate_stack(d, 17, 24, y0, 2)                                # crates and a bench along the other eaves
+        d.set(17, y0, 25, "barrel[facing=up,open=false]")
+        bench(d, 11, 30, y0, "north", 2, "spruce", sit=False)
         fit(d, 6, [("s", x, 27, "spruce_planks") for x in (6, 7, 8, 9)] + [("o", x, 27, "dark_oak_planks") for x in (6, 7)] +
-            [("s", x, 24, "stripped_spruce_wood[axis=x]") for x in (7, 8, 9)] + [("L", 10, 25)])
+            [("s", x, 24, sl("spruce", "top")) for x in range(6, 11)] +
+            [("o", x, 24, "spruce_planks" if x % 2 else sl("dark_oak")) for x in range(6, 11)] +
+            [("s", 12, 28, "barrel[facing=north,open=false]"), ("s", 13, 28, "chest[facing=north,type=single,waterlogged=false]"),
+             ("s", 5, 22, "barrel[facing=up,open=false]"), ("L", 10, 25), ("L", 7, 26)])
     # ---- bunkhouse and log flume (L5)
     if L >= 5:
         e = build(d, 19, 22, 25, 31, 2, roof="gable", axis="z", core=(20, 24), chimney=(24, 28, "west"))

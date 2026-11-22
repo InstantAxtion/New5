@@ -498,3 +498,433 @@ def cas_stop(pack, rel):
     post_sign(d, 2, 3, 13, 8, ["To depart", "press the", "button on", "the buffer"], "spruce")
     d.hut(6, 2, 13)
     return d
+
+
+# ================================================================================================ CANALS
+CANAL_STYLE = {
+    #            quay wall              bed                  coping                     towpath
+    "Neoterra": ("light_gray_concrete", "cyan_terracotta", "smooth_stone", "polished_andesite"),
+    "Hearthwood": ("bricks", "clay", "stone_bricks", "dirt_path"),
+    "Cascadia": (log("spruce_log", "z"), None, None, "coarse_dirt"),
+}
+RIVER_ROCK = ("cobblestone", "mossy_cobblestone", "andesite", "cobblestone", "tuff")
+
+
+def canal_rows(d, rows, z0=0, y=CANAL_GY):
+    """Lay the channel from a hand-drawn map (T towpath, C coping/quay, W water): bed at y-2, water at y-1, the
+    ground layer at y. Cascadia's quays are log cribs (logs laid along the bank) with a river-rock bed."""
+    quay, bed, coping, tow = CANAL_STYLE[d.pack]
+    for dz, row in enumerate(rows):
+        z = z0 + dz
+        for x, ch in enumerate(row):
+            if d.pack == "Cascadia":
+                along_z = 0 < x < 8 and (row[x - 1] == "W" or row[x + 1] == "W") if ch == "C" else False
+                along_x = (0 < dz < len(rows) - 1 and (rows[dz - 1][x] == "W" or rows[dz + 1][x] == "W")
+                           if ch == "C" else False)
+                ax = "y" if along_z and along_x else ("z" if along_z else "x")
+                quay = log("spruce_log", ax if ax != "y" else "y")
+                coping = log("stripped_spruce_log", ax)
+                bed = RIVER_ROCK[(x * 3 + z * 7) % len(RIVER_ROCK)]
+            if ch == "T":
+                d.set(x, y, z, tow)
+            elif ch == "C":
+                for yy in range(y - 2, y):
+                    d.set(x, yy, z, quay)
+                d.set(x, y, z, coping)
+            elif ch == "W":
+                d.set(x, y - 2, z, bed)
+                d.set(x, y - 1, z, WATER)
+                d.set(x, y, z, AIR)
+
+
+def railing(d, cells, y):
+    """Neoterra glass balustrade / Cascadia rail fence on the listed coping cells."""
+    blk = {"Neoterra": "glass_pane", "Cascadia": "spruce_fence"}.get(d.pack)
+    if blk:
+        for x, z in cells:
+            d.set(x, y, z, blk)
+
+
+def neo_canal_light(d, x, z, y=3, bars=2):
+    """Slim column light: andesite foot, bar shaft, sea-lantern head."""
+    d.set(x, y, z, "polished_andesite")
+    for k in range(bars):
+        d.set(x, y + 1 + k, z, "iron_bars")
+    d.set(x, y + 1 + bars, z, "sea_lantern")
+
+
+def hw_lamp(d, x, z, y=3):
+    d.set(x, y, z, wall("polished_deepslate"))
+    d.set(x, y + 1, z, wall("polished_deepslate"))
+    d.set(x, y + 2, z, LANTERN)
+
+
+@design("canalstraight")
+def canalstraight(pack, rel, L):
+    d = Design(pack, rel, (9, 7, 8), gy=CANAL_GY)
+    canal_rows(d, [CANAL_ROW] * 8)
+    if pack == "Neoterra":
+        railing(d, [(x, z) for x in (1, 7) for z in range(8) if (x, z) != (7, 4)], 3)
+        neo_canal_light(d, 7, 4)
+        d.set(0, 2, 3, "sea_lantern")            # flush towpath lights
+        d.set(8, 2, 7, "sea_lantern")
+    elif pack == "Hearthwood":
+        hw_lamp(d, 1, 2)
+        d.set(7, 3, 1, wall("deepslate_tile"))   # mooring bollards
+        d.set(7, 3, 5, wall("deepslate_tile"))
+        d.set(1, 3, 6, wall("diorite"))          # white mile post
+        d.set(1, 4, 6, slab("smooth_stone"))
+        d.set(8, 3, 3, "short_grass")
+    else:
+        railing(d, [(x, z) for x in (1, 7) for z in range(8) if (x, z) != (7, 5)], 3)
+        d.set(1, 4, 3, LANTERN)                  # lantern on a fence post
+        d.set(7, 3, 5, log("spruce_log"))        # mooring piling
+        d.set(7, 4, 5, log("spruce_log"))
+        d.set(0, 3, 6, "fern")
+    d.anchor(4, CANAL_GY, 0)
+    return d
+
+
+CORNER_MAP = ["TCWWWWWCT",
+              "TCWWWWWCC",
+              "TCWWWWWWW",
+              "TCWWWWWWW",
+              "TCWWWWWWW",
+              "TCWWWWWWW",
+              "TCCWWWWWW",
+              "TCCCCCCCC",
+              "TTTTTTTTT"]
+
+
+@design("canalcorner")
+def canalcorner(pack, rel, L):
+    d = Design(pack, rel, (9, 7, 9), gy=CANAL_GY)
+    canal_rows(d, CORNER_MAP)
+    outer = [(1, z) for z in range(7)] + [(2, 6)] + [(x, 7) for x in range(1, 9)]
+    inner = [(7, 0), (7, 1), (8, 1)]
+    if pack == "Neoterra":
+        railing(d, [c for c in outer + inner if c != (1, 7)], 3)
+        neo_canal_light(d, 1, 7)
+        d.set(0, 2, 2, "sea_lantern")
+        d.set(5, 2, 8, "sea_lantern")
+    elif pack == "Hearthwood":
+        hw_lamp(d, 1, 7)
+        d.set(7, 3, 1, wall("deepslate_tile"))
+        d.set(1, 3, 2, wall("deepslate_tile"))
+        d.set(6, 3, 7, wall("deepslate_tile"))
+    else:
+        railing(d, outer + inner, 3)
+        d.set(1, 4, 7, LANTERN)
+        d.set(8, 4, 1, LANTERN)
+        d.set(0, 3, 8, "fern")
+    d.anchor(4, CANAL_GY, 0)
+    return d
+
+
+CROSS_MAP = ["TCWWWWWCT",
+             "CCWWWWWCC",
+             "WWWWWWWWW",
+             "WWWWWWWWW",
+             "WWWWWWWWW",
+             "WWWWWWWWW",
+             "WWWWWWWWW",
+             "CCWWWWWCC",
+             "TCWWWWWCT"]
+
+FOOTBRIDGE = {"Neoterra": ("polished_diorite", "polished_diorite"), "Hearthwood": ("brick", "bricks"),
+              "Cascadia": ("spruce", "spruce_planks")}
+
+
+def footbridge(d, cells, up, down):
+    """Hump footbridge over one arm: cells = the 7 cells from island to island; deck at y 4 over the 3 middle
+    water cells, stairs up at both ends, arch springers under the first and last water cells."""
+    st, deck = FOOTBRIDGE[d.pack]
+    (a, b, c, e, f, g, h) = cells
+    d.set(a[0], 3, a[1], stairs(st, up))
+    d.set(b[0], 4, b[1], stairs(st, up))
+    for x, z in (c, e, f):
+        d.set(x, 4, z, deck)
+    d.set(g[0], 4, g[1], stairs(st, down))
+    d.set(h[0], 3, h[1], stairs(st, down))
+    d.set(b[0], 3, b[1], stairs(st, down, "top"))
+    d.set(g[0], 3, g[1], stairs(st, up, "top"))
+
+
+@design("canalintersection")
+def canalintersection(pack, rel, L):
+    d = Design(pack, rel, (9, 7, 9), gy=CANAL_GY)
+    canal_rows(d, CROSS_MAP)
+    footbridge(d, [(x, 0) for x in range(1, 8)], "east", "west")      # north arm
+    footbridge(d, [(x, 8) for x in range(1, 8)], "east", "west")      # south arm
+    footbridge(d, [(0, z) for z in range(1, 8)], "south", "north")    # west arm
+    footbridge(d, [(8, z) for z in range(1, 8)], "south", "north")    # east arm
+    if pack == "Neoterra":
+        neo_canal_light(d, 1, 1)
+        neo_canal_light(d, 7, 7)
+        for x, z in ((7, 1), (1, 7)):
+            d.set(x, 3, z, "moss_block")
+            d.set(x, 4, z, "azalea")
+        for x, z in ((0, 0), (8, 8)):
+            d.set(x, 2, z, "sea_lantern")
+    elif pack == "Hearthwood":
+        hw_lamp(d, 1, 1)
+        hw_lamp(d, 7, 7)
+        d.set(7, 3, 1, wall("deepslate_tile"))
+        d.set(1, 3, 7, wall("deepslate_tile"))
+    else:
+        for x, z in ((1, 1), (7, 7)):
+            d.set(x, 3, z, log("spruce_log"))
+            d.set(x, 4, z, log("spruce_log"))
+            d.set(x, 5, z, LANTERN)
+        for x, z in ((7, 1), (1, 7)):
+            d.set(x, 3, z, log("spruce_log"))
+    d.anchor(4, CANAL_GY, 0)
+    return d
+
+
+LOCK_WOOD = {"Neoterra": "mangrove", "Hearthwood": "dark_oak", "Cascadia": "spruce"}
+
+
+@design("canallock")
+def canallock(pack, rel, L):
+    d = Design(pack, rel, (9, 7, 12), gy=CANAL_GY)
+    quay, bed, coping, tow = CANAL_STYLE[pack]
+    g = LOCK_GATE_Z
+    canal_rows(d, [CANAL_ROW] * (g + 1))                         # lower reach z 0..5
+    canal_rows(d, [CANAL_ROW] * (11 - g), z0=g + 1, y=CANAL_GY + LOCK_STEP)   # upper reach, one higher
+    for z in range(g + 1, 12):
+        for x in (0, 8):
+            d.set(x, CANAL_GY, z, SOLID)                         # raised towpath sits on ground fill
+        for x in range(2, 7):
+            d.set(x, 0, z, d.get(x, 1, z))                       # bed under the raised bed (sill / step)
+    # towpath steps up at the sill
+    step = {"Neoterra": "polished_andesite", "Hearthwood": "cobblestone", "Cascadia": "spruce"}[pack]
+    for x in (0, 8):
+        d.set(x, 3, g + 1, stairs(step, "south"))
+    # the lock gates: a closed row of fence gates holding back the upper water
+    for x in range(2, 7):
+        d.set(x, 2, g, gate(LOCK_WOOD[pack]))
+    post = {"Neoterra": "light_gray_concrete", "Hearthwood": log("stripped_dark_oak_log"),
+            "Cascadia": log("spruce_log")}[pack]
+    for x in (1, 7):
+        d.set(x, 3, g, post)
+        d.set(x, 4, g, "lever[face=floor,facing=north,powered=false]")   # paddle gear
+    wall_sign(d, 0, 3, g, "west", ["LOCK No. 1", "keep gates", "closed", ""], LOCK_WOOD[pack])
+    if pack == "Neoterra":
+        railing(d, [(x, z) for x in (1, 7) for z in range(g)], 3)
+        railing(d, [(x, z) for x in (1, 7) for z in range(g + 1, 12) if (x, z) != (7, 9)], 4)
+        neo_canal_light(d, 7, 9, y=4, bars=1)
+        d.set(8, 2, 2, "sea_lantern")
+        d.set(0, 3, 9, "sea_lantern")
+    else:
+        beam = log("stripped_birch_log" if pack == "Hearthwood" else "stripped_spruce_log", "z")
+        for x in (1, 7):
+            for z in range(g - 3, g):
+                d.set(x, 3, z, beam)                              # balance beams, swung parallel to the bank
+        if pack == "Hearthwood":
+            hw_lamp(d, 1, 9, y=4)
+            d.set(7, 3, 1, wall("deepslate_tile"))
+            d.set(7, 4, 10, wall("deepslate_tile"))
+        else:
+            railing(d, [(x, z) for x in (1, 7) for z in range(g - 3)], 3)
+            railing(d, [(x, z) for x in (1, 7) for z in range(g + 1, 12)], 4)
+            d.set(7, 5, 9, LANTERN)
+            d.set(1, 5, 9, LANTERN)
+    d.anchor(4, CANAL_GY, 0)
+    return d
+
+
+# ================================================================================================ BRIDGE
+@design("bridgestraight")
+def bridgestraight(pack, rel, L):
+    if pack == "Neoterra":
+        d = Design(pack, rel, (7, 8, 8), gy=0, paving="smooth_stone")
+        for z in range(8):
+            plan(d, 0, ["ASSLSSA"], {"A": "polished_andesite", "S": "smooth_stone", "L": "light_gray_concrete"},
+                 z0=z)
+            for x in (0, 6):
+                post = z in (0, 4)
+                d.set(x, 1, z, "polished_andesite" if post else "glass_pane")
+                d.set(x, 2, z, "polished_andesite" if z == 0 else slab("smooth_stone"))
+        d.set(1, 0, 2, "sea_lantern")            # flush deck lights
+        d.set(5, 0, 6, "sea_lantern")
+        d.set(0, 3, 0, "end_rod[facing=up]")
+        d.set(6, 3, 0, "end_rod[facing=up]")
+    elif pack == "Hearthwood":
+        d = Design(pack, rel, (7, 10, 8), gy=0, paving="cobblestone")
+        for z in range(8):
+            plan(d, 0, ["KKcccKK"], {"K": "stone_bricks", "c": "cobblestone"}, z0=z)
+            for x in (0, 6):
+                d.set(x, 1, z, "stone_bricks")
+                d.set(x, 2, z, slab("stone_brick"))
+        d.set(2, 0, 5, "mossy_cobblestone")
+        d.set(4, 0, 2, "mossy_cobblestone")
+        # lamps on the parapet, staggered: west on the joint, east mid-span
+        for x, z in ((0, 0), (6, 4)):
+            d.set(x, 1, z, "chiseled_stone_bricks")
+            d.set(x, 2, z, wall("polished_deepslate"))
+            d.set(x, 3, z, wall("polished_deepslate"))
+            d.set(x, 4, z, LANTERN)
+    else:
+        d = Design(pack, rel, (7, 10, 8), gy=0, paving="spruce_planks")
+        for z in range(8):
+            plan(d, 0, ["EPPPPPE"], {"E": log("stripped_spruce_log", "z"), "P": "spruce_planks"}, z0=z)
+            for x in (0, 6):
+                if z in (0, 4):
+                    for y in (1, 2, 3):
+                        d.set(x, y, z, log("spruce_log"))       # wall posts
+                else:
+                    d.set(x, 1, z, "spruce_planks")              # kick board
+                    d.set(x, 2, z, "spruce_fence")               # window strip
+                    d.set(x, 3, z, log("stripped_spruce_log", "z"))   # top plate
+            # roof: steep gable over the whole width (shingled dark by the Cascadia roof pass)
+            d.set(0, 4, z, stairs("spruce", "east"))
+            d.set(6, 4, z, stairs("spruce", "west"))
+            d.set(1, 5, z, stairs("spruce", "east"))
+            d.set(5, 5, z, stairs("spruce", "west"))
+            d.set(2, 6, z, stairs("spruce", "east"))
+            d.set(4, 6, z, stairs("spruce", "west"))
+            d.set(3, 6, z, "spruce_planks")
+            d.set(3, 7, z, slab("spruce"))
+        for z in (0, 4):                                         # trusses: tie beam and king post
+            for x in range(1, 6):
+                d.set(x, 4, z, log("stripped_spruce_log", "x"))
+            d.set(3, 5, z, "spruce_fence")
+        d.set(3, 3, 4, HANGING)
+    d.anchor(3, 0, 0)
+    return d
+
+
+@design("bridgestart")
+def bridgestart(pack, rel, L):
+    d = Design(pack, rel, (7, 8, 10), gy=0, paving=SOLID)
+    for z, (t, kind) in enumerate(RAMP):
+        for x in range(1, 6):
+            for y in range(0, t):
+                d.set(x, y, z, SOLID)                            # embankment fill
+        if pack == "Neoterra":
+            walk = {"F": "light_gray_concrete" , "S": slab("smooth_stone")}
+            for x in range(1, 6):
+                d.set(x, t, z, walk[kind] if x == 3 else ("smooth_stone" if kind == "F" else slab("smooth_stone")))
+            for x in (0, 6):
+                for y in range(0, t):
+                    d.set(x, y, z, "light_gray_concrete")
+                d.set(x, t, z, "polished_andesite")
+                d.set(x, t + 1, z, "glass_pane")
+                d.set(x, t + 2, z, slab("smooth_stone"))
+        elif pack == "Hearthwood":
+            for x in range(1, 6):
+                kerb = x in (1, 5)
+                if kind == "F":
+                    d.set(x, t, z, "stone_bricks" if kerb else "cobblestone")
+                else:
+                    d.set(x, t, z, slab("stone_brick") if kerb else slab("cobblestone"))
+            for x in (0, 6):
+                for y in range(0, t + 2):
+                    d.set(x, y, z, "stone_bricks")
+                d.set(x, t + 2, z, slab("stone_brick"))
+        else:
+            for x in range(1, 6):
+                d.set(x, t, z, "spruce_planks" if kind == "F" else slab("spruce"))
+            for x in (0, 6):
+                d.set(x, 0, z, "cobblestone")
+                for y in range(1, t + 1):
+                    d.set(x, y, z, log("spruce_log", "z"))
+                d.set(x, t + 1, z, "spruce_fence")
+    # river face of the abutment (below the deck at z = 9)
+    face = {"Neoterra": "light_gray_concrete", "Hearthwood": "stone_bricks", "Cascadia": log("spruce_log", "x")}[pack]
+    for x in range(7):
+        for y in range(0, RAMP_RISE):
+            d.set(x, y, 9, "cobblestone" if pack == "Cascadia" and y == 0 else face)
+    # bank-end features
+    if pack == "Neoterra":
+        for x in (0, 6):
+            d.set(x, 1, 0, "polished_andesite")
+            d.set(x, 2, 0, "sea_lantern")            # light bollards
+            d.set(x, 3, 0, slab("smooth_stone"))
+        for x in (0, 6):
+            d.set(x, RAMP_RISE + 1, 8, "polished_andesite")    # post where the glass meets the bridge
+    elif pack == "Hearthwood":
+        for x in (0, 6):
+            d.set(x, 1, 0, "stone_bricks")
+            d.set(x, 2, 0, "chiseled_stone_bricks")
+            d.set(x, 3, 0, wall("polished_deepslate"))
+            d.set(x, 4, 0, wall("polished_deepslate"))
+            d.set(x, 5, 0, LANTERN)
+    else:
+        for x in (0, 6):
+            for y in (1, 2, 3):
+                d.set(x, y, 0, log("spruce_log"))
+        for x in range(7):
+            d.set(x, 4, 0, log("spruce_log", "x"))               # portal beam over the entrance
+        d.set(1, 3, 0, HANGING)
+        d.set(5, 3, 0, HANGING)
+        hang_sign(d, 3, 3, 0, 0, ["CASCADIA", "COVERED", "BRIDGE", "walk horses"], "spruce")
+    d.anchor(3, 0, 0)
+    return d
+
+
+@design("bridgepillar")
+def bridgepillar(pack, rel, L):
+    d = Design(pack, rel, (7, 20, 7), gy=0, paving=KEEP)
+    d.fill(0, 0, 0, 6, PILLAR_TOP, 6, KEEP)          # never cut the deck, the abutment or the river
+    top = PILLAR_TOP - 1                              # y 18: directly under the deck
+    if pack == "Neoterra":
+        d.fill(1, 0, 1, 5, 0, 5, "stone")
+        d.fill(1, 1, 1, 5, 1, 5, "polished_andesite")
+        d.fill(2, 2, 2, 4, top - 3, 4, "light_gray_concrete")
+        d.fill(2, 11, 2, 4, 11, 4, "cyan_terracotta")            # accent band
+        d.fill(1, top - 2, 2, 5, top - 2, 4, "white_concrete")
+        d.set(0, top - 2, 3, stairs("polished_diorite", "east", "top"))
+        d.set(6, top - 2, 3, stairs("polished_diorite", "west", "top"))
+        d.fill(0, top - 1, 2, 6, top - 1, 4, "white_concrete")
+        d.fill(0, top, 1, 6, top, 5, "white_concrete")            # hammerhead cap under the deck
+        for z in (1, 5):
+            d.set(0, top - 1, z, stairs("polished_diorite", "south" if z == 1 else "north", "top"))
+            d.set(6, top - 1, z, stairs("polished_diorite", "south" if z == 1 else "north", "top"))
+    elif pack == "Hearthwood":
+        d.fill(0, 0, 1, 6, 1, 5, "stone")                          # footing on the river bed
+        for y in range(2, 15):
+            blk = "mossy_stone_bricks" if y <= 4 else "stone_bricks"
+            d.fill(1, y, 2, 5, y, 4, blk)
+            if y <= 12:
+                d.set(0, y, 3, blk)                                # pointed cutwaters
+                d.set(6, y, 3, blk)
+        d.set(0, 13, 3, stairs("stone_brick", "east"))
+        d.set(6, 13, 3, stairs("stone_brick", "west"))
+        d.fill(0, 14, 2, 6, 14, 4, "chiseled_stone_bricks")        # string course
+        # corbelled haunches widening to the full deck under the joint
+        d.fill(0, 15, 2, 6, 15, 4, "stone_bricks")
+        for x in range(7):
+            d.set(x, 15, 1, stairs("stone_brick", "south", "top"))
+            d.set(x, 15, 5, stairs("stone_brick", "north", "top"))
+            d.set(x, 16, 0, stairs("stone_brick", "south", "top"))
+            d.set(x, 16, 6, stairs("stone_brick", "north", "top"))
+        d.fill(0, 16, 1, 6, 16, 5, "stone_bricks")
+        d.fill(0, 17, 0, 6, top, 6, "stone_bricks")
+    else:
+        plan(d, 0, ["mcAcmcA",
+                    "cmcAccm",
+                    "AccmcAc",
+                    "cAcmcmc",
+                    "mccAcmc"], {"m": "mossy_cobblestone", "c": "cobblestone", "A": "andesite"}, z0=1)
+        d.fill(0, 1, 2, 6, 1, 4, "cobblestone")
+        d.set(0, 1, 3, "mossy_cobblestone")
+        d.set(5, 1, 2, "mossy_cobblestone")
+        d.fill(1, 2, 3, 5, 2, 3, "mossy_cobblestone")
+        for x in (1, 3, 5):                                         # trestle bent: three log posts
+            d.fill(x, 3, 3, x, top - 1, 3, log("spruce_log"))
+        for y in (8, 13):                                           # girts
+            d.fill(0, y, 3, 6, y, 3, log("stripped_spruce_log", "x"))
+        for x, ys in ((2, (4, 5, 10, 15)), (4, (6, 7, 11, 16))):  # lattice of fence braces between the posts
+            for y in ys:
+                d.set(x, y, 3, "spruce_fence")
+        d.fill(0, top, 3, 6, top, 3, log("spruce_log", "x"))       # cap beam
+        for x in (1, 5):                                            # stringers under the deck
+            for z in range(7):
+                if z != 3:
+                    d.set(x, top, z, log("spruce_log", "z"))
+            d.set(x, top - 1, 2, "spruce_fence")
+            d.set(x, top - 1, 4, "spruce_fence")
+    d.anchor(3, PILLAR_TOP, 3)
+    return d

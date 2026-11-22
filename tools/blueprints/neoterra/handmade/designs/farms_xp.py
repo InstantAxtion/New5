@@ -151,7 +151,8 @@ def water_floor(d, w, y0, kind):
                 d.clear(x, y0, z, x, y0 + pitch - 1, z)
             elif k == "arm":
                 d.set(x, y0 + 1, z, WATER if dist == 8 else AIR)          # sources at d=8, else: flow
-                d.clear(x, y0 + 2, z, x, y0 + pitch - 1, z)
+                if pitch > 2:
+                    d.clear(x, y0 + 2, z, x, y0 + pitch - 1, z)
             elif kind == "spider":
                 edge = any(classify(x + a, z + b, w)[0] == "arm" for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1))
                            if (x + a) in xs and (z + b) in zs)
@@ -435,9 +436,6 @@ def spiderfarm(pack, rel, L):
     cells = [(4, 5), (6, 7), (13, 5), (15, 7), (4, 16), (6, 18), (13, 16), (15, 18)]
     spawns = (strip_spawns("minecraft:spider", floors[0] + 1, cells) + strip_spawns("minecraft:spider", floors[2] + 1, cells[::2])
               + [("minecraft:spider", x, y0 + 1, z, 1) for y0 in floors for (x, z) in CHANNEL])
-    import os
-    if os.environ.get("XPDBG"):
-        spawns = [("minecraft:spider", x, floors[0] + 1, z, 2) for (x, z) in CENTRE]
     d.farm_test(expect={"minecraft:string": 3}, spawns=spawns, ticks=6000)
     return d
 

@@ -426,6 +426,7 @@ def cocoa(pack, rel, L):
                                  n="side" if x == 2 else "none"))
     for z in range(5, 10):
         d.set(2, 4, z, dust(n="side", s="side"))
+    d.set(2, 4, 7, "repeater[delay=1,facing=north,locked=false,powered=false]")   # input from the north
     d.set(14, 3, 4, SB)
     d.set(15, 3, 4, button("east"))
     for z in range(5, 10):
