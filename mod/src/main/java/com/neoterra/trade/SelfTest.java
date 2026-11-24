@@ -227,7 +227,7 @@ final class SelfTest
                     finish(level, false);
                     return;
                 }
-                finish(level, checkBlueprints(level) & checkResearch() & checkFreeFastResearch() & checkFreePlacement(level) & checkEntities(level));
+                finish(level, checkBlueprints(level) & checkResearch() & checkFreeFastResearch() & checkFreePlacement(level) & checkEntities(level) & checkFlatten(level));
             }
             default -> { }
         }
@@ -299,6 +299,79 @@ final class SelfTest
         }
         log("research: %d branches 10x faster, %d sampled researches free: %s", branches, checked, ok && checked > 0);
         return ok && checked > 0;
+    }
+
+    /** Leveling Staff: refuses with a chest in the way or without enough fill, then flattens a hill, a pit and a tree. */
+    private boolean checkFlatten(final ServerLevel level)
+    {
+        final net.minecraft.world.level.block.state.BlockState stone = net.minecraft.world.level.block.Blocks.STONE.defaultBlockState();
+        final net.minecraft.world.level.block.state.BlockState air = net.minecraft.world.level.block.Blocks.AIR.defaultBlockState();
+        final int x0 = 1500, z0 = 1500;
+        final int g = ground(level, new BlockPos(x0 + 5, 0, z0 + 5)).getY() + 2;
+        for (int x = x0 - 2; x < x0 + 12; x++)
+        {
+            for (int z = z0 - 2; z < z0 + 12; z++)
+            {
+                level.setChunkForced(x >> 4, z >> 4, true);
+                for (int y = g - 8; y <= g + 12; y++)
+                {
+                    level.setBlock(new BlockPos(x, y, z), y <= g ? stone : air, 2);
+                }
+            }
+        }
+        // hill (4 x 10 x 3 = 120 stone), pit (4 x 10 x 5 = 200 cells), a small tree
+        for (int x = x0; x < x0 + 4; x++)
+            for (int z = z0; z < z0 + 10; z++)
+                for (int y = g + 1; y <= g + 3; y++)
+                    level.setBlock(new BlockPos(x, y, z), stone, 2);
+        for (int x = x0 + 6; x < x0 + 10; x++)
+            for (int z = z0; z < z0 + 10; z++)
+                for (int y = g - 4; y <= g; y++)
+                    level.setBlock(new BlockPos(x, y, z), air, 2);
+        for (int y = g + 1; y <= g + 4; y++)
+            level.setBlock(new BlockPos(x0 + 4, y, z0 + 5), net.minecraft.world.level.block.Blocks.OAK_LOG.defaultBlockState(), 2);
+        final BlockPos chest = new BlockPos(x0 + 5, g + 1, z0 + 2);
+        level.setBlock(chest, net.minecraft.world.level.block.Blocks.CHEST.defaultBlockState(), 3);
+        final FakePlayer p = FakePlayerFactory.get(level, new GameProfile(UUID.nameUUIDFromBytes("Leveler".getBytes()), "Leveler"));
+        p.getInventory().clearContent();
+        final BlockPos a = new BlockPos(x0, g, z0), b = new BlockPos(x0 + 9, g, z0 + 9);
+        final Flattening.Plan withChest = Flattening.plan(level, p, a, b);
+        level.setBlock(chest, air, 3);
+        final Flattening.Plan noFill = Flattening.plan(level, p, a, b);
+        p.getInventory().add(new ItemStack(Items.DIRT, 64));
+        p.getInventory().add(new ItemStack(Items.DIRT, 36));
+        final Flattening.Plan ok = Flattening.plan(level, p, a, b);
+        if (ok.refusal() == null)
+        {
+            Flattening.start(ok, p);
+            Flattening.runAll();
+        }
+        int flat = 0, filled = 0;
+        for (int x = x0; x < x0 + 10; x++)
+        {
+            for (int z = z0; z < z0 + 10; z++)
+            {
+                boolean col = level.getBlockState(new BlockPos(x, g, z)).isSolid();
+                for (int y = g + 1; y <= g + 8; y++)
+                {
+                    col &= level.getBlockState(new BlockPos(x, y, z)).isAir();
+                }
+                flat += col ? 1 : 0;
+                if (x >= x0 + 6)
+                {
+                    for (int y = g - 4; y <= g; y++)
+                    {
+                        filled += level.getBlockState(new BlockPos(x, y, z)).isSolid() ? 1 : 0;
+                    }
+                }
+            }
+        }
+        final int dirtLeft = p.getInventory().countItem(Items.DIRT);
+        final int logs = p.getInventory().countItem(Items.OAK_LOG);
+        log("leveling staff: chest -> %s | no fill -> %s | fill needed %d, flat columns %d/100, pit cells filled %d/200, dirt left %d, oak logs %d",
+            withChest.refusal(), noFill.refusal(), ok.fillNeeded(), flat, filled, dirtLeft, logs);
+        return withChest.refusal() != null && withChest.refusal().contains("container") && noFill.refusal() != null
+            && ok.refusal() == null && ok.fillNeeded() == 200 && flat == 100 && filled == 200 && dirtLeft == 20 && logs == 4;
     }
 
     /** Item frames and armour stands in the player house survive loading through Structurize. */

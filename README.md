@@ -67,6 +67,19 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## Leveling Staff (1.26.0)
+A survival tool that flattens land perfectly. Craft it from a compass over two iron ingots, an iron shovel and a
+stick (iron ingot – compass – iron ingot / iron shovel / stick).
+* **Right-click a block:** first corner – its height becomes the new ground level.
+* **Right-click a second block:** opposite corner; a box shows the area and the new ground level.
+* **Sneak + right-click:** flatten. Everything above the ground level is removed (hills, trees, plants, water) and
+  you get the blocks; holes are filled with natural ground (grass on top, dirt, stone deeper – sand in deserts),
+  using the removed dirt/stone first, then dirt, stone, sand or gravel from your inventory. If you don't have
+  enough it tells you how much to bring and changes nothing. Up to 64 x 64, clears up to 64 blocks up and fills
+  holes up to 32 deep.
+* Never touches chests and other containers, colony huts or unbreakable blocks, spawn protection, or colonies
+  where you may not break blocks.
+
 ## 22 more farms – 51 tested farms in Farmworks (1.25.0)
 * **Plants:** moss, glow berries, sea pickles, pointed dripstone, mushrooms (automatic); glow lichen (you shear)
   and chorus fruit (End – you replant).

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": {"item": "minecraft:iron_ingot"},
+    "S": {"item": "minecraft:iron_shovel"},
+    "C": {"item": "minecraft:compass"},
+    "T": {"item": "minecraft:stick"}
+  },
+  "pattern": [
+    "ICI",
+    " S ",
+    " T "
+  ],
+  "result": {"count": 1, "id": "neoterra:leveling_staff"}
+}
