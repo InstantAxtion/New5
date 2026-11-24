@@ -330,16 +330,24 @@ final class SelfTest
                     level.setBlock(new BlockPos(x, y, z), air, 2);
         for (int y = g + 1; y <= g + 4; y++)
             level.setBlock(new BlockPos(x0 + 4, y, z0 + 5), net.minecraft.world.level.block.Blocks.OAK_LOG.defaultBlockState(), 2);
+        final BlockPos sign = new BlockPos(x0 + 1, g + 4, z0 + 1);
+        level.setBlock(sign, net.minecraft.world.level.block.Blocks.OAK_SIGN.defaultBlockState(), 3);
+        final java.util.Map<BlockPos, net.minecraft.world.level.block.state.BlockState> before = new java.util.HashMap<>();
         final BlockPos chest = new BlockPos(x0 + 5, g + 1, z0 + 2);
         level.setBlock(chest, net.minecraft.world.level.block.Blocks.CHEST.defaultBlockState(), 3);
         final FakePlayer p = FakePlayerFactory.get(level, new GameProfile(UUID.nameUUIDFromBytes("Leveler".getBytes()), "Leveler"));
         p.getInventory().clearContent();
-        final BlockPos a = new BlockPos(x0, g, z0), b = new BlockPos(x0 + 9, g, z0 + 9);
+        // second corner at a different height: the ground level is still the first corner's
+        final BlockPos a = new BlockPos(x0, g, z0), b = new BlockPos(x0 + 9, g + 5, z0 + 9);
         final Flattening.Plan withChest = Flattening.plan(level, p, a, b);
         level.setBlock(chest, air, 3);
         final Flattening.Plan noFill = Flattening.plan(level, p, a, b);
         p.getInventory().add(new ItemStack(Items.DIRT, 64));
         p.getInventory().add(new ItemStack(Items.DIRT, 36));
+        for (int x = x0 - 1; x <= x0 + 10; x++)
+            for (int z = z0 - 1; z <= z0 + 10; z++)
+                for (int y = g - 6; y <= g + 8; y++)
+                    before.put(new BlockPos(x, y, z), level.getBlockState(new BlockPos(x, y, z)));
         final Flattening.Plan ok = Flattening.plan(level, p, a, b);
         if (ok.refusal() == null)
         {
@@ -368,10 +376,29 @@ final class SelfTest
         }
         final int dirtLeft = p.getInventory().countItem(Items.DIRT);
         final int logs = p.getInventory().countItem(Items.OAK_LOG);
+        // undo: land, sign and items come back
+        final String undoWhy = Flattening.undo(p);
+        Flattening.runAll();
+        int same = 0;
+        for (final var e : before.entrySet())
+        {
+            same += level.getBlockState(e.getKey()).equals(e.getValue()) ? 1 : 0;
+        }
+        final boolean signBack = level.getBlockEntity(sign) instanceof net.minecraft.world.level.block.entity.SignBlockEntity;
+        final int dirtAfterUndo = p.getInventory().countItem(Items.DIRT), logsAfterUndo = p.getInventory().countItem(Items.OAK_LOG);
+        final String again = Flattening.undo(p);
+        // area size: 192 is allowed, 193 is not
+        final Flattening.Plan big = Flattening.plan(level, p, new BlockPos(x0 + 2000, g, z0), new BlockPos(x0 + 2000 + 191, g, z0 + 191));
+        final Flattening.Plan tooBig = Flattening.plan(level, p, new BlockPos(x0, g, z0), new BlockPos(x0 + 192, g, z0));
+        log("leveling staff undo: %s, blocks restored %d/%d, sign back %s, dirt %d, logs %d, second undo -> %s; 192 wide -> %s; 193 wide -> %s",
+            undoWhy, same, before.size(), signBack, dirtAfterUndo, logsAfterUndo, again,
+            big.refusal() == null ? "allowed" : big.refusal(), tooBig.refusal());
+        final boolean undoOk = undoWhy == null && same == before.size() && signBack && dirtAfterUndo == 100 && logsAfterUndo == 0
+            && again != null && (big.refusal() == null || !big.refusal().contains("at most")) && tooBig.refusal() != null && tooBig.refusal().contains("at most");
         log("leveling staff: chest -> %s | no fill -> %s | fill needed %d, flat columns %d/100, pit cells filled %d/200, dirt left %d, oak logs %d",
             withChest.refusal(), noFill.refusal(), ok.fillNeeded(), flat, filled, dirtLeft, logs);
         return withChest.refusal() != null && withChest.refusal().contains("container") && noFill.refusal() != null
-            && ok.refusal() == null && ok.fillNeeded() == 200 && flat == 100 && filled == 200 && dirtLeft == 20 && logs == 4;
+            && ok.refusal() == null && ok.ground() == g && ok.fillNeeded() == 200 && flat == 100 && filled == 200 && dirtLeft == 20 && logs == 4 && undoOk;
     }
 
     /** Item frames and armour stands in the player house survive loading through Structurize. */

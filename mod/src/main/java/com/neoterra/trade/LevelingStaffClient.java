@@ -25,6 +25,69 @@ final class LevelingStaffClient
         NeoForge.EVENT_BUS.addListener(LevelingStaffClient::onRender);
     }
 
+    /** The staff's menu: Flatten, Undo last flatten, Clear selection, Take stored blocks. */
+    static void openMenu(final ItemStack stack)
+    {
+        Minecraft.getInstance().setScreen(new StaffScreen(stack));
+    }
+
+    private static final class StaffScreen extends net.minecraft.client.gui.screens.Screen
+    {
+        private final ItemStack stack;
+
+        StaffScreen(final ItemStack stack)
+        {
+            super(net.minecraft.network.chat.Component.literal("Leveling Staff"));
+            this.stack = stack;
+        }
+
+        @Override
+        protected void init()
+        {
+            final int w = 160, x = (width - w) / 2;
+            int y = height / 2 - 30;
+            final boolean full = LevelingStaffItem.corner(stack, "a").isPresent() && LevelingStaffItem.corner(stack, "b").isPresent();
+            final var flatten = net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("Flatten"),
+                b -> send(LevelingStaffItem.ACTION_FLATTEN)).bounds(x, y, w, 20).build();
+            flatten.active = full;
+            addRenderableWidget(flatten);
+            addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("Undo last flatten"),
+                b -> send(LevelingStaffItem.ACTION_UNDO)).bounds(x, y + 24, w, 20).build());
+            addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("Clear selection"),
+                b -> send(LevelingStaffItem.ACTION_CLEAR)).bounds(x, y + 48, w, 20).build());
+            final var take = net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal(
+                "Take stored blocks (" + LevelingStaffItem.storeTotal(stack) + ")"), b -> send(LevelingStaffItem.ACTION_TAKE)).bounds(x, y + 72, w, 20).build();
+            take.active = LevelingStaffItem.storeTotal(stack) > 0;
+            addRenderableWidget(take);
+        }
+
+        private void send(final int action)
+        {
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new StaffActionPayload(action));
+            onClose();
+        }
+
+        @Override
+        public void render(final net.minecraft.client.gui.GuiGraphics g, final int mx, final int my, final float pt)
+        {
+            super.render(g, mx, my, pt);
+            final Optional<BlockPos> a = LevelingStaffItem.corner(stack, "a");
+            final Optional<BlockPos> b = LevelingStaffItem.corner(stack, "b");
+            final String info = a.isEmpty() ? "No selection – right-click a block for corner 1"
+                : b.isEmpty() ? "Corner 1 set: ground level y " + a.get().getY() + " – right-click corner 2"
+                : "Area " + (Math.abs(a.get().getX() - b.get().getX()) + 1) + " x " + (Math.abs(a.get().getZ() - b.get().getZ()) + 1)
+                    + ", ground level y " + a.get().getY();
+            g.drawCenteredString(font, title, width / 2, height / 2 - 62, 0xFFD24A);
+            g.drawCenteredString(font, info, width / 2, height / 2 - 46, 0xFFFFFF);
+        }
+
+        @Override
+        public boolean isPauseScreen()
+        {
+            return false;
+        }
+    }
+
     private static void onRender(final RenderLevelStageEvent event)
     {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS)

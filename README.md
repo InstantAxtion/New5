@@ -67,6 +67,18 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## Leveling Staff: undo, 3x bigger, staff store (1.27.0)
+* **Menu:** right-click the air with the staff – **Flatten**, **Undo last flatten**, **Clear selection**,
+  **Take stored blocks**. Sneak + right-click still flattens straight away.
+* **Undo** puts every block of your last flatten back exactly (signs and other block contents included), takes back
+  the blocks the flatten gave you and returns the fill it used – so it can't duplicate anything. If you have used
+  some of those blocks it tells you what is missing.
+* **Up to 192 x 192** (was 64 x 64).
+* **The first corner always sets the ground height**; the second corner only marks the opposite side.
+* **Staff store:** blocks that don't fit in your inventory go into the staff (shown in its tooltip and menu) instead
+  of being dropped. Right-click a chest or barrel with the staff to empty the store into it, or use
+  "Take stored blocks".
+
 ## Leveling Staff (1.26.0)
 A survival tool that flattens land perfectly. Craft it from a compass over two iron ingots, an iron shovel and a
 stick (iron ingot – compass – iron ingot / iron shovel / stick).

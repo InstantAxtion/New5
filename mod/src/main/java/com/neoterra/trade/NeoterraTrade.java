@@ -139,6 +139,8 @@ public class NeoterraTrade
         modBus.addListener(this::onRegister);
         modBus.addListener(this::onBlockEntityBlocks);
         modBus.addListener(this::onCreativeTabs);
+        modBus.addListener((net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent e) ->
+            e.registrar("1").playToServer(StaffActionPayload.TYPE, StaffActionPayload.CODEC, StaffActionPayload::handle));
         NeoForge.EVENT_BUS.register(new ColonyBoosts());
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.ServerTickEvent.Post e) -> Flattening.tick());
         if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient())
