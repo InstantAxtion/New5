@@ -128,6 +128,7 @@ public class NeoterraTrade
         .createBuildingEntry());
 
     public static final DeferredItem<Item> LEDGER = ITEMS.register("trade_ledger", () -> new TradeLedgerItem(new Item.Properties().stacksTo(1)));
+    public static final DeferredItem<Item> BUILDER_WAND = ITEMS.register("builder_wand", () -> new BuilderWandItem(new Item.Properties().stacksTo(1)));
     public static final DeferredItem<Item> LEVELING_STAFF = ITEMS.register("leveling_staff", () -> new LevelingStaffItem(new Item.Properties().stacksTo(1)));
 
     public NeoterraTrade(final IEventBus modBus, final ModContainer container)
@@ -140,7 +141,10 @@ public class NeoterraTrade
         modBus.addListener(this::onBlockEntityBlocks);
         modBus.addListener(this::onCreativeTabs);
         modBus.addListener((net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent e) ->
-            e.registrar("1").playToServer(StaffActionPayload.TYPE, StaffActionPayload.CODEC, StaffActionPayload::handle));
+        {
+            e.registrar("1").playToServer(StaffActionPayload.TYPE, StaffActionPayload.CODEC, StaffActionPayload::handle);
+            e.registrar("1").playToServer(WandPayload.TYPE, WandPayload.CODEC, WandPayload::handle);
+        });
         NeoForge.EVENT_BUS.register(new ColonyBoosts());
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.ServerTickEvent.Post e) -> Flattening.tick());
         if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient())
@@ -206,6 +210,7 @@ public class NeoterraTrade
         {
             event.accept(LEDGER.get());
             event.accept(LEVELING_STAFF.get());
+            event.accept(BUILDER_WAND.get());
         }
     }
 }

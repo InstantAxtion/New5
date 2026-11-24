@@ -227,7 +227,7 @@ final class SelfTest
                     finish(level, false);
                     return;
                 }
-                finish(level, checkBlueprints(level) & checkResearch() & checkFreeFastResearch() & checkFreePlacement(level) & checkEntities(level) & checkFlatten(level));
+                finish(level, checkBlueprints(level) & checkResearch() & checkFreeFastResearch() & checkFreePlacement(level) & checkEntities(level) & checkFlatten(level) & checkWand(level));
             }
             default -> { }
         }
@@ -399,6 +399,74 @@ final class SelfTest
             withChest.refusal(), noFill.refusal(), ok.fillNeeded(), flat, filled, dirtLeft, logs);
         return withChest.refusal() != null && withChest.refusal().contains("container") && noFill.refusal() != null
             && ok.refusal() == null && ok.ground() == g && ok.fillNeeded() == 200 && flat == 100 && filled == 200 && dirtLeft == 20 && logs == 4 && undoOk;
+    }
+
+    /** Builder's Wand: place / replace / destroy / use in different modes; inventory first, off hand last; undo. */
+    private boolean checkWand(final ServerLevel level)
+    {
+        final int x0 = 1800, z0 = 1800;
+        final int g = ground(level, new BlockPos(x0 + 6, 0, z0 + 6)).getY() + 2;
+        for (int x = x0 - 2; x < x0 + 14; x++)
+            for (int z = z0 - 2; z < z0 + 14; z++)
+            {
+                level.setChunkForced(x >> 4, z >> 4, true);
+                for (int y = g - 2; y <= g + 6; y++)
+                    level.setBlock(new BlockPos(x, y, z), y <= g ? net.minecraft.world.level.block.Blocks.STONE.defaultBlockState()
+                        : net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 2);
+            }
+        final FakePlayer p = FakePlayerFactory.get(level, new GameProfile(UUID.nameUUIDFromBytes("Wand".getBytes()), "Wand"));
+        p.getInventory().clearContent();
+        p.setYRot(0);
+        p.setXRot(0);
+        p.getInventory().add(new ItemStack(Items.STONE_BRICKS, 64));
+        p.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, new ItemStack(Items.STONE_BRICKS, 10));
+        final BlockPos c = new BlockPos(x0 + 3, g, z0 + 3);
+        final java.util.function.Function<BlockPos, net.minecraft.world.phys.BlockHitResult> top = q ->
+            new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(q).add(0, 0.5, 0), net.minecraft.core.Direction.UP, q, false);
+        // 1. place a 3x3 area on the floor
+        final String m1 = BuildWand.apply(level, p, top.apply(c), new BuildWand.Settings(BuildWand.PLACE, BuildWand.AREA, 3));
+        int placed = 0;
+        for (int dx = -1; dx <= 1; dx++)
+            for (int dz = -1; dz <= 1; dz++)
+                placed += level.getBlockState(c.offset(dx, 1, dz)).is(net.minecraft.world.level.block.Blocks.STONE_BRICKS) ? 1 : 0;
+        final int inv1 = p.getInventory().countItem(Items.STONE_BRICKS) - p.getOffhandItem().getCount(), off1 = p.getOffhandItem().getCount();
+        // 2. replace a row of 5 (3 bricks there) with oak planks from the off hand
+        p.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, new ItemStack(Items.OAK_PLANKS, 16));
+        final String m2 = BuildWand.apply(level, p, top.apply(c.above()), new BuildWand.Settings(BuildWand.REPLACE, BuildWand.ROW_COLUMN, 5));
+        int planks = 0;
+        for (int dz = -2; dz <= 2; dz++)
+            planks += level.getBlockState(c.offset(0, 1, dz)).is(net.minecraft.world.level.block.Blocks.OAK_PLANKS) ? 1 : 0;
+        final int bricksBack = p.getInventory().countItem(Items.STONE_BRICKS);
+        // 3. destroy 2 deep (a brick and the stone under it)
+        final String m3 = BuildWand.apply(level, p, top.apply(c.offset(1, 1, 1)), new BuildWand.Settings(BuildWand.DESTROY, BuildWand.DIRECTION, 2));
+        final boolean dug = level.getBlockState(c.offset(1, 1, 1)).isAir() && level.getBlockState(c.offset(1, 0, 1)).isAir();
+        // 4. fill corner to corner: a 4 x 2 x 4 block of bricks (two clicks with the wand)
+        p.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, new ItemStack(Items.STONE_BRICKS, 64));
+        final ItemStack wand = new ItemStack(NeoterraTrade.BUILDER_WAND.get());
+        final BuildWand.Settings fillS = new BuildWand.Settings(BuildWand.PLACE, BuildWand.FILL, 4);
+        final String m4a = BuildWand.apply(level, p, top.apply(new BlockPos(x0 + 8, g, z0 + 8)), fillS, wand);
+        final String m4 = m4a + " / " + BuildWand.apply(level, p, top.apply(new BlockPos(x0 + 11, g + 1, z0 + 11)), fillS, wand);
+        int filled = 0;
+        for (int x = x0 - 2; x < x0 + 14; x++)
+            for (int z = z0 - 2; z < z0 + 14; z++)
+                for (int y = g + 1; y <= g + 2; y++)
+                    filled += level.getBlockState(new BlockPos(x, y, z)).is(net.minecraft.world.level.block.Blocks.STONE_BRICKS) ? 1 : 0;
+        // 5. use: a shovel makes a path on a row of 3 grass blocks; then undo it
+        for (int dx = 0; dx < 3; dx++)
+            level.setBlock(new BlockPos(x0 + dx, g, z0 + 11), net.minecraft.world.level.block.Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+        p.setYRot(-90);   // looking east: the row runs along x
+        p.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, new ItemStack(Items.IRON_SHOVEL));
+        final String m5 = BuildWand.apply(level, p, top.apply(new BlockPos(x0 + 1, g, z0 + 11)), new BuildWand.Settings(BuildWand.USE, BuildWand.ROW_COLUMN, 3));
+        int paths = 0;
+        for (int dx = 0; dx < 3; dx++)
+            paths += level.getBlockState(new BlockPos(x0 + dx, g, z0 + 11)).is(net.minecraft.world.level.block.Blocks.DIRT_PATH) ? 1 : 0;
+        final String m6 = BuildWand.undo(p);
+        int grass = 0;
+        for (int dx = 0; dx < 3; dx++)
+            grass += level.getBlockState(new BlockPos(x0 + dx, g, z0 + 11)).is(net.minecraft.world.level.block.Blocks.GRASS_BLOCK) ? 1 : 0;
+        log("builder's wand: place area '%s' -> %d placed, inventory bricks %d (64-9), off hand %d (untouched) | replace row '%s' -> %d planks, bricks back %d | destroy '%s' -> %s | fill '%s' -> %d bricks on the floor | use '%s' -> %d paths | undo '%s' -> %d grass back",
+            m1, placed, inv1, off1, m2, planks, bricksBack, m3, dug, m4, filled, m5, paths, m6, grass);
+        return placed == 9 && inv1 == 55 && off1 == 10 && planks == 3 && bricksBack == 58 && dug && filled == 9 - 3 - 1 + 32 && paths == 3 && grass == 3;
     }
 
     /** Item frames and armour stands in the player house survive loading through Structurize. */

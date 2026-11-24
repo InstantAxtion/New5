@@ -88,6 +88,153 @@ final class LevelingStaffClient
         }
     }
 
+    // ------------------------------------------------------------------------------------------------ Builder's Wand
+
+    static void openWandMenu(final ItemStack stack)
+    {
+        Minecraft.getInstance().setScreen(new WandScreen(stack));
+    }
+
+    /** Two lists like a classic building gadget: Action (Place/Replace/Destroy/Use) and Mode, plus size and undo. */
+    private static final class WandScreen extends net.minecraft.client.gui.screens.Screen
+    {
+        private final ItemStack stack;
+        private int action, mode, size;
+
+        WandScreen(final ItemStack stack)
+        {
+            super(net.minecraft.network.chat.Component.literal("Builder's Wand"));
+            this.stack = stack;
+            final BuildWand.Settings s = BuilderWandItem.settings(stack);
+            action = s.action();
+            mode = s.mode();
+            size = s.size();
+        }
+
+        private int left() { return width / 2 - 110; }
+        private int top() { return height / 2 - 60; }
+
+        @Override
+        protected void init()
+        {
+            final int y = top() + 108;
+            addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("-"),
+                b -> setSize(size - 1)).bounds(left(), y, 20, 20).build());
+            addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("+"),
+                b -> setSize(size + 1)).bounds(left() + 70, y, 20, 20).build());
+            addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("Undo last"),
+                b -> {
+                    net.neoforged.neoforge.network.PacketDistributor.sendToServer(new WandPayload(action, mode, size, true));
+                    onClose();
+                }).bounds(left() + 120, y, 100, 20).build());
+        }
+
+        private void setSize(final int s)
+        {
+            size = Math.max(1, Math.min(BuildWand.MAX_SIZE, s));
+            push();
+        }
+
+        private void push()
+        {
+            BuilderWandItem.setSettings(stack, new BuildWand.Settings(action, mode, size));
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new WandPayload(action, mode, size, false));
+        }
+
+        @Override
+        public boolean mouseClicked(final double mx, final double my, final int button)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                if (inRow(mx, my, left(), i))
+                {
+                    action = i;
+                    push();
+                    return true;
+                }
+                if (inRow(mx, my, left() + 120, i))
+                {
+                    mode = i;
+                    push();
+                    return true;
+                }
+            }
+            return super.mouseClicked(mx, my, button);
+        }
+
+        private boolean inRow(final double mx, final double my, final int x, final int i)
+        {
+            final int y = top() + 16 + i * 20;
+            return mx >= x && mx < x + 100 && my >= y && my < y + 18;
+        }
+
+        @Override
+        public void render(final net.minecraft.client.gui.GuiGraphics g, final int mx, final int my, final float pt)
+        {
+            super.render(g, mx, my, pt);
+            g.fill(left() - 8, top() - 8, left() + 228, top() + 136, 0xFFEDE3C6);          // parchment panel
+            g.drawString(font, "Action", left(), top() + 2, 0x302820, false);
+            g.drawString(font, "Mode", left() + 120, top() + 2, 0x302820, false);
+            for (int i = 0; i < 4; i++)
+            {
+                row(g, left(), i, BuildWand.ACTIONS[i], i == action);
+                row(g, left() + 120, i, BuildWand.MODES[i], i == mode);
+            }
+            g.drawString(font, "Size", left(), top() + 98, 0x302820, false);
+            g.drawCenteredString(font, mode == BuildWand.FILL ? "corner to corner" : String.valueOf(mode == BuildWand.AREA ? Math.min(16, size) + "x" + Math.min(16, size) : size),
+                left() + 45, top() + 114, 0xFFFFFF);
+            for (final var w : renderables)
+            {
+                w.render(g, mx, my, pt);
+            }
+            final ItemStack off = Minecraft.getInstance().player == null ? ItemStack.EMPTY : Minecraft.getInstance().player.getOffhandItem();
+            g.drawString(font, off.isEmpty() ? "Off hand: empty" : "Off hand: " + off.getHoverName().getString(), left(), top() + 132, 0x504030, false);
+        }
+
+        private void row(final net.minecraft.client.gui.GuiGraphics g, final int x, final int i, final String text, final boolean on)
+        {
+            final int y = top() + 16 + i * 20;
+            g.fill(x, y, x + 100, y + 18, on ? 0xFF3A9E9A : 0xFF3A3A3A);
+            g.drawString(font, text, x + 4, y + 5, 0xFFFFFF, false);
+        }
+
+        @Override
+        public boolean isPauseScreen()
+        {
+            return false;
+        }
+    }
+
+    private static void renderWandPreview(final RenderLevelStageEvent event, final Minecraft mc, final ItemStack wand)
+    {
+        if (!(mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit) || hit.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK)
+        {
+            return;
+        }
+        final BuildWand.Settings s = BuilderWandItem.settings(wand);
+        final java.util.List<BlockPos> targets = BuildWand.targets(mc.level, mc.player, hit, s,
+            s.mode() == BuildWand.FILL ? BuilderWandItem.fillCorner(wand) : null);
+        final float[] c = switch (s.action())
+        {
+            case BuildWand.PLACE -> new float[] {0.3f, 1.0f, 0.4f};
+            case BuildWand.REPLACE -> new float[] {1.0f, 0.85f, 0.2f};
+            case BuildWand.DESTROY -> new float[] {1.0f, 0.3f, 0.3f};
+            default -> new float[] {0.4f, 0.7f, 1.0f};
+        };
+        final Vec3 cam = event.getCamera().getPosition();
+        final PoseStack pose = event.getPoseStack();
+        pose.pushPose();
+        pose.translate(-cam.x, -cam.y, -cam.z);
+        final MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
+        final VertexConsumer lines = buffers.getBuffer(RenderType.lines());
+        for (final BlockPos p : targets)
+        {
+            LevelRenderer.renderLineBox(pose, lines, new AABB(p).inflate(0.005), c[0], c[1], c[2], 0.9f);
+        }
+        buffers.endBatch(RenderType.lines());
+        pose.popPose();
+    }
+
     private static void onRender(final RenderLevelStageEvent event)
     {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS)
@@ -97,6 +244,11 @@ final class LevelingStaffClient
         final Minecraft mc = Minecraft.getInstance();
         if (mc.player == null)
         {
+            return;
+        }
+        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS && mc.player.getMainHandItem().getItem() instanceof BuilderWandItem)
+        {
+            renderWandPreview(event, mc, mc.player.getMainHandItem());
             return;
         }
         ItemStack stack = mc.player.getMainHandItem();
