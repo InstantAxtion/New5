@@ -67,6 +67,17 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## Builder's Wand: long range, up to 1028 (1.29.0)
+* **Long range:** the wand works on the block you are looking at, up to 1028 blocks away (as far as your view
+  shows loaded blocks). The outline preview shows at that distance too.
+* **Up to 1028:** lines up to 1028 long, areas up to 1028 x 1028, and **Fill** corner to corner (like the Leveling
+  Staff: click one corner, then the opposite one) up to 1028 per side – at most about 1.1 million blocks per click.
+  Big jobs run over a few seconds; the preview shows the outline of the whole box.
+* If you don't carry enough blocks for a placement it tells you how many to bring and changes nothing.
+* Blocks you get back that don't fit in your inventory go into the wand's store (like the staff's): **Take stored**
+  in the menu.
+* **Sneak + right-click** opens the menu (size buttons -10 / -1 / +1 / +10); a plain right-click always builds.
+
 ## Builder's Wand (1.28.0)
 A building tool in the style of the classic gadgets. Craft: gold ingot + diamond at the top right, stick + gold ingot
 in the middle, stick bottom left. Right-click the air for its menu: **Action** (Place, Replace, Destroy, Use),

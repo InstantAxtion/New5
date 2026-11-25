@@ -47,8 +47,10 @@ public final class BuildWand
     public static final int DIRECTION = 0, ROW_COLUMN = 1, FILL = 2, AREA = 3;
     public static final String[] ACTIONS = {"Place", "Replace", "Destroy", "Use"};
     public static final String[] MODES = {"Direction", "Row/Column", "Fill", "Area"};
-    public static final int MAX_SIZE = 32;      // line length; area side is capped at 16
-    public static final int MAX_BLOCKS = 256;   // per click
+    public static final int MAX_SIZE = 1028;          // line length, area side and fill side
+    public static final int MAX_BLOCKS = 1_100_000;  // per click
+    private static final int SYNC_LIMIT = 4096;       // bigger jobs run over several ticks
+    private static final int BLOCKS_PER_TICK = 4096;
 
     private static final Map<UUID, Undo> UNDO = new HashMap<>();
 
@@ -68,8 +70,6 @@ public final class BuildWand
 
     // ================================================================================================ targets
 
-    /** The blocks one click would affect (in order). Pure geometry + a few block checks; safe on the client. */
-    public static final int MAX_FILL = 4096;    // corner-to-corner fill, at most 32 per side
 
     /** The cell a click points at: the space in front of the face when placing, else the clicked block. */
     public static BlockPos cell(final BlockHitResult hit, final Settings s)
@@ -113,7 +113,7 @@ public final class BuildWand
             }
             case AREA ->
             {
-                final int side = Math.min(16, n);
+                final int side = n;
                 final Direction[] ax = planeAxes(face);
                 final int half = (side - 1) / 2;
                 for (int i = -half; i < side - half; i++)
@@ -128,7 +128,9 @@ public final class BuildWand
             {
                 // FILL: the box from the first corner to this one (just this cell before the first corner is set)
                 final BlockPos from = fillCorner == null ? base : fillCorner;
-                if (Math.abs(from.getX() - base.getX()) < 32 && Math.abs(from.getY() - base.getY()) < 32 && Math.abs(from.getZ() - base.getZ()) < 32)
+                if (Math.abs(from.getX() - base.getX()) < MAX_SIZE && Math.abs(from.getY() - base.getY()) < MAX_SIZE
+                    && Math.abs(from.getZ() - base.getZ()) < MAX_SIZE
+                    && (long) (Math.abs(from.getX() - base.getX()) + 1) * (Math.abs(from.getY() - base.getY()) + 1) * (Math.abs(from.getZ() - base.getZ()) + 1) <= MAX_BLOCKS)
                 {
                     for (final BlockPos q : BlockPos.betweenClosed(from, base))
                     {
@@ -141,7 +143,7 @@ public final class BuildWand
         final List<BlockPos> list = new ArrayList<>();
         for (final BlockPos p : out)
         {
-            if (list.size() >= (s.mode() == FILL ? MAX_FILL : MAX_BLOCKS) || !level.isInWorldBounds(p))
+            if (list.size() >= MAX_BLOCKS || !level.isInWorldBounds(p) || !level.isLoaded(p))
             {
                 continue;
             }
@@ -158,6 +160,36 @@ public final class BuildWand
             }
         }
         return list;
+    }
+
+    /** The box a click covers, without looking at blocks (cheap; for the preview of big jobs). */
+    public static BlockPos[] bounds(final Player player, final BlockHitResult hit, final Settings s, final BlockPos fillCorner)
+    {
+        final Direction face = hit.getDirection();
+        final boolean place = s.action() == PLACE;
+        final BlockPos base = place ? hit.getBlockPos().relative(face) : hit.getBlockPos();
+        final int n = Math.max(1, Math.min(MAX_SIZE, s.size()));
+        final int half = (n - 1) / 2;
+        return switch (s.mode())
+        {
+            case DIRECTION -> new BlockPos[] {base, base.relative(place ? face : face.getOpposite(), n - 1)};
+            case ROW_COLUMN ->
+            {
+                final Direction d = inPlane(player.getLookAngle(), face);
+                yield new BlockPos[] {base.relative(d, -half), base.relative(d, n - 1 - half)};
+            }
+            case AREA ->
+            {
+                final Direction[] ax = planeAxes(face);
+                yield new BlockPos[] {base.relative(ax[0], -half).relative(ax[1], -half), base.relative(ax[0], n - 1 - half).relative(ax[1], n - 1 - half)};
+            }
+            default -> new BlockPos[] {fillCorner == null ? base : fillCorner, base};
+        };
+    }
+
+    public static long volume(final BlockPos[] b)
+    {
+        return (long) (Math.abs(b[0].getX() - b[1].getX()) + 1) * (Math.abs(b[0].getY() - b[1].getY()) + 1) * (Math.abs(b[0].getZ() - b[1].getZ()) + 1);
     }
 
     private static Direction[] planeAxes(final Direction face)
@@ -202,10 +234,18 @@ public final class BuildWand
             }
             final BlockPos c2 = cell(hit, s);
             BuilderWandItem.setFillCorner(wand, null);
-            if (Math.abs(corner.getX() - c2.getX()) >= 32 || Math.abs(corner.getY() - c2.getY()) >= 32 || Math.abs(corner.getZ() - c2.getZ()) >= 32)
+            if (Math.abs(corner.getX() - c2.getX()) >= MAX_SIZE || Math.abs(corner.getY() - c2.getY()) >= MAX_SIZE || Math.abs(corner.getZ() - c2.getZ()) >= MAX_SIZE)
             {
-                return "Fill is at most 32 blocks on each side – pick a closer corner.";
+                return "Fill is at most " + MAX_SIZE + " blocks on each side – pick a closer corner.";
             }
+            if (volume(new BlockPos[] {corner, c2}) > MAX_BLOCKS)
+            {
+                return "That box has " + volume(new BlockPos[] {corner, c2}) + " blocks – at most " + MAX_BLOCKS + " at a time.";
+            }
+        }
+        if (JOBS.stream().anyMatch(j -> j.player == player))
+        {
+            return "The wand is still working on your last job – wait a moment.";
         }
         final List<BlockPos> targets = targets(level, player, hit, s, corner);
         if (targets.isEmpty())
@@ -221,98 +261,199 @@ public final class BuildWand
         {
             return "Hold the item to use (bone meal, a hoe, a shovel, an axe...) in your off hand.";
         }
-        final Undo undo = new Undo();
-        undo.level = level;
-        int done = 0, skipped = 0;
-        final ItemStack tool = new ItemStack(Items.DIAMOND_PICKAXE);
-        for (final BlockPos p : targets)
+        if ((s.action() == PLACE || s.action() == REPLACE) && !player.isCreative())
         {
+            final BlockItem bi = (BlockItem) off.getItem();
+            int need = 0;
+            for (final BlockPos p : targets)
+            {
+                need += s.action() == REPLACE && level.getBlockState(p).is(bi.getBlock()) ? 0 : 1;
+            }
+            final int have = countBlock(player, bi);
+            if (need > have)
+            {
+                return "That needs " + need + " " + bi.getDescription().getString() + "; you carry " + have + ". Bring " + (need - have) + " more.";
+            }
+        }
+        final Job job = new Job(level, player, s, hit.getDirection(), targets);
+        if (targets.size() <= SYNC_LIMIT)
+        {
+            run(job, Integer.MAX_VALUE);
+            return job.message();
+        }
+        JOBS.add(job);
+        return "Working on " + targets.size() + " blocks – this takes a few seconds.";
+    }
+
+    /** One click's work; big ones are done a few thousand blocks per tick. */
+    private static final class Job
+    {
+        final ServerLevel level;
+        final Player player;
+        final Settings s;
+        final Direction face;
+        final List<BlockPos> targets;
+        final Undo undo = new Undo();
+        int next, done, skipped;
+        String stop;
+        BlockItem blockItem;
+
+        BlockItem blockItem()
+        {
+            return blockItem;
+        }
+
+        Job(final ServerLevel level, final Player player, final Settings s, final Direction face, final List<BlockPos> targets)
+        {
+            this.level = level;
+            this.player = player;
+            this.s = s;
+            this.face = face;
+            this.targets = targets;
+            undo.level = level;
+            if (player.getOffhandItem().getItem() instanceof BlockItem bi)
+            {
+                blockItem = bi;
+            }
+        }
+
+        String message()
+        {
+            return done + " block" + (done == 1 ? "" : "s") + " " + switch (s.action())
+            {
+                case PLACE -> "placed";
+                case REPLACE -> "replaced";
+                case DESTROY -> "removed";
+                default -> "used";
+            } + (skipped > 0 ? " (" + skipped + " skipped: protected or can't go there)" : "") + (stop != null ? " – " + stop : "") + ".";
+        }
+    }
+
+    private static final List<Job> JOBS = new ArrayList<>();
+    private static final List<Runnable> RESTORES = new ArrayList<>();
+
+    /** Server tick: continue big jobs. */
+    public static void tick()
+    {
+        if (!JOBS.isEmpty())
+        {
+            final Job job = JOBS.get(0);
+            if (run(job, BLOCKS_PER_TICK))
+            {
+                JOBS.remove(0);
+                job.player.displayClientMessage(net.minecraft.network.chat.Component.literal(job.message())
+                    .withStyle(net.minecraft.ChatFormatting.GOLD), false);
+            }
+        }
+        for (int i = 0; i < BLOCKS_PER_TICK && !RESTORES.isEmpty(); i++)
+        {
+            RESTORES.remove(RESTORES.size() - 1).run();
+        }
+    }
+
+    /** Finish all queued work now (self-test). */
+    static void runAll()
+    {
+        while (!JOBS.isEmpty() || !RESTORES.isEmpty())
+        {
+            tick();
+        }
+    }
+
+    /** Works up to `limit` blocks of the job; true when finished. */
+    private static boolean run(final Job job, final int limit)
+    {
+        final ItemStack tool = new ItemStack(Items.DIAMOND_PICKAXE);
+        final ServerLevel level = job.level;
+        final Player player = job.player;
+        final ItemStack off = player.getOffhandItem();
+        for (int k = 0; k < limit && job.next < job.targets.size() && job.stop == null; k++)
+        {
+            final BlockPos p = job.targets.get(job.next++);
             if (!mayChange(level, player, p))
             {
-                skipped++;
+                job.skipped++;
                 continue;
             }
             final BlockState old = level.getBlockState(p);
             final BlockEntity oldBe = level.getBlockEntity(p);
-            if ((s.action() == REPLACE || s.action() == DESTROY) && protectedBlock(level, p, old))
+            if ((job.s.action() == REPLACE || job.s.action() == DESTROY) && protectedBlock(level, p, old))
             {
-                skipped++;
+                job.skipped++;
                 continue;
             }
             final CompoundTag oldTag = oldBe == null ? null : oldBe.saveWithFullMetadata(level.registryAccess());
-            switch (s.action())
+            switch (job.s.action())
             {
                 case PLACE, REPLACE ->
                 {
-                    final BlockItem bi = (BlockItem) off.getItem();
-                    if (s.action() == REPLACE && old.is(bi.getBlock()))
+                    final BlockItem bi = job.blockItem();
+                    if (job.s.action() == REPLACE && old.is(bi.getBlock()))
                     {
                         continue;
                     }
-                    BlockState st = bi.getBlock().getStateForPlacement(new BlockPlaceContext(player, InteractionHand.OFF_HAND, off,
-                        new BlockHitResult(Vec3.atCenterOf(p), hit.getDirection(), p, false)));
+                    BlockState st = bi.getBlock().getStateForPlacement(new BlockPlaceContext(player, InteractionHand.OFF_HAND,
+                        new ItemStack(bi), new BlockHitResult(Vec3.atCenterOf(p), job.face, p, false)));
                     if (st == null)
                     {
                         st = bi.getBlock().defaultBlockState();
                     }
                     if (!st.canSurvive(level, p))
                     {
-                        skipped++;
+                        job.skipped++;
                         continue;
                     }
-                    if (!player.isCreative() && !takeOne(player, bi, undo.taken))
+                    if (!player.isCreative() && !takeOne(player, bi, job.undo.taken))
                     {
-                        finish(player, undo);
-                        return done + " blocks done – out of " + bi.getDescription().getString() + ".";
+                        job.stop = "out of " + bi.getDescription().getString();
+                        break;
                     }
-                    if (s.action() == REPLACE && !player.isCreative())
+                    if (job.s.action() == REPLACE && !player.isCreative())
                     {
-                        giveAll(player, Block.getDrops(old, level, p, oldBe, player, tool), undo.given);
+                        giveAll(player, Block.getDrops(old, level, p, oldBe, player, tool), job.undo.given);
                     }
-                    undo.before.add(new Old(p, old, oldTag));
+                    job.undo.before.add(new Old(p, old, oldTag));
                     level.setBlock(p, st, Block.UPDATE_ALL);
-                    done++;
+                    job.done++;
                 }
                 case DESTROY ->
                 {
                     if (!player.isCreative())
                     {
-                        giveAll(player, Block.getDrops(old, level, p, oldBe, player, tool), undo.given);
+                        giveAll(player, Block.getDrops(old, level, p, oldBe, player, tool), job.undo.given);
                     }
-                    undo.before.add(new Old(p, old, oldTag));
+                    job.undo.before.add(new Old(p, old, oldTag));
                     level.setBlock(p, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
-                    done++;
+                    job.done++;
                 }
                 default ->
                 {
                     if (off.isEmpty())
                     {
-                        finish(player, undo);
-                        return done + " blocks done – your off-hand item is used up.";
+                        job.stop = "your off-hand item is used up";
+                        break;
                     }
                     final int countBefore = off.getCount();
                     final var result = off.getItem().useOn(new UseOnContext(level, player, InteractionHand.OFF_HAND, off,
-                        new BlockHitResult(Vec3.atCenterOf(p).relative(hit.getDirection(), 0.5), hit.getDirection(), p, false)));
+                        new BlockHitResult(Vec3.atCenterOf(p).relative(job.face, 0.5), job.face, p, false)));
                     if (result.consumesAction())
                     {
-                        undo.before.add(new Old(p, old, oldTag));
+                        job.undo.before.add(new Old(p, old, oldTag));
                         if (off.getCount() < countBefore)
                         {
-                            undo.taken.merge(off.getItem(), countBefore - off.getCount(), Integer::sum);
+                            job.undo.taken.merge(off.getItem(), countBefore - off.getCount(), Integer::sum);
                         }
-                        done++;
+                        job.done++;
                     }
                 }
             }
         }
-        finish(player, undo);
-        return done + " block" + (done == 1 ? "" : "s") + " " + switch (s.action())
+        final boolean finished = job.next >= job.targets.size() || job.stop != null;
+        if (finished)
         {
-            case PLACE -> "placed";
-            case REPLACE -> "replaced";
-            case DESTROY -> "removed";
-            default -> "used";
-        } + (skipped > 0 ? " (" + skipped + " skipped: protected or can't go there)" : "") + ".";
+            finish(player, job.undo);
+        }
+        return finished;
     }
 
     private static void finish(final Player player, final Undo undo)
@@ -340,7 +481,7 @@ public final class BuildWand
             final StringBuilder missing = new StringBuilder();
             for (final Map.Entry<Item, Integer> e : undo.given.entrySet())
             {
-                final int have = player.getInventory().countItem(e.getKey());
+                final int have = player.getInventory().countItem(e.getKey()) + LevelingStaffItem.store(player).getOrDefault(e.getKey(), 0);
                 if (have < e.getValue())
                 {
                     missing.append(e.getValue() - have).append(' ').append(e.getKey().getDescription().getString()).append(", ");
@@ -352,26 +493,41 @@ public final class BuildWand
             }
             for (final Map.Entry<Item, Integer> e : undo.given.entrySet())
             {
-                remove(player.getInventory(), e.getKey(), e.getValue());
+                final int fromStore = LevelingStaffItem.storeTake(player, e.getKey(), e.getValue());
+                remove(player.getInventory(), e.getKey(), e.getValue() - fromStore);
             }
             for (final Map.Entry<Item, Integer> e : undo.taken.entrySet())
             {
                 giveAll(player, List.of(new ItemStack(e.getKey(), e.getValue())), null);
             }
         }
-        for (int i = undo.before.size() - 1; i >= 0; i--)
+        // restore in reverse order; RESTORES is worked from its end, so add oldest first
+        final List<Runnable> work = new ArrayList<>();
+        for (final Old o : undo.before)
         {
-            final Old o = undo.before.get(i);
-            undo.level.setBlock(o.pos(), o.state(), Block.UPDATE_ALL);
-            if (o.blockEntity() != null)
-            {
-                final BlockEntity be = undo.level.getBlockEntity(o.pos());
-                if (be != null)
+            work.add(() -> {
+                undo.level.setBlock(o.pos(), o.state(), Block.UPDATE_ALL);
+                if (o.blockEntity() != null)
                 {
-                    be.loadWithComponents(o.blockEntity(), undo.level.registryAccess());
-                    be.setChanged();
+                    final BlockEntity be = undo.level.getBlockEntity(o.pos());
+                    if (be != null)
+                    {
+                        be.loadWithComponents(o.blockEntity(), undo.level.registryAccess());
+                        be.setChanged();
+                    }
                 }
+            });
+        }
+        if (work.size() <= SYNC_LIMIT)
+        {
+            for (int i = work.size() - 1; i >= 0; i--)
+            {
+                work.get(i).run();
             }
+        }
+        else
+        {
+            RESTORES.addAll(work);
         }
         UNDO.remove(player.getUUID());
         return "Undone: " + undo.before.size() + " blocks put back.";
@@ -403,6 +559,13 @@ public final class BuildWand
         return false;
     }
 
+    /** Blocks of this kind the player carries (inventory + off hand). */
+    private static int countBlock(final Player player, final BlockItem item)
+    {
+        return player.getInventory().countItem(item);
+    }
+
+    /** Gives items: inventory first, the rest into the wand's (or staff's) store – never a flood of dropped items. */
     private static void giveAll(final Player player, final List<ItemStack> stacks, final Map<Item, Integer> record)
     {
         for (final ItemStack s : stacks)
@@ -415,11 +578,7 @@ public final class BuildWand
             {
                 record.merge(s.getItem(), s.getCount(), Integer::sum);
             }
-            final ItemStack c = s.copy();
-            if (!player.getInventory().add(c) && !c.isEmpty())
-            {
-                player.drop(c, false);
-            }
+            Flattening.give(player, s.getItem(), s.getCount());
         }
     }
 

@@ -81,33 +81,54 @@ public class BuilderWandItem extends Item
         return ItemStack.EMPTY;
     }
 
+    /** How far the wand reaches: it works on the block you look at, as far as your view goes (loaded chunks). */
+    public static final double RANGE = 1028;
+
     @Override
     public InteractionResult useOn(final UseOnContext ctx)
     {
-        final Player player = ctx.getPlayer();
-        if (player == null || ctx.getHand() != InteractionHand.MAIN_HAND)
-        {
-            return InteractionResult.PASS;
-        }
-        if (ctx.getLevel().isClientSide)
-        {
-            return InteractionResult.SUCCESS;
-        }
-        final BlockHitResult hit = new BlockHitResult(ctx.getClickLocation(), ctx.getClickedFace(), ctx.getClickedPos(), ctx.isInside());
-        final String msg = BuildWand.apply((ServerLevel) ctx.getLevel(), player, hit, settings(ctx.getItemInHand()), ctx.getItemInHand());
-        player.displayClientMessage(Component.literal(msg).withStyle(ChatFormatting.GOLD), true);
-        return InteractionResult.CONSUME;
+        // near or far, every click goes through use(): the client aims and sends the target to the server
+        return InteractionResult.PASS;
     }
 
     @Override
     public InteractionResultHolder<ItemStack> use(final Level level, final Player player, final InteractionHand hand)
     {
         final ItemStack stack = player.getItemInHand(hand);
+        if (hand != InteractionHand.MAIN_HAND)
+        {
+            return InteractionResultHolder.pass(stack);
+        }
         if (level.isClientSide)
         {
-            LevelingStaffClient.openWandMenu(stack);
+            if (player.isShiftKeyDown())
+            {
+                LevelingStaffClient.openWandMenu(stack);
+            }
+            else
+            {
+                LevelingStaffClient.wandClick(player);
+            }
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+    }
+
+    /** Server: a click on a (possibly far) block, sent by the client. */
+    static void clicked(final Player player, final net.minecraft.core.BlockPos pos, final net.minecraft.core.Direction face)
+    {
+        final ItemStack wand = wand(player);
+        if (wand.isEmpty() || !(player.level() instanceof ServerLevel level))
+        {
+            return;
+        }
+        if (player.getEyePosition().distanceTo(net.minecraft.world.phys.Vec3.atCenterOf(pos)) > RANGE + 2 || !level.isLoaded(pos))
+        {
+            player.displayClientMessage(Component.literal("Out of range.").withStyle(ChatFormatting.RED), true);
+            return;
+        }
+        final BlockHitResult hit = new BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(pos).relative(face, 0.5), face, pos, false);
+        final String msg = BuildWand.apply(level, player, hit, settings(wand), wand);
+        player.displayClientMessage(Component.literal(msg).withStyle(ChatFormatting.GOLD), true);
     }
 
     @Override
@@ -123,6 +144,12 @@ public class BuilderWandItem extends Item
         }
         lines.add(Component.literal("Block or item to use: in your off hand").withStyle(ChatFormatting.GRAY));
         lines.add(Component.literal("Blocks come from your inventory first, the off hand last").withStyle(ChatFormatting.GRAY));
-        lines.add(Component.literal("Right-click the air: menu (action, mode, size, undo)").withStyle(ChatFormatting.GRAY));
+        lines.add(Component.literal("Right-click: works on the block you look at, up to " + (int) RANGE + " blocks away").withStyle(ChatFormatting.GRAY));
+        lines.add(Component.literal("Sneak + right-click: menu (action, mode, size, undo)").withStyle(ChatFormatting.GRAY));
+        final int stored = LevelingStaffItem.storeTotal(stack);
+        if (stored > 0)
+        {
+            lines.add(Component.literal(stored + " blocks stored – Take them in the menu").withStyle(ChatFormatting.AQUA));
+        }
     }
 }

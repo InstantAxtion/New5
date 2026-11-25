@@ -227,7 +227,7 @@ final class SelfTest
                     finish(level, false);
                     return;
                 }
-                finish(level, checkBlueprints(level) & checkResearch() & checkFreeFastResearch() & checkFreePlacement(level) & checkEntities(level) & checkFlatten(level) & checkWand(level));
+                finish(level, checkBlueprints(level) & checkResearch() & checkFreeFastResearch() & checkFreePlacement(level) & checkEntities(level) & checkFlatten(level) & checkWand(level) & checkWandBig(level));
             }
             default -> { }
         }
@@ -467,6 +467,57 @@ final class SelfTest
         log("builder's wand: place area '%s' -> %d placed, inventory bricks %d (64-9), off hand %d (untouched) | replace row '%s' -> %d planks, bricks back %d | destroy '%s' -> %s | fill '%s' -> %d bricks on the floor | use '%s' -> %d paths | undo '%s' -> %d grass back",
             m1, placed, inv1, off1, m2, planks, bricksBack, m3, dug, m4, filled, m5, paths, m6, grass);
         return placed == 9 && inv1 == 55 && off1 == 10 && planks == 3 && bricksBack == 58 && dug && filled == 9 - 3 - 1 + 32 && paths == 3 && grass == 3;
+    }
+
+    /** Builder's Wand at long range on a big job: 100 x 100 destroyed from 250 blocks away, drops stored, undone. */
+    private boolean checkWandBig(final ServerLevel level)
+    {
+        final int x0 = 2100, z0 = 2100, n = 100;
+        final int g = ground(level, new BlockPos(x0 + 50, 0, z0 + 50)).getY() + 3;
+        for (int cx = (x0 >> 4) - 1; cx <= ((x0 + n) >> 4) + 1; cx++)
+            for (int cz = ((z0 - 260) >> 4); cz <= ((z0 + n) >> 4) + 1; cz++)
+                level.setChunkForced(cx, cz, true);
+        for (int x = x0; x < x0 + n; x++)
+            for (int z = z0; z < z0 + n; z++)
+            {
+                level.setBlock(new BlockPos(x, g, z), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(), 2);
+                level.setBlock(new BlockPos(x, g + 1, z), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 2);
+                level.setBlock(new BlockPos(x, g - 1, z), net.minecraft.world.level.block.Blocks.BEDROCK.defaultBlockState(), 2);
+            }
+        final FakePlayer p = FakePlayerFactory.get(level, new GameProfile(UUID.nameUUIDFromBytes("WandFar".getBytes()), "WandFar"));
+        p.getInventory().clearContent();
+        p.setPos(x0 + 50, g + 2, z0 - 200);
+        final ItemStack wand = new ItemStack(NeoterraTrade.BUILDER_WAND.get());
+        BuilderWandItem.setSettings(wand, new BuildWand.Settings(BuildWand.DESTROY, BuildWand.AREA, n));
+        p.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, wand);
+        final BlockPos centre = new BlockPos(x0 + 49, g, z0 + 49);   // even size: the area reaches one more on the + side
+        // not enough blocks to place: refused, nothing changes
+        BuilderWandItem.setSettings(wand, new BuildWand.Settings(BuildWand.PLACE, BuildWand.AREA, 50));
+        p.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, new ItemStack(Items.STONE_BRICKS, 64));
+        final String refused = BuildWand.apply(level, p, new net.minecraft.world.phys.BlockHitResult(
+            net.minecraft.world.phys.Vec3.atCenterOf(centre).add(0, 0.5, 0), net.minecraft.core.Direction.UP, centre, false), BuilderWandItem.settings(wand), wand);
+        p.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, ItemStack.EMPTY);
+        BuilderWandItem.setSettings(wand, new BuildWand.Settings(BuildWand.DESTROY, BuildWand.AREA, n));
+        final double dist = p.getEyePosition().distanceTo(net.minecraft.world.phys.Vec3.atCenterOf(centre));
+        BuilderWandItem.clicked(p, centre, net.minecraft.core.Direction.UP);
+        BuildWand.runAll();
+        int air = 0;
+        for (int x = x0; x < x0 + n; x++)
+            for (int z = z0; z < z0 + n; z++)
+                air += level.getBlockState(new BlockPos(x, g, z)).isAir() ? 1 : 0;
+        final int inInv = p.getInventory().countItem(Items.COBBLESTONE);
+        final int inStore = LevelingStaffItem.store(wand).getOrDefault(Items.COBBLESTONE, 0);
+        final String undone = BuildWand.undo(p);
+        BuildWand.runAll();
+        int stone = 0;
+        for (int x = x0; x < x0 + n; x++)
+            for (int z = z0; z < z0 + n; z++)
+                stone += level.getBlockState(new BlockPos(x, g, z)).is(net.minecraft.world.level.block.Blocks.STONE) ? 1 : 0;
+        final int leftAfterUndo = p.getInventory().countItem(Items.COBBLESTONE) + LevelingStaffItem.store(wand).getOrDefault(Items.COBBLESTONE, 0);
+        log("wand far & big: refused '%s' | clicked %.0f blocks away -> %d/%d removed, cobble %d in inventory + %d in the wand | undo '%s' -> %d/%d stone back, cobble left %d",
+            refused, dist, air, n * n, inInv, inStore, undone, stone, n * n, leftAfterUndo);
+        return refused.contains("Bring") && dist > 200 && air == n * n && inInv + inStore == n * n && inStore > 0
+            && stone == n * n && leftAfterUndo == 0;
     }
 
     /** Item frames and armour stands in the player house survive loading through Structurize. */

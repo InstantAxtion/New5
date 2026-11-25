@@ -106,6 +106,31 @@ public class LevelingStaffItem extends Item
         return ItemStack.EMPTY;
     }
 
+    /** Holder of the blocks store: the staff, else a Builder's Wand (held first, then anywhere in the inventory). */
+    static ItemStack storeHolder(final Player player)
+    {
+        final ItemStack staff = staff(player);
+        if (!staff.isEmpty())
+        {
+            return staff;
+        }
+        for (final InteractionHand hand : InteractionHand.values())
+        {
+            if (player.getItemInHand(hand).getItem() instanceof BuilderWandItem)
+            {
+                return player.getItemInHand(hand);
+            }
+        }
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++)
+        {
+            if (player.getInventory().getItem(i).getItem() instanceof BuilderWandItem)
+            {
+                return player.getInventory().getItem(i);
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
     /** The staff's store of blocks that did not fit in the inventory. */
     public static Map<Item, Integer> store(final ItemStack stack)
     {
@@ -114,12 +139,12 @@ public class LevelingStaffItem extends Item
 
     static Map<Item, Integer> store(final Player player)
     {
-        return store(staff(player));
+        return store(storeHolder(player));
     }
 
     static void storeAdd(final Player player, final Item item, final int count)
     {
-        final ItemStack staff = staff(player);
+        final ItemStack staff = storeHolder(player);
         if (staff.isEmpty())
         {
             Flattening.dropAt(player, item, count);
@@ -135,7 +160,7 @@ public class LevelingStaffItem extends Item
     /** Takes up to `count` of the item from the store; returns how many were taken. */
     static int storeTake(final Player player, final Item item, final int count)
     {
-        final ItemStack staff = staff(player);
+        final ItemStack staff = storeHolder(player);
         if (staff.isEmpty())
         {
             return 0;
@@ -227,7 +252,7 @@ public class LevelingStaffItem extends Item
     /** A staff action from a click or a menu button (server side). */
     static void act(final Player player, final int action)
     {
-        final ItemStack stack = staff(player);
+        final ItemStack stack = action == ACTION_TAKE ? storeHolder(player) : staff(player);
         if (stack.isEmpty() || !(player.level() instanceof ServerLevel level))
         {
             return;
@@ -293,7 +318,7 @@ public class LevelingStaffItem extends Item
     private static int emptyInto(final Player player, final Container container)
     {
         int moved = 0;
-        for (final Map.Entry<Item, Integer> e : store(staff(player)).entrySet())
+        for (final Map.Entry<Item, Integer> e : store(storeHolder(player)).entrySet())
         {
             int left = e.getValue();
             for (int i = 0; i < container.getContainerSize() && left > 0; i++)

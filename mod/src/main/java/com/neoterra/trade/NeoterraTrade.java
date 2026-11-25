@@ -144,9 +144,13 @@ public class NeoterraTrade
         {
             e.registrar("1").playToServer(StaffActionPayload.TYPE, StaffActionPayload.CODEC, StaffActionPayload::handle);
             e.registrar("1").playToServer(WandPayload.TYPE, WandPayload.CODEC, WandPayload::handle);
+            e.registrar("1").playToServer(WandClickPayload.TYPE, WandClickPayload.CODEC, WandClickPayload::handle);
         });
         NeoForge.EVENT_BUS.register(new ColonyBoosts());
-        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.ServerTickEvent.Post e) -> Flattening.tick());
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.ServerTickEvent.Post e) -> {
+            Flattening.tick();
+            BuildWand.tick();
+        });
         if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient())
         {
             LevelingStaffClient.register();

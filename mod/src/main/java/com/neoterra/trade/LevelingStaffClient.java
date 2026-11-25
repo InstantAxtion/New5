@@ -90,6 +90,20 @@ final class LevelingStaffClient
 
     // ------------------------------------------------------------------------------------------------ Builder's Wand
 
+    /** Aim as far as the wand reaches and send the target to the server. */
+    static void wandClick(final net.minecraft.world.entity.player.Player player)
+    {
+        final net.minecraft.world.phys.HitResult hit = player.pick(BuilderWandItem.RANGE, 1.0f, false);
+        if (hit instanceof net.minecraft.world.phys.BlockHitResult bh && hit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK)
+        {
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new WandClickPayload(bh.getBlockPos(), bh.getDirection().get3DDataValue()));
+        }
+        else
+        {
+            player.displayClientMessage(net.minecraft.network.chat.Component.literal("No block in sight (sneak + right-click for the menu)."), true);
+        }
+    }
+
     static void openWandMenu(final ItemStack stack)
     {
         Minecraft.getInstance().setScreen(new WandScreen(stack));
@@ -118,10 +132,21 @@ final class LevelingStaffClient
         protected void init()
         {
             final int y = top() + 108;
-            addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("-"),
-                b -> setSize(size - 1)).bounds(left(), y, 20, 20).build());
-            addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("+"),
-                b -> setSize(size + 1)).bounds(left() + 70, y, 20, 20).build());
+            addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("-10"),
+                b -> setSize(size - 10)).bounds(left(), y, 22, 20).build());
+            addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("-1"),
+                b -> setSize(size - 1)).bounds(left() + 23, y, 18, 20).build());
+            addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("+1"),
+                b -> setSize(size + 1)).bounds(left() + 59, y, 18, 20).build());
+            addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("+10"),
+                b -> setSize(size + 10)).bounds(left() + 78, y, 22, 20).build());
+            final var take = net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal(
+                "Take stored (" + LevelingStaffItem.storeTotal(stack) + ")"), b -> {
+                    net.neoforged.neoforge.network.PacketDistributor.sendToServer(new StaffActionPayload(LevelingStaffItem.ACTION_TAKE));
+                    onClose();
+                }).bounds(left() + 120, y + 22, 100, 20).build();
+            take.active = LevelingStaffItem.storeTotal(stack) > 0;
+            addRenderableWidget(take);
             addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("Undo last"),
                 b -> {
                     net.neoforged.neoforge.network.PacketDistributor.sendToServer(new WandPayload(action, mode, size, true));
@@ -172,7 +197,7 @@ final class LevelingStaffClient
         public void render(final net.minecraft.client.gui.GuiGraphics g, final int mx, final int my, final float pt)
         {
             super.render(g, mx, my, pt);
-            g.fill(left() - 8, top() - 8, left() + 228, top() + 136, 0xFFEDE3C6);          // parchment panel
+            g.fill(left() - 8, top() - 8, left() + 228, top() + 156, 0xFFEDE3C6);          // parchment panel
             g.drawString(font, "Action", left(), top() + 2, 0x302820, false);
             g.drawString(font, "Mode", left() + 120, top() + 2, 0x302820, false);
             for (int i = 0; i < 4; i++)
@@ -181,14 +206,15 @@ final class LevelingStaffClient
                 row(g, left() + 120, i, BuildWand.MODES[i], i == mode);
             }
             g.drawString(font, "Size", left(), top() + 98, 0x302820, false);
-            g.drawCenteredString(font, mode == BuildWand.FILL ? "corner to corner" : String.valueOf(mode == BuildWand.AREA ? Math.min(16, size) + "x" + Math.min(16, size) : size),
-                left() + 45, top() + 114, 0xFFFFFF);
+            g.drawCenteredString(font, mode == BuildWand.FILL ? "-" : String.valueOf(size), left() + 50, top() + 114, 0xFFFFFF);
+            g.drawString(font, mode == BuildWand.FILL ? "Fill: corner to corner (up to " + BuildWand.MAX_SIZE + " per side)"
+                : mode == BuildWand.AREA ? "Area: " + size + " x " + size : "Line: " + size + " long", left(), top() + 134, 0x504030, false);
             for (final var w : renderables)
             {
                 w.render(g, mx, my, pt);
             }
             final ItemStack off = Minecraft.getInstance().player == null ? ItemStack.EMPTY : Minecraft.getInstance().player.getOffhandItem();
-            g.drawString(font, off.isEmpty() ? "Off hand: empty" : "Off hand: " + off.getHoverName().getString(), left(), top() + 132, 0x504030, false);
+            g.drawString(font, off.isEmpty() ? "Off hand: empty" : "Off hand: " + off.getHoverName().getString(), left(), top() + 146, 0x504030, false);
         }
 
         private void row(final net.minecraft.client.gui.GuiGraphics g, final int x, final int i, final String text, final boolean on)
@@ -207,13 +233,16 @@ final class LevelingStaffClient
 
     private static void renderWandPreview(final RenderLevelStageEvent event, final Minecraft mc, final ItemStack wand)
     {
-        if (!(mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit) || hit.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK)
+        final net.minecraft.world.phys.HitResult aim = mc.player.pick(BuilderWandItem.RANGE, event.getPartialTick().getGameTimeDeltaPartialTick(true), false);
+        if (!(aim instanceof net.minecraft.world.phys.BlockHitResult hit) || aim.getType() != net.minecraft.world.phys.HitResult.Type.BLOCK)
         {
             return;
         }
         final BuildWand.Settings s = BuilderWandItem.settings(wand);
-        final java.util.List<BlockPos> targets = BuildWand.targets(mc.level, mc.player, hit, s,
-            s.mode() == BuildWand.FILL ? BuilderWandItem.fillCorner(wand) : null);
+        final BlockPos fill = s.mode() == BuildWand.FILL ? BuilderWandItem.fillCorner(wand) : null;
+        final BlockPos[] box = BuildWand.bounds(mc.player, hit, s, fill);
+        // big jobs: just the outline of the whole box (checking every block each frame would be too slow)
+        final java.util.List<BlockPos> targets = BuildWand.volume(box) <= 2048 ? BuildWand.targets(mc.level, mc.player, hit, s, fill) : java.util.List.of();
         final float[] c = switch (s.action())
         {
             case BuildWand.PLACE -> new float[] {0.3f, 1.0f, 0.4f};
@@ -231,6 +260,7 @@ final class LevelingStaffClient
         {
             LevelRenderer.renderLineBox(pose, lines, new AABB(p).inflate(0.005), c[0], c[1], c[2], 0.9f);
         }
+        LevelRenderer.renderLineBox(pose, lines, AABB.encapsulatingFullBlocks(box[0], box[1]).inflate(0.02), c[0], c[1], c[2], 1.0f);
         buffers.endBatch(RenderType.lines());
         pose.popPose();
     }
