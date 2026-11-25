@@ -20,41 +20,9 @@ final class LevelingStaffClient
 {
     private LevelingStaffClient() {}
 
-    /** U by default (Controls → Neoterra): undo the Builder's Wand's last job. */
-    static final net.minecraft.client.KeyMapping UNDO_KEY = new net.minecraft.client.KeyMapping(
-        "key.neoterra.wand_undo", org.lwjgl.glfw.GLFW.GLFW_KEY_U, "key.categories.neoterra");
-
     static void register(final net.neoforged.bus.api.IEventBus modBus)
     {
         NeoForge.EVENT_BUS.addListener(LevelingStaffClient::onRender);
-        modBus.addListener((net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent e) -> e.register(UNDO_KEY));
-        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientTickEvent.Post e) -> {
-            while (UNDO_KEY.consumeClick())
-            {
-                final Minecraft mc = Minecraft.getInstance();
-                if (mc.player != null && mc.screen == null)
-                {
-                    undoWand();
-                }
-            }
-        });
-        // sneak + left-click with the wand: undo
-        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.InputEvent.InteractionKeyMappingTriggered e) -> {
-            final Minecraft mc = Minecraft.getInstance();
-            if (e.isAttack() && mc.player != null && mc.player.isShiftKeyDown()
-                && mc.player.getMainHandItem().getItem() instanceof BuilderWandItem)
-            {
-                e.setCanceled(true);
-                e.setSwingHand(false);
-                undoWand();
-            }
-        });
-    }
-
-    private static void undoWand()
-    {
-        final BuildWand.Settings s = BuilderWandItem.settings(Minecraft.getInstance().player.getMainHandItem());
-        net.neoforged.neoforge.network.PacketDistributor.sendToServer(new WandPayload(s.action(), s.mode(), s.size(), true));
     }
 
     /** The staff's menu: Flatten, Undo last flatten, Clear selection, Take stored blocks. */

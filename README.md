@@ -67,8 +67,8 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
-## Builder's Wand: quick undo, preview of what you can afford, drops on the ground (1.30.0)
-* **Undo:** sneak + left-click with the wand, or press **U** (Controls → Neoterra), or "Undo last" in the menu.
+## Builder's Wand: preview of what you can afford, drops on the ground (1.30.0)
+* **Undo:** "Undo last" in the wand's menu (sneak + right-click).
 * **Place / Replace highlight only as many blocks as you carry** (inventory + off hand) and build exactly those,
   bottom layer first – no more "bring N more" refusals.
 * **Replaced blocks drop on the ground** where they were (grouped into a few stacks per patch on big jobs).
