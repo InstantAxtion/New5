@@ -67,6 +67,22 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## Builder's Wand (1.28.0)
+A building tool in the style of the classic gadgets. Craft: gold ingot + diamond at the top right, stick + gold ingot
+in the middle, stick bottom left. Right-click the air for its menu: **Action** (Place, Replace, Destroy, Use),
+**Mode** (Direction, Row/Column, Fill, Area), size and **Undo last**. An outline shows exactly which blocks a click
+will change.
+* **The block to place is the one in your off hand**; blocks are taken from your inventory first and from the off-hand
+  stack last.
+* **Place** builds on the face you click · **Replace** swaps blocks for the off-hand block (you get the old ones) ·
+  **Destroy** removes them (you get them) · **Use** uses the off-hand item on every block (bone meal, hoe, shovel
+  paths, axe stripping...).
+* **Direction:** a line straight out of (or into) the face · **Row/Column:** a line across the face, along where
+  you look · **Fill:** corner to corner – click one corner, then the opposite one, and the whole box between them
+  is filled (up to 32 per side) · **Area:** a square on the face (up to 16 x 16).
+* Never breaks containers, colony huts or unbreakable blocks; respects spawn protection and colony permissions.
+* **Undo** puts the last click back and swaps the items back (no duplicating).
+
 ## Leveling Staff: undo, 3x bigger, staff store (1.27.0)
 * **Menu:** right-click the air with the staff – **Flatten**, **Undo last flatten**, **Clear selection**,
   **Take stored blocks**. Sneak + right-click still flattens straight away.
