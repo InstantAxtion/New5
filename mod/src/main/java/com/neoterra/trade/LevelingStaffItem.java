@@ -142,6 +142,91 @@ public class LevelingStaffItem extends Item
         return store(storeHolder(player));
     }
 
+    // ------------------------------------------------------------------------------------------------ store management
+
+    public static final int STORE_TAKE = 1, STORE_DISCARD = 2, STORE_TOGGLE_VOID = 3, STORE_DISCARD_ALL = 4;
+
+    /** Item types the holder throws away instead of keeping (auto-discard). */
+    public static java.util.Set<Item> voided(final ItemStack stack)
+    {
+        final java.util.Set<Item> out = new java.util.LinkedHashSet<>();
+        final CompoundTag tag = tag(stack);
+        if (tag.contains("void", net.minecraft.nbt.Tag.TAG_LIST))
+        {
+            final net.minecraft.nbt.ListTag list = tag.getList("void", net.minecraft.nbt.Tag.TAG_STRING);
+            for (int i = 0; i < list.size(); i++)
+            {
+                final Item item = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse(list.getString(i)));
+                if (item != net.minecraft.world.item.Items.AIR)
+                {
+                    out.add(item);
+                }
+            }
+        }
+        return out;
+    }
+
+    static boolean isVoided(final Player player, final Item item)
+    {
+        final ItemStack holder = storeHolder(player);
+        return !holder.isEmpty() && voided(holder).contains(item);
+    }
+
+    /**
+     * A store action on a holder stack (staff or wand). Pure data change – used by the server and, for an immediate
+     * screen update, by the client on its copy. Taking items into the inventory is done by the server only.
+     */
+    static void storeEdit(final ItemStack stack, final int action, final Item item, final int amount)
+    {
+        final CompoundTag tag = tag(stack);
+        final Map<Item, Integer> store = Flattening.readStore(tag);
+        switch (action)
+        {
+            case STORE_TAKE -> store.computeIfPresent(item, (k, v) -> Math.max(0, v - amount));
+            case STORE_DISCARD -> store.remove(item);
+            case STORE_DISCARD_ALL -> store.clear();
+            case STORE_TOGGLE_VOID ->
+            {
+                final java.util.Set<Item> v = voided(stack);
+                if (!v.remove(item))
+                {
+                    v.add(item);
+                    store.remove(item);   // switching auto-discard on also throws away what is stored
+                }
+                final net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
+                v.forEach(i -> list.add(net.minecraft.nbt.StringTag.valueOf(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(i).toString())));
+                if (list.isEmpty())
+                {
+                    tag.remove("void");
+                }
+                else
+                {
+                    tag.put("void", list);
+                }
+            }
+            default -> { }
+        }
+        Flattening.writeStore(tag, store);
+        save(stack, tag);
+    }
+
+    /** Server: a button of the Stored blocks screen. */
+    static void storeAction(final Player player, final int action, final Item item, final int amount)
+    {
+        final ItemStack holder = storeHolder(player);
+        if (holder.isEmpty())
+        {
+            return;
+        }
+        if (action == STORE_TAKE)
+        {
+            final int took = storeTake(player, item, amount);
+            Flattening.giveInventoryOnly(player, item, took);
+            return;
+        }
+        storeEdit(holder, action, item, amount);
+    }
+
     static void storeAdd(final Player player, final Item item, final int count)
     {
         final ItemStack staff = storeHolder(player);

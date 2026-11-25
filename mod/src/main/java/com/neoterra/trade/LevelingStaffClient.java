@@ -55,10 +55,8 @@ final class LevelingStaffClient
                 b -> send(LevelingStaffItem.ACTION_UNDO)).bounds(x, y + 24, w, 20).build());
             addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("Clear selection"),
                 b -> send(LevelingStaffItem.ACTION_CLEAR)).bounds(x, y + 48, w, 20).build());
-            final var take = net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal(
-                "Take stored blocks (" + LevelingStaffItem.storeTotal(stack) + ")"), b -> send(LevelingStaffItem.ACTION_TAKE)).bounds(x, y + 72, w, 20).build();
-            take.active = LevelingStaffItem.storeTotal(stack) > 0;
-            addRenderableWidget(take);
+            addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal(
+                "Stored blocks (" + LevelingStaffItem.storeTotal(stack) + ")…"), b -> openStore(stack)).bounds(x, y + 72, w, 20).build());
         }
 
         private void send(final int action)
@@ -140,13 +138,8 @@ final class LevelingStaffClient
                 b -> setSize(size + 1)).bounds(left() + 59, y, 18, 20).build());
             addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("+10"),
                 b -> setSize(size + 10)).bounds(left() + 78, y, 22, 20).build());
-            final var take = net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal(
-                "Take stored (" + LevelingStaffItem.storeTotal(stack) + ")"), b -> {
-                    net.neoforged.neoforge.network.PacketDistributor.sendToServer(new StaffActionPayload(LevelingStaffItem.ACTION_TAKE));
-                    onClose();
-                }).bounds(left() + 120, y + 22, 100, 20).build();
-            take.active = LevelingStaffItem.storeTotal(stack) > 0;
-            addRenderableWidget(take);
+            addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal(
+                "Stored (" + LevelingStaffItem.storeTotal(stack) + ")…"), b -> openStore(stack)).bounds(left() + 120, y + 22, 100, 20).build());
             addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("Undo last"),
                 b -> {
                     net.neoforged.neoforge.network.PacketDistributor.sendToServer(new WandPayload(action, mode, size, true));
@@ -289,6 +282,139 @@ final class LevelingStaffClient
         }
         buffers.endBatch(RenderType.lines());
         pose.popPose();
+    }
+
+    /** Stored blocks of a staff or wand: take, discard, auto-discard, sorted by amount or name. */
+    static void openStore(final ItemStack holder)
+    {
+        Minecraft.getInstance().setScreen(new StoreScreen(holder));
+    }
+
+    private static final class StoreScreen extends net.minecraft.client.gui.screens.Screen
+    {
+        private static final int ROW = 22, VISIBLE = 8;
+        private final ItemStack holder;
+        private boolean byName;
+        private int scroll;
+
+        StoreScreen(final ItemStack holder)
+        {
+            super(net.minecraft.network.chat.Component.literal("Stored blocks"));
+            this.holder = holder;
+        }
+
+        private java.util.List<net.minecraft.world.item.Item> rows()
+        {
+            final java.util.Map<net.minecraft.world.item.Item, Integer> store = LevelingStaffItem.store(holder);
+            final java.util.LinkedHashSet<net.minecraft.world.item.Item> set = new java.util.LinkedHashSet<>(store.keySet());
+            set.addAll(LevelingStaffItem.voided(holder));
+            final java.util.List<net.minecraft.world.item.Item> list = new java.util.ArrayList<>(set);
+            if (byName)
+            {
+                list.sort(java.util.Comparator.comparing(i -> i.getDescription().getString()));
+            }
+            else
+            {
+                list.sort((a, b) -> Integer.compare(store.getOrDefault(b, 0), store.getOrDefault(a, 0)));
+            }
+            return list;
+        }
+
+        private int left() { return width / 2 - 150; }
+        private int top() { return height / 2 - 100; }
+
+        @Override
+        protected void init()
+        {
+            addRenderableWidget(net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal(byName ? "Sort: name" : "Sort: amount"),
+                b -> { byName = !byName; rebuildWidgets(); }).bounds(left(), top() + 14, 90, 18).build());
+            final var all = net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("Discard all"),
+                b -> act(LevelingStaffItem.STORE_DISCARD_ALL, net.minecraft.world.item.Items.AIR, 0)).bounds(left() + 210, top() + 14, 90, 18).build();
+            all.active = LevelingStaffItem.storeTotal(holder) > 0;
+            addRenderableWidget(all);
+            final java.util.List<net.minecraft.world.item.Item> rows = rows();
+            scroll = Math.max(0, Math.min(scroll, rows.size() - VISIBLE));
+            final java.util.Map<net.minecraft.world.item.Item, Integer> store = LevelingStaffItem.store(holder);
+            final java.util.Set<net.minecraft.world.item.Item> voided = LevelingStaffItem.voided(holder);
+            for (int r = 0; r < VISIBLE && scroll + r < rows.size(); r++)
+            {
+                final net.minecraft.world.item.Item item = rows.get(scroll + r);
+                final int y = top() + 40 + r * ROW;
+                final int have = store.getOrDefault(item, 0);
+                final var take64 = net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("Take 64"),
+                    b -> act(LevelingStaffItem.STORE_TAKE, item, 64)).bounds(left() + 130, y, 44, 18).build();
+                final var takeAll = net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("All"),
+                    b -> act(LevelingStaffItem.STORE_TAKE, item, have)).bounds(left() + 176, y, 28, 18).build();
+                final var discard = net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal("Discard"),
+                    b -> act(LevelingStaffItem.STORE_DISCARD, item, 0)).bounds(left() + 206, y, 44, 18).build();
+                take64.active = takeAll.active = discard.active = have > 0;
+                final boolean on = voided.contains(item);
+                final var auto = net.minecraft.client.gui.components.Button.builder(net.minecraft.network.chat.Component.literal(on ? "Auto: on" : "Auto: off"),
+                    b -> act(LevelingStaffItem.STORE_TOGGLE_VOID, item, 0)).bounds(left() + 252, y, 48, 18)
+                    .tooltip(net.minecraft.client.gui.components.Tooltip.create(net.minecraft.network.chat.Component.literal(
+                        "Auto-discard: throw this block away on every flatten / wand job instead of keeping it"))).build();
+                addRenderableWidget(take64);
+                addRenderableWidget(takeAll);
+                addRenderableWidget(discard);
+                addRenderableWidget(auto);
+            }
+        }
+
+        private void act(final int action, final net.minecraft.world.item.Item item, final int amount)
+        {
+            LevelingStaffItem.storeEdit(holder, action, item, amount);   // show the change right away; the server syncs back
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new StorePayload(action,
+                item == net.minecraft.world.item.Items.AIR ? "" : net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item).toString(), amount));
+            rebuildWidgets();
+        }
+
+        @Override
+        public boolean mouseScrolled(final double mx, final double my, final double dx, final double dy)
+        {
+            scroll = Math.max(0, scroll - (int) Math.signum(dy));
+            rebuildWidgets();
+            return true;
+        }
+
+        @Override
+        public void render(final net.minecraft.client.gui.GuiGraphics g, final int mx, final int my, final float pt)
+        {
+            super.render(g, mx, my, pt);
+            g.fill(left() - 8, top() - 8, left() + 308, top() + 46 + VISIBLE * ROW, 0xFFEDE3C6);
+            g.drawString(font, "Stored blocks – " + LevelingStaffItem.storeTotal(holder) + " in total", left(), top(), 0x302820, false);
+            final java.util.List<net.minecraft.world.item.Item> rows = rows();
+            final java.util.Map<net.minecraft.world.item.Item, Integer> store = LevelingStaffItem.store(holder);
+            final java.util.Set<net.minecraft.world.item.Item> voided = LevelingStaffItem.voided(holder);
+            if (rows.isEmpty())
+            {
+                g.drawString(font, "Nothing stored. Blocks that don't fit in your inventory land here.", left(), top() + 44, 0x504030, false);
+            }
+            for (int r = 0; r < VISIBLE && scroll + r < rows.size(); r++)
+            {
+                final net.minecraft.world.item.Item item = rows.get(scroll + r);
+                final int y = top() + 40 + r * ROW;
+                g.fill(left() - 2, y - 1, left() + 302, y + 19, voided.contains(item) ? 0xFF8A5A4A : 0xFF3A3A3A);
+                g.renderItem(new ItemStack(item), left(), y + 1);
+                final String name = item.getDescription().getString();
+                g.drawString(font, name.length() > 13 ? name.substring(0, 12) + "…" : name, left() + 20, y + 5, 0xFFFFFF, false);
+                g.drawString(font, String.valueOf(store.getOrDefault(item, 0)), left() + 98, y + 5, 0xFFE08A, false);
+            }
+            if (rows.size() > VISIBLE)
+            {
+                g.drawString(font, "Scroll for more (" + (scroll + 1) + "-" + Math.min(rows.size(), scroll + VISIBLE) + " of " + rows.size() + ")",
+                    left(), top() + 42 + VISIBLE * ROW, 0x504030, false);
+            }
+            for (final var w : renderables)
+            {
+                w.render(g, mx, my, pt);
+            }
+        }
+
+        @Override
+        public boolean isPauseScreen()
+        {
+            return false;
+        }
     }
 
     private static void onRender(final RenderLevelStageEvent event)

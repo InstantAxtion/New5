@@ -67,6 +67,13 @@ pack's own roofs and materials.)
 table and upgrades independently. Designed per pack (glass workshop / plaster-and-timber carpentry house / timber
 barn workshop).
 
+## Stored blocks screen (1.31.0)
+The Leveling Staff and Builder's Wand menus have a **Stored blocks…** button: a list of everything the tool holds,
+with icon and count, sorted by amount or name (scroll for more). Per block type: **Take 64**, **All** (into your
+inventory), **Discard**, and **Auto** – auto-discard, which throws that block away on every flatten and wand job
+instead of keeping it (great for dirt, cobble or netherrack). **Discard all** empties the store. Auto-discarded
+blocks are never handed to you, so undo doesn't ask for them back.
+
 ## Builder's Wand: preview of what you can afford, drops on the ground (1.30.0)
 * **Undo:** "Undo last" in the wand's menu (sneak + right-click).
 * **Place / Replace highlight only as many blocks as you carry** (inventory + off hand) and build exactly those,

@@ -145,6 +145,7 @@ public class NeoterraTrade
             e.registrar("1").playToServer(StaffActionPayload.TYPE, StaffActionPayload.CODEC, StaffActionPayload::handle);
             e.registrar("1").playToServer(WandPayload.TYPE, WandPayload.CODEC, WandPayload::handle);
             e.registrar("1").playToServer(WandClickPayload.TYPE, WandClickPayload.CODEC, WandClickPayload::handle);
+            e.registrar("1").playToServer(StorePayload.TYPE, StorePayload.CODEC, StorePayload::handle);
         });
         NeoForge.EVENT_BUS.register(new ColonyBoosts());
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.tick.ServerTickEvent.Post e) -> {

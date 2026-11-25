@@ -227,7 +227,7 @@ final class SelfTest
                     finish(level, false);
                     return;
                 }
-                finish(level, checkBlueprints(level) & checkResearch() & checkFreeFastResearch() & checkFreePlacement(level) & checkEntities(level) & checkFlatten(level) & checkWand(level) & checkWandBig(level));
+                finish(level, checkBlueprints(level) & checkResearch() & checkFreeFastResearch() & checkFreePlacement(level) & checkEntities(level) & checkFlatten(level) & checkWand(level) & checkWandBig(level) & checkStore(level));
             }
             default -> { }
         }
@@ -527,6 +527,35 @@ final class SelfTest
             refused, bricks, dist, air, n * n, inInv, inStore, undone, stone, n * n, leftAfterUndo);
         return partial && dist > 200 && air == n * n && inInv + inStore == n * n && inStore > 0
             && stone == n * n && leftAfterUndo == 0;
+    }
+
+    /** Stored blocks: take 64, discard a type, auto-discard a type (also during a wand job). */
+    private boolean checkStore(final ServerLevel level)
+    {
+        final FakePlayer p = FakePlayerFactory.get(level, new GameProfile(UUID.nameUUIDFromBytes("Store".getBytes()), "Store"));
+        p.getInventory().clearContent();
+        final ItemStack staff = new ItemStack(NeoterraTrade.LEVELING_STAFF.get());
+        p.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, staff);
+        LevelingStaffItem.storeAdd(p, Items.DIRT, 100);
+        LevelingStaffItem.storeAdd(p, Items.COBBLESTONE, 50);
+        LevelingStaffItem.storeAdd(p, Items.GRAVEL, 10);
+        LevelingStaffItem.storeAction(p, LevelingStaffItem.STORE_TAKE, Items.DIRT, 64);
+        final int dirtInv = p.getInventory().countItem(Items.DIRT), dirtStore = LevelingStaffItem.store(staff).getOrDefault(Items.DIRT, 0);
+        LevelingStaffItem.storeAction(p, LevelingStaffItem.STORE_DISCARD, Items.COBBLESTONE, 0);
+        final boolean cobbleGone = !LevelingStaffItem.store(staff).containsKey(Items.COBBLESTONE);
+        LevelingStaffItem.storeAction(p, LevelingStaffItem.STORE_TOGGLE_VOID, Items.GRAVEL, 0);
+        final boolean gravelVoided = LevelingStaffItem.isVoided(p, Items.GRAVEL) && !LevelingStaffItem.store(staff).containsKey(Items.GRAVEL);
+        // a flatten-style hand-out of gravel is now thrown away
+        final int before = p.getInventory().countItem(Items.GRAVEL);
+        BuildWand.giveForTest(p, new ItemStack(Items.GRAVEL, 20));
+        final boolean gravelSkipped = p.getInventory().countItem(Items.GRAVEL) == before && !LevelingStaffItem.store(staff).containsKey(Items.GRAVEL);
+        LevelingStaffItem.storeAction(p, LevelingStaffItem.STORE_TOGGLE_VOID, Items.GRAVEL, 0);
+        final boolean toggledOff = !LevelingStaffItem.isVoided(p, Items.GRAVEL);
+        LevelingStaffItem.storeAction(p, LevelingStaffItem.STORE_DISCARD_ALL, Items.AIR, 0);
+        final int left = LevelingStaffItem.storeTotal(staff);
+        log("stored blocks: take 64 dirt -> %d in inventory, %d stored | discard cobble %s | auto-discard gravel %s, gravel skipped %s, off again %s | discard all -> %d left",
+            dirtInv, dirtStore, cobbleGone, gravelVoided, gravelSkipped, toggledOff, left);
+        return dirtInv == 64 && dirtStore == 36 && cobbleGone && gravelVoided && gravelSkipped && toggledOff && left == 0;
     }
 
     /** Item frames and armour stands in the player house survive loading through Structurize. */

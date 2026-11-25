@@ -625,9 +625,9 @@ public final class BuildWand
     {
         for (final ItemStack s : stacks)
         {
-            if (s.isEmpty())
+            if (s.isEmpty() || LevelingStaffItem.isVoided(player, s.getItem()))
             {
-                continue;
+                continue;   // auto-discarded: never handed out, so undo doesn't ask for it
             }
             if (record != null)
             {
@@ -635,6 +635,11 @@ public final class BuildWand
             }
             Flattening.give(player, s.getItem(), s.getCount());
         }
+    }
+
+    static void giveForTest(final Player player, final ItemStack stack)
+    {
+        giveAll(player, List.of(stack), new LinkedHashMap<>());
     }
 
     private static void remove(final Inventory inv, final Item item, int count)

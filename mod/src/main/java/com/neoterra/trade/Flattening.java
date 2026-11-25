@@ -262,7 +262,7 @@ public final class Flattening
         // what is left goes to the player: inventory first, then the staff's store
         for (final Map.Entry<Item, Integer> e : plan.drops.entrySet())
         {
-            if (e.getValue() > 0)
+            if (e.getValue() > 0 && !LevelingStaffItem.isVoided(player, e.getKey()))
             {
                 give(player, e.getKey(), e.getValue());
                 undo.given.merge(e.getKey(), e.getValue(), Integer::sum);
