@@ -432,11 +432,14 @@ final class SelfTest
         final int inv1 = p.getInventory().countItem(Items.STONE_BRICKS) - p.getOffhandItem().getCount(), off1 = p.getOffhandItem().getCount();
         // 2. replace a row of 5 (3 bricks there) with oak planks from the off hand
         p.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, new ItemStack(Items.OAK_PLANKS, 16));
+        final int droppedBefore = BuildWand.droppedTotal;
         final String m2 = BuildWand.apply(level, p, top.apply(c.above()), new BuildWand.Settings(BuildWand.REPLACE, BuildWand.ROW_COLUMN, 5));
         int planks = 0;
         for (int dz = -2; dz <= 2; dz++)
             planks += level.getBlockState(c.offset(0, 1, dz)).is(net.minecraft.world.level.block.Blocks.OAK_PLANKS) ? 1 : 0;
-        final int bricksBack = p.getInventory().countItem(Items.STONE_BRICKS);
+        // replaced blocks drop on the ground where they were (not into the inventory)
+        final int bricksBack = BuildWand.droppedTotal - droppedBefore;
+        final boolean notInInventory = p.getInventory().countItem(Items.STONE_BRICKS) == 55;
         // 3. destroy 2 deep (a brick and the stone under it)
         final String m3 = BuildWand.apply(level, p, top.apply(c.offset(1, 1, 1)), new BuildWand.Settings(BuildWand.DESTROY, BuildWand.DIRECTION, 2));
         final boolean dug = level.getBlockState(c.offset(1, 1, 1)).isAir() && level.getBlockState(c.offset(1, 0, 1)).isAir();
@@ -464,9 +467,9 @@ final class SelfTest
         int grass = 0;
         for (int dx = 0; dx < 3; dx++)
             grass += level.getBlockState(new BlockPos(x0 + dx, g, z0 + 11)).is(net.minecraft.world.level.block.Blocks.GRASS_BLOCK) ? 1 : 0;
-        log("builder's wand: place area '%s' -> %d placed, inventory bricks %d (64-9), off hand %d (untouched) | replace row '%s' -> %d planks, bricks back %d | destroy '%s' -> %s | fill '%s' -> %d bricks on the floor | use '%s' -> %d paths | undo '%s' -> %d grass back",
+        log("builder's wand: place area '%s' -> %d placed, inventory bricks %d (64-9), off hand %d (untouched) | replace row '%s' -> %d planks, bricks dropped on the ground %d | destroy '%s' -> %s | fill '%s' -> %d bricks on the floor | use '%s' -> %d paths | undo '%s' -> %d grass back",
             m1, placed, inv1, off1, m2, planks, bricksBack, m3, dug, m4, filled, m5, paths, m6, grass);
-        return placed == 9 && inv1 == 55 && off1 == 10 && planks == 3 && bricksBack == 58 && dug && filled == 9 - 3 - 1 + 32 && paths == 3 && grass == 3;
+        return placed == 9 && inv1 == 55 && off1 == 10 && planks == 3 && bricksBack == 3 && notInInventory && dug && filled == 9 - 3 - 1 + 32 && paths == 3 && grass == 3;
     }
 
     /** Builder's Wand at long range on a big job: 100 x 100 destroyed from 250 blocks away, drops stored, undone. */
@@ -496,6 +499,12 @@ final class SelfTest
         p.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, new ItemStack(Items.STONE_BRICKS, 64));
         final String refused = BuildWand.apply(level, p, new net.minecraft.world.phys.BlockHitResult(
             net.minecraft.world.phys.Vec3.atCenterOf(centre).add(0, 0.5, 0), net.minecraft.core.Direction.UP, centre, false), BuilderWandItem.settings(wand), wand);
+        // only as many as carried (64), the first row of the 50 x 50 area and 14 of the next
+        int bricks = 0;
+        for (int x = x0; x < x0 + n; x++)
+            for (int z = z0; z < z0 + n; z++)
+                bricks += level.getBlockState(new BlockPos(x, g + 1, z)).is(net.minecraft.world.level.block.Blocks.STONE_BRICKS) ? 1 : 0;
+        final boolean partial = refused.startsWith("64 blocks placed") && bricks == 64 && p.getInventory().countItem(Items.STONE_BRICKS) == 0;
         p.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, ItemStack.EMPTY);
         BuilderWandItem.setSettings(wand, new BuildWand.Settings(BuildWand.DESTROY, BuildWand.AREA, n));
         final double dist = p.getEyePosition().distanceTo(net.minecraft.world.phys.Vec3.atCenterOf(centre));
@@ -514,9 +523,9 @@ final class SelfTest
             for (int z = z0; z < z0 + n; z++)
                 stone += level.getBlockState(new BlockPos(x, g, z)).is(net.minecraft.world.level.block.Blocks.STONE) ? 1 : 0;
         final int leftAfterUndo = p.getInventory().countItem(Items.COBBLESTONE) + LevelingStaffItem.store(wand).getOrDefault(Items.COBBLESTONE, 0);
-        log("wand far & big: refused '%s' | clicked %.0f blocks away -> %d/%d removed, cobble %d in inventory + %d in the wand | undo '%s' -> %d/%d stone back, cobble left %d",
-            refused, dist, air, n * n, inInv, inStore, undone, stone, n * n, leftAfterUndo);
-        return refused.contains("Bring") && dist > 200 && air == n * n && inInv + inStore == n * n && inStore > 0
+        log("wand far & big: 64 carried of 2500 -> '%s', bricks placed %d | clicked %.0f blocks away -> %d/%d removed, cobble %d in inventory + %d in the wand | undo '%s' -> %d/%d stone back, cobble left %d",
+            refused, bricks, dist, air, n * n, inInv, inStore, undone, stone, n * n, leftAfterUndo);
+        return partial && dist > 200 && air == n * n && inInv + inStore == n * n && inStore > 0
             && stone == n * n && leftAfterUndo == 0;
     }
 

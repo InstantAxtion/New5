@@ -153,7 +153,7 @@ public class NeoterraTrade
         });
         if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient())
         {
-            LevelingStaffClient.register();
+            LevelingStaffClient.register(modBus);
         }
         SelfTest.register();
         FarmTest.register();

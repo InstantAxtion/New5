@@ -85,78 +85,103 @@ public final class BuildWand
     /** fillCorner: the first corner of a corner-to-corner fill (FILL mode), or null before it is set. */
     public static List<BlockPos> targets(final Level level, final Player player, final BlockHitResult hit, final Settings s, final BlockPos fillCorner)
     {
+        final Block block = player.getOffhandItem().getItem() instanceof BlockItem bi ? bi.getBlock() : null;
+        return targets(level, player, hit, s, fillCorner, MAX_BLOCKS, block);
+    }
+
+    /**
+     * The blocks a click would change, in build order (fills from the bottom layer up), at most `limit` of them.
+     * block: the off-hand block (Replace skips cells that already are it), may be null.
+     */
+    public static List<BlockPos> targets(final Level level, final Player player, final BlockHitResult hit, final Settings s,
+                                         final BlockPos fillCorner, final int limit, final Block block)
+    {
         final BlockPos clicked = hit.getBlockPos();
         final Direction face = hit.getDirection();
         final boolean place = s.action() == PLACE;
         final BlockPos base = place ? clicked.relative(face) : clicked;
         final int n = Math.max(1, Math.min(MAX_SIZE, s.size()));
-        final Set<BlockPos> out = new LinkedHashSet<>();
+        final int cap = Math.min(limit, MAX_BLOCKS);
+        final List<BlockPos> list = new ArrayList<>();
+        // adds a cell if the action can work on it; false when the list is full
+        final java.util.function.Predicate<BlockPos> add = p -> {
+            if (list.size() >= cap)
+            {
+                return false;
+            }
+            if (!level.isInWorldBounds(p) || !level.isLoaded(p))
+            {
+                return true;
+            }
+            final BlockState st = level.getBlockState(p);
+            final boolean ok = switch (s.action())
+            {
+                case PLACE -> st.canBeReplaced();
+                case REPLACE -> !st.isAir() && st.getFluidState().isEmpty() && (block == null || !st.is(block));
+                case DESTROY -> !st.isAir() && st.getFluidState().isEmpty();
+                default -> !st.isAir();
+            };
+            if (ok)
+            {
+                list.add(p.immutable());
+            }
+            return list.size() < cap;
+        };
+        final int half = (n - 1) / 2;
         switch (s.mode())
         {
             case DIRECTION ->
             {
                 // straight out of the face when building, into it when replacing / destroying / using
                 final Direction d = place ? face : face.getOpposite();
-                for (int i = 0; i < n; i++)
-                {
-                    out.add(base.relative(d, i));
-                }
+                for (int i = 0; i < n && add.test(base.relative(d, i)); i++) { }
             }
             case ROW_COLUMN ->
             {
                 final Direction d = inPlane(player.getLookAngle(), face);
-                final int half = (n - 1) / 2;
-                for (int i = -half; i < n - half; i++)
-                {
-                    out.add(base.relative(d, i));
-                }
+                for (int i = -half; i < n - half && add.test(base.relative(d, i)); i++) { }
             }
             case AREA ->
             {
-                final int side = n;
                 final Direction[] ax = planeAxes(face);
-                final int half = (side - 1) / 2;
-                for (int i = -half; i < side - half; i++)
+                // vertical axis last, so a wall is built from the bottom row up
+                final Direction outer = ax[1], inner = ax[0];
+                outerLoop:
+                for (int j = -half; j < n - half; j++)
                 {
-                    for (int j = -half; j < side - half; j++)
+                    for (int i = -half; i < n - half; i++)
                     {
-                        out.add(base.relative(ax[0], i).relative(ax[1], j));
+                        if (!add.test(base.relative(outer, j).relative(inner, i)))
+                        {
+                            break outerLoop;
+                        }
                     }
                 }
             }
             default ->
             {
-                // FILL: the box from the first corner to this one (just this cell before the first corner is set)
+                // FILL: the box from the first corner to this one (just this cell before the first corner is set),
+                // bottom layer first
                 final BlockPos from = fillCorner == null ? base : fillCorner;
-                if (Math.abs(from.getX() - base.getX()) < MAX_SIZE && Math.abs(from.getY() - base.getY()) < MAX_SIZE
-                    && Math.abs(from.getZ() - base.getZ()) < MAX_SIZE
-                    && (long) (Math.abs(from.getX() - base.getX()) + 1) * (Math.abs(from.getY() - base.getY()) + 1) * (Math.abs(from.getZ() - base.getZ()) + 1) <= MAX_BLOCKS)
+                if (volume(new BlockPos[] {from, base}) <= MAX_BLOCKS && Math.abs(from.getX() - base.getX()) < MAX_SIZE
+                    && Math.abs(from.getY() - base.getY()) < MAX_SIZE && Math.abs(from.getZ() - base.getZ()) < MAX_SIZE)
                 {
-                    for (final BlockPos q : BlockPos.betweenClosed(from, base))
+                    final BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+                    boxLoop:
+                    for (int y = Math.min(from.getY(), base.getY()); y <= Math.max(from.getY(), base.getY()); y++)
                     {
-                        out.add(q.immutable());
+                        for (int z = Math.min(from.getZ(), base.getZ()); z <= Math.max(from.getZ(), base.getZ()); z++)
+                        {
+                            for (int x = Math.min(from.getX(), base.getX()); x <= Math.max(from.getX(), base.getX()); x++)
+                            {
+                                if (!add.test(m.set(x, y, z)))
+                                {
+                                    break boxLoop;
+                                }
+                            }
+                        }
                     }
                 }
-            }
-        }
-        // keep only cells the action can work on
-        final List<BlockPos> list = new ArrayList<>();
-        for (final BlockPos p : out)
-        {
-            if (list.size() >= MAX_BLOCKS || !level.isInWorldBounds(p) || !level.isLoaded(p))
-            {
-                continue;
-            }
-            final BlockState st = level.getBlockState(p);
-            final boolean ok = switch (s.action())
-            {
-                case PLACE -> st.canBeReplaced();
-                case REPLACE, DESTROY -> !st.isAir() && st.getFluidState().isEmpty();
-                default -> !st.isAir();
-            };
-            if (ok)
-            {
-                list.add(p);
             }
         }
         return list;
@@ -247,12 +272,16 @@ public final class BuildWand
         {
             return "The wand is still working on your last job – wait a moment.";
         }
-        final List<BlockPos> targets = targets(level, player, hit, s, corner);
+        final ItemStack off = player.getOffhandItem();
+        final Block offBlock = off.getItem() instanceof BlockItem obi ? obi.getBlock() : null;
+        // place / replace: only as many blocks as the player carries (inventory + off hand)
+        final boolean uses = s.action() == PLACE || s.action() == REPLACE;
+        final int carried = uses && offBlock != null && !player.isCreative() ? countBlock(player, (BlockItem) off.getItem()) : MAX_BLOCKS;
+        final List<BlockPos> targets = targets(level, player, hit, s, corner, carried, offBlock);
         if (targets.isEmpty())
         {
-            return "Nothing to do here.";
+            return uses && carried == 0 ? "You have no " + off.getHoverName().getString() + " left." : "Nothing to do here.";
         }
-        final ItemStack off = player.getOffhandItem();
         if ((s.action() == PLACE || s.action() == REPLACE) && !(off.getItem() instanceof BlockItem))
         {
             return "Hold the block to " + (s.action() == PLACE ? "place" : "replace with") + " in your off hand.";
@@ -260,20 +289,6 @@ public final class BuildWand
         if (s.action() == USE && off.isEmpty())
         {
             return "Hold the item to use (bone meal, a hoe, a shovel, an axe...) in your off hand.";
-        }
-        if ((s.action() == PLACE || s.action() == REPLACE) && !player.isCreative())
-        {
-            final BlockItem bi = (BlockItem) off.getItem();
-            int need = 0;
-            for (final BlockPos p : targets)
-            {
-                need += s.action() == REPLACE && level.getBlockState(p).is(bi.getBlock()) ? 0 : 1;
-            }
-            final int have = countBlock(player, bi);
-            if (need > have)
-            {
-                return "That needs " + need + " " + bi.getDescription().getString() + "; you carry " + have + ". Bring " + (need - have) + " more.";
-            }
         }
         final Job job = new Job(level, player, s, hit.getDirection(), targets);
         if (targets.size() <= SYNC_LIMIT)
@@ -297,6 +312,7 @@ public final class BuildWand
         int next, done, skipped;
         String stop;
         BlockItem blockItem;
+        final Map<Long, Drop> drops = new HashMap<>();
 
         BlockItem blockItem()
         {
@@ -328,6 +344,15 @@ public final class BuildWand
             } + (skipped > 0 ? " (" + skipped + " skipped: protected or can't go there)" : "") + (stop != null ? " – " + stop : "") + ".";
         }
     }
+
+    private static final class Drop
+    {
+        BlockPos at;
+        final Map<Item, Integer> items = new LinkedHashMap<>();
+    }
+
+    /** Items dropped on the ground by Replace since start (self-test). */
+    static int droppedTotal;
 
     private static final List<Job> JOBS = new ArrayList<>();
     private static final List<Runnable> RESTORES = new ArrayList<>();
@@ -410,7 +435,18 @@ public final class BuildWand
                     }
                     if (job.s.action() == REPLACE && !player.isCreative())
                     {
-                        giveAll(player, Block.getDrops(old, level, p, oldBe, player, tool), job.undo.given);
+                        // the replaced block drops where it was (grouped per small patch, so big jobs don't flood items)
+                        for (final ItemStack d : Block.getDrops(old, level, p, oldBe, player, tool))
+                        {
+                            if (!d.isEmpty())
+                            {
+                                job.undo.given.merge(d.getItem(), d.getCount(), Integer::sum);
+                                final long key = BlockPos.asLong(p.getX() >> 2, p.getY() >> 2, p.getZ() >> 2);
+                                final Drop drop = job.drops.computeIfAbsent(key, kk -> new Drop());
+                                drop.at = drop.at == null || p.getY() >= drop.at.getY() ? p.above() : drop.at;
+                                drop.items.merge(d.getItem(), d.getCount(), Integer::sum);
+                            }
+                        }
                     }
                     job.undo.before.add(new Old(p, old, oldTag));
                     level.setBlock(p, st, Block.UPDATE_ALL);
@@ -448,6 +484,25 @@ public final class BuildWand
                 }
             }
         }
+        // drop what was collected this round
+        for (final Drop d : job.drops.values())
+        {
+            for (final Map.Entry<Item, Integer> e : d.items.entrySet())
+            {
+                int left = e.getValue();
+                while (left > 0)
+                {
+                    final int c = Math.min(left, e.getKey().getDefaultMaxStackSize());
+                    final net.minecraft.world.entity.item.ItemEntity ie = new net.minecraft.world.entity.item.ItemEntity(level,
+                        d.at.getX() + 0.5, d.at.getY() + 0.1, d.at.getZ() + 0.5, new ItemStack(e.getKey(), c));
+                    ie.setDefaultPickUpDelay();
+                    level.addFreshEntity(ie);
+                    droppedTotal += c;
+                    left -= c;
+                }
+            }
+        }
+        job.drops.clear();
         final boolean finished = job.next >= job.targets.size() || job.stop != null;
         if (finished)
         {
@@ -489,7 +544,7 @@ public final class BuildWand
             }
             if (!missing.isEmpty())
             {
-                return "To undo, give back what the wand gave you. Missing: " + missing.substring(0, missing.length() - 2) + ".";
+                return "To undo, pick up / give back what the wand gave you (replaced blocks drop on the ground). Missing: " + missing.substring(0, missing.length() - 2) + ".";
             }
             for (final Map.Entry<Item, Integer> e : undo.given.entrySet())
             {

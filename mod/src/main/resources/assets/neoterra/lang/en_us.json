@@ -44,5 +44,7 @@
   "item.neoterra.blockhutgreatforge": "Great Forge (Grand Project)",
   "com.neoterra.building.greatforge": "Great Forge",
   "item.neoterra.leveling_staff": "Leveling Staff",
-  "item.neoterra.builder_wand": "Builder's Wand"
+  "item.neoterra.builder_wand": "Builder's Wand",
+  "key.neoterra.wand_undo": "Builder's Wand: undo",
+  "key.categories.neoterra": "Neoterra"
 }

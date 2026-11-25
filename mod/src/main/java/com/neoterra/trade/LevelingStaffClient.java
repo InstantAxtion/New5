@@ -20,9 +20,41 @@ final class LevelingStaffClient
 {
     private LevelingStaffClient() {}
 
-    static void register()
+    /** U by default (Controls → Neoterra): undo the Builder's Wand's last job. */
+    static final net.minecraft.client.KeyMapping UNDO_KEY = new net.minecraft.client.KeyMapping(
+        "key.neoterra.wand_undo", org.lwjgl.glfw.GLFW.GLFW_KEY_U, "key.categories.neoterra");
+
+    static void register(final net.neoforged.bus.api.IEventBus modBus)
     {
         NeoForge.EVENT_BUS.addListener(LevelingStaffClient::onRender);
+        modBus.addListener((net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent e) -> e.register(UNDO_KEY));
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientTickEvent.Post e) -> {
+            while (UNDO_KEY.consumeClick())
+            {
+                final Minecraft mc = Minecraft.getInstance();
+                if (mc.player != null && mc.screen == null)
+                {
+                    undoWand();
+                }
+            }
+        });
+        // sneak + left-click with the wand: undo
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.InputEvent.InteractionKeyMappingTriggered e) -> {
+            final Minecraft mc = Minecraft.getInstance();
+            if (e.isAttack() && mc.player != null && mc.player.isShiftKeyDown()
+                && mc.player.getMainHandItem().getItem() instanceof BuilderWandItem)
+            {
+                e.setCanceled(true);
+                e.setSwingHand(false);
+                undoWand();
+            }
+        });
+    }
+
+    private static void undoWand()
+    {
+        final BuildWand.Settings s = BuilderWandItem.settings(Minecraft.getInstance().player.getMainHandItem());
+        net.neoforged.neoforge.network.PacketDistributor.sendToServer(new WandPayload(s.action(), s.mode(), s.size(), true));
     }
 
     /** The staff's menu: Flatten, Undo last flatten, Clear selection, Take stored blocks. */
@@ -242,7 +274,15 @@ final class LevelingStaffClient
         final BlockPos fill = s.mode() == BuildWand.FILL ? BuilderWandItem.fillCorner(wand) : null;
         final BlockPos[] box = BuildWand.bounds(mc.player, hit, s, fill);
         // big jobs: just the outline of the whole box (checking every block each frame would be too slow)
-        final java.util.List<BlockPos> targets = BuildWand.volume(box) <= 2048 ? BuildWand.targets(mc.level, mc.player, hit, s, fill) : java.util.List.of();
+        // place / replace highlight only as many blocks as you carry (inventory + off hand)
+        final ItemStack off = mc.player.getOffhandItem();
+        final net.minecraft.world.level.block.Block offBlock = off.getItem() instanceof net.minecraft.world.item.BlockItem bi ? bi.getBlock() : null;
+        final boolean uses = s.action() == BuildWand.PLACE || s.action() == BuildWand.REPLACE;
+        final int carried = !uses || mc.player.isCreative() ? Integer.MAX_VALUE : offBlock == null ? 0 : mc.player.getInventory().countItem(off.getItem());
+        final boolean limited = carried < BuildWand.volume(box);
+        // small jobs: every block; limited by what you carry (up to 50k): exactly those; else the whole box
+        final java.util.List<BlockPos> targets = BuildWand.volume(box) <= 2048 || (limited && carried <= 50_000)
+            ? BuildWand.targets(mc.level, mc.player, hit, s, fill, Math.min(carried, 50_000), offBlock) : java.util.List.of();
         final float[] c = switch (s.action())
         {
             case BuildWand.PLACE -> new float[] {0.3f, 1.0f, 0.4f};
@@ -256,11 +296,29 @@ final class LevelingStaffClient
         pose.translate(-cam.x, -cam.y, -cam.z);
         final MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
         final VertexConsumer lines = buffers.getBuffer(RenderType.lines());
-        for (final BlockPos p : targets)
+        if (targets.size() <= 2048)
         {
-            LevelRenderer.renderLineBox(pose, lines, new AABB(p).inflate(0.005), c[0], c[1], c[2], 0.9f);
+            for (final BlockPos p : targets)
+            {
+                LevelRenderer.renderLineBox(pose, lines, new AABB(p).inflate(0.005), c[0], c[1], c[2], 0.9f);
+            }
         }
-        LevelRenderer.renderLineBox(pose, lines, AABB.encapsulatingFullBlocks(box[0], box[1]).inflate(0.02), c[0], c[1], c[2], 1.0f);
+        if (targets.size() > 2048)
+        {
+            // many blocks: one outline around the ones you can afford
+            int x1 = Integer.MAX_VALUE, y1 = Integer.MAX_VALUE, z1 = Integer.MAX_VALUE, x2 = Integer.MIN_VALUE, y2 = Integer.MIN_VALUE, z2 = Integer.MIN_VALUE;
+            for (final BlockPos p : targets)
+            {
+                x1 = Math.min(x1, p.getX()); y1 = Math.min(y1, p.getY()); z1 = Math.min(z1, p.getZ());
+                x2 = Math.max(x2, p.getX()); y2 = Math.max(y2, p.getY()); z2 = Math.max(z2, p.getZ());
+            }
+            LevelRenderer.renderLineBox(pose, lines, new AABB(x1, y1, z1, x2 + 1, y2 + 1, z2 + 1).inflate(0.02), c[0], c[1], c[2], 1.0f);
+        }
+        else if (targets.isEmpty() && !limited && BuildWand.volume(box) > 2048)
+        {
+            // a big job you have enough blocks for: the outline of the whole box
+            LevelRenderer.renderLineBox(pose, lines, AABB.encapsulatingFullBlocks(box[0], box[1]).inflate(0.02), c[0], c[1], c[2], 1.0f);
+        }
         buffers.endBatch(RenderType.lines());
         pose.popPose();
     }
